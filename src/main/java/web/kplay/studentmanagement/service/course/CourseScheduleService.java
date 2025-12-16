@@ -1,0 +1,124 @@
+package web.kplay.studentmanagement.service.course;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import web.kplay.studentmanagement.domain.course.Course;
+import web.kplay.studentmanagement.domain.course.CourseSchedule;
+import web.kplay.studentmanagement.dto.course.CourseScheduleCreateRequest;
+import web.kplay.studentmanagement.dto.course.CourseScheduleResponse;
+import web.kplay.studentmanagement.exception.ResourceNotFoundException;
+import web.kplay.studentmanagement.repository.CourseRepository;
+import web.kplay.studentmanagement.repository.CourseScheduleRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CourseScheduleService {
+
+    private final CourseScheduleRepository scheduleRepository;
+    private final CourseRepository courseRepository;
+
+    @Transactional
+    public CourseScheduleResponse createSchedule(CourseScheduleCreateRequest request) {
+        Course course = courseRepository.findById(request.getCourseId())
+                .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+
+        CourseSchedule schedule = CourseSchedule.builder()
+                .course(course)
+                .scheduleDate(request.getScheduleDate())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .dayOfWeek(request.getDayOfWeek())
+                .currentStudents(0)
+                .isCancelled(false)
+                .memo(request.getMemo())
+                .build();
+
+        CourseSchedule savedSchedule = scheduleRepository.save(schedule);
+        log.info("수업 스케줄 생성: 수업={}, 날짜={}",
+                course.getCourseName(), request.getScheduleDate());
+
+        return toResponse(savedSchedule);
+    }
+
+    @Transactional(readOnly = true)
+    public CourseScheduleResponse getSchedule(Long id) {
+        CourseSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("스케줄을 찾을 수 없습니다"));
+        return toResponse(schedule);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getSchedulesByDate(LocalDate date) {
+        return scheduleRepository.findActiveSchedulesByDate(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
+        return scheduleRepository.findByScheduleDateBetween(startDate, endDate).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getSchedulesByCourse(Long courseId) {
+        return scheduleRepository.findByCourseId(courseId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CourseScheduleResponse updateSchedule(Long id, CourseScheduleCreateRequest request) {
+        CourseSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("스케줄을 찾을 수 없습니다"));
+
+        schedule.updateTime(request.getStartTime(), request.getEndTime());
+        schedule.updateMemo(request.getMemo());
+
+        log.info("수업 스케줄 업데이트: ID={}", id);
+        return toResponse(schedule);
+    }
+
+    @Transactional
+    public void cancelSchedule(Long id, String reason) {
+        CourseSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("스케줄을 찾을 수 없습니다"));
+
+        schedule.cancel(reason);
+        log.info("수업 스케줄 취소: ID={}, 사유={}", id, reason);
+    }
+
+    @Transactional
+    public void restoreSchedule(Long id) {
+        CourseSchedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("스케줄을 찾을 수 없습니다"));
+
+        schedule.restore();
+        log.info("수업 스케줄 복구: ID={}", id);
+    }
+
+    private CourseScheduleResponse toResponse(CourseSchedule schedule) {
+        return CourseScheduleResponse.builder()
+                .id(schedule.getId())
+                .courseId(schedule.getCourse().getId())
+                .courseName(schedule.getCourse().getCourseName())
+                .scheduleDate(schedule.getScheduleDate())
+                .startTime(schedule.getStartTime())
+                .endTime(schedule.getEndTime())
+                .dayOfWeek(schedule.getDayOfWeek())
+                .currentStudents(schedule.getCurrentStudents())
+                .maxStudents(schedule.getCourse().getMaxStudents())
+                .isCancelled(schedule.getIsCancelled())
+                .cancelReason(schedule.getCancelReason())
+                .memo(schedule.getMemo())
+                .build();
+    }
+}
