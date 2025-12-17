@@ -67,6 +67,7 @@ export const studentAPI = {
   getById: (id) => api.get(`/students/${id}`),
   search: (keyword) => api.get(`/students/search?keyword=${keyword}`),
   create: (data) => api.post('/students', data),
+  update: (id, data) => api.put(`/students/${id}`, data),
   deactivate: (id) => api.delete(`/students/${id}`),
 };
 
