@@ -1,0 +1,586 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { enrollmentAPI, studentAPI, courseAPI } from '../services/api';
+import '../styles/Enrollments.css';
+
+function Enrollments() {
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [newEnrollment, setNewEnrollment] = useState({
+    studentId: '',
+    courseId: '',
+    type: 'PERIOD_BASED',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+    totalCount: 0,
+    price: 0,
+    notes: '',
+  });
+
+  // 전체 수강권 조회
+  const { data: enrollments = [], isLoading } = useQuery({
+    queryKey: ['enrollments'],
+    queryFn: async () => {
+      const response = await enrollmentAPI.getAll();
+      return response.data;
+    },
+  });
+
+  // 학생 목록 조회
+  const { data: students = [] } = useQuery({
+    queryKey: ['students'],
+    queryFn: async () => {
+      const response = await studentAPI.getAll();
+      return response.data;
+    },
+  });
+
+  // 코스 목록 조회
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: async () => {
+      const response = await courseAPI.getAll();
+      return response.data;
+    },
+  });
+
+  // 수강권 생성 mutation
+  const createMutation = useMutation({
+    mutationFn: (data) => enrollmentAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      setShowCreateModal(false);
+      setNewEnrollment({
+        studentId: '',
+        courseId: '',
+        type: 'PERIOD_BASED',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        totalCount: 0,
+        price: 0,
+        notes: '',
+      });
+      alert('수강권이 등록되었습니다.');
+    },
+    onError: (error) => {
+      alert(`등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  // 수강권 취소 mutation
+  const cancelMutation = useMutation({
+    mutationFn: (id) => enrollmentAPI.cancel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      setShowDetailModal(false);
+      alert('수강권이 취소되었습니다.');
+    },
+    onError: (error) => {
+      alert(`취소 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  // 수강권 연장 mutation
+  const extendMutation = useMutation({
+    mutationFn: ({ id, newEndDate }) => enrollmentAPI.extendPeriod(id, newEndDate),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      setShowDetailModal(false);
+      alert('수강권이 연장되었습니다.');
+    },
+    onError: (error) => {
+      alert(`연장 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  const handleCreateEnrollment = () => {
+    if (!newEnrollment.studentId || !newEnrollment.courseId) {
+      alert('학생과 코스를 선택해주세요.');
+      return;
+    }
+
+    if (newEnrollment.type === 'PERIOD_BASED' && !newEnrollment.endDate) {
+      alert('종료일을 선택해주세요.');
+      return;
+    }
+
+    if (newEnrollment.type === 'COUNT_BASED' && newEnrollment.totalCount <= 0) {
+      alert('수강 횟수를 입력해주세요.');
+      return;
+    }
+
+    createMutation.mutate(newEnrollment);
+  };
+
+  const handleCancelEnrollment = (id) => {
+    if (window.confirm('수강권을 취소하시겠습니까?')) {
+      cancelMutation.mutate(id);
+    }
+  };
+
+  const handleExtendEnrollment = (id) => {
+    const days = prompt('연장할 일수를 입력하세요:', '30');
+    if (days && !isNaN(days) && parseInt(days) > 0) {
+      // 현재 날짜에서 days만큼 더한 새로운 종료일 계산
+      const newEndDate = new Date();
+      newEndDate.setDate(newEndDate.getDate() + parseInt(days));
+      const formattedDate = newEndDate.toISOString().split('T')[0];
+      extendMutation.mutate({ id, newEndDate: formattedDate });
+    }
+  };
+
+  const openDetailModal = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setShowDetailModal(true);
+  };
+
+  // 필터링 로직
+  const filteredEnrollments = enrollments.filter((enrollment) => {
+    const matchesStatus = statusFilter === 'ALL' || enrollment.status === statusFilter;
+    const matchesSearch =
+      searchQuery === '' ||
+      enrollment.student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      enrollment.course.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  // 남은 일수 계산
+  const getRemainingDays = (endDate) => {
+    const today = new Date();
+    const end = new Date(endDate);
+    const diffTime = end - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // 상태별 배지
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      ACTIVE: { text: '활성', color: '#03C75A' },
+      EXPIRED: { text: '만료', color: '#999' },
+      CANCELLED: { text: '취소', color: '#FF3B30' },
+    };
+    const { text, color } = statusMap[status] || { text: status, color: '#999' };
+    return <span className="status-badge" style={{ backgroundColor: color }}>{text}</span>;
+  };
+
+  // 타입별 배지
+  const getTypeBadge = (type) => {
+    const typeMap = {
+      PERIOD_BASED: { text: '기간제', color: '#0066FF' },
+      COUNT_BASED: { text: '횟수제', color: '#FF9800' },
+    };
+    const { text, color } = typeMap[type] || { text: type, color: '#999' };
+    return <span className="type-badge" style={{ backgroundColor: color }}>{text}</span>;
+  };
+
+  if (isLoading) {
+    return <div className="enrollments-container">로딩 중...</div>;
+  }
+
+  return (
+    <div className="enrollments-container">
+      <div className="enrollments-header">
+        <h1>수강권 관리</h1>
+        <button className="btn-create-enrollment" onClick={() => setShowCreateModal(true)}>
+          + 수강권 등록
+        </button>
+      </div>
+
+      <div className="enrollments-filters">
+        <div className="filter-left">
+          <div className="status-filters">
+            {['ALL', 'ACTIVE', 'EXPIRED', 'CANCELLED'].map((status) => (
+              <button
+                key={status}
+                className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
+                onClick={() => setStatusFilter(status)}
+              >
+                {status === 'ALL' ? '전체' : status === 'ACTIVE' ? '활성' : status === 'EXPIRED' ? '만료' : '취소'}
+                <span className="count">
+                  ({status === 'ALL' ? enrollments.length : enrollments.filter(e => e.status === status).length})
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="filter-right">
+          <input
+            type="text"
+            placeholder="학생명 또는 코스명으로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+        </div>
+      </div>
+
+      <div className="enrollments-grid">
+        {filteredEnrollments.length === 0 ? (
+          <div className="empty-state">
+            {searchQuery ? '검색 결과가 없습니다.' : '등록된 수강권이 없습니다.'}
+          </div>
+        ) : (
+          filteredEnrollments.map((enrollment) => (
+            <div
+              key={enrollment.id}
+              className="enrollment-card"
+              onClick={() => openDetailModal(enrollment)}
+            >
+              <div className="enrollment-header">
+                <div className="badges">
+                  {getTypeBadge(enrollment.type)}
+                  {getStatusBadge(enrollment.status)}
+                </div>
+              </div>
+
+              <div className="enrollment-body">
+                <h3 className="student-name">{enrollment.student.name}</h3>
+                <p className="course-name">{enrollment.course.name}</p>
+
+                <div className="enrollment-details">
+                  {enrollment.type === 'PERIOD_BASED' ? (
+                    <>
+                      <div className="detail-item">
+                        <span className="label">기간</span>
+                        <span className="value">
+                          {new Date(enrollment.startDate).toLocaleDateString()} ~{' '}
+                          {new Date(enrollment.endDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {enrollment.status === 'ACTIVE' && (
+                        <div className="detail-item">
+                          <span className="label">남은 일수</span>
+                          <span
+                            className="value remaining"
+                            style={{
+                              color: getRemainingDays(enrollment.endDate) < 7 ? '#FF3B30' : '#03C75A',
+                            }}
+                          >
+                            {getRemainingDays(enrollment.endDate)}일
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="detail-item">
+                        <span className="label">전체 횟수</span>
+                        <span className="value">{enrollment.totalCount}회</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">남은 횟수</span>
+                        <span
+                          className="value remaining"
+                          style={{
+                            color: enrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
+                          }}
+                        >
+                          {enrollment.remainingCount}회
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="detail-item">
+                    <span className="label">가격</span>
+                    <span className="value price">
+                      {enrollment.price.toLocaleString()}원
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* 수강권 생성 모달 */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>수강권 등록</h2>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>
+                ×
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>학생 선택 *</label>
+                <select
+                  value={newEnrollment.studentId}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, studentId: e.target.value })
+                  }
+                >
+                  <option value="">학생을 선택하세요</option>
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.name} ({student.phone})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>코스 선택 *</label>
+                <select
+                  value={newEnrollment.courseId}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, courseId: e.target.value })
+                  }
+                >
+                  <option value="">코스를 선택하세요</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.name} - {course.level}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>수강권 타입 *</label>
+                <div className="radio-group">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="type"
+                      value="PERIOD_BASED"
+                      checked={newEnrollment.type === 'PERIOD_BASED'}
+                      onChange={(e) =>
+                        setNewEnrollment({ ...newEnrollment, type: e.target.value })
+                      }
+                    />
+                    <span>기간제</span>
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="type"
+                      value="COUNT_BASED"
+                      checked={newEnrollment.type === 'COUNT_BASED'}
+                      onChange={(e) =>
+                        setNewEnrollment({ ...newEnrollment, type: e.target.value })
+                      }
+                    />
+                    <span>횟수제</span>
+                  </label>
+                </div>
+              </div>
+
+              {newEnrollment.type === 'PERIOD_BASED' ? (
+                <>
+                  <div className="form-group">
+                    <label>시작일 *</label>
+                    <input
+                      type="date"
+                      value={newEnrollment.startDate}
+                      onChange={(e) =>
+                        setNewEnrollment({ ...newEnrollment, startDate: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>종료일 *</label>
+                    <input
+                      type="date"
+                      value={newEnrollment.endDate}
+                      onChange={(e) =>
+                        setNewEnrollment({ ...newEnrollment, endDate: e.target.value })
+                      }
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="form-group">
+                  <label>수강 횟수 *</label>
+                  <input
+                    type="number"
+                    value={newEnrollment.totalCount}
+                    onChange={(e) =>
+                      setNewEnrollment({ ...newEnrollment, totalCount: parseInt(e.target.value) || 0 })
+                    }
+                    placeholder="예: 10"
+                    min="1"
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label>가격 *</label>
+                <input
+                  type="number"
+                  value={newEnrollment.price}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, price: parseInt(e.target.value) || 0 })
+                  }
+                  placeholder="예: 300000"
+                  min="0"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>메모</label>
+                <textarea
+                  value={newEnrollment.notes}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, notes: e.target.value })
+                  }
+                  placeholder="추가 메모 사항을 입력하세요"
+                  rows="3"
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>
+                취소
+              </button>
+              <button className="btn-primary" onClick={handleCreateEnrollment}>
+                등록
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 수강권 상세 모달 */}
+      {showDetailModal && selectedEnrollment && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>수강권 상세</h2>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}>
+                ×
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="detail-section">
+                <div className="badges">
+                  {getTypeBadge(selectedEnrollment.type)}
+                  {getStatusBadge(selectedEnrollment.status)}
+                </div>
+
+                <div className="detail-info-grid">
+                  <div className="detail-info-item">
+                    <span className="info-label">학생</span>
+                    <span className="info-value">{selectedEnrollment.student.name}</span>
+                  </div>
+                  <div className="detail-info-item">
+                    <span className="info-label">연락처</span>
+                    <span className="info-value">{selectedEnrollment.student.phone}</span>
+                  </div>
+                  <div className="detail-info-item">
+                    <span className="info-label">코스</span>
+                    <span className="info-value">{selectedEnrollment.course.name}</span>
+                  </div>
+                  <div className="detail-info-item">
+                    <span className="info-label">레벨</span>
+                    <span className="info-value">{selectedEnrollment.course.level}</span>
+                  </div>
+
+                  {selectedEnrollment.type === 'PERIOD_BASED' ? (
+                    <>
+                      <div className="detail-info-item">
+                        <span className="info-label">시작일</span>
+                        <span className="info-value">
+                          {new Date(selectedEnrollment.startDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="detail-info-item">
+                        <span className="info-label">종료일</span>
+                        <span className="info-value">
+                          {new Date(selectedEnrollment.endDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {selectedEnrollment.status === 'ACTIVE' && (
+                        <div className="detail-info-item">
+                          <span className="info-label">남은 일수</span>
+                          <span
+                            className="info-value"
+                            style={{
+                              color: getRemainingDays(selectedEnrollment.endDate) < 7 ? '#FF3B30' : '#03C75A',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {getRemainingDays(selectedEnrollment.endDate)}일
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="detail-info-item">
+                        <span className="info-label">전체 횟수</span>
+                        <span className="info-value">{selectedEnrollment.totalCount}회</span>
+                      </div>
+                      <div className="detail-info-item">
+                        <span className="info-label">남은 횟수</span>
+                        <span
+                          className="info-value"
+                          style={{
+                            color: selectedEnrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {selectedEnrollment.remainingCount}회
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="detail-info-item">
+                    <span className="info-label">가격</span>
+                    <span className="info-value price">
+                      {selectedEnrollment.price.toLocaleString()}원
+                    </span>
+                  </div>
+
+                  {selectedEnrollment.notes && (
+                    <div className="detail-info-item full-width">
+                      <span className="info-label">메모</span>
+                      <span className="info-value">{selectedEnrollment.notes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              {selectedEnrollment.status === 'ACTIVE' && (
+                <>
+                  {selectedEnrollment.type === 'PERIOD_BASED' && (
+                    <button
+                      className="btn-extend"
+                      onClick={() => handleExtendEnrollment(selectedEnrollment.id)}
+                    >
+                      기간 연장
+                    </button>
+                  )}
+                  <button
+                    className="btn-cancel-enrollment"
+                    onClick={() => handleCancelEnrollment(selectedEnrollment.id)}
+                  >
+                    수강권 취소
+                  </button>
+                </>
+              )}
+              <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Enrollments;

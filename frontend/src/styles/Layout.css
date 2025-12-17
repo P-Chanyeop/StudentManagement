@@ -1,0 +1,25 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.main-content {
+  margin-left: 260px;
+  flex: 1;
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main-content {
+    margin-left: 200px;
+  }
+}
