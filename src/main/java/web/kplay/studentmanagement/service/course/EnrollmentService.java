@@ -28,6 +28,7 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+    private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
     @Transactional
     public EnrollmentResponse createEnrollment(EnrollmentCreateRequest request) {
@@ -127,6 +128,92 @@ public class EnrollmentService {
         enrollment.extendPeriod(newEndDate);
         log.info("수강권 기간 연장: 수강권ID={}, 새종료일={}", id, newEndDate);
         return toResponse(enrollment);
+    }
+
+    /**
+     * 공휴일을 제외한 N일 후로 수강권 기간 연장
+     * 예: 30일권을 구매하면 주말과 공휴일을 제외한 실제 수업일 30일 보장
+     */
+    @Transactional
+    public EnrollmentResponse extendPeriodWithHolidays(Long id, int businessDays) {
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
+
+        if (enrollment.getEnrollmentType() != EnrollmentType.PERIOD) {
+            throw new BusinessException("기간권만 기간 연장이 가능합니다");
+        }
+
+        LocalDate currentEndDate = enrollment.getEndDate();
+        LocalDate newEndDate = holidayService.addBusinessDays(currentEndDate, businessDays);
+
+        enrollment.extendPeriod(newEndDate);
+        log.info("수강권 기간 연장 (공휴일 제외): 수강권ID={}, 추가일수={}, 새종료일={}",
+                id, businessDays, newEndDate);
+
+        return toResponse(enrollment);
+    }
+
+    /**
+     * 공휴일을 제외한 실제 수업일 기준으로 수강권 생성
+     */
+    @Transactional
+    public EnrollmentResponse createEnrollmentWithHolidays(EnrollmentCreateRequest request) {
+        Student student = studentRepository.findById(request.getStudentId())
+                .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
+
+        Course course = courseRepository.findById(request.getCourseId())
+                .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+
+        // 기간권의 경우 공휴일을 제외한 실제 종료일 계산
+        LocalDate endDate;
+        if (request.getEnrollmentType() == EnrollmentType.PERIOD) {
+            if (request.getStartDate() == null) {
+                throw new BusinessException("시작일은 필수입니다");
+            }
+
+            // 요청에 총 수업일수가 있으면 공휴일 제외 계산, 없으면 종료일 그대로 사용
+            if (request.getTotalCount() != null && request.getTotalCount() > 0) {
+                // 총 수업일수 기준으로 공휴일 제외 계산
+                endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
+                log.info("공휴일 제외 종료일 계산: 시작={}, 수업일수={}, 종료={}",
+                        request.getStartDate(), request.getTotalCount(), endDate);
+            } else if (request.getEndDate() != null) {
+                endDate = request.getEndDate();
+            } else {
+                throw new BusinessException("종료일 또는 총 수업일수가 필요합니다");
+            }
+
+            if (endDate.isBefore(request.getStartDate())) {
+                throw new BusinessException("종료일은 시작일보다 이후여야 합니다");
+            }
+        } else if (request.getEnrollmentType() == EnrollmentType.COUNT) {
+            if (request.getTotalCount() == null || request.getTotalCount() < 1) {
+                throw new BusinessException("횟수권은 1회 이상의 총 횟수가 필요합니다");
+            }
+            endDate = null;
+        } else {
+            endDate = request.getEndDate();
+        }
+
+        Enrollment enrollment = Enrollment.builder()
+                .student(student)
+                .course(course)
+                .enrollmentType(request.getEnrollmentType())
+                .startDate(request.getStartDate())
+                .endDate(endDate)
+                .totalCount(request.getTotalCount())
+                .usedCount(0)
+                .remainingCount(request.getTotalCount())
+                .isActive(true)
+                .memo(request.getMemo())
+                .build();
+
+        Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+        log.info("새 수강권 등록 (공휴일 고려): 학생={}, 수업={}, 타입={}, 종료일={}",
+                student.getStudentName(), course.getCourseName(),
+                request.getEnrollmentType(), endDate);
+
+        return toResponse(savedEnrollment);
     }
 
     @Transactional
