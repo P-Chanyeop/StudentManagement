@@ -39,9 +39,20 @@ public class AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
 
         LocalDateTime now = LocalDateTime.now();
-        LocalTime expectedLeave = request.getExpectedLeaveTime() != null
-                ? request.getExpectedLeaveTime()
-                : schedule.getEndTime();
+
+        // 예상 하원 시간 자동 계산
+        // 1. 요청에 명시적으로 지정된 경우 사용
+        // 2. 그렇지 않으면 등원 시간 + 코스 수업 시간(분)으로 자동 계산
+        LocalTime expectedLeave;
+        if (request.getExpectedLeaveTime() != null) {
+            expectedLeave = request.getExpectedLeaveTime();
+        } else {
+            // 등원 시간 + 수업 시간으로 자동 계산
+            Integer courseDuration = schedule.getCourse().getDurationMinutes();
+            expectedLeave = now.toLocalTime().plusMinutes(courseDuration);
+            log.info("예상 하원 시간 자동 계산: 등원={}, 수업시간={}분, 예상하원={}",
+                    now.toLocalTime(), courseDuration, expectedLeave);
+        }
 
         Attendance attendance = Attendance.builder()
                 .student(student)
@@ -53,10 +64,11 @@ public class AttendanceService {
         attendance.checkIn(now, expectedLeave);
 
         Attendance savedAttendance = attendanceRepository.save(attendance);
-        log.info("출석 체크인: 학생={}, 수업={}, 상태={}",
+        log.info("출석 체크인: 학생={}, 수업={}, 상태={}, 예상하원={}",
                 student.getStudentName(),
                 schedule.getCourse().getCourseName(),
-                savedAttendance.getStatus());
+                savedAttendance.getStatus(),
+                expectedLeave);
 
         return toResponse(savedAttendance);
     }
