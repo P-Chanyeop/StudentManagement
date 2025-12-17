@@ -86,7 +86,7 @@ function Enrollments() {
 
   // 수강권 연장 mutation
   const extendMutation = useMutation({
-    mutationFn: ({ id, days }) => enrollmentAPI.extend(id, days),
+    mutationFn: ({ id, newEndDate }) => enrollmentAPI.extendPeriod(id, newEndDate),
     onSuccess: () => {
       queryClient.invalidateQueries(['enrollments']);
       setShowDetailModal(false);
@@ -125,7 +125,11 @@ function Enrollments() {
   const handleExtendEnrollment = (id) => {
     const days = prompt('연장할 일수를 입력하세요:', '30');
     if (days && !isNaN(days) && parseInt(days) > 0) {
-      extendMutation.mutate({ id, days: parseInt(days) });
+      // 현재 날짜에서 days만큼 더한 새로운 종료일 계산
+      const newEndDate = new Date();
+      newEndDate.setDate(newEndDate.getDate() + parseInt(days));
+      const formattedDate = newEndDate.toISOString().split('T')[0];
+      extendMutation.mutate({ id, newEndDate: formattedDate });
     }
   };
 

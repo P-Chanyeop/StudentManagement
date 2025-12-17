@@ -82,6 +82,23 @@ public class ReservationService {
     }
 
     @Transactional
+    public ReservationResponse confirmReservation(Long id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new BusinessException("대기 중인 예약만 확정할 수 있습니다");
+        }
+
+        reservation.confirm();
+        log.info("예약 확정: 학생={}, 수업={}",
+                reservation.getStudent().getStudentName(),
+                reservation.getSchedule().getCourse().getCourseName());
+
+        return toResponse(reservation);
+    }
+
+    @Transactional
     public void cancelReservation(Long id, String reason) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));

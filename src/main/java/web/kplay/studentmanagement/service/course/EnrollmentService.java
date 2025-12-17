@@ -79,6 +79,13 @@ public class EnrollmentService {
     }
 
     @Transactional(readOnly = true)
+    public List<EnrollmentResponse> getAllEnrollments() {
+        return enrollmentRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<EnrollmentResponse> getEnrollmentsByStudent(Long studentId) {
         return enrollmentRepository.findByStudentId(studentId).stream()
                 .map(this::toResponse)

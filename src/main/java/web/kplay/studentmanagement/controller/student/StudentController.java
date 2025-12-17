@@ -54,6 +54,15 @@ public class StudentController {
         return ResponseEntity.ok(responses);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<StudentResponse> updateStudent(
+            @PathVariable Long id,
+            @Valid @RequestBody StudentCreateRequest request) {
+        StudentResponse response = studentService.updateStudent(id, request);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivateStudent(@PathVariable Long id) {

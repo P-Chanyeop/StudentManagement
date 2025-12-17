@@ -58,6 +58,13 @@ public class ReservationController {
         return ResponseEntity.ok(responses);
     }
 
+    @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<ReservationResponse> confirmReservation(@PathVariable Long id) {
+        ReservationResponse response = reservationService.confirmReservation(id);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<Map<String, String>> cancelReservation(

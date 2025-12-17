@@ -83,6 +83,7 @@ export const courseAPI = {
 
 // 수강권 API
 export const enrollmentAPI = {
+  getAll: () => api.get('/enrollments'),
   getByStudent: (studentId) => api.get(`/enrollments/student/${studentId}`),
   getActiveByStudent: (studentId) => api.get(`/enrollments/student/${studentId}/active`),
   getExpiring: (days = 7) => api.get(`/enrollments/expiring?days=${days}`),
@@ -90,6 +91,7 @@ export const enrollmentAPI = {
   create: (data) => api.post('/enrollments', data),
   extendPeriod: (id, newEndDate) => api.patch(`/enrollments/${id}/extend?newEndDate=${newEndDate}`),
   addCount: (id, additionalCount) => api.patch(`/enrollments/${id}/add-count?additionalCount=${additionalCount}`),
+  cancel: (id) => api.delete(`/enrollments/${id}`),
   deactivate: (id) => api.delete(`/enrollments/${id}`),
 };
 

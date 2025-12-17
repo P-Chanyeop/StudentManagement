@@ -94,6 +94,37 @@ public class StudentService {
     }
 
     @Transactional
+    public StudentResponse updateStudent(Long id, StudentCreateRequest request) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
+
+        // 학생 정보 업데이트
+        student.updateInfo(
+                request.getStudentName(),
+                request.getStudentPhone(),
+                request.getBirthDate(),
+                request.getGender(),
+                request.getAddress(),
+                request.getSchool(),
+                request.getGrade()
+        );
+
+        // 학부모 정보 업데이트
+        student.updateParentInfo(
+                request.getParentName(),
+                request.getParentPhone(),
+                request.getParentEmail()
+        );
+
+        // 영어 레벨 및 메모 업데이트
+        student.updateEnglishLevel(request.getEnglishLevel());
+        student.updateMemo(request.getMemo());
+
+        log.info("학생 정보 수정: {}", student.getStudentName());
+        return toResponse(student);
+    }
+
+    @Transactional
     public void deactivateStudent(Long id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));

@@ -27,6 +27,13 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<EnrollmentResponse>> getAllEnrollments() {
+        List<EnrollmentResponse> responses = enrollmentService.getAllEnrollments();
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<EnrollmentResponse> getEnrollment(@PathVariable Long id) {
