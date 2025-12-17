@@ -15,6 +15,7 @@ function Sidebar() {
   const menuItems = [
     { path: '/dashboard', icon: '📊', label: '대시보드' },
     { path: '/students', icon: '👥', label: '학생 관리' },
+    { path: '/courses', icon: '📚', label: '코스 관리' },
     { path: '/attendance', icon: '✅', label: '출석 체크' },
     { path: '/reservations', icon: '📅', label: '예약 관리' },
     { path: '/enrollments', icon: '🎫', label: '수강권 관리' },

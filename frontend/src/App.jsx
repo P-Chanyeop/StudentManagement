@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
+import Courses from './pages/Courses';
 import Attendance from './pages/Attendance';
 import Reservations from './pages/Reservations';
 import Enrollments from './pages/Enrollments';
@@ -35,6 +36,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Students />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/courses"
+        element={
+          <ProtectedRoute>
+            <Courses />
           </ProtectedRoute>
         }
       />
