@@ -29,6 +29,7 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
     private final CourseScheduleRepository scheduleRepository;
+    private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
 
     @Transactional
     public AttendanceResponse checkIn(AttendanceCheckInRequest request) {
@@ -69,6 +70,15 @@ public class AttendanceService {
                 schedule.getCourse().getCourseName(),
                 savedAttendance.getStatus(),
                 expectedLeave);
+
+        // 지각인 경우 자동으로 문자 알림 발송
+        if (savedAttendance.getStatus() == AttendanceStatus.LATE) {
+            LocalDateTime scheduledStartTime = LocalDateTime.of(
+                    now.toLocalDate(),
+                    schedule.getStartTime()
+            );
+            automatedMessageService.sendLateNotification(student, now, scheduledStartTime);
+        }
 
         return toResponse(savedAttendance);
     }
