@@ -20,6 +20,10 @@ public interface LevelTestRepository extends JpaRepository<LevelTest, Long> {
     List<LevelTest> findByDateRange(@Param("startDate") LocalDate startDate,
                                      @Param("endDate") LocalDate endDate);
 
+    // 특정 날짜의 모든 레벨테스트 조회
+    @Query("SELECT lt FROM LevelTest lt WHERE lt.testDate = :date")
+    List<LevelTest> findByTestDate(@Param("date") LocalDate date);
+
     @Query("SELECT lt FROM LevelTest lt WHERE lt.testDate = :date AND lt.testStatus = 'SCHEDULED'")
     List<LevelTest> findScheduledTestsByDate(@Param("date") LocalDate date);
 

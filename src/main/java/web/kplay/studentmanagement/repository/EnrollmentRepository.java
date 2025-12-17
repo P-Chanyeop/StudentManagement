@@ -28,6 +28,19 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
                                                @Param("startDate") LocalDate startDate,
                                                @Param("endDate") LocalDate endDate);
 
+    // 기간권 만료 예정 (4주 이내)
+    @Query("SELECT e FROM Enrollment e WHERE e.enrollmentType = 'PERIOD' AND e.endDate BETWEEN :startDate AND :endDate AND e.isActive = true")
+    List<Enrollment> findExpiringEnrollments(@Param("startDate") LocalDate startDate,
+                                               @Param("endDate") LocalDate endDate);
+
+    // 만료된 수강권
+    @Query("SELECT e FROM Enrollment e WHERE e.enrollmentType = 'PERIOD' AND e.endDate < :today AND e.isActive = false")
+    List<Enrollment> findExpiredEnrollments(@Param("today") LocalDate today);
+
+    // 만료된 수강권 (날짜 파라미터 없음)
+    @Query("SELECT e FROM Enrollment e WHERE e.enrollmentType = 'PERIOD' AND e.endDate < CURRENT_DATE AND e.isActive = false")
+    List<Enrollment> findExpiredEnrollments();
+
     @Query("SELECT e FROM Enrollment e WHERE e.enrollmentType = 'COUNT' AND e.remainingCount <= :threshold AND e.isActive = true")
     List<Enrollment> findLowCountEnrollments(@Param("threshold") Integer threshold);
 }

@@ -9,6 +9,7 @@ import Reservations from './pages/Reservations';
 import Enrollments from './pages/Enrollments';
 import LevelTests from './pages/LevelTests';
 import Consultations from './pages/Consultations';
+import Messages from './pages/Messages';
 
 // 보호된 라우트 컴포넌트
 function ProtectedRoute({ children }) {
@@ -86,6 +87,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Consultations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <Messages />
           </ProtectedRoute>
         }
       />

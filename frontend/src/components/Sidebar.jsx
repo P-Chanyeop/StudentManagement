@@ -21,6 +21,7 @@ function Sidebar() {
     { path: '/enrollments', icon: '🎫', label: '수강권 관리' },
     { path: '/leveltests', icon: '📝', label: '레벨 테스트' },
     { path: '/consultations', icon: '💬', label: '상담 내역' },
+    { path: '/messages', icon: '📨', label: '문자 발송' },
   ];
 
   return (

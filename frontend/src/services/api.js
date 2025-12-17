@@ -67,6 +67,7 @@ export const studentAPI = {
   getById: (id) => api.get(`/students/${id}`),
   search: (keyword) => api.get(`/students/search?keyword=${keyword}`),
   create: (data) => api.post('/students', data),
+  update: (id, data) => api.put(`/students/${id}`, data),
   deactivate: (id) => api.delete(`/students/${id}`),
 };
 
@@ -114,6 +115,7 @@ export const reservationAPI = {
   getByStudent: (studentId) => api.get(`/reservations/student/${studentId}`),
   getByDate: (date) => api.get(`/reservations/date/${date}`),
   getBySchedule: (scheduleId) => api.get(`/reservations/schedule/${scheduleId}`),
+  confirm: (id) => api.post(`/reservations/${id}/confirm`),
   cancel: (id, reason) => api.post(`/reservations/${id}/cancel`, { reason }),
   forceCancel: (id, reason) => api.post(`/reservations/${id}/force-cancel`, { reason }),
 };

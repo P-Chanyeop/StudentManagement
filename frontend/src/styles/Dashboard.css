@@ -1,26 +1,27 @@
-.dashboard {
+.dashboard-container {
+  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.page-header {
+.dashboard-header {
   margin-bottom: 32px;
 }
 
-.page-title {
+.dashboard-header h1 {
   font-size: 32px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #1a1a1a;
   margin-bottom: 8px;
 }
 
-.page-subtitle {
+.dashboard-subtitle {
   font-size: 16px;
-  color: var(--text-secondary);
+  color: #6b7280;
   margin: 0;
 }
 
-/* Stats Grid */
+/* 통계 카드 그리드 */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -35,13 +36,13 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .stat-icon {
@@ -52,6 +53,7 @@
   align-items: center;
   justify-content: center;
   font-size: 28px;
+  flex-shrink: 0;
 }
 
 .stat-content {
@@ -60,17 +62,18 @@
 
 .stat-label {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: #6b7280;
   margin-bottom: 4px;
+  font-weight: 500;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #111827;
 }
 
-/* Dashboard Grid */
+/* 대시보드 그리드 */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -80,30 +83,42 @@
 .dashboard-card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
 .card-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .card-title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--gray-900);
+  color: #111827;
   margin: 0;
 }
 
+.card-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
 .card-body {
-  padding: 24px;
+  padding: 0;
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: var(--text-secondary);
+  padding: 60px 20px;
+  color: #9ca3af;
 }
 
 .empty-state p {
@@ -111,9 +126,275 @@
   font-size: 15px;
 }
 
+/* 수업 목록 */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  gap: 16px;
+  transition: background 0.15s;
+}
+
+.schedule-item:hover {
+  background: #f9fafb;
+}
+
+.schedule-item:last-child {
+  border-bottom: none;
+}
+
+.schedule-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+  min-width: 120px;
+}
+
+.schedule-info {
+  flex: 1;
+}
+
+.schedule-course {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.schedule-teacher {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.schedule-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.schedule-status.scheduled {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.schedule-status.completed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.schedule-status.cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* 수강권 목록 */
+.enrollment-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.enrollment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.enrollment-item:hover {
+  background: #f9fafb;
+}
+
+.enrollment-item:last-child {
+  border-bottom: none;
+}
+
+.enrollment-student {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.course-name {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.days-left {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 80px;
+  text-align: center;
+}
+
+.days-left.urgent {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.days-left.warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* 출석 목록 */
+.attendance-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.attendance-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.attendance-item:hover {
+  background: #f9fafb;
+}
+
+.attendance-item:last-child {
+  border-bottom: none;
+}
+
+.attendance-student {
+  flex: 1;
+}
+
+.attendance-time {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.attendance-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.attendance-status.present {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.attendance-status.late {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.attendance-status.absent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.attendance-status.excused {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+/* 예약 목록 */
+.reservation-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.reservation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+}
+
+.reservation-item:hover {
+  background: #f9fafb;
+}
+
+.reservation-item:last-child {
+  border-bottom: none;
+}
+
+.reservation-student {
+  flex: 1;
+}
+
+.reservation-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reservation-status.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.reservation-status.confirmed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.reservation-status.cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.reservation-status.completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* 더보기 */
+.show-more {
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-top: 1px solid #f3f4f6;
+}
+
+.show-more:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
 /* 반응형 */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .page-title {
+  .dashboard-container {
+    padding: 16px;
+  }
+
+  .dashboard-header h1 {
     font-size: 24px;
   }
 
@@ -126,8 +407,49 @@
     padding: 16px;
   }
 
+  .stat-value {
+    font-size: 24px;
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .schedule-item,
+  .enrollment-item,
+  .attendance-item,
+  .reservation-item {
+    padding: 12px 16px;
+  }
+
+  .schedule-time {
+    min-width: 100px;
+    font-size: 13px;
+  }
+
+  .card-header {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h1 {
+    font-size: 20px;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .schedule-item {
+    flex-wrap: wrap;
+  }
+
+  .schedule-time {
+    width: 100%;
+    margin-bottom: 8px;
   }
 }
