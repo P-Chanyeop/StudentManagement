@@ -7,6 +7,7 @@ import Courses from './pages/Courses';
 import Attendance from './pages/Attendance';
 import Reservations from './pages/Reservations';
 import Enrollments from './pages/Enrollments';
+import LevelTests from './pages/LevelTests';
 
 // 보호된 라우트 컴포넌트
 function ProtectedRoute({ children }) {
@@ -68,6 +69,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Enrollments />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leveltests"
+        element={
+          <ProtectedRoute>
+            <LevelTests />
           </ProtectedRoute>
         }
       />
