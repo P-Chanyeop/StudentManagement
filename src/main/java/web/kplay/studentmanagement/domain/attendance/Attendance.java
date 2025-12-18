@@ -48,6 +48,9 @@ public class Attendance extends BaseEntity {
     @Column(length = 200)
     private String reason; // 결석/지각 사유
 
+    @Column(nullable = false)
+    private Boolean classCompleted = false; // 수업 완료 여부 (체크박스)
+
     // 출석 체크
     public void checkIn(LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         this.checkInTime = checkInTime;
@@ -83,5 +86,20 @@ public class Attendance extends BaseEntity {
     // 예상 하원 시간 업데이트
     public void updateExpectedLeaveTime(LocalTime expectedLeaveTime) {
         this.expectedLeaveTime = expectedLeaveTime;
+    }
+
+    // 수업 완료 처리
+    public void completeClass() {
+        this.classCompleted = true;
+    }
+
+    // 수업 완료 취소
+    public void uncompleteClass() {
+        this.classCompleted = false;
+    }
+
+    // 수업 완료 상태 토글
+    public void toggleClassCompleted() {
+        this.classCompleted = !this.classCompleted;
     }
 }
