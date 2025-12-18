@@ -31,4 +31,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByStudentAndMessageTypeAndSentAtAfter(@Param("student") web.kplay.studentmanagement.domain.student.Student student,
                                                               @Param("messageType") MessageType messageType,
                                                               @Param("sentAfter") LocalDateTime sentAfter);
+
+    // 마이페이지용 메서드
+    List<Message> findTop20ByStudentIdOrderByCreatedAtDesc(Long studentId);
 }

@@ -58,6 +58,7 @@ export const authAPI = {
   signup: (userData) => api.post('/auth/signup', userData),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  getProfile: () => api.get('/auth/profile'),
 };
 
 // 학생 API
@@ -152,6 +153,43 @@ export const messageAPI = {
   getByStudent: (studentId) => api.get(`/messages/student/${studentId}`),
   getPending: () => api.get('/messages/pending'),
   getAll: () => api.get('/messages'),
+};
+
+// 마이페이지 API
+export const mypageAPI = {
+  getMyPage: () => api.get('/mypage/me'),
+  getStudentMyPage: (studentId) => api.get(`/mypage/student/${studentId}`),
+};
+
+// 공지사항 API
+export const noticeAPI = {
+  getAll: (page = 0, size = 10) => api.get(`/notices?page=${page}&size=${size}`),
+  getById: (id) => api.get(`/notices/${id}`),
+  getPinned: () => api.get('/notices/pinned'),
+  search: (keyword, page = 0, size = 10) => api.get(`/notices/search?keyword=${keyword}&page=${page}&size=${size}`),
+  create: (data) => api.post('/notices', data),
+  update: (id, data) => api.put(`/notices/${id}`, data),
+  delete: (id) => api.delete(`/notices/${id}`),
+  pin: (id) => api.patch(`/notices/${id}/pin`),
+  unpin: (id) => api.patch(`/notices/${id}/unpin`),
+};
+
+// 보강 수업 API
+export const makeupClassAPI = {
+  getAll: () => api.get('/makeup-classes'),
+  getById: (id) => api.get(`/makeup-classes/${id}`),
+  getByStudent: (studentId) => api.get(`/makeup-classes/student/${studentId}`),
+  getByCourse: (courseId) => api.get(`/makeup-classes/course/${courseId}`),
+  getByDateRange: (startDate, endDate) => api.get(`/makeup-classes/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getByDate: (date) => api.get(`/makeup-classes/date/${date}`),
+  getByStatus: (status) => api.get(`/makeup-classes/status/${status}`),
+  getUpcomingByStudent: (studentId) => api.get(`/makeup-classes/upcoming/student/${studentId}`),
+  getAllUpcoming: () => api.get('/makeup-classes/upcoming'),
+  create: (data) => api.post('/makeup-classes', data),
+  update: (id, data) => api.put(`/makeup-classes/${id}`, data),
+  delete: (id) => api.delete(`/makeup-classes/${id}`),
+  complete: (id) => api.patch(`/makeup-classes/${id}/complete`),
+  cancel: (id) => api.patch(`/makeup-classes/${id}/cancel`),
 };
 
 export default api;

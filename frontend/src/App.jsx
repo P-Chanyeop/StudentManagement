@@ -10,6 +10,7 @@ import Enrollments from './pages/Enrollments';
 import LevelTests from './pages/LevelTests';
 import Consultations from './pages/Consultations';
 import Messages from './pages/Messages';
+import MakeupClasses from './pages/MakeupClasses';
 
 // 보호된 라우트 컴포넌트
 function ProtectedRoute({ children }) {
@@ -95,6 +96,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Messages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/makeup-classes"
+        element={
+          <ProtectedRoute>
+            <MakeupClasses />
           </ProtectedRoute>
         }
       />

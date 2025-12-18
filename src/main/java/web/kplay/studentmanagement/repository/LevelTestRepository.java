@@ -30,4 +30,9 @@ public interface LevelTestRepository extends JpaRepository<LevelTest, Long> {
     @Query("SELECT lt FROM LevelTest lt WHERE lt.testDate BETWEEN :startDate AND :endDate AND lt.messageNotificationSent = false")
     List<LevelTest> findPendingNotifications(@Param("startDate") LocalDate startDate,
                                               @Param("endDate") LocalDate endDate);
+
+    // 마이페이지용 메서드
+    @Query("SELECT lt FROM LevelTest lt WHERE lt.student.id = :studentId AND lt.testDate > :date ORDER BY lt.testDate ASC")
+    List<LevelTest> findByStudentIdAndTestDateAfter(@Param("studentId") Long studentId,
+                                                      @Param("date") LocalDate date);
 }

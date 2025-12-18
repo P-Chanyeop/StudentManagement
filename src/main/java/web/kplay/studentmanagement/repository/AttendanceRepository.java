@@ -8,6 +8,7 @@ import web.kplay.studentmanagement.domain.attendance.Attendance;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -26,4 +27,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date")
     List<Attendance> findByDate(@Param("date") LocalDate date);
+
+    // 마이페이지용 메서드
+    List<Attendance> findTop10ByStudentIdOrderByCheckInTimeDesc(Long studentId);
+
+    Long countByStudentIdAndStatus(Long studentId, AttendanceStatus status);
+
+    Long countByStudentIdAndCheckInTimeBetween(Long studentId, LocalDateTime start, LocalDateTime end);
 }

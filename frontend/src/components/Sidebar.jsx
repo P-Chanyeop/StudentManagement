@@ -19,6 +19,7 @@ function Sidebar() {
     { path: '/attendance', icon: '✅', label: '출석 체크' },
     { path: '/reservations', icon: '📅', label: '예약 관리' },
     { path: '/enrollments', icon: '🎫', label: '수강권 관리' },
+    { path: '/makeup-classes', icon: '🔄', label: '보강 수업' },
     { path: '/leveltests', icon: '📝', label: '레벨 테스트' },
     { path: '/consultations', icon: '💬', label: '상담 내역' },
     { path: '/messages', icon: '📨', label: '문자 발송' },

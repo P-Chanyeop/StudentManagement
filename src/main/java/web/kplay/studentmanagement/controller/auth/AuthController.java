@@ -10,6 +10,7 @@ import web.kplay.studentmanagement.dto.auth.JwtResponse;
 import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
 import web.kplay.studentmanagement.dto.auth.SignupRequest;
+import web.kplay.studentmanagement.dto.user.UserProfileResponse;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.auth.AuthService;
 
@@ -58,5 +59,11 @@ public class AuthController {
         response.put("username", userDetails.getUsername());
         response.put("role", userDetails.getRole());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getUserProfile(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        UserProfileResponse profile = authService.getUserProfile(userDetails.getId());
+        return ResponseEntity.ok(profile);
     }
 }

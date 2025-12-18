@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import web.kplay.studentmanagement.domain.course.EnrollmentType;
 
 import java.time.LocalDate;
 
@@ -18,7 +17,7 @@ public class EnrollmentResponse {
     private String studentName;
     private Long courseId;
     private String courseName;
-    private EnrollmentType enrollmentType;
+    // 모든 수강권은 기간 + 횟수를 모두 가짐
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer totalCount;

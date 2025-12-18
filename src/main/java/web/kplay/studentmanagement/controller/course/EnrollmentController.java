@@ -80,6 +80,29 @@ public class EnrollmentController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 공휴일을 제외한 N일로 수강권 기간 연장
+     */
+    @PatchMapping("/{id}/extend-business-days")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<EnrollmentResponse> extendPeriodWithHolidays(
+            @PathVariable Long id,
+            @RequestParam int businessDays) {
+        EnrollmentResponse response = enrollmentService.extendPeriodWithHolidays(id, businessDays);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 공휴일을 고려한 수강권 생성
+     */
+    @PostMapping("/with-holidays")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<EnrollmentResponse> createEnrollmentWithHolidays(
+            @Valid @RequestBody EnrollmentCreateRequest request) {
+        EnrollmentResponse response = enrollmentService.createEnrollmentWithHolidays(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PatchMapping("/{id}/add-count")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<EnrollmentResponse> addCount(
