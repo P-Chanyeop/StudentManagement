@@ -7,12 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.attendance.Attendance;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
+import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.dto.attendance.AttendanceCheckInRequest;
 import web.kplay.studentmanagement.dto.attendance.AttendanceResponse;
+import web.kplay.studentmanagement.exception.BusinessException;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.AttendanceRepository;
 import web.kplay.studentmanagement.repository.CourseScheduleRepository;
+import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
 
 import java.time.LocalDate;
@@ -29,6 +32,7 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
     private final CourseScheduleRepository scheduleRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
 
     @Transactional
@@ -102,11 +106,43 @@ public class AttendanceService {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
+        AttendanceStatus previousStatus = attendance.getStatus();
         attendance.updateStatus(status, reason);
-        log.info("출석 상태 변경: 학생={}, 상태={}",
-                attendance.getStudent().getStudentName(), status);
+        log.info("출석 상태 변경: 학생={}, 이전상태={}, 새상태={}",
+                attendance.getStudent().getStudentName(), previousStatus, status);
+
+        // 결석 처리 시 수강권 횟수 자동 차감
+        if (status == AttendanceStatus.ABSENT && previousStatus != AttendanceStatus.ABSENT) {
+            deductEnrollmentCount(attendance);
+        }
 
         return toResponse(attendance);
+    }
+
+    /**
+     * 결석 시 수강권 횟수 자동 차감
+     */
+    private void deductEnrollmentCount(Attendance attendance) {
+        Long studentId = attendance.getStudent().getId();
+        Long courseId = attendance.getSchedule().getCourse().getId();
+
+        // 해당 학생의 해당 수업에 대한 활성 수강권 조회
+        List<Enrollment> activeEnrollments = enrollmentRepository
+                .findActiveEnrollmentByStudentAndCourse(studentId, courseId);
+
+        if (activeEnrollments.isEmpty()) {
+            log.warn("결석 처리: 활성 수강권이 없음 - 학생ID={}, 수업ID={}", studentId, courseId);
+            throw new BusinessException("활성화된 수강권이 없어 결석 처리할 수 없습니다.");
+        }
+
+        // 가장 최근 수강권 사용 (첫 번째 항목)
+        Enrollment enrollment = activeEnrollments.get(0);
+        enrollment.useCount();
+
+        log.info("결석으로 수강권 횟수 차감: 수강권ID={}, 남은횟수={}/{}",
+                enrollment.getId(),
+                enrollment.getRemainingCount(),
+                enrollment.getTotalCount());
     }
 
     @Transactional(readOnly = true)
