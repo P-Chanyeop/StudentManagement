@@ -58,6 +58,7 @@ export const authAPI = {
   signup: (userData) => api.post('/auth/signup', userData),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
+  getProfile: () => api.get('/auth/profile'),
 };
 
 // 학생 API

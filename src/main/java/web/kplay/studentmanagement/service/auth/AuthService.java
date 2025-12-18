@@ -9,16 +9,27 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import web.kplay.studentmanagement.domain.course.Enrollment;
+import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.dto.auth.JwtResponse;
 import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
 import web.kplay.studentmanagement.dto.auth.SignupRequest;
+import web.kplay.studentmanagement.dto.user.UserProfileResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
+import web.kplay.studentmanagement.repository.EnrollmentRepository;
+import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.security.JwtTokenProvider;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,6 +37,8 @@ import web.kplay.studentmanagement.security.UserDetailsImpl;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
@@ -125,5 +138,74 @@ public class AuthService {
         user.updateRefreshToken(null);
         userRepository.save(user);
         log.info("사용자 로그아웃: {}", username);
+    }
+
+    /**
+     * 사용자 프로필 조회 (헤더 표시용)
+     */
+    @Transactional(readOnly = true)
+    public UserProfileResponse getUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
+
+        UserProfileResponse.UserProfileResponseBuilder builder = UserProfileResponse.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole().name());
+
+        // 학생인 경우 수강권 정보 조회
+        Optional<Student> studentOpt = studentRepository.findByUserId(userId);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            builder.studentId(student.getId())
+                    .studentName(student.getStudentName());
+
+            // 활성 수강권 목록 조회
+            List<Enrollment> activeEnrollments = enrollmentRepository
+                    .findByStudentIdAndIsActiveTrue(student.getId());
+
+            List<UserProfileResponse.EnrollmentSummary> summaries = activeEnrollments.stream()
+                    .map(this::toEnrollmentSummary)
+                    .collect(Collectors.toList());
+
+            builder.enrollmentSummaries(summaries);
+        } else {
+            builder.enrollmentSummaries(List.of());
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Enrollment를 EnrollmentSummary로 변환
+     */
+    private UserProfileResponse.EnrollmentSummary toEnrollmentSummary(Enrollment enrollment) {
+        UserProfileResponse.EnrollmentSummary.EnrollmentSummaryBuilder builder =
+                UserProfileResponse.EnrollmentSummary.builder()
+                        .enrollmentId(enrollment.getId())
+                        .courseName(enrollment.getCourse().getCourseName())
+                        .enrollmentType(enrollment.getEnrollmentType().name());
+
+        if (enrollment.getEnrollmentType().name().equals("PERIOD")) {
+            // 기간권
+            LocalDate endDate = enrollment.getEndDate();
+            long daysRemaining = ChronoUnit.DAYS.between(LocalDate.now(), endDate);
+            boolean isExpiring = daysRemaining <= 7 && daysRemaining >= 0;
+
+            builder.endDate(endDate)
+                    .daysRemaining(daysRemaining)
+                    .isExpiring(isExpiring);
+        } else {
+            // 횟수권
+            builder.remainingCount(enrollment.getRemainingCount())
+                    .totalCount(enrollment.getTotalCount())
+                    .isExpiring(enrollment.getRemainingCount() != null &&
+                                enrollment.getRemainingCount() <= 3);
+        }
+
+        return builder.build();
     }
 }
