@@ -43,4 +43,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     @Query("SELECT e FROM Enrollment e WHERE e.enrollmentType = 'COUNT' AND e.remainingCount <= :threshold AND e.isActive = true")
     List<Enrollment> findLowCountEnrollments(@Param("threshold") Integer threshold);
+
+    // 마이페이지용 메서드
+    List<Enrollment> findByStudentIdAndIsActiveTrue(Long studentId);
+
+    Integer countByStudentIdAndIsActiveTrue(Long studentId);
 }

@@ -24,4 +24,8 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 
     @Query("SELECT c FROM Consultation c WHERE c.student.id = :studentId ORDER BY c.consultationDate DESC")
     List<Consultation> findByStudentIdOrderByDateDesc(@Param("studentId") Long studentId);
+
+    // 마이페이지용 메서드
+    @Query("SELECT c FROM Consultation c WHERE c.student.id = :studentId ORDER BY c.consultationDate DESC LIMIT 5")
+    List<Consultation> findTop5ByStudentIdOrderByConsultationDateDesc(@Param("studentId") Long studentId);
 }

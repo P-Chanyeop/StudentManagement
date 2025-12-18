@@ -30,4 +30,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.schedule.scheduleDate BETWEEN :startDate AND :endDate")
     List<Reservation> findByDateRange(@Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate);
+
+    // 마이페이지용 메서드
+    @Query("SELECT r FROM Reservation r WHERE r.student.id = :studentId AND r.schedule.scheduleDate > :date")
+    List<Reservation> findByStudentIdAndScheduleDateAfter(@Param("studentId") Long studentId,
+                                                            @Param("date") LocalDate date);
 }
