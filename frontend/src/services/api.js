@@ -160,4 +160,17 @@ export const mypageAPI = {
   getStudentMyPage: (studentId) => api.get(`/mypage/student/${studentId}`),
 };
 
+// 공지사항 API
+export const noticeAPI = {
+  getAll: (page = 0, size = 10) => api.get(`/notices?page=${page}&size=${size}`),
+  getById: (id) => api.get(`/notices/${id}`),
+  getPinned: () => api.get('/notices/pinned'),
+  search: (keyword, page = 0, size = 10) => api.get(`/notices/search?keyword=${keyword}&page=${page}&size=${size}`),
+  create: (data) => api.post('/notices', data),
+  update: (id, data) => api.put(`/notices/${id}`, data),
+  delete: (id) => api.delete(`/notices/${id}`),
+  pin: (id) => api.patch(`/notices/${id}/pin`),
+  unpin: (id) => api.patch(`/notices/${id}/unpin`),
+};
+
 export default api;
