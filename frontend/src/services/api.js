@@ -154,4 +154,10 @@ export const messageAPI = {
   getAll: () => api.get('/messages'),
 };
 
+// 마이페이지 API
+export const mypageAPI = {
+  getMyPage: () => api.get('/mypage/me'),
+  getStudentMyPage: (studentId) => api.get(`/mypage/student/${studentId}`),
+};
+
 export default api;
