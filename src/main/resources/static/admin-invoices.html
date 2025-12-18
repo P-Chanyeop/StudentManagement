@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>청구서 관리 - K-PLAY 학원</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+        }
+        .container {
+            max-width: 1400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginSection">
+            <div class="card shadow-sm" style="max-width: 400px; margin: 0 auto;">
+                <div class="card-body">
+                    <h3 class="card-title text-center mb-4">관리자 로그인</h3>
+                    <div class="mb-3">
+                        <label class="form-label">사용자명</label>
+                        <input type="text" class="form-control" id="username" placeholder="관리자 ID">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">비밀번호</label>
+                        <input type="password" class="form-control" id="password">
+                    </div>
+                    <button class="btn btn-primary w-100" onclick="login()">로그인</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainSection" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>청구서 관리</h2>
+                <div>
+                    <button class="btn btn-success me-2" onclick="openCreateModal()">청구서 생성</button>
+                    <a href="payment-history.html" class="btn btn-info me-2">결제 내역</a>
+                    <button class="btn btn-secondary" onclick="logout()">로그아웃</button>
+                </div>
+            </div>
+
+            <!-- 통계 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h6>전체 청구서</h6>
+                            <h3 id="statTotal">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h6>미납</h6>
+                            <h3 id="statPending">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h6>완납</h6>
+                            <h3 id="statPaid">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <h6>연체</h6>
+                            <h3 id="statOverdue">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 청구서 목록 -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>학생명</th>
+                                <th>제목</th>
+                                <th>금액</th>
+                                <th>발급일</th>
+                                <th>납부기한</th>
+                                <th>상태</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceTableBody">
+                            <!-- 동적으로 채워짐 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 청구서 생성 모달 -->
+    <div class="modal fade" id="createModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">청구서 생성</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">학생 선택</label>
+                        <select class="form-select" id="studentId">
+                            <!-- 동적으로 채워짐 -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">제목</label>
+                        <input type="text" class="form-control" id="title" placeholder="예: 2025년 1월 수강료">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">금액 (원)</label>
+                        <input type="number" class="form-control" id="amount" placeholder="100000">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">발급일</label>
+                        <input type="date" class="form-control" id="issueDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">납부기한</label>
+                        <input type="date" class="form-control" id="dueDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">상세 설명</label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="createInvoice()">생성</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let authToken = '';
+
+        function login() {
+            const username = $('#username').val();
+            const password = $('#password').val();
+
+            $.ajax({
+                url: '/api/auth/login',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ username, password }),
+                success: function(response) {
+                    authToken = response.accessToken;
+                    localStorage.setItem('authToken', authToken);
+                    $('#loginSection').hide();
+                    $('#mainSection').show();
+                    loadInvoices();
+                    loadStatistics();
+                    loadStudents();
+                },
+                error: function(xhr) {
+                    alert('로그인 실패: ' + (xhr.responseJSON?.message || '알 수 없는 오류'));
+                }
+            });
+        }
+
+        function logout() {
+            authToken = '';
+            localStorage.removeItem('authToken');
+            $('#mainSection').hide();
+            $('#loginSection').show();
+        }
+
+        function loadInvoices() {
+            $.ajax({
+                url: '/api/invoices',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function(invoices) {
+                    displayInvoices(invoices);
+                },
+                error: function(xhr) {
+                    if (xhr.status === 401) {
+                        logout();
+                    }
+                }
+            });
+        }
+
+        function loadStatistics() {
+            $.ajax({
+                url: '/api/invoices/statistics',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function(stats) {
+                    $('#statTotal').text(stats.totalCount);
+                    $('#statPending').text(stats.pendingCount);
+                    $('#statPaid').text(stats.paidCount);
+                    $('#statOverdue').text(stats.overdueCount);
+                }
+            });
+        }
+
+        function loadStudents() {
+            $.ajax({
+                url: '/api/students',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function(students) {
+                    const select = $('#studentId');
+                    select.empty();
+                    students.forEach(student => {
+                        select.append(`<option value="${student.id}">${student.studentName} (${student.grade})</option>`);
+                    });
+                }
+            });
+        }
+
+        function displayInvoices(invoices) {
+            const tbody = $('#invoiceTableBody');
+            tbody.empty();
+
+            invoices.forEach(invoice => {
+                const statusBadge = getStatusBadge(invoice.status);
+                const row = `
+                    <tr>
+                        <td>${invoice.invoiceNumber || invoice.id}</td>
+                        <td>${invoice.studentName}</td>
+                        <td>${invoice.title}</td>
+                        <td>${formatCurrency(invoice.amount)}원</td>
+                        <td>${invoice.issueDate}</td>
+                        <td>${invoice.dueDate}</td>
+                        <td><span class="badge ${statusBadge.class}">${statusBadge.text}</span></td>
+                        <td>
+                            ${invoice.status === 'PENDING' || invoice.status === 'OVERDUE' ?
+                                `<button class="btn btn-sm btn-danger" onclick="deleteInvoice(${invoice.id})">삭제</button>` : ''}
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function openCreateModal() {
+            const modal = new bootstrap.Modal(document.getElementById('createModal'));
+            const today = new Date().toISOString().split('T')[0];
+            $('#issueDate').val(today);
+
+            // 납부기한은 발급일로부터 7일 후
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 7);
+            $('#dueDate').val(dueDate.toISOString().split('T')[0]);
+
+            modal.show();
+        }
+
+        function createInvoice() {
+            const data = {
+                studentId: parseInt($('#studentId').val()),
+                title: $('#title').val(),
+                amount: parseInt($('#amount').val()),
+                issueDate: $('#issueDate').val(),
+                dueDate: $('#dueDate').val(),
+                description: $('#description').val()
+            };
+
+            $.ajax({
+                url: '/api/invoices',
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + authToken,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify(data),
+                success: function() {
+                    alert('청구서가 생성되었습니다.');
+                    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+                    loadInvoices();
+                    loadStatistics();
+                },
+                error: function(xhr) {
+                    alert('청구서 생성 실패: ' + (xhr.responseJSON?.message || '알 수 없는 오류'));
+                }
+            });
+        }
+
+        function deleteInvoice(id) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+
+            $.ajax({
+                url: '/api/invoices/' + id,
+                type: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function() {
+                    alert('청구서가 삭제되었습니다.');
+                    loadInvoices();
+                    loadStatistics();
+                },
+                error: function(xhr) {
+                    alert('삭제 실패: ' + (xhr.responseJSON?.message || '알 수 없는 오류'));
+                }
+            });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'PENDING': { class: 'bg-warning text-dark', text: '미납' },
+                'PAID': { class: 'bg-success', text: '완납' },
+                'OVERDUE': { class: 'bg-danger', text: '연체' },
+                'CANCELLED': { class: 'bg-secondary', text: '취소' }
+            };
+            return badges[status] || { class: 'bg-secondary', text: status };
+        }
+
+        function formatCurrency(amount) {
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        $(document).ready(function() {
+            const savedToken = localStorage.getItem('authToken');
+            if (savedToken) {
+                authToken = savedToken;
+                $('#loginSection').hide();
+                $('#mainSection').show();
+                loadInvoices();
+                loadStatistics();
+                loadStudents();
+            }
+        });
+    </script>
+</body>
+</html>
