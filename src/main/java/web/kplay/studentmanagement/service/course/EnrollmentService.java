@@ -95,7 +95,7 @@ public class EnrollmentService {
     public List<EnrollmentResponse> getExpiringEnrollments(int days) {
         LocalDate now = LocalDate.now();
         LocalDate endDate = now.plusDays(days);
-        return enrollmentRepository.findExpiringEnrollments(EnrollmentType.PERIOD, now, endDate).stream()
+        return enrollmentRepository.findExpiringEnrollments(now, endDate).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -138,6 +138,7 @@ public class EnrollmentService {
 
     /**
      * 공휴일을 제외한 실제 수업일 기준으로 수강권 생성
+     * 모든 수강권은 기간 + 횟수를 함께 가짐
      */
     @Transactional
     public EnrollmentResponse createEnrollmentWithHolidays(EnrollmentCreateRequest request) {
@@ -147,41 +148,25 @@ public class EnrollmentService {
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
 
-        // 기간권의 경우 공휴일을 제외한 실제 종료일 계산
+        // 공휴일을 제외한 실제 종료일 계산
         LocalDate endDate;
-        if (request.getEnrollmentType() == EnrollmentType.PERIOD) {
-            if (request.getStartDate() == null) {
-                throw new BusinessException("시작일은 필수입니다");
-            }
-
-            // 요청에 총 수업일수가 있으면 공휴일 제외 계산, 없으면 종료일 그대로 사용
-            if (request.getTotalCount() != null && request.getTotalCount() > 0) {
-                // 총 수업일수 기준으로 공휴일 제외 계산
-                endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
-                log.info("공휴일 제외 종료일 계산: 시작={}, 수업일수={}, 종료={}",
-                        request.getStartDate(), request.getTotalCount(), endDate);
-            } else if (request.getEndDate() != null) {
-                endDate = request.getEndDate();
-            } else {
-                throw new BusinessException("종료일 또는 총 수업일수가 필요합니다");
-            }
-
-            if (endDate.isBefore(request.getStartDate())) {
-                throw new BusinessException("종료일은 시작일보다 이후여야 합니다");
-            }
-        } else if (request.getEnrollmentType() == EnrollmentType.COUNT) {
-            if (request.getTotalCount() == null || request.getTotalCount() < 1) {
-                throw new BusinessException("횟수권은 1회 이상의 총 횟수가 필요합니다");
-            }
-            endDate = null;
-        } else {
+        if (request.getEndDate() != null) {
+            // 종료일이 직접 지정된 경우
             endDate = request.getEndDate();
+        } else {
+            // 시작일 + 수업일수로 공휴일 제외하여 종료일 계산
+            endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
+            log.info("공휴일 제외 종료일 계산: 시작={}, 수업일수={}, 종료={}",
+                    request.getStartDate(), request.getTotalCount(), endDate);
+        }
+
+        if (endDate.isBefore(request.getStartDate())) {
+            throw new BusinessException("종료일은 시작일보다 이후여야 합니다");
         }
 
         Enrollment enrollment = Enrollment.builder()
                 .student(student)
                 .course(course)
-                .enrollmentType(request.getEnrollmentType())
                 .startDate(request.getStartDate())
                 .endDate(endDate)
                 .totalCount(request.getTotalCount())
@@ -192,9 +177,10 @@ public class EnrollmentService {
                 .build();
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
-        log.info("새 수강권 등록 (공휴일 고려): 학생={}, 수업={}, 타입={}, 종료일={}",
+        log.info("새 수강권 등록 (공휴일 고려): 학생={}, 수업={}, 기간={} ~ {}, 횟수={}/{}",
                 student.getStudentName(), course.getCourseName(),
-                request.getEnrollmentType(), endDate);
+                request.getStartDate(), endDate,
+                request.getTotalCount(), request.getTotalCount());
 
         return toResponse(savedEnrollment);
     }
@@ -203,10 +189,6 @@ public class EnrollmentService {
     public EnrollmentResponse addCount(Long id, Integer additionalCount) {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
-
-        if (enrollment.getEnrollmentType() != EnrollmentType.COUNT) {
-            throw new BusinessException("횟수권만 횟수 추가가 가능합니다");
-        }
 
         enrollment.addCount(additionalCount);
         log.info("수강권 횟수 추가: 수강권ID={}, 추가횟수={}", id, additionalCount);

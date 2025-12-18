@@ -167,28 +167,21 @@ function MyPage() {
                         <div key={enrollment.id} className="enrollment-card">
                           <div className="enrollment-header">
                             <h3>{enrollment.courseName}</h3>
-                            <span className="enrollment-type">
-                              {enrollment.enrollmentType === 'PERIOD' ? '기간권' : '횟수권'}
-                            </span>
+                            <span className="enrollment-type">수강권</span>
                           </div>
-                          {enrollment.enrollmentType === 'PERIOD' ? (
-                            <div className="enrollment-details">
-                              <p>시작일: {formatDate(enrollment.startDate)}</p>
-                              <p>종료일: {formatDate(enrollment.endDate)}</p>
+                          <div className="enrollment-details">
+                            <p>시작일: {formatDate(enrollment.startDate)}</p>
+                            <p>종료일: {formatDate(enrollment.endDate)}</p>
+                            <p>남은 횟수: <strong>{enrollment.remainingCount}</strong> / {enrollment.totalCount}</p>
+                            <div className="progress-bar">
+                              <div
+                                className="progress-fill"
+                                style={{
+                                  width: `${(enrollment.remainingCount / enrollment.totalCount) * 100}%`,
+                                }}
+                              ></div>
                             </div>
-                          ) : (
-                            <div className="enrollment-details">
-                              <p>남은 횟수: <strong>{enrollment.remainingCount}</strong> / {enrollment.totalCount}</p>
-                              <div className="progress-bar">
-                                <div
-                                  className="progress-fill"
-                                  style={{
-                                    width: `${(enrollment.remainingCount / enrollment.totalCount) * 100}%`,
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -271,7 +264,6 @@ function MyPage() {
                     <thead>
                       <tr>
                         <th>수업명</th>
-                        <th>유형</th>
                         <th>시작일</th>
                         <th>종료일</th>
                         <th>총 횟수</th>
@@ -283,17 +275,10 @@ function MyPage() {
                       {activeEnrollments.map((enrollment) => (
                         <tr key={enrollment.id}>
                           <td>{enrollment.courseName}</td>
-                          <td>{enrollment.enrollmentType === 'PERIOD' ? '기간권' : '횟수권'}</td>
                           <td>{formatDate(enrollment.startDate)}</td>
                           <td>{formatDate(enrollment.endDate)}</td>
-                          <td>{enrollment.totalCount || '-'}</td>
-                          <td>
-                            {enrollment.remainingCount !== null ? (
-                              <strong>{enrollment.remainingCount}</strong>
-                            ) : (
-                              '-'
-                            )}
-                          </td>
+                          <td>{enrollment.totalCount}</td>
+                          <td><strong>{enrollment.remainingCount}</strong></td>
                           <td>{enrollment.memo || '-'}</td>
                         </tr>
                       ))}

@@ -181,31 +181,25 @@ public class AuthService {
 
     /**
      * Enrollment를 EnrollmentSummary로 변환
+     * 모든 수강권은 기간 + 횟수를 모두 가짐
      */
     private UserProfileResponse.EnrollmentSummary toEnrollmentSummary(Enrollment enrollment) {
-        UserProfileResponse.EnrollmentSummary.EnrollmentSummaryBuilder builder =
-                UserProfileResponse.EnrollmentSummary.builder()
-                        .enrollmentId(enrollment.getId())
-                        .courseName(enrollment.getCourse().getCourseName())
-                        .enrollmentType(enrollment.getEnrollmentType().name());
+        // 기간 정보 계산
+        LocalDate endDate = enrollment.getEndDate();
+        long daysRemaining = ChronoUnit.DAYS.between(LocalDate.now(), endDate);
 
-        if (enrollment.getEnrollmentType().name().equals("PERIOD")) {
-            // 기간권
-            LocalDate endDate = enrollment.getEndDate();
-            long daysRemaining = ChronoUnit.DAYS.between(LocalDate.now(), endDate);
-            boolean isExpiring = daysRemaining <= 7 && daysRemaining >= 0;
+        // 만료 임박 여부: 기간 7일 이하 또는 횟수 3회 이하
+        boolean isExpiring = (daysRemaining <= 7 && daysRemaining >= 0) ||
+                            (enrollment.getRemainingCount() != null && enrollment.getRemainingCount() <= 3);
 
-            builder.endDate(endDate)
-                    .daysRemaining(daysRemaining)
-                    .isExpiring(isExpiring);
-        } else {
-            // 횟수권
-            builder.remainingCount(enrollment.getRemainingCount())
-                    .totalCount(enrollment.getTotalCount())
-                    .isExpiring(enrollment.getRemainingCount() != null &&
-                                enrollment.getRemainingCount() <= 3);
-        }
-
-        return builder.build();
+        return UserProfileResponse.EnrollmentSummary.builder()
+                .enrollmentId(enrollment.getId())
+                .courseName(enrollment.getCourse().getCourseName())
+                .endDate(endDate)
+                .daysRemaining(daysRemaining)
+                .remainingCount(enrollment.getRemainingCount())
+                .totalCount(enrollment.getTotalCount())
+                .isExpiring(isExpiring)
+                .build();
     }
 }

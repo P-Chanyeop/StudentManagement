@@ -35,11 +35,11 @@ public class UserProfileResponse {
     public static class EnrollmentSummary {
         private Long enrollmentId;
         private String courseName;
-        private String enrollmentType; // PERIOD or COUNT
-        private LocalDate endDate; // 기간권인 경우
-        private Integer remainingCount; // 횟수권인 경우
-        private Integer totalCount; // 횟수권인 경우
-        private Long daysRemaining; // 기간권 남은 일수
-        private Boolean isExpiring; // 만료 임박 여부 (7일 이내)
+        // 모든 수강권은 기간 + 횟수를 모두 가짐
+        private LocalDate endDate; // 종료일
+        private Integer remainingCount; // 남은 횟수
+        private Integer totalCount; // 전체 횟수
+        private Long daysRemaining; // 남은 일수
+        private Boolean isExpiring; // 만료 임박 여부 (기간 7일 이내 or 횟수 3회 이하)
     }
 }

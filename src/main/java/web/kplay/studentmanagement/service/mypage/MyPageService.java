@@ -197,7 +197,6 @@ public class MyPageService {
                 .studentName(enrollment.getStudent().getStudentName())
                 .courseId(enrollment.getCourse().getId())
                 .courseName(enrollment.getCourse().getCourseName())
-                .enrollmentType(enrollment.getEnrollmentType().name())
                 .startDate(enrollment.getStartDate())
                 .endDate(enrollment.getEndDate())
                 .totalCount(enrollment.getTotalCount())

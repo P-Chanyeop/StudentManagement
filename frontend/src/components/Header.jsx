@@ -60,20 +60,16 @@ function Header() {
                 className={`enrollment-badge ${enrollment.isExpiring ? 'expiring' : ''}`}
               >
                 <span className="course-name">{enrollment.courseName}</span>
-                {enrollment.enrollmentType === 'PERIOD' ? (
-                  <span className="enrollment-info">
-                    {enrollment.daysRemaining >= 0 ? (
-                      <>D-{enrollment.daysRemaining}</>
-                    ) : (
-                      <>만료됨</>
-                    )}
-                    {' '}({formatDate(enrollment.endDate)})
-                  </span>
-                ) : (
-                  <span className="enrollment-info">
-                    {enrollment.remainingCount}/{enrollment.totalCount}회
-                  </span>
-                )}
+                <span className="enrollment-info">
+                  {enrollment.daysRemaining >= 0 ? (
+                    <>D-{enrollment.daysRemaining}</>
+                  ) : (
+                    <>만료됨</>
+                  )}
+                  {' '}({formatDate(enrollment.endDate)})
+                  {' · '}
+                  {enrollment.remainingCount}/{enrollment.totalCount}회
+                </span>
               </div>
             ))}
             {profile.enrollmentSummaries.length > 2 && (
