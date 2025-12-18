@@ -27,24 +27,21 @@ public class Enrollment extends BaseEntity {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private EnrollmentType enrollmentType;
+    // 모든 수강권은 기간 + 횟수를 모두 가짐
+    @Column(nullable = false)
+    private LocalDate startDate; // 시작일
 
-    @Column
-    private LocalDate startDate; // 시작일 (기간권)
+    @Column(nullable = false)
+    private LocalDate endDate; // 종료일
 
-    @Column
-    private LocalDate endDate; // 종료일 (기간권)
+    @Column(nullable = false)
+    private Integer totalCount; // 총 횟수
 
-    @Column
-    private Integer totalCount; // 총 횟수 (횟수권)
+    @Column(nullable = false)
+    private Integer usedCount = 0; // 사용 횟수
 
-    @Column
-    private Integer usedCount = 0; // 사용 횟수 (횟수권)
-
-    @Column
-    private Integer remainingCount; // 남은 횟수 (횟수권)
+    @Column(nullable = false)
+    private Integer remainingCount; // 남은 횟수
 
     @Column(nullable = false)
     private Boolean isActive = true;
@@ -54,10 +51,11 @@ public class Enrollment extends BaseEntity {
 
     // 횟수 사용
     public void useCount() {
-        if (enrollmentType == EnrollmentType.COUNT && remainingCount > 0) {
+        if (remainingCount > 0) {
             this.usedCount++;
             this.remainingCount--;
-            if (remainingCount == 0) {
+            // 횟수가 모두 소진되거나 기간이 만료되면 비활성화
+            if (remainingCount == 0 || LocalDate.now().isAfter(endDate)) {
                 this.isActive = false;
             }
         }
@@ -65,24 +63,23 @@ public class Enrollment extends BaseEntity {
 
     // 횟수 복구 (출석 취소 시)
     public void restoreCount() {
-        if (enrollmentType == EnrollmentType.COUNT && usedCount > 0) {
+        if (usedCount > 0) {
             this.usedCount--;
             this.remainingCount++;
-            if (!this.isActive && remainingCount > 0) {
+            // 횟수가 남아있고 기간이 유효하면 재활성화
+            if (!this.isActive && remainingCount > 0 && !LocalDate.now().isAfter(endDate)) {
                 this.isActive = true;
             }
         }
     }
 
-    // 기간권 유효성 체크
+    // 수강권 유효성 체크 (기간 + 횟수 모두 체크)
     public boolean isValid() {
-        if (enrollmentType == EnrollmentType.PERIOD) {
-            LocalDate now = LocalDate.now();
-            return isActive && !now.isBefore(startDate) && !now.isAfter(endDate);
-        } else if (enrollmentType == EnrollmentType.COUNT) {
-            return isActive && remainingCount > 0;
-        }
-        return false;
+        LocalDate now = LocalDate.now();
+        return isActive &&
+               !now.isBefore(startDate) &&
+               !now.isAfter(endDate) &&
+               remainingCount > 0;
     }
 
     // 수강권 비활성화
@@ -102,17 +99,19 @@ public class Enrollment extends BaseEntity {
 
     // 기간 연장
     public void extendPeriod(LocalDate newEndDate) {
-        if (enrollmentType == EnrollmentType.PERIOD) {
-            this.endDate = newEndDate;
+        this.endDate = newEndDate;
+        // 기간이 연장되고 횟수가 남아있으면 재활성화
+        if (remainingCount > 0) {
             this.isActive = true;
         }
     }
 
     // 횟수 추가
     public void addCount(Integer additionalCount) {
-        if (enrollmentType == EnrollmentType.COUNT) {
-            this.totalCount += additionalCount;
-            this.remainingCount += additionalCount;
+        this.totalCount += additionalCount;
+        this.remainingCount += additionalCount;
+        // 횟수가 추가되고 기간이 유효하면 재활성화
+        if (!LocalDate.now().isAfter(endDate)) {
             this.isActive = true;
         }
     }

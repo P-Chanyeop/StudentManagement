@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.Enrollment;
-import web.kplay.studentmanagement.domain.course.EnrollmentType;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
@@ -38,24 +37,14 @@ public class EnrollmentService {
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
 
-        // 수강권 타입별 검증
-        if (request.getEnrollmentType() == EnrollmentType.PERIOD) {
-            if (request.getStartDate() == null || request.getEndDate() == null) {
-                throw new BusinessException("기간권은 시작일과 종료일이 필요합니다");
-            }
-            if (request.getEndDate().isBefore(request.getStartDate())) {
-                throw new BusinessException("종료일은 시작일보다 이후여야 합니다");
-            }
-        } else if (request.getEnrollmentType() == EnrollmentType.COUNT) {
-            if (request.getTotalCount() == null || request.getTotalCount() < 1) {
-                throw new BusinessException("횟수권은 1회 이상의 총 횟수가 필요합니다");
-            }
+        // 기간+횟수 검증 (모든 수강권에 적용)
+        if (request.getEndDate().isBefore(request.getStartDate())) {
+            throw new BusinessException("종료일은 시작일보다 이후여야 합니다");
         }
 
         Enrollment enrollment = Enrollment.builder()
                 .student(student)
                 .course(course)
-                .enrollmentType(request.getEnrollmentType())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .totalCount(request.getTotalCount())
@@ -66,8 +55,10 @@ public class EnrollmentService {
                 .build();
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
-        log.info("새 수강권 등록: 학생={}, 수업={}, 타입={}",
-                student.getStudentName(), course.getCourseName(), request.getEnrollmentType());
+        log.info("새 수강권 등록: 학생={}, 수업={}, 기간={} ~ {}, 횟수={}/{}",
+                student.getStudentName(), course.getCourseName(),
+                request.getStartDate(), request.getEndDate(),
+                request.getTotalCount(), request.getTotalCount());
 
         return toResponse(savedEnrollment);
     }
@@ -121,10 +112,6 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
 
-        if (enrollment.getEnrollmentType() != EnrollmentType.PERIOD) {
-            throw new BusinessException("기간권만 기간 연장이 가능합니다");
-        }
-
         enrollment.extendPeriod(newEndDate);
         log.info("수강권 기간 연장: 수강권ID={}, 새종료일={}", id, newEndDate);
         return toResponse(enrollment);
@@ -138,10 +125,6 @@ public class EnrollmentService {
     public EnrollmentResponse extendPeriodWithHolidays(Long id, int businessDays) {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
-
-        if (enrollment.getEnrollmentType() != EnrollmentType.PERIOD) {
-            throw new BusinessException("기간권만 기간 연장이 가능합니다");
-        }
 
         LocalDate currentEndDate = enrollment.getEndDate();
         LocalDate newEndDate = holidayService.addBusinessDays(currentEndDate, businessDays);
@@ -245,7 +228,6 @@ public class EnrollmentService {
                 .studentName(enrollment.getStudent().getStudentName())
                 .courseId(enrollment.getCourse().getId())
                 .courseName(enrollment.getCourse().getCourseName())
-                .enrollmentType(enrollment.getEnrollmentType())
                 .startDate(enrollment.getStartDate())
                 .endDate(enrollment.getEndDate())
                 .totalCount(enrollment.getTotalCount())
