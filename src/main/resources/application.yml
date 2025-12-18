@@ -46,6 +46,15 @@ naver:
 file:
   upload-dir: ${FILE_UPLOAD_DIR:uploads}
 
+# 포트원(PortOne) 결제 설정
+portone:
+  api-key: ${PORTONE_API_KEY:}
+  api-secret: ${PORTONE_API_SECRET:}
+  imp-code: ${PORTONE_IMP_CODE:}  # 가맹점 식별코드
+  pg-provider: ${PORTONE_PG_PROVIDER:nice}  # 기본 PG사 (nice, kcp, inicis, kakaopay 등)
+  api-url: ${PORTONE_API_URL:https://api.iamport.kr}
+  test-mode: ${PORTONE_TEST_MODE:true}  # 테스트 모드
+
 spring:
   servlet:
     multipart:

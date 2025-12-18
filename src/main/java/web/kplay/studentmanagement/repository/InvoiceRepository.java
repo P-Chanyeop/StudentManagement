@@ -9,6 +9,7 @@ import web.kplay.studentmanagement.domain.invoice.InvoiceStatus;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
@@ -16,6 +17,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByStudentId(Long studentId);
 
     List<Invoice> findByStatus(InvoiceStatus status);
+
+    Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
 
     @Query("SELECT i FROM Invoice i WHERE i.dueDate < :date AND i.status = 'PENDING'")
     List<Invoice> findOverdueInvoices(@Param("date") LocalDate date);
