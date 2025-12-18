@@ -174,4 +174,22 @@ export const noticeAPI = {
   unpin: (id) => api.patch(`/notices/${id}/unpin`),
 };
 
+// 보강 수업 API
+export const makeupClassAPI = {
+  getAll: () => api.get('/makeup-classes'),
+  getById: (id) => api.get(`/makeup-classes/${id}`),
+  getByStudent: (studentId) => api.get(`/makeup-classes/student/${studentId}`),
+  getByCourse: (courseId) => api.get(`/makeup-classes/course/${courseId}`),
+  getByDateRange: (startDate, endDate) => api.get(`/makeup-classes/date-range?startDate=${startDate}&endDate=${endDate}`),
+  getByDate: (date) => api.get(`/makeup-classes/date/${date}`),
+  getByStatus: (status) => api.get(`/makeup-classes/status/${status}`),
+  getUpcomingByStudent: (studentId) => api.get(`/makeup-classes/upcoming/student/${studentId}`),
+  getAllUpcoming: () => api.get('/makeup-classes/upcoming'),
+  create: (data) => api.post('/makeup-classes', data),
+  update: (id, data) => api.put(`/makeup-classes/${id}`, data),
+  delete: (id) => api.delete(`/makeup-classes/${id}`),
+  complete: (id) => api.patch(`/makeup-classes/${id}/complete`),
+  cancel: (id) => api.patch(`/makeup-classes/${id}/cancel`),
+};
+
 export default api;
