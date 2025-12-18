@@ -97,8 +97,20 @@ public class Enrollment extends BaseEntity {
         this.memo = memo;
     }
 
-    // 기간 연장
+    // 기간 연장 (입력 검증 추가)
     public void extendPeriod(LocalDate newEndDate) {
+        // 입력 검증: null 체크
+        if (newEndDate == null) {
+            throw new IllegalArgumentException("새 종료일은 필수입니다.");
+        }
+
+        // 입력 검증: 새 종료일이 시작일보다 이전인지 체크
+        if (newEndDate.isBefore(this.startDate)) {
+            throw new IllegalArgumentException(
+                String.format("종료일(%s)은 시작일(%s)보다 이후여야 합니다.", newEndDate, this.startDate)
+            );
+        }
+
         this.endDate = newEndDate;
         // 기간이 연장되고 횟수가 남아있으면 재활성화
         if (remainingCount > 0) {
@@ -106,8 +118,31 @@ public class Enrollment extends BaseEntity {
         }
     }
 
-    // 횟수 추가
+    // 횟수 추가 (입력 검증 및 오버플로우 방지)
     public void addCount(Integer additionalCount) {
+        // 입력 검증: null 체크
+        if (additionalCount == null) {
+            throw new IllegalArgumentException("추가할 횟수는 필수입니다.");
+        }
+
+        // 입력 검증: 양수 체크
+        if (additionalCount <= 0) {
+            throw new IllegalArgumentException("추가할 횟수는 1 이상이어야 합니다: " + additionalCount);
+        }
+
+        // 입력 검증: 최대값 체크 (매우 큰 값 방지)
+        if (additionalCount > 10000) {
+            throw new IllegalArgumentException("추가할 횟수가 너무 큽니다 (최대 10000): " + additionalCount);
+        }
+
+        // 오버플로우 방지: 합계가 Integer.MAX_VALUE를 초과하지 않는지 확인
+        if ((long) this.totalCount + additionalCount > Integer.MAX_VALUE) {
+            throw new ArithmeticException("총 횟수가 최대값을 초과합니다.");
+        }
+        if ((long) this.remainingCount + additionalCount > Integer.MAX_VALUE) {
+            throw new ArithmeticException("남은 횟수가 최대값을 초과합니다.");
+        }
+
         this.totalCount += additionalCount;
         this.remainingCount += additionalCount;
         // 횟수가 추가되고 기간이 유효하면 재활성화
