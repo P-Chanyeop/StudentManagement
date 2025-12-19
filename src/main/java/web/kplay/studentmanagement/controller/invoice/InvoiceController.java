@@ -11,7 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.domain.invoice.InvoiceStatus;
 import web.kplay.studentmanagement.dto.invoice.*;
-import web.kplay.studentmanagement.security.CustomUserDetails;
+import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.invoice.InvoiceService;
 
 import java.time.LocalDate;

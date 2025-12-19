@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.parent.ParentStudentRelationRequest;
 import web.kplay.studentmanagement.dto.parent.ParentStudentRelationResponse;
 import web.kplay.studentmanagement.dto.parent.PermissionUpdateRequest;
-import web.kplay.studentmanagement.security.CustomUserDetails;
+import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.parent.ParentAccessControlService;
 
 import java.util.List;

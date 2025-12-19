@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.mypage.MyPageResponse;
-import web.kplay.studentmanagement.security.CustomUserDetails;
+import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.mypage.MyPageService;
 
 @Slf4j
