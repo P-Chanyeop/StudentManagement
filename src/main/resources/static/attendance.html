@@ -450,7 +450,7 @@
             // 오늘 날짜의 스케줄이 있다고 가정 (실제로는 스케줄 조회 필요)
             // 간단하게 처리하기 위해 임시 스케줄 생성
             $.ajax({
-                url: '/api/attendances',
+                url: '/api/attendances/checkin',
                 type: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + authToken,
@@ -490,8 +490,8 @@
             }
 
             $.ajax({
-                url: `/api/attendances/${attendance.id}/check-out`,
-                type: 'PATCH',
+                url: `/api/attendances/${attendance.id}/checkout`,
+                type: 'POST',
                 headers: {
                     'Authorization': 'Bearer ' + authToken,
                     'Content-Type': 'application/json'

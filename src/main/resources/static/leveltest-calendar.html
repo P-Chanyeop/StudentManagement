@@ -539,7 +539,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/level-tests`, {
+                const response = await fetch(`${API_BASE_URL}/leveltests`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(levelTestData)
@@ -650,7 +650,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/level-tests/${currentLevelTest.id}/complete`, {
+                const response = await fetch(`${API_BASE_URL}/leveltests/${currentLevelTest.id}/complete`, {
                     method: 'PATCH',
                     headers: getAuthHeaders()
                 });
@@ -675,7 +675,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/level-tests/${currentLevelTest.id}/cancel`, {
+                const response = await fetch(`${API_BASE_URL}/leveltests/${currentLevelTest.id}/cancel`, {
                     method: 'PATCH',
                     headers: getAuthHeaders()
                 });
@@ -702,7 +702,7 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/level-tests/${currentLevelTest.id}/result`, {
+                const response = await fetch(`${API_BASE_URL}/leveltests/${currentLevelTest.id}/result`, {
                     method: 'PATCH',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(resultData)
@@ -727,8 +727,8 @@
                     endTime: event.end ? event.end.toTimeString().substring(0, 5) : null
                 };
 
-                const response = await fetch(`${API_BASE_URL}/level-tests/${event.id}`, {
-                    method: 'PATCH',
+                const response = await fetch(`${API_BASE_URL}/leveltests/${event.id}`, {
+                    method: 'PUT',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(updateData)
                 });
