@@ -1,11 +1,14 @@
 package web.kplay.studentmanagement.controller.sms;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import web.kplay.studentmanagement.service.sms.SMSService;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -14,20 +17,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SMSController {
 
+    private final SMSService smsService;
+
     /**
      * SMS 통계 조회
      */
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<Map<String, Object>> getStatistics() {
-        // TODO: 실제 SMS 통계 구현
-        Map<String, Object> stats = Map.of(
-                "balance", 10000,
-                "sentToday", 0,
-                "sentThisMonth", 0,
-                "provider", "알리고"
-        );
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(smsService.getStatistics());
     }
 
     /**
@@ -36,16 +34,7 @@ public class SMSController {
     @GetMapping("/templates")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<Map<String, Object>>> getTemplates() {
-        // TODO: 실제 템플릿 DB 조회
-        List<Map<String, Object>> templates = List.of(
-                Map.of(
-                        "id", 1,
-                        "name", "출석 리마인더",
-                        "category", "attendance",
-                        "content", "[K-PLAY 학원]\\n안녕하세요, {학부모명}님.\\n{학생명} 학생의 오늘 수업이 {수업시간}에 예정되어 있습니다.\\n잊지 말고 참석 부탁드립니다!"
-                )
-        );
-        return ResponseEntity.ok(templates);
+        return ResponseEntity.ok(smsService.getActiveTemplates());
     }
 
     /**
@@ -54,14 +43,31 @@ public class SMSController {
     @PostMapping("/templates")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<Map<String, Object>> createTemplate(@RequestBody Map<String, String> request) {
-        // TODO: 실제 템플릿 DB 저장
-        Map<String, Object> template = Map.of(
-                "id", 1,
-                "name", request.get("name"),
-                "category", request.get("category"),
-                "content", request.get("content")
+        Map<String, Object> template = smsService.createTemplate(
+                request.get("name"),
+                request.get("category"),
+                request.get("content"),
+                request.get("description")
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(template);
+    }
+
+    /**
+     * 템플릿 수정
+     */
+    @PutMapping("/templates/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Object>> updateTemplate(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        Map<String, Object> template = smsService.updateTemplate(
+                id,
+                request.get("name"),
+                request.get("category"),
+                request.get("content"),
+                request.get("description")
+        );
+        return ResponseEntity.ok(template);
     }
 
     /**
@@ -70,7 +76,7 @@ public class SMSController {
     @DeleteMapping("/templates/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<Void> deleteTemplate(@PathVariable Long id) {
-        // TODO: 실제 템플릿 DB 삭제
+        smsService.deleteTemplate(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -80,14 +86,60 @@ public class SMSController {
     @PostMapping("/send")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<Map<String, Object>> sendSMS(@RequestBody Map<String, Object> request) {
-        // TODO: 실제 SMS 발송 로직 (알리고/문자나라 API 연동)
-        // 현재는 성공 응답만 반환
-        Map<String, Object> response = Map.of(
-                "success", true,
-                "message", "SMS가 발송되었습니다.",
-                "sentCount", request.getOrDefault("recipients", List.of()).toString().split(",").length
-        );
-        return ResponseEntity.ok(response);
+        String recipientType = (String) request.get("recipientType");
+        String message = (String) request.get("message");
+        String category = (String) request.getOrDefault("category", "general");
+
+        // 수신자 목록 추출
+        @SuppressWarnings("unchecked")
+        List<String> recipients = (List<String>) request.getOrDefault("recipients", List.of());
+
+        if (recipients.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "수신자를 선택해주세요."
+            ));
+        }
+
+        if (message == null || message.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "메시지 내용을 입력해주세요."
+            ));
+        }
+
+        // 대량 발송
+        Map<String, Object> result = smsService.sendBulkSMS(recipients, message, category);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 단일 SMS 발송
+     */
+    @PostMapping("/send-single")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Object>> sendSingleSMS(@RequestBody Map<String, String> request) {
+        String receiverNumber = request.get("receiverNumber");
+        String receiverName = request.getOrDefault("receiverName", "");
+        String message = request.get("message");
+        String category = request.getOrDefault("category", "general");
+
+        if (receiverNumber == null || receiverNumber.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "수신 번호를 입력해주세요."
+            ));
+        }
+
+        if (message == null || message.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "메시지 내용을 입력해주세요."
+            ));
+        }
+
+        Map<String, Object> result = smsService.sendSMS(receiverNumber, receiverName, message, category);
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -96,11 +148,28 @@ public class SMSController {
     @GetMapping("/history")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<Map<String, Object>>> getHistory(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        // TODO: 실제 발송 내역 DB 조회
-        List<Map<String, Object>> history = List.of();
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        // 기본값 설정 (최근 30일)
+        if (startDate == null) {
+            startDate = LocalDate.now().minusDays(30);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+
+        List<Map<String, Object>> history = smsService.getHistory(startDate, endDate);
         return ResponseEntity.ok(history);
+    }
+
+    /**
+     * 최근 발송 내역 조회
+     */
+    @GetMapping("/history/recent")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<Map<String, Object>>> getRecentHistory() {
+        return ResponseEntity.ok(smsService.getRecentHistory());
     }
 
     /**
@@ -109,8 +178,24 @@ public class SMSController {
     @PostMapping("/settings")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> saveSettings(@RequestBody Map<String, String> request) {
-        // TODO: 실제 설정 DB 저장 (암호화 필요)
-        return ResponseEntity.ok(Map.of("message", "설정이 저장되었습니다."));
+        String provider = request.getOrDefault("provider", "ALIGO");
+        String apiKey = request.get("apiKey");
+        String userId = request.get("userId");
+        String senderNumber = request.get("senderNumber");
+
+        if (apiKey == null || apiKey.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "API Key를 입력해주세요."));
+        }
+
+        if (userId == null || userId.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "사용자 ID를 입력해주세요."));
+        }
+
+        if (senderNumber == null || senderNumber.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "발신번호를 입력해주세요."));
+        }
+
+        return ResponseEntity.ok(smsService.saveSettings(provider, apiKey, userId, senderNumber));
     }
 
     /**
@@ -119,11 +204,7 @@ public class SMSController {
     @PostMapping("/test")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> testConnection() {
-        // TODO: 실제 SMS 공급사 API 연결 테스트
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "연결 테스트 성공"
-        ));
+        return ResponseEntity.ok(smsService.testConnection());
     }
 
     /**
@@ -132,7 +213,10 @@ public class SMSController {
     @PostMapping("/auto-settings")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> saveAutoSettings(@RequestBody Map<String, Boolean> request) {
-        // TODO: 실제 자동 발송 설정 DB 저장
-        return ResponseEntity.ok(Map.of("message", "자동 발송 설정이 저장되었습니다."));
+        Boolean attendanceReminder = request.get("attendanceReminder");
+        Boolean enrollmentExpiry = request.get("enrollmentExpiry");
+        Boolean paymentReminder = request.get("paymentReminder");
+
+        return ResponseEntity.ok(smsService.saveAutoSettings(attendanceReminder, enrollmentExpiry, paymentReminder));
     }
 }
