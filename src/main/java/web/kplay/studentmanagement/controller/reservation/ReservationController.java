@@ -84,4 +84,19 @@ public class ReservationController {
         reservationService.forceCancelReservation(id, reason);
         return ResponseEntity.ok(Map.of("message", "예약이 강제 취소되었습니다"));
     }
+
+    @GetMapping("/available")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT', 'STUDENT')")
+    public ResponseEntity<List<ReservationResponse>> getAvailableSlots(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<ReservationResponse> responses = reservationService.getReservationsByDate(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
+    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
+        reservationService.deleteReservation(id);
+        return ResponseEntity.noContent().build();
+    }
 }

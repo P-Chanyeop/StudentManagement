@@ -29,9 +29,60 @@ public class LevelTestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<LevelTestResponse>> getAllLevelTests() {
+        List<LevelTestResponse> responses = levelTestService.getAllLevelTests();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
+    public ResponseEntity<LevelTestResponse> getLevelTest(@PathVariable Long id) {
+        LevelTestResponse response = levelTestService.getLevelTest(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<LevelTestResponse> updateLevelTest(
+            @PathVariable Long id,
+            @Valid @RequestBody LevelTestRequest request) {
+        LevelTestResponse response = levelTestService.updateLevelTest(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<LevelTestResponse> completeLevelTest(@PathVariable Long id) {
+        LevelTestResponse response = levelTestService.completeLevelTest(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<LevelTestResponse> cancelLevelTest(@PathVariable Long id) {
+        LevelTestResponse response = levelTestService.cancelLevelTest(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/result")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<LevelTestResponse> saveLevelTestResult(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request) {
+        LevelTestResponse response = levelTestService.saveLevelTestResult(
+                id,
+                (String) request.get("level"),
+                (Integer) request.get("score"),
+                (String) request.get("comment")
+        );
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/complete")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<LevelTestResponse> completeLevelTest(
+    public ResponseEntity<LevelTestResponse> completeLevelTestWithDetails(
             @PathVariable Long id,
             @RequestBody Map<String, String> request) {
         LevelTestResponse response = levelTestService.completeLevelTest(
@@ -59,5 +110,71 @@ public class LevelTestController {
     public ResponseEntity<List<LevelTestResponse>> getLevelTestsByStudent(@PathVariable Long studentId) {
         List<LevelTestResponse> responses = levelTestService.getLevelTestsByStudent(studentId);
         return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 월별 레벨테스트 조회 (캘린더 뷰)
+     */
+    @GetMapping("/calendar/month")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<LevelTestResponse>> getLevelTestsByMonth(
+            @RequestParam int year,
+            @RequestParam int month) {
+        List<LevelTestResponse> responses = levelTestService.getLevelTestsByMonth(year, month);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 주간 레벨테스트 조회 (주간 뷰)
+     */
+    @GetMapping("/calendar/week")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<LevelTestResponse>> getLevelTestsByWeek(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekEnd) {
+        List<LevelTestResponse> responses = levelTestService.getLevelTestsByWeek(weekStart, weekEnd);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 선생님별 레벨테스트 조회
+     */
+    @GetMapping("/teacher/{teacherId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<LevelTestResponse>> getLevelTestsByTeacher(@PathVariable Long teacherId) {
+        List<LevelTestResponse> responses = levelTestService.getLevelTestsByTeacher(teacherId);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 예정된 레벨테스트 조회
+     */
+    @GetMapping("/upcoming")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<LevelTestResponse>> getUpcomingTests() {
+        List<LevelTestResponse> responses = levelTestService.getUpcomingTests();
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 완료된 레벨테스트 조회
+     */
+    @GetMapping("/completed")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<LevelTestResponse>> getCompletedTests() {
+        List<LevelTestResponse> responses = levelTestService.getCompletedTests();
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 레벨테스트 통계 조회
+     */
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Object>> getStatistics(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        Map<String, Object> statistics = levelTestService.getStatistics(startDate, endDate);
+        return ResponseEntity.ok(statistics);
     }
 }

@@ -24,6 +24,17 @@ public class FileStorageService {
     private static final String[] ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".m4a", ".wav", ".aac", ".ogg"};
     private static final String[] ALLOWED_FILE_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx", ".txt"};
 
+    // MIME 타입 검증을 위한 화이트리스트
+    private static final String[] ALLOWED_AUDIO_MIME_TYPES = {
+        "audio/mpeg", "audio/mp4", "audio/wav", "audio/aac", "audio/ogg"
+    };
+    private static final String[] ALLOWED_FILE_MIME_TYPES = {
+        "application/pdf",
+        "image/jpeg", "image/png",
+        "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "text/plain"
+    };
+
     public FileStorageService(@Value("${file.upload-dir:uploads}") String uploadDir) {
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
 
@@ -36,19 +47,27 @@ public class FileStorageService {
     }
 
     /**
-     * 파일 업로드
+     * 파일 업로드 (보안 검증 강화)
      */
     public String storeFile(MultipartFile file, String fileType) {
         // 파일명 정규화
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
 
         try {
-            // 파일명에 부적절한 문자가 있는지 체크
-            if (originalFileName.contains("..")) {
-                throw new RuntimeException("파일명에 부적절한 경로가 포함되어 있습니다: " + originalFileName);
+            // 파일 존재 여부 체크
+            if (file.isEmpty()) {
+                throw new RuntimeException("빈 파일은 업로드할 수 없습니다.");
             }
 
-            // 파일 크기 체크
+            // 파일명에 부적절한 문자가 있는지 체크
+            if (originalFileName.contains("..")) {
+                throw new SecurityException("파일명에 부적절한 경로가 포함되어 있습니다: " + originalFileName);
+            }
+
+            // 파일 크기 체크 (0바이트 방지)
+            if (file.getSize() == 0) {
+                throw new RuntimeException("파일 크기가 0입니다.");
+            }
             if (file.getSize() > MAX_FILE_SIZE) {
                 throw new RuntimeException("파일 크기가 최대 허용 크기(50MB)를 초과했습니다.");
             }
@@ -57,8 +76,12 @@ public class FileStorageService {
             String extension = getFileExtension(originalFileName);
             if (fileType.equals("audio")) {
                 validateAudioFile(extension);
+                // MIME 타입 검증
+                validateMimeType(file.getContentType(), ALLOWED_AUDIO_MIME_TYPES, "오디오");
             } else {
                 validateDocumentFile(extension);
+                // MIME 타입 검증
+                validateMimeType(file.getContentType(), ALLOWED_FILE_MIME_TYPES, "문서");
             }
 
             // 고유 파일명 생성 (날짜 + UUID + 원본 확장자)
@@ -143,6 +166,26 @@ public class FileStorageService {
             }
         }
         throw new RuntimeException("허용되지 않은 파일 형식입니다. 허용 형식: pdf, jpg, jpeg, png, doc, docx, txt");
+    }
+
+    /**
+     * MIME 타입 검증 (파일 확장자 스푸핑 방지)
+     */
+    private void validateMimeType(String mimeType, String[] allowedMimeTypes, String fileTypeName) {
+        if (mimeType == null || mimeType.isEmpty()) {
+            throw new SecurityException("MIME 타입을 확인할 수 없습니다.");
+        }
+
+        for (String allowed : allowedMimeTypes) {
+            if (allowed.equalsIgnoreCase(mimeType)) {
+                return;
+            }
+        }
+
+        log.warn("허용되지 않은 MIME 타입: {} (파일 타입: {})", mimeType, fileTypeName);
+        throw new SecurityException(
+            String.format("허용되지 않은 %s 파일 MIME 타입입니다: %s", fileTypeName, mimeType)
+        );
     }
 
     /**

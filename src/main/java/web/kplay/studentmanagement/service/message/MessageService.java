@@ -11,6 +11,7 @@ import web.kplay.studentmanagement.dto.message.MessageSendRequest;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.MessageRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
+import web.kplay.studentmanagement.service.message.sms.SmsService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,7 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final StudentRepository studentRepository;
+    private final SmsService smsService;
 
     @Transactional
     public MessageResponse sendMessage(MessageSendRequest request) {
@@ -43,13 +45,23 @@ public class MessageService {
 
         Message savedMessage = messageRepository.save(message);
 
-        // TODO: 실제 SMS API 연동 (추후 구현)
-        // 현재는 PENDING 상태로만 저장
-        log.info("문자 발송 요청: 수신자={}, 타입={}, 내용={}",
-                request.getRecipientPhone(), request.getMessageType(), request.getContent());
+        // 실제 SMS API를 통한 발송
+        try {
+            log.info("문자 발송 요청: 수신자={}, 타입={}, 내용={}",
+                    request.getRecipientPhone(), request.getMessageType(), request.getContent());
 
-        // 테스트용: 자동으로 발송 완료 처리 (실제 SMS API 연동 후 제거)
-        savedMessage.markAsSent(LocalDateTime.now(), "TEST-" + savedMessage.getId());
+            String externalMessageId = smsService.sendSms(
+                    request.getRecipientPhone(),
+                    request.getContent()
+            );
+
+            savedMessage.markAsSent(LocalDateTime.now(), externalMessageId);
+            log.info("문자 발송 성공: messageId={}, externalId={}",
+                    savedMessage.getId(), externalMessageId);
+        } catch (Exception e) {
+            log.error("문자 발송 실패: {}", e.getMessage(), e);
+            savedMessage.markAsFailed("SMS 발송 실패: " + e.getMessage());
+        }
 
         return toResponse(savedMessage);
     }

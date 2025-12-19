@@ -25,4 +25,5 @@ public class AttendanceResponse {
     private LocalTime expectedLeaveTime;
     private String memo;
     private String reason;
+    private Boolean classCompleted; // 수업 완료 여부
 }

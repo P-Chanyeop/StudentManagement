@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.HtmlUtils;
 import web.kplay.studentmanagement.domain.notice.Notice;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.dto.notice.NoticeRequest;
@@ -27,16 +28,36 @@ public class NoticeService {
     private final UserRepository userRepository;
 
     /**
-     * 공지사항 생성
+     * 공지사항 생성 (XSS 방지)
      */
     @Transactional
     public NoticeResponse createNotice(NoticeRequest request, Long authorId) {
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new ResourceNotFoundException("작성자를 찾을 수 없습니다"));
 
+        // 입력 검증 및 XSS 방지: HTML 특수 문자 이스케이프
+        String sanitizedTitle = sanitizeInput(request.getTitle());
+        String sanitizedContent = sanitizeInput(request.getContent());
+
+        // 입력 검증: null/빈 문자열 체크
+        if (sanitizedTitle == null || sanitizedTitle.trim().isEmpty()) {
+            throw new IllegalArgumentException("제목은 필수입니다.");
+        }
+        if (sanitizedContent == null || sanitizedContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("내용은 필수입니다.");
+        }
+
+        // 입력 검증: 길이 제한
+        if (sanitizedTitle.length() > 200) {
+            throw new IllegalArgumentException("제목은 200자를 초과할 수 없습니다.");
+        }
+        if (sanitizedContent.length() > 50000) {
+            throw new IllegalArgumentException("내용은 50000자를 초과할 수 없습니다.");
+        }
+
         Notice notice = Notice.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
+                .title(sanitizedTitle)
+                .content(sanitizedContent)
                 .author(author)
                 .isPinned(request.getIsPinned() != null ? request.getIsPinned() : false)
                 .isActive(true)
@@ -44,9 +65,20 @@ public class NoticeService {
                 .build();
 
         Notice saved = noticeRepository.save(notice);
-        log.info("공지사항 생성: 제목={}, 작성자={}", request.getTitle(), author.getUsername());
+        log.info("공지사항 생성: 제목={}, 작성자={}", sanitizedTitle, author.getUsername());
 
         return toResponse(saved);
+    }
+
+    /**
+     * 입력 문자열 sanitize (XSS 방지)
+     */
+    private String sanitizeInput(String input) {
+        if (input == null) {
+            return null;
+        }
+        // HTML 특수 문자 이스케이프: <, >, &, ", ' 등
+        return HtmlUtils.htmlEscape(input);
     }
 
     /**

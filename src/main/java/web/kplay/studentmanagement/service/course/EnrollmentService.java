@@ -203,6 +203,31 @@ public class EnrollmentService {
         log.info("수강권 비활성화: 수강권ID={}", id);
     }
 
+    /**
+     * 수동 횟수 조절 (관리자용)
+     * 결석/보강/연기 등으로 인한 수동 조절
+     * @param id 수강권 ID
+     * @param adjustment 조절 횟수 (양수: 증가, 음수: 감소)
+     * @param reason 조절 사유
+     */
+    @Transactional
+    public EnrollmentResponse manualAdjustCount(Long id, Integer adjustment, String reason) {
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
+
+        int beforeTotal = enrollment.getTotalCount();
+        int beforeRemaining = enrollment.getRemainingCount();
+
+        enrollment.manualAdjustCount(adjustment);
+
+        log.info("수강권 수동 조절: 수강권ID={}, 조절={}, 사유={}, 총횟수 {}→{}, 남은횟수 {}→{}",
+                id, adjustment, reason,
+                beforeTotal, enrollment.getTotalCount(),
+                beforeRemaining, enrollment.getRemainingCount());
+
+        return toResponse(enrollment);
+    }
+
     private EnrollmentResponse toResponse(Enrollment enrollment) {
         return EnrollmentResponse.builder()
                 .id(enrollment.getId())

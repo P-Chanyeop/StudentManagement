@@ -16,7 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/attendance")
+@RequestMapping("/api/attendances")
 @RequiredArgsConstructor
 public class AttendanceController {
 
@@ -77,5 +77,101 @@ public class AttendanceController {
         List<AttendanceResponse> responses = attendanceService.getAttendanceByStudentAndDateRange(
                 studentId, startDate, endDate);
         return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 출석한 순서대로 조회 (등원 시간 오름차순)
+     */
+    @GetMapping("/date/{date}/check-in-order")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<AttendanceResponse>> getAttendanceByCheckInOrder(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceResponse> responses = attendanceService.getAttendanceByCheckInOrder(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 하원 예정 순서대로 조회 (예상 하원 시간 오름차순)
+     */
+    @GetMapping("/date/{date}/leave-order")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<AttendanceResponse>> getAttendanceByLeaveOrder(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceResponse> responses = attendanceService.getAttendanceByLeaveOrder(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 오늘 출석한 학생만 조회
+     */
+    @GetMapping("/date/{date}/attended")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<AttendanceResponse>> getAttendedStudents(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceResponse> responses = attendanceService.getAttendedStudents(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 오늘 출석하지 않은 학생 조회
+     */
+    @GetMapping("/date/{date}/not-attended")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<AttendanceResponse>> getNotAttendedStudents(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceResponse> responses = attendanceService.getNotAttendedStudents(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 하원 완료된 학생만 조회
+     */
+    @GetMapping("/date/{date}/checked-out")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<AttendanceResponse>> getCheckedOutStudents(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceResponse> responses = attendanceService.getCheckedOutStudents(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 아직 하원하지 않은 학생 조회
+     */
+    @GetMapping("/date/{date}/not-checked-out")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<AttendanceResponse>> getNotCheckedOutStudents(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceResponse> responses = attendanceService.getNotCheckedOutStudents(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 수업 완료 체크박스 토글
+     */
+    @PatchMapping("/{id}/toggle-completed")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> toggleClassCompleted(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.toggleClassCompleted(id);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 수업 완료 처리
+     */
+    @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> completeClass(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.completeClass(id);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 수업 완료 취소
+     */
+    @PatchMapping("/{id}/uncomplete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> uncompleteClass(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.uncompleteClass(id);
+        return ResponseEntity.ok(response);
     }
 }

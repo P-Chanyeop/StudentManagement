@@ -69,32 +69,58 @@ public class FileUploadController {
 
     /**
      * 파일 다운로드
+     * Path Traversal 방지를 위한 보안 검증 추가
      */
     @GetMapping("/download/**")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<Resource> downloadFile(@RequestParam("filePath") String filePath) {
 
         try {
+            // 입력 검증: null 또는 빈 문자열 체크
+            if (filePath == null || filePath.trim().isEmpty()) {
+                throw new IllegalArgumentException("파일 경로가 제공되지 않았습니다.");
+            }
+
+            // 보안 검증: ".." 경로 조작 문자 차단
+            if (filePath.contains("..")) {
+                log.warn("Path Traversal 시도 감지: {}", filePath);
+                throw new SecurityException("부적절한 파일 경로입니다.");
+            }
+
             // 파일 경로 정규화 (앞의 "/" 제거)
             String normalizedPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
 
             Path fileStorageLocation = fileStorageService.getFileStorageLocation();
             Path file = fileStorageLocation.resolve(normalizedPath).normalize();
-            Resource resource = new UrlResource(file.toUri());
 
-            if (!resource.exists()) {
-                throw new RuntimeException("파일을 찾을 수 없습니다: " + filePath);
+            // 보안 검증: 요청된 파일이 허용된 디렉토리 내에 있는지 확인
+            if (!file.startsWith(fileStorageLocation)) {
+                log.warn("디렉토리 외부 파일 접근 시도: {}", filePath);
+                throw new SecurityException("파일 경로가 유효하지 않습니다.");
             }
 
-            // 파일명 추출
+            Resource resource = new UrlResource(file.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("파일을 찾을 수 없거나 읽을 수 없습니다: " + filePath);
+            }
+
+            // 파일명 추출 및 안전한 파일명 생성 (XSS 방지)
             String fileName = file.getFileName().toString();
+            String safeFileName = fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+
+            log.info("파일 다운로드: {}", safeFileName);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + safeFileName + "\"")
                     .body(resource);
 
+        } catch (SecurityException | IllegalArgumentException ex) {
+            log.error("보안 검증 실패: {}", ex.getMessage());
+            throw ex;
         } catch (MalformedURLException ex) {
+            log.error("파일 경로 오류: {}", filePath, ex);
             throw new RuntimeException("파일을 읽을 수 없습니다: " + filePath, ex);
         }
     }

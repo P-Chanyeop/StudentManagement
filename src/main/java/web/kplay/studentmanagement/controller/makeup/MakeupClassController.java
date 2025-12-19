@@ -24,6 +24,42 @@ public class MakeupClassController {
     private final MakeupClassService makeupClassService;
 
     /**
+     * 전체 요청 조회 (결석/보강 통합)
+     */
+    @GetMapping("/requests")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<MakeupClassResponse>> getAllRequests() {
+        List<MakeupClassResponse> responses = makeupClassService.getAllMakeupClasses();
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 통계 조회
+     */
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Long>> getStatistics() {
+        Map<String, Long> statistics = Map.of(
+                "pending", makeupClassService.countByStatus(web.kplay.studentmanagement.domain.makeup.MakeupStatus.SCHEDULED),
+                "approved", 0L,
+                "completed", makeupClassService.countByStatus(web.kplay.studentmanagement.domain.makeup.MakeupStatus.COMPLETED),
+                "rejected", makeupClassService.countByStatus(web.kplay.studentmanagement.domain.makeup.MakeupStatus.CANCELLED)
+        );
+        return ResponseEntity.ok(statistics);
+    }
+
+    /**
+     * 결석 처리 (보강 요청 생성)
+     */
+    @PostMapping("/absence")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<MakeupClassResponse> processAbsence(
+            @Valid @RequestBody MakeupClassCreateRequest request) {
+        MakeupClassResponse response = makeupClassService.createMakeupClass(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
      * 보강 수업 등록
      */
     @PostMapping
@@ -32,6 +68,33 @@ public class MakeupClassController {
             @Valid @RequestBody MakeupClassCreateRequest request) {
         MakeupClassResponse response = makeupClassService.createMakeupClass(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 보강 요청 승인
+     */
+    @PatchMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<MakeupClassResponse> approveRequest(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String makeupDateStr = request.get("makeupDate");
+        MakeupClassResponse response = makeupClassService.updateMakeupClass(id,
+                MakeupClassUpdateRequest.builder()
+                        .makeupDate(java.time.LocalDate.parse(makeupDateStr))
+                        .status(web.kplay.studentmanagement.domain.makeup.MakeupStatus.SCHEDULED)
+                        .build());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 보강 요청 거절
+     */
+    @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<MakeupClassResponse> rejectRequest(@PathVariable Long id) {
+        MakeupClassResponse response = makeupClassService.cancelMakeupClass(id);
+        return ResponseEntity.ok(response);
     }
 
     /**

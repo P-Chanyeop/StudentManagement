@@ -174,6 +174,109 @@ public class AttendanceService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 출석한 순서대로 조회 (등원 시간 오름차순)
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getAttendanceByCheckInOrder(LocalDate date) {
+        return attendanceRepository.findByDateOrderByCheckInTime(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 하원 예정 순서대로 조회 (예상 하원 시간 오름차순)
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getAttendanceByLeaveOrder(LocalDate date) {
+        return attendanceRepository.findByDateOrderByExpectedLeaveTime(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 오늘 출석한 학생만 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getAttendedStudents(LocalDate date) {
+        return attendanceRepository.findAttendedByDate(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 오늘 출석하지 않은 학생 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getNotAttendedStudents(LocalDate date) {
+        return attendanceRepository.findNotAttendedByDate(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 하원 완료된 학생만 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getCheckedOutStudents(LocalDate date) {
+        return attendanceRepository.findCheckedOutByDate(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 아직 하원하지 않은 학생 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getNotCheckedOutStudents(LocalDate date) {
+        return attendanceRepository.findNotCheckedOutByDate(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 수업 완료 체크박스 토글
+     */
+    @Transactional
+    public AttendanceResponse toggleClassCompleted(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+
+        attendance.toggleClassCompleted();
+        log.info("수업 완료 상태 토글: 학생={}, 완료여부={}",
+                attendance.getStudent().getStudentName(), attendance.getClassCompleted());
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * 수업 완료 처리
+     */
+    @Transactional
+    public AttendanceResponse completeClass(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+
+        attendance.completeClass();
+        log.info("수업 완료 처리: 학생={}", attendance.getStudent().getStudentName());
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * 수업 완료 취소
+     */
+    @Transactional
+    public AttendanceResponse uncompleteClass(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+
+        attendance.uncompleteClass();
+        log.info("수업 완료 취소: 학생={}", attendance.getStudent().getStudentName());
+
+        return toResponse(attendance);
+    }
+
     private AttendanceResponse toResponse(Attendance attendance) {
         return AttendanceResponse.builder()
                 .id(attendance.getId())
@@ -187,6 +290,7 @@ public class AttendanceService {
                 .expectedLeaveTime(attendance.getExpectedLeaveTime())
                 .memo(attendance.getMemo())
                 .reason(attendance.getReason())
+                .classCompleted(attendance.getClassCompleted())
                 .build();
     }
 }

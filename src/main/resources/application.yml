@@ -17,11 +17,24 @@ jwt:
   expiration: 86400000  # 24시간 (밀리초)
   refresh-expiration: 604800000  # 7일 (밀리초)
 
-# SMS API 설정 (추후 실제 SMS 서비스 연동 시 사용)
+# SMS API 설정
+# provider: test (테스트 모드), aligo (알리고), munjanara (문자나라)
 sms:
-  api:
-    key: ${SMS_API_KEY:your-sms-api-key}
-    sender: ${SMS_SENDER:01012345678}
+  provider: ${SMS_PROVIDER:test}
+
+  # 알리고 SMS 설정
+  aligo:
+    enabled: ${SMS_ALIGO_ENABLED:false}
+    api-key: ${SMS_ALIGO_API_KEY:}
+    user-id: ${SMS_ALIGO_USER_ID:}
+    sender: ${SMS_ALIGO_SENDER:}
+
+  # 문자나라 SMS 설정
+  munjanara:
+    enabled: ${SMS_MUNJANARA_ENABLED:false}
+    api-key: ${SMS_MUNJANARA_API_KEY:}
+    user-id: ${SMS_MUNJANARA_USER_ID:}
+    sender: ${SMS_MUNJANARA_SENDER:}
 
 # 네이버 예약 크롤링 설정
 naver:
@@ -32,6 +45,15 @@ naver:
 # 파일 업로드 설정
 file:
   upload-dir: ${FILE_UPLOAD_DIR:uploads}
+
+# 포트원(PortOne) 결제 설정
+portone:
+  api-key: ${PORTONE_API_KEY:}
+  api-secret: ${PORTONE_API_SECRET:}
+  imp-code: ${PORTONE_IMP_CODE:}  # 가맹점 식별코드
+  pg-provider: ${PORTONE_PG_PROVIDER:nice}  # 기본 PG사 (nice, kcp, inicis, kakaopay 등)
+  api-url: ${PORTONE_API_URL:https://api.iamport.kr}
+  test-mode: ${PORTONE_TEST_MODE:true}  # 테스트 모드
 
 spring:
   servlet:
