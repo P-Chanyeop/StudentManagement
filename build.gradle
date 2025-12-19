@@ -50,6 +50,9 @@ dependencies {
     // HTTP Client (for SMS API)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // Jackson for JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+
     // Scheduling
     implementation 'org.springframework.boot:spring-boot-starter-quartz'
 

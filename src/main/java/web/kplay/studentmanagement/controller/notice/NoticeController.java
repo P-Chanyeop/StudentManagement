@@ -10,7 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.notice.NoticeRequest;
 import web.kplay.studentmanagement.dto.notice.NoticeResponse;
-import web.kplay.studentmanagement.security.CustomUserDetails;
+import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.notice.NoticeService;
 
 import java.util.List;
