@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>출석 체크 - K-PLAY 학원</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .date-info {
+            font-size: 1.3rem;
+            color: #666;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .action-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .student-search {
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            font-size: 1.5rem;
+            padding: 15px 20px;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+        }
+
+        .search-input:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 0.2rem rgba(118, 75, 162, 0.25);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            padding: 25px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-checkin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-checkout {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .attendance-list-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .attendance-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .attendance-row {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: 60px 1fr 120px 120px 120px 100px;
+            gap: 15px;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .attendance-row:hover {
+            background: #e9ecef;
+        }
+
+        .row-index {
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #667eea;
+        }
+
+        .student-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-name {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .student-meta {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .time-info {
+            text-align: center;
+        }
+
+        .time-label {
+            font-size: 0.85rem;
+            color: #666;
+            display: block;
+        }
+
+        .time-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status-present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-late {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .complete-checkbox {
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .attendance-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .header-title {
+                font-size: 2rem;
+            }
+
+            .action-btn {
+                font-size: 1.2rem;
+                padding: 20px;
+            }
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="header-title">📋 출석 체크</div>
+                    <div class="date-info" id="dateInfo"></div>
+                </div>
+                <div>
+                    <a href="index.html" class="btn btn-secondary btn-lg">홈으로</a>
+                    <button class="btn btn-warning btn-lg" onclick="logout()">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-label">총 학생</div>
+                <div class="stat-number text-primary" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">출석</div>
+                <div class="stat-number text-success" id="statPresent">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">지각</div>
+                <div class="stat-number text-warning" id="statLate">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">미출석</div>
+                <div class="stat-number text-danger" id="statAbsent">0</div>
+            </div>
+        </div>
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <div class="student-search">
+                <input type="text" class="form-control search-input" id="studentSearch"
+                       placeholder="학생 이름 또는 전화번호 검색...">
+            </div>
+            <div id="searchResults" style="margin-bottom: 20px;"></div>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="attendance-list-section">
+            <h3 class="mb-4">📝 오늘 출석 현황</h3>
+
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="changeTab('all')">전체</button>
+                <button class="tab-btn" onclick="changeTab('check-in-order')">등원순</button>
+                <button class="tab-btn" onclick="changeTab('leave-order')">하원순</button>
+                <button class="tab-btn" onclick="changeTab('attended')">출석만</button>
+                <button class="tab-btn" onclick="changeTab('not-attended')">미출석만</button>
+            </div>
+
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary"></div>
+                <div class="mt-3">로딩 중...</div>
+            </div>
+
+            <div id="attendanceList"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let authToken = '';
+        let currentTab = 'all';
+        let allAttendances = [];
+        let allStudents = [];
+
+        // 페이지 로드
+        $(document).ready(function() {
+            authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'admin-invoices.html';
+                return;
+            }
+
+            updateDate();
+            setInterval(updateDate, 60000); // 1분마다 업데이트
+
+            loadStudents();
+            loadAttendances();
+            setInterval(loadAttendances, 30000); // 30초마다 자동 새로고침
+
+            // 검색 이벤트
+            $('#studentSearch').on('input', function() {
+                const query = $(this).val();
+                if (query.length >= 2) {
+                    searchStudents(query);
+                } else {
+                    $('#searchResults').empty();
+                }
+            });
+        });
+
+        function logout() {
+            authToken = '';
+            localStorage.removeItem('authToken');
+            window.location.href = 'index.html';
+        }
+
+        function updateDate() {
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            $('#dateInfo').text(now.toLocaleDateString('ko-KR', options));
+        }
+
+        function loadStudents() {
+            $.ajax({
+                url: '/api/students',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function(students) {
+                    allStudents = students;
+                },
+                error: handleError
+            });
+        }
+
+        function searchStudents(query) {
+            const filtered = allStudents.filter(s =>
+                s.studentName.includes(query) ||
+                (s.studentPhone && s.studentPhone.includes(query))
+            );
+
+            const resultsHtml = filtered.slice(0, 5).map(student => `
+                <div class="card mb-2" style="cursor: pointer;" onclick="showStudentActions(${student.id}, '${student.studentName}')">
+                    <div class="card-body">
+                        <strong>${student.studentName}</strong> - ${student.grade || '학년 미정'}
+                        <small class="text-muted">${student.studentPhone || ''}</small>
+                    </div>
+                </div>
+            `).join('');
+
+            $('#searchResults').html(resultsHtml);
+        }
+
+        function showStudentActions(studentId, studentName) {
+            $('#searchResults').html(`
+                <div class="alert alert-info">
+                    <h5>${studentName} 학생</h5>
+                    <div class="action-buttons mt-3">
+                        <button class="btn btn-success btn-lg" onclick="checkIn(${studentId}, '${studentName}')">
+                            ✓ 등원 체크
+                        </button>
+                        <button class="btn btn-danger btn-lg" onclick="checkOut(${studentId}, '${studentName}')">
+                            → 하원 체크
+                        </button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function checkIn(studentId, studentName) {
+            // 오늘 날짜의 스케줄이 있다고 가정 (실제로는 스케줄 조회 필요)
+            // 간단하게 처리하기 위해 임시 스케줄 생성
+            $.ajax({
+                url: '/api/attendances',
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + authToken,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    studentId: studentId,
+                    scheduleId: 1, // 실제로는 적절한 스케줄 ID 필요
+                    checkInTime: new Date().toISOString().substring(0, 19),
+                    memo: '태블릿 체크'
+                }),
+                success: function() {
+                    alert(studentName + ' 학생 등원 완료!');
+                    $('#studentSearch').val('');
+                    $('#searchResults').empty();
+                    loadAttendances();
+                },
+                error: function(xhr) {
+                    if (xhr.status === 404 || xhr.responseJSON?.message?.includes('스케줄')) {
+                        alert('오늘 예약된 스케줄이 없습니다. 먼저 스케줄을 등록해주세요.');
+                    } else {
+                        alert('등원 체크 실패: ' + (xhr.responseJSON?.message || '알 수 없는 오류'));
+                    }
+                }
+            });
+        }
+
+        function checkOut(studentId, studentName) {
+            // 오늘 출석 기록 찾기
+            const attendance = allAttendances.find(a =>
+                a.studentId === studentId && a.checkOutTime === null
+            );
+
+            if (!attendance) {
+                alert('등원 기록이 없습니다. 먼저 등원 체크를 해주세요.');
+                return;
+            }
+
+            $.ajax({
+                url: `/api/attendances/${attendance.id}/check-out`,
+                type: 'PATCH',
+                headers: {
+                    'Authorization': 'Bearer ' + authToken,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    checkOutTime: new Date().toISOString().substring(0, 19)
+                }),
+                success: function() {
+                    alert(studentName + ' 학생 하원 완료!');
+                    $('#studentSearch').val('');
+                    $('#searchResults').empty();
+                    loadAttendances();
+                },
+                error: function(xhr) {
+                    alert('하원 체크 실패: ' + (xhr.responseJSON?.message || '알 수 없는 오류'));
+                }
+            });
+        }
+
+        function loadAttendances() {
+            $('#loadingSpinner').show();
+            const today = new Date().toISOString().split('T')[0];
+
+            let url = '/api/attendances/date/' + today;
+            if (currentTab === 'check-in-order') {
+                url += '/check-in-order';
+            } else if (currentTab === 'leave-order') {
+                url += '/leave-order';
+            } else if (currentTab === 'attended') {
+                url += '/attended';
+            } else if (currentTab === 'not-attended') {
+                url += '/not-attended';
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function(attendances) {
+                    allAttendances = attendances;
+                    displayAttendances(attendances);
+                    updateStats(attendances);
+                    $('#loadingSpinner').hide();
+                },
+                error: function(xhr) {
+                    $('#loadingSpinner').hide();
+                    if (xhr.status !== 401) {
+                        console.error('출석 조회 실패:', xhr);
+                    } else {
+                        handleError(xhr);
+                    }
+                }
+            });
+        }
+
+        function displayAttendances(attendances) {
+            const container = $('#attendanceList');
+
+            if (attendances.length === 0) {
+                container.html(`
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <h4>출석 기록이 없습니다</h4>
+                        <p>학생을 검색하여 출석 체크를 시작하세요.</p>
+                    </div>
+                `);
+                return;
+            }
+
+            const rows = attendances.map((att, index) => {
+                const statusClass = att.status === 'LATE' ? 'status-late' :
+                                  att.status === 'ABSENT' ? 'status-absent' : 'status-present';
+                const statusText = att.status === 'LATE' ? '지각' :
+                                 att.status === 'ABSENT' ? '결석' : '출석';
+
+                return `
+                    <div class="attendance-row">
+                        <div class="row-index">${index + 1}</div>
+                        <div class="student-info">
+                            <span class="student-name">${att.studentName}</span>
+                            <span class="student-meta">${att.courseName || '수업 정보 없음'}</span>
+                        </div>
+                        <div class="time-info">
+                            <span class="time-label">등원</span>
+                            <span class="time-value">${att.checkInTime ? formatTime(att.checkInTime) : '-'}</span>
+                        </div>
+                        <div class="time-info">
+                            <span class="time-label">하원</span>
+                            <span class="time-value">${att.checkOutTime ? formatTime(att.checkOutTime) : '-'}</span>
+                        </div>
+                        <div class="time-info">
+                            <span class="time-label">예상 하원</span>
+                            <span class="time-value">${att.expectedLeaveTime ? formatTime(att.expectedLeaveTime) : '-'}</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <div class="status-badge ${statusClass}">${statusText}</div>
+                            <div class="mt-2">
+                                <input type="checkbox" class="complete-checkbox"
+                                       ${att.classCompleted ? 'checked' : ''}
+                                       onchange="toggleComplete(${att.id}, this.checked)">
+                                <small class="d-block">수업완료</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.html(rows);
+        }
+
+        function updateStats(attendances) {
+            $('#statTotal').text(attendances.length);
+
+            const present = attendances.filter(a => a.status === 'PRESENT').length;
+            const late = attendances.filter(a => a.status === 'LATE').length;
+            const absent = attendances.filter(a => a.status === 'ABSENT' || !a.checkInTime).length;
+
+            $('#statPresent').text(present);
+            $('#statLate').text(late);
+            $('#statAbsent').text(absent);
+        }
+
+        function toggleComplete(attendanceId, completed) {
+            $.ajax({
+                url: `/api/attendances/${attendanceId}/complete`,
+                type: 'PATCH',
+                headers: { 'Authorization': 'Bearer ' + authToken },
+                success: function() {
+                    console.log('수업 완료 상태 변경:', completed);
+                },
+                error: function(xhr) {
+                    alert('수업 완료 상태 변경 실패');
+                    loadAttendances(); // 실패 시 다시 로드
+                }
+            });
+        }
+
+        function changeTab(tab) {
+            currentTab = tab;
+            $('.tab-btn').removeClass('active');
+            $(`button[onclick="changeTab('${tab}')"]`).addClass('active');
+            loadAttendances();
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '-';
+            const date = new Date(timeString);
+            return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function handleError(xhr) {
+            if (xhr.status === 401) {
+                alert('인증이 만료되었습니다. 다시 로그인하세요.');
+                logout();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -150,4 +150,54 @@ public class Enrollment extends BaseEntity {
             this.isActive = true;
         }
     }
+
+    /**
+     * 수동 횟수 조절 (관리자용)
+     * 양수: 횟수 증가, 음수: 횟수 감소
+     * 결석/보강/연기 등 수동 조절이 필요한 경우 사용
+     */
+    public void manualAdjustCount(Integer adjustment) {
+        // 입력 검증: null 체크
+        if (adjustment == null) {
+            throw new IllegalArgumentException("조절할 횟수는 필수입니다.");
+        }
+
+        // 0인 경우 변경 없음
+        if (adjustment == 0) {
+            return;
+        }
+
+        // 입력 검증: 최대값 체크 (매우 큰 값 방지)
+        if (Math.abs(adjustment) > 10000) {
+            throw new IllegalArgumentException("조절할 횟수가 너무 큽니다 (최대 ±10000): " + adjustment);
+        }
+
+        // 횟수 감소 시 음수가 되지 않도록 확인
+        if (adjustment < 0 && this.remainingCount + adjustment < 0) {
+            throw new IllegalArgumentException(
+                String.format("남은 횟수가 음수가 될 수 없습니다. 현재=%d, 조절=%d", this.remainingCount, adjustment)
+            );
+        }
+
+        // 오버플로우 방지
+        if (adjustment > 0) {
+            if ((long) this.totalCount + adjustment > Integer.MAX_VALUE) {
+                throw new ArithmeticException("총 횟수가 최대값을 초과합니다.");
+            }
+            if ((long) this.remainingCount + adjustment > Integer.MAX_VALUE) {
+                throw new ArithmeticException("남은 횟수가 최대값을 초과합니다.");
+            }
+        }
+
+        // 횟수 조절
+        this.totalCount += adjustment;
+        this.remainingCount += adjustment;
+
+        // 횟수 조절 후 상태 업데이트
+        if (this.remainingCount <= 0) {
+            this.isActive = false;
+        } else if (!LocalDate.now().isAfter(endDate)) {
+            this.isActive = true;
+        }
+    }
 }

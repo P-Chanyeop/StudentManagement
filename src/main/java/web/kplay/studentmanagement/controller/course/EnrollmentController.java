@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import web.kplay.studentmanagement.dto.course.EnrollmentAdjustRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
 import web.kplay.studentmanagement.service.course.EnrollmentService;
@@ -109,6 +110,20 @@ public class EnrollmentController {
             @PathVariable Long id,
             @RequestParam Integer additionalCount) {
         EnrollmentResponse response = enrollmentService.addCount(id, additionalCount);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 수동 횟수 조절 (관리자용)
+     * 결석/보강/연기 등으로 인한 수동 조절
+     */
+    @PatchMapping("/{id}/manual-adjust")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<EnrollmentResponse> manualAdjustCount(
+            @PathVariable Long id,
+            @Valid @RequestBody EnrollmentAdjustRequest request) {
+        EnrollmentResponse response = enrollmentService.manualAdjustCount(
+                id, request.getAdjustment(), request.getReason());
         return ResponseEntity.ok(response);
     }
 
