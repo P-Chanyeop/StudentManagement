@@ -99,6 +99,22 @@ public class ReservationService {
     }
 
     @Transactional
+    public void deleteReservation(Long id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
+
+        // 예약 취소
+        reservation.cancel("예약 삭제");
+
+        // 스케줄에서 학생 수 감소
+        reservation.getSchedule().removeStudent();
+
+        log.info("예약 삭제: 학생={}, 수업={}",
+                reservation.getStudent().getStudentName(),
+                reservation.getSchedule().getCourse().getCourseName());
+    }
+
+    @Transactional
     public void cancelReservation(Long id, String reason) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));

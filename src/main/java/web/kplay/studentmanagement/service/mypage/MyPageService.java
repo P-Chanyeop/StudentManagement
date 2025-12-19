@@ -216,7 +216,7 @@ public class MyPageService {
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())
                 .expectedLeaveTime(attendance.getExpectedLeaveTime())
-                .status(attendance.getStatus().name())
+                .status(attendance.getStatus())
                 .reason(attendance.getReason())
                 .memo(attendance.getMemo())
                 .build();
@@ -229,7 +229,6 @@ public class MyPageService {
                 .studentName(reservation.getStudent().getStudentName())
                 .scheduleId(reservation.getSchedule().getId())
                 .scheduleDate(reservation.getSchedule().getScheduleDate())
-                .scheduleTime(reservation.getSchedule().getStartTime() + " - " + reservation.getSchedule().getEndTime())
                 .enrollmentId(reservation.getEnrollment() != null ? reservation.getEnrollment().getId() : null)
                 .status(reservation.getStatus().name())
                 .memo(reservation.getMemo())
@@ -246,7 +245,6 @@ public class MyPageService {
                 .studentName(levelTest.getStudent().getStudentName())
                 .testDate(levelTest.getTestDate())
                 .testTime(levelTest.getTestTime())
-                .currentLevel(levelTest.getCurrentLevel())
                 .testResult(levelTest.getTestResult())
                 .recommendedLevel(levelTest.getRecommendedLevel())
                 .memo(levelTest.getMemo())
@@ -261,11 +259,9 @@ public class MyPageService {
                 .studentName(message.getStudent() != null ? message.getStudent().getStudentName() : null)
                 .recipientName(message.getRecipientName())
                 .recipientPhone(message.getRecipientPhone())
-                .messageType(message.getMessageType().name())
+                .messageType(message.getMessageType())
                 .content(message.getContent())
-                .status(message.getStatus().name())
                 .sentAt(message.getSentAt())
-                .failReason(message.getFailReason())
                 .build();
     }
 

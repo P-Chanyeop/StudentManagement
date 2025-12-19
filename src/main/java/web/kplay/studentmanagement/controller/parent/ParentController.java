@@ -44,7 +44,7 @@ public class ParentController {
     @GetMapping("/my-students")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<ParentStudentRelationResponse>> getMyStudents(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<ParentStudentRelationResponse> responses =
                 parentAccessControlService.getStudentsByParent(userDetails.getId());
         return ResponseEntity.ok(responses);
@@ -123,7 +123,7 @@ public class ParentController {
     public ResponseEntity<Boolean> checkAccess(
             @PathVariable Long studentId,
             Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         boolean hasAccess = parentAccessControlService.hasAccessToStudent(userDetails.getId(), studentId);
         return ResponseEntity.ok(hasAccess);
     }

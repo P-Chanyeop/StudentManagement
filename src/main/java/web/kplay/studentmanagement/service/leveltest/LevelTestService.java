@@ -57,6 +57,50 @@ public class LevelTestService {
         return toResponse(savedLevelTest);
     }
 
+    @Transactional(readOnly = true)
+    public List<LevelTestResponse> getAllLevelTests() {
+        return levelTestRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public LevelTestResponse getLevelTest(Long id) {
+        LevelTest levelTest = levelTestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
+        return toResponse(levelTest);
+    }
+
+    @Transactional
+    public LevelTestResponse updateLevelTest(Long id, LevelTestRequest request) {
+        LevelTest levelTest = levelTestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
+
+        User teacher = null;
+        if (request.getTeacherId() != null) {
+            teacher = userRepository.findById(request.getTeacherId())
+                    .orElseThrow(() -> new ResourceNotFoundException("선생님을 찾을 수 없습니다"));
+        }
+
+        levelTest.setTeacher(teacher);
+        levelTest.setTestDate(request.getTestDate());
+        levelTest.setTestTime(request.getTestTime());
+        levelTest.setMemo(request.getMemo());
+
+        log.info("레벨테스트 수정: ID={}", id);
+        return toResponse(levelTest);
+    }
+
+    @Transactional
+    public LevelTestResponse completeLevelTest(Long id) {
+        LevelTest levelTest = levelTestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
+
+        levelTest.setTestStatus("COMPLETED");
+        log.info("레벨테스트 완료: 학생={}", levelTest.getStudent().getStudentName());
+        return toResponse(levelTest);
+    }
+
     @Transactional
     public LevelTestResponse completeLevelTest(Long id, String testResult, String feedback,
                                                 String strengths, String improvements, String recommendedLevel) {
@@ -66,6 +110,32 @@ public class LevelTestService {
         levelTest.complete(testResult, feedback, strengths, improvements, recommendedLevel);
         log.info("레벨테스트 완료: 학생={}, 결과={}",
                 levelTest.getStudent().getStudentName(), testResult);
+
+        return toResponse(levelTest);
+    }
+
+    @Transactional
+    public LevelTestResponse cancelLevelTest(Long id) {
+        LevelTest levelTest = levelTestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
+
+        levelTest.setTestStatus("CANCELLED");
+        log.info("레벨테스트 취소: 학생={}", levelTest.getStudent().getStudentName());
+        return toResponse(levelTest);
+    }
+
+    @Transactional
+    public LevelTestResponse saveLevelTestResult(Long id, String level, Integer score, String feedback) {
+        LevelTest levelTest = levelTestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
+
+        levelTest.setTestResult(level);
+        levelTest.setTestScore(score);
+        levelTest.setFeedback(feedback);
+        levelTest.setTestStatus("COMPLETED");
+
+        log.info("레벨테스트 결과 저장: 학생={}, 레벨={}, 점수={}",
+                levelTest.getStudent().getStudentName(), level, score);
 
         return toResponse(levelTest);
     }
@@ -99,7 +169,7 @@ public class LevelTestService {
      */
     @Transactional(readOnly = true)
     public List<LevelTestResponse> getLevelTestsByWeek(LocalDate weekStart, LocalDate weekEnd) {
-        return levelTestRepository.findByWeekRange(weekStart, weekEnd).stream()
+        return levelTestRepository.findByWeek(weekStart, weekEnd).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -119,7 +189,7 @@ public class LevelTestService {
      */
     @Transactional(readOnly = true)
     public List<LevelTestResponse> getUpcomingTests() {
-        return levelTestRepository.findUpcoming(LocalDate.now()).stream()
+        return levelTestRepository.findUpcomingTests(LocalDate.now()).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -129,7 +199,7 @@ public class LevelTestService {
      */
     @Transactional(readOnly = true)
     public List<LevelTestResponse> getCompletedTests() {
-        return levelTestRepository.findCompleted().stream()
+        return levelTestRepository.findCompletedTests().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
