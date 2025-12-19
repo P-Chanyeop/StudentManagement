@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS 관리 - K-PLAY 학원</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .template-card {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .template-card:hover {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+        .template-card.selected {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+        .sms-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            min-height: 200px;
+            position: relative;
+        }
+        .char-counter {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            font-weight: bold;
+        }
+        .history-item {
+            border-left: 4px solid #0d6efd;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+        .recipient-tag {
+            display: inline-block;
+            background: #e7f1ff;
+            border: 1px solid #0d6efd;
+            border-radius: 15px;
+            padding: 0.25rem 0.75rem;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-mortarboard-fill me-2"></i>K-PLAY 학원
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">대시보드</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="students.html">학생관리</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="sms.html">SMS관리</a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                            <i class="bi bi-box-arrow-right"></i> 로그아웃
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2><i class="bi bi-chat-dots text-primary"></i> SMS 관리</h2>
+                <p class="text-muted">학부모 문자 발송 및 관리</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#sendSMSModal">
+                    <i class="bi bi-send"></i> 문자 발송
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <h3 class="text-primary mb-0" id="smsBalance">10,000</h3>
+                        <p class="text-muted mb-0">잔여 포인트</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <h3 class="text-success mb-0" id="sentToday">0</h3>
+                        <p class="text-muted mb-0">오늘 발송</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <h3 class="text-info mb-0" id="sentThisMonth">0</h3>
+                        <p class="text-muted mb-0">이번 달 발송</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <h3 class="text-warning mb-0" id="smsProvider">알리고</h3>
+                        <p class="text-muted mb-0">SMS 공급사</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="smsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button">
+                    <i class="bi bi-file-text"></i> 템플릿
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button">
+                    <i class="bi bi-clock-history"></i> 발송 내역
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button">
+                    <i class="bi bi-gear"></i> 설정
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="smsTabContent">
+            <!-- Templates Tab -->
+            <div class="tab-pane fade show active" id="templates" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>메시지 템플릿</h4>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
+                                <i class="bi bi-plus-circle"></i> 템플릿 추가
+                            </button>
+                        </div>
+                        <div id="templatesList">
+                            <!-- Templates will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="mb-3">미리보기</h4>
+                        <div class="sms-preview">
+                            <div id="templatePreview" class="mb-3">
+                                템플릿을 선택하면 미리보기가 표시됩니다.
+                            </div>
+                            <div class="char-counter text-muted" id="charCount">0 / 2000</div>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3" onclick="useSe lectedTemplate()">
+                            <i class="bi bi-send"></i> 이 템플릿으로 발송
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" id="historyStartDate">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" id="historyEndDate">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="loadHistory()">
+                            <i class="bi bi-search"></i> 검색
+                        </button>
+                    </div>
+                </div>
+                <div id="historyList">
+                    <!-- History will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">SMS 공급사 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">SMS 공급사</label>
+                                <select class="form-select" id="smsProviderSelect">
+                                    <option value="ALIGO">알리고</option>
+                                    <option value="MESSAGEKOREA">문자나라</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">API Key</label>
+                                <input type="password" class="form-control" id="apiKey" placeholder="API Key 입력">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">발신번호</label>
+                                <input type="tel" class="form-control" id="senderNumber" placeholder="010-1234-5678">
+                            </div>
+                            <div class="col-md-12">
+                                <button class="btn btn-success" onclick="saveSettings()">
+                                    <i class="bi bi-check-circle"></i> 설정 저장
+                                </button>
+                                <button class="btn btn-outline-primary ms-2" onclick="testConnection()">
+                                    <i class="bi bi-wifi"></i> 연결 테스트
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">자동 발송 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="autoAttendanceReminder">
+                            <label class="form-check-label" for="autoAttendanceReminder">
+                                출석 전 리마인더 (수업 1시간 전)
+                            </label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="autoEnrollmentExpiry">
+                            <label class="form-check-label" for="autoEnrollmentExpiry">
+                                수강권 만료 알림 (7일 전)
+                            </label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="autoPaymentReminder">
+                            <label class="form-check-label" for="autoPaymentReminder">
+                                미납 청구서 알림 (매주 월요일)
+                            </label>
+                        </div>
+                        <button class="btn btn-info" onclick="saveAutoSettings()">
+                            <i class="bi bi-check-circle"></i> 자동 발송 설정 저장
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send SMS Modal -->
+    <div class="modal fade" id="sendSMSModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-send"></i> SMS 발송</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">발송 대상 선택</label>
+                            <select class="form-select" id="recipientType" onchange="updateRecipientOptions()">
+                                <option value="all">전체 학부모</option>
+                                <option value="grade">학년별</option>
+                                <option value="course">과정별</option>
+                                <option value="individual">개별 선택</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12" id="recipientOptionsContainer" style="display: none;">
+                            <label class="form-label fw-bold">상세 선택</label>
+                            <select class="form-select" id="recipientOptions" multiple size="5">
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">선택된 수신자</label>
+                            <div id="selectedRecipients" class="border rounded p-2" style="min-height: 60px;">
+                                <span class="text-muted">수신자를 선택하세요</span>
+                            </div>
+                            <small class="text-muted">예상 발송 건수: <span id="recipientCount">0</span>건</small>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">메시지 내용</label>
+                            <textarea class="form-control" id="smsMessage" rows="8" maxlength="2000"
+                                      placeholder="메시지를 입력하세요&#10;&#10;변수 사용 가능:&#10;{학생명} - 학생 이름&#10;{학부모명} - 학부모 이름&#10;{학년} - 학년&#10;{수업시간} - 수업 시간"></textarea>
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted">특수문자, 이모지 사용 가능</small>
+                                <small class="fw-bold" id="messageCharCount">0 / 2000자</small>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>발송 예상 비용:</strong> <span id="estimatedCost">0</span>원
+                                (SMS: 20원/건, LMS: 50원/건)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="sendSMS()">
+                        <i class="bi bi-send"></i> 발송
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Template Modal -->
+    <div class="modal fade" id="addTemplateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-file-plus"></i> 템플릿 추가</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">템플릿 이름</label>
+                        <input type="text" class="form-control" id="templateName" placeholder="예: 출석 리마인더">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">카테고리</label>
+                        <select class="form-select" id="templateCategory">
+                            <option value="attendance">출석</option>
+                            <option value="enrollment">수강권</option>
+                            <option value="payment">결제</option>
+                            <option value="general">일반</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">메시지 내용</label>
+                        <textarea class="form-control" id="templateContent" rows="8" maxlength="2000"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTemplate()">
+                        <i class="bi bi-check-circle"></i> 저장
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = '/api';
+        let selectedTemplate = null;
+        let templates = [];
+
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Get auth headers
+        function getAuthHeaders() {
+            return {
+                'Authorization': 'Bearer ' + localStorage.getItem('jwtToken'),
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('jwtToken');
+            window.location.href = 'login.html';
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/statistics`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    $('#smsBalance').text(stats.balance?.toLocaleString() || '10,000');
+                    $('#sentToday').text(stats.sentToday || 0);
+                    $('#sentThisMonth').text(stats.sentThisMonth || 0);
+                    $('#smsProvider').text(stats.provider || '알리고');
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Load templates
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/templates`, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    templates = await response.json();
+                } else {
+                    // Use sample templates
+                    templates = getSampleTemplates();
+                }
+
+                displayTemplates();
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                templates = getSampleTemplates();
+                displayTemplates();
+            }
+        }
+
+        // Get sample templates
+        function getSampleTemplates() {
+            return [
+                {
+                    id: 1,
+                    name: '출석 리마인더',
+                    category: 'attendance',
+                    content: '[K-PLAY 학원]\n안녕하세요, {학부모명}님.\n{학생명} 학생의 오늘 수업이 {수업시간}에 예정되어 있습니다.\n잊지 말고 참석 부탁드립니다!'
+                },
+                {
+                    id: 2,
+                    name: '수강권 만료 알림',
+                    category: 'enrollment',
+                    content: '[K-PLAY 학원]\n{학부모명}님, {학생명} 학생의 수강권이 7일 후 만료 예정입니다.\n연장을 원하시면 학원으로 연락 부탁드립니다.'
+                },
+                {
+                    id: 3,
+                    name: '청구서 발송',
+                    category: 'payment',
+                    content: '[K-PLAY 학원]\n{학부모명}님, {학생명} 학생의 이번 달 청구서가 발행되었습니다.\n금액: {금액}원\n납부 기한: {납부기한}\n감사합니다.'
+                },
+                {
+                    id: 4,
+                    name: '일반 공지',
+                    category: 'general',
+                    content: '[K-PLAY 학원]\n{학부모명}님, 안녕하세요.\n\n학원 공지사항을 알려드립니다.\n궁금한 사항은 학원으로 문의 부탁드립니다.'
+                }
+            ];
+        }
+
+        // Display templates
+        function displayTemplates() {
+            const container = $('#templatesList');
+            container.empty();
+
+            if (templates.length === 0) {
+                container.html('<p class="text-muted">등록된 템플릿이 없습니다.</p>');
+                return;
+            }
+
+            const categories = {
+                attendance: '출석',
+                enrollment: '수강권',
+                payment: '결제',
+                general: '일반'
+            };
+
+            templates.forEach(template => {
+                const card = $(`
+                    <div class="template-card ${selectedTemplate && selectedTemplate.id === template.id ? 'selected' : ''}"
+                         onclick="selectTemplate(${template.id})">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">${template.name}</h6>
+                                <small class="text-muted">${categories[template.category] || template.category}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); editTemplate(${template.id})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteTemplate(${template.id})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                container.append(card);
+            });
+        }
+
+        // Select template
+        function selectTemplate(templateId) {
+            selectedTemplate = templates.find(t => t.id === templateId);
+            displayTemplates();
+            if (selectedTemplate) {
+                $('#templatePreview').text(selectedTemplate.content);
+                $('#charCount').text(selectedTemplate.content.length + ' / 2000');
+            }
+        }
+
+        // Use selected template
+        function useSelectedTemplate() {
+            if (!selectedTemplate) {
+                alert('템플릿을 선택해주세요.');
+                return;
+            }
+            $('#smsMessage').val(selectedTemplate.content);
+            updateMessageCharCount();
+            $('#sendSMSModal').modal('show');
+        }
+
+        // Save template
+        async function saveTemplate() {
+            const templateData = {
+                name: $('#templateName').val(),
+                category: $('#templateCategory').val(),
+                content: $('#templateContent').val()
+            };
+
+            if (!templateData.name || !templateData.content) {
+                alert('필수 항목을 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/templates`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(templateData)
+                });
+
+                if (!response.ok) throw new Error('Failed to save template');
+
+                alert('템플릿이 저장되었습니다.');
+                $('#addTemplateModal').modal('hide');
+                $('#templateName').val('');
+                $('#templateContent').val('');
+                loadTemplates();
+            } catch (error) {
+                console.error('Error saving template:', error);
+                alert('템플릿 저장에 실패했습니다.');
+            }
+        }
+
+        // Delete template
+        async function deleteTemplate(templateId) {
+            if (!confirm('정말 이 템플릿을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/templates/${templateId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) throw new Error('Failed to delete template');
+
+                alert('템플릿이 삭제되었습니다.');
+                loadTemplates();
+            } catch (error) {
+                console.error('Error deleting template:', error);
+                alert('템플릿 삭제에 실패했습니다.');
+            }
+        }
+
+        // Update recipient options
+        function updateRecipientOptions() {
+            const type = $('#recipientType').val();
+            const container = $('#recipientOptionsContainer');
+            const select = $('#recipientOptions');
+
+            if (type === 'all') {
+                container.hide();
+                updateSelectedRecipients(['전체 학부모']);
+            } else {
+                container.show();
+                select.empty();
+
+                if (type === 'grade') {
+                    const grades = ['유치원', '초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+                    grades.forEach(grade => {
+                        select.append(`<option value="${grade}">${grade}</option>`);
+                    });
+                } else if (type === 'course') {
+                    // Load courses
+                    loadCoursesForSMS();
+                } else if (type === 'individual') {
+                    // Load students
+                    loadStudentsForSMS();
+                }
+            }
+        }
+
+        // Load courses for SMS
+        async function loadCoursesForSMS() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/courses`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const courses = await response.json();
+                    const select = $('#recipientOptions');
+                    select.empty();
+                    courses.forEach(course => {
+                        select.append(`<option value="${course.id}">${course.name}</option>`);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+            }
+        }
+
+        // Load students for SMS
+        async function loadStudentsForSMS() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/students`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const students = await response.json();
+                    const select = $('#recipientOptions');
+                    select.empty();
+                    students.forEach(student => {
+                        select.append(`<option value="${student.id}">${student.name} (${student.grade || '학년미정'})</option>`);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+
+        // Update selected recipients
+        function updateSelectedRecipients(recipients) {
+            const container = $('#selectedRecipients');
+            container.empty();
+
+            if (recipients.length === 0) {
+                container.html('<span class="text-muted">수신자를 선택하세요</span>');
+                $('#recipientCount').text(0);
+                return;
+            }
+
+            recipients.forEach(recipient => {
+                container.append(`<span class="recipient-tag">${recipient}</span>`);
+            });
+
+            $('#recipientCount').text(recipients.length);
+            updateEstimatedCost(recipients.length);
+        }
+
+        // Update estimated cost
+        function updateEstimatedCost(count) {
+            const messageLength = $('#smsMessage').val().length;
+            const costPerMessage = messageLength > 90 ? 50 : 20; // LMS vs SMS
+            const totalCost = count * costPerMessage;
+            $('#estimatedCost').text(totalCost.toLocaleString());
+        }
+
+        // Update message char count
+        function updateMessageCharCount() {
+            const message = $('#smsMessage').val();
+            $('#messageCharCount').text(message.length + ' / 2000자');
+
+            const count = parseInt($('#recipientCount').text()) || 0;
+            updateEstimatedCost(count);
+        }
+
+        // Send SMS
+        async function sendSMS() {
+            const recipientType = $('#recipientType').val();
+            const message = $('#smsMessage').val();
+
+            if (!message) {
+                alert('메시지를 입력해주세요.');
+                return;
+            }
+
+            const smsData = {
+                recipientType: recipientType,
+                message: message,
+                recipients: [] // Would be populated based on selection
+            };
+
+            if (!confirm(`${$('#recipientCount').text()}건의 문자를 발송하시겠습니까?\n예상 비용: ${$('#estimatedCost').text()}원`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/send`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(smsData)
+                });
+
+                if (!response.ok) throw new Error('Failed to send SMS');
+
+                alert('문자가 발송되었습니다.');
+                $('#sendSMSModal').modal('hide');
+                $('#smsMessage').val('');
+                loadStatistics();
+                loadHistory();
+            } catch (error) {
+                console.error('Error sending SMS:', error);
+                alert('문자 발송에 실패했습니다: ' + error.message);
+            }
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const startDate = $('#historyStartDate').val();
+                const endDate = $('#historyEndDate').val();
+
+                let url = `${API_BASE_URL}/sms/history`;
+                if (startDate && endDate) {
+                    url += `?startDate=${startDate}&endDate=${endDate}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const history = await response.json();
+                    displayHistory(history);
+                } else {
+                    // Show sample history
+                    displayHistory(getSampleHistory());
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                displayHistory(getSampleHistory());
+            }
+        }
+
+        // Get sample history
+        function getSampleHistory() {
+            return [
+                {
+                    id: 1,
+                    date: '2024-01-15 14:30',
+                    recipientCount: 25,
+                    message: '[K-PLAY 학원] 출석 리마인더 발송',
+                    status: 'SUCCESS',
+                    cost: 500
+                },
+                {
+                    id: 2,
+                    date: '2024-01-14 10:00',
+                    recipientCount: 50,
+                    message: '[K-PLAY 학원] 수강권 만료 알림',
+                    status: 'SUCCESS',
+                    cost: 1000
+                }
+            ];
+        }
+
+        // Display history
+        function displayHistory(history) {
+            const container = $('#historyList');
+            container.empty();
+
+            if (history.length === 0) {
+                container.html('<p class="text-muted">발송 내역이 없습니다.</p>');
+                return;
+            }
+
+            history.forEach(item => {
+                const statusBadge = item.status === 'SUCCESS' ?
+                    '<span class="badge bg-success">성공</span>' :
+                    '<span class="badge bg-danger">실패</span>';
+
+                const historyItem = $(`
+                    <div class="history-item">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">${item.date}</h6>
+                            ${statusBadge}
+                        </div>
+                        <p class="mb-1">${item.message}</p>
+                        <small class="text-muted">발송: ${item.recipientCount}건 | 비용: ${item.cost}원</small>
+                    </div>
+                `);
+                container.append(historyItem);
+            });
+        }
+
+        // Save settings
+        async function saveSettings() {
+            const settings = {
+                provider: $('#smsProviderSelect').val(),
+                apiKey: $('#apiKey').val(),
+                senderNumber: $('#senderNumber').val()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/settings`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(settings)
+                });
+
+                if (!response.ok) throw new Error('Failed to save settings');
+
+                alert('설정이 저장되었습니다.');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('설정 저장에 실패했습니다.');
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/test`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    alert('연결 테스트 성공!');
+                } else {
+                    alert('연결 테스트 실패. 설정을 확인해주세요.');
+                }
+            } catch (error) {
+                console.error('Error testing connection:', error);
+                alert('연결 테스트 실패: ' + error.message);
+            }
+        }
+
+        // Save auto settings
+        async function saveAutoSettings() {
+            const autoSettings = {
+                attendanceReminder: $('#autoAttendanceReminder').is(':checked'),
+                enrollmentExpiry: $('#autoEnrollmentExpiry').is(':checked'),
+                paymentReminder: $('#autoPaymentReminder').is(':checked')
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/sms/auto-settings`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(autoSettings)
+                });
+
+                if (!response.ok) throw new Error('Failed to save auto settings');
+
+                alert('자동 발송 설정이 저장되었습니다.');
+            } catch (error) {
+                console.error('Error saving auto settings:', error);
+                alert('자동 발송 설정 저장에 실패했습니다.');
+            }
+        }
+
+        // Event listeners
+        $(document).ready(function() {
+            checkAuth();
+            loadStatistics();
+            loadTemplates();
+
+            // Set default dates for history
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            $('#historyStartDate').val(lastMonth.toISOString().split('T')[0]);
+            $('#historyEndDate').val(today.toISOString().split('T')[0]);
+
+            $('#smsMessage').on('input', updateMessageCharCount);
+            $('#recipientOptions').on('change', function() {
+                const selected = $(this).find('option:selected');
+                const recipients = [];
+                selected.each(function() {
+                    recipients.push($(this).text());
+                });
+                updateSelectedRecipients(recipients);
+            });
+        });
+    </script>
+</body>
+</html>
