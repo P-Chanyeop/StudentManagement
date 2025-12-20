@@ -36,7 +36,7 @@ public class InvoiceController {
     public ResponseEntity<InvoiceResponse> createInvoice(
             @Valid @RequestBody InvoiceCreateRequest request,
             Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         InvoiceResponse response = invoiceService.createInvoice(request, userDetails.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -25,7 +25,7 @@ public class MyPageController {
     @GetMapping("/me")
     @PreAuthorize("hasAnyRole('STUDENT', 'PARENT')")
     public ResponseEntity<MyPageResponse> getMyPage(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long userId = userDetails.getId();
 
         log.info("마이페이지 조회 요청: userId={}", userId);

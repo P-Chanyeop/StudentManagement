@@ -98,12 +98,12 @@ public class ConsultationExcelService {
 
                 // 상담자
                 Cell cell4 = row.createCell(4);
-                cell4.setCellValue(consultation.getConsultant() != null ? consultation.getConsultant() : "");
+                cell4.setCellValue(consultation.getConsultant() != null ? consultation.getConsultant().getName() : "");
                 cell4.setCellStyle(dataStyle);
 
                 // 비고
                 Cell cell5 = row.createCell(5);
-                cell5.setCellValue(consultation.getMemo() != null ? consultation.getMemo() : "");
+                cell5.setCellValue(consultation.getContent() != null ? consultation.getContent() : "");
                 cell5.setCellStyle(dataStyle);
             }
 

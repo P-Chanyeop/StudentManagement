@@ -168,6 +168,11 @@ public class MakeupClassService {
         return toResponse(makeupClass);
     }
 
+    @Transactional(readOnly = true)
+    public long countByStatus(MakeupStatus status) {
+        return makeupClassRepository.findByStatus(status).size();
+    }
+
     private MakeupClassResponse toResponse(MakeupClass makeupClass) {
         return MakeupClassResponse.builder()
                 .id(makeupClass.getId())
