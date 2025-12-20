@@ -103,15 +103,21 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
 
+        // 수강권 횟수 복원
+        if (reservation.getEnrollment() != null) {
+            reservation.getEnrollment().restoreCount();
+        }
+
         // 스케줄에서 학생 수 감소
         reservation.getSchedule().removeStudent();
 
         // 실제로 DB에서 삭제
         reservationRepository.delete(reservation);
 
-        log.info("예약 삭제: 학생={}, 수업={}",
+        log.info("예약 삭제: 학생={}, 수업={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
-                reservation.getSchedule().getCourse().getCourseName());
+                reservation.getSchedule().getCourse().getCourseName(),
+                reservation.getEnrollment() != null);
     }
 
     @Transactional
@@ -119,16 +125,22 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
 
+        // 수강권 횟수 복원 (상태 변경 전에 먼저 수행 - race condition 방지)
+        if (reservation.getEnrollment() != null) {
+            reservation.getEnrollment().restoreCount();
+        }
+
         // 예약 취소 (전날 오후 6시까지만 가능)
         reservation.cancel(reason);
 
         // 스케줄에서 학생 수 감소
         reservation.getSchedule().removeStudent();
 
-        log.info("예약 취소: 학생={}, 수업={}, 사유={}",
+        log.info("예약 취소: 학생={}, 수업={}, 사유={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
                 reservation.getSchedule().getCourse().getCourseName(),
-                reason);
+                reason,
+                reservation.getEnrollment() != null);
     }
 
     @Transactional
@@ -136,16 +148,22 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
 
+        // 수강권 횟수 복원 (상태 변경 전에 먼저 수행 - race condition 방지)
+        if (reservation.getEnrollment() != null) {
+            reservation.getEnrollment().restoreCount();
+        }
+
         // 관리자 강제 취소 (시간 제한 없음)
         reservation.forceCancel(reason);
 
         // 스케줄에서 학생 수 감소
         reservation.getSchedule().removeStudent();
 
-        log.info("예약 강제 취소 (관리자): 학생={}, 수업={}, 사유={}",
+        log.info("예약 강제 취소 (관리자): 학생={}, 수업={}, 사유={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
                 reservation.getSchedule().getCourse().getCourseName(),
-                reason);
+                reason,
+                reservation.getEnrollment() != null);
     }
 
     @Transactional(readOnly = true)
