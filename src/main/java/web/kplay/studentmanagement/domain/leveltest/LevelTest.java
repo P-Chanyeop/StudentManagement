@@ -12,7 +12,6 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "level_tests")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -41,6 +40,9 @@ public class LevelTest extends BaseEntity {
 
     @Column(length = 50)
     private String testResult; // 테스트 결과 레벨
+
+    @Column
+    private Integer testScore; // 테스트 점수
 
     @Column(length = 1000)
     private String feedback; // 피드백
@@ -95,5 +97,39 @@ public class LevelTest extends BaseEntity {
     // 메모 업데이트
     public void updateMemo(String memo) {
         this.memo = memo;
+    }
+
+    // 레벨테스트 상세 정보 업데이트 (일정, 선생님, 메모)
+    public void updateDetails(User teacher, LocalDate testDate, LocalTime testTime, String memo) {
+        if (teacher != null) {
+            this.teacher = teacher;
+        }
+        if (testDate != null) {
+            this.testDate = testDate;
+        }
+        if (testTime != null) {
+            this.testTime = testTime;
+        }
+        if (memo != null) {
+            this.memo = memo;
+        }
+    }
+
+    // 완료 상태로 변경 (간단 버전)
+    public void markAsCompleted() {
+        this.testStatus = "COMPLETED";
+    }
+
+    // 취소 상태로 변경 (간단 버전)
+    public void markAsCancelled() {
+        this.testStatus = "CANCELLED";
+    }
+
+    // 테스트 결과 저장
+    public void saveResult(String level, Integer score, String feedback) {
+        this.testResult = level;
+        this.testScore = score;
+        this.feedback = feedback;
+        this.testStatus = "COMPLETED";
     }
 }
