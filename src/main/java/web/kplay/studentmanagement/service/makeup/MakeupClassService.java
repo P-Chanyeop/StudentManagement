@@ -170,7 +170,7 @@ public class MakeupClassService {
 
     @Transactional(readOnly = true)
     public long countByStatus(MakeupStatus status) {
-        return makeupClassRepository.findByStatus(status).size();
+        return makeupClassRepository.countByStatus(status);
     }
 
     private MakeupClassResponse toResponse(MakeupClass makeupClass) {
