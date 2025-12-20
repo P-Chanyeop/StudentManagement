@@ -230,7 +230,7 @@ public class MyPageService {
                 .scheduleId(reservation.getSchedule().getId())
                 .scheduleDate(reservation.getSchedule().getScheduleDate())
                 .enrollmentId(reservation.getEnrollment() != null ? reservation.getEnrollment().getId() : null)
-                .status(reservation.getStatus().name())
+                .status(reservation.getStatus())
                 .memo(reservation.getMemo())
                 .cancelReason(reservation.getCancelReason())
                 .cancelledAt(reservation.getCancelledAt())
