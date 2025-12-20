@@ -16,15 +16,16 @@
 ```
 === 초기 데이터 로딩 완료 ===
 
-📋 로그인 정보:
-  관리자: admin / admin123
-  선생님1: teacher1 / teacher123
-  선생님2: teacher2 / teacher123
-  학부모: parent1 / parent123
+📋 초기 계정 생성됨 (비밀번호는 CREDENTIALS.md 참조)
+  - admin (관리자)
+  - teacher1, teacher2 (선생님)
+  - parent1 (학부모)
 
 🌐 Swagger UI: http://localhost:8080/swagger-ui.html
-🗄️  H2 Console: http://localhost:8080/h2-console
+🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN 계정 필요)
 ```
+
+⚠️ **보안 주의:** 초기 계정 비밀번호는 `CREDENTIALS.md` 파일을 참조하세요. (Git에 커밋되지 않음)
 
 ---
 
@@ -33,24 +34,35 @@
 | 서비스 | URL | 설명 |
 |--------|-----|------|
 | **Swagger UI** | `http://localhost:8080/swagger-ui.html` | API 문서 및 테스트 |
-| **H2 Console** | `http://localhost:8080/h2-console` | 개발용 DB 콘솔 |
+| **H2 Console** | `http://localhost:8080/h2-console` | 개발용 DB 콘솔 (**ADMIN 전용**) |
 | **REST API** | `http://localhost:8080/api/**` | 실제 API 엔드포인트 |
 
 #### H2 Console 접속 정보
-- **JDBC URL**: `jdbc:h2:mem:testdb`
-- **Username**: `sa`
-- **Password**: (비어있음)
+⚠️ **보안:** H2 Console은 ADMIN 계정으로 로그인한 후에만 접근 가능합니다.
+
+1. Swagger UI에서 admin 계정으로 로그인
+2. JWT 토큰 획득
+3. H2 Console 접속 시 토큰으로 인증
+4. DB Console 접속:
+   - **JDBC URL**: `jdbc:h2:mem:testdb`
+   - **Username**: `sa`
+   - **Password**: (비어있음)
 
 ---
 
 ## 🔐 초기 계정 정보
 
+⚠️ **보안 주의사항:**
+- 초기 계정 비밀번호는 **`CREDENTIALS.md`** 파일에 있습니다
+- 이 파일은 `.gitignore`에 추가되어 Git에 커밋되지 않습니다
+- **절대 프로덕션에서 이 계정들을 사용하지 마세요**
+
 | 역할 | 아이디 | 비밀번호 | 권한 |
 |------|--------|---------|------|
-| 관리자 | admin | admin123 | ROLE_ADMIN |
-| 선생님1 | teacher1 | teacher123 | ROLE_TEACHER |
-| 선생님2 | teacher2 | teacher123 | ROLE_TEACHER |
-| 학부모 | parent1 | parent123 | ROLE_PARENT |
+| 관리자 | admin | `CREDENTIALS.md` 참조 | ROLE_ADMIN |
+| 선생님1 | teacher1 | `CREDENTIALS.md` 참조 | ROLE_TEACHER |
+| 선생님2 | teacher2 | `CREDENTIALS.md` 참조 | ROLE_TEACHER |
+| 학부모 | parent1 | `CREDENTIALS.md` 참조 | ROLE_PARENT |
 
 **초기 데이터:**
 - 학생 3명 (홍길동, 김민수, 이지은)

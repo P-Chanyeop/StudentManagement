@@ -48,7 +48,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(admin);
-                log.info("✓ 관리자 계정 생성 완료 (username: admin, password: admin123)");
+                log.info("✓ 관리자 계정 생성 완료 (username: admin)");
             }
 
             // 선생님 계정 생성
@@ -63,7 +63,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(teacher1);
-                log.info("✓ 선생님 계정 생성 완료 (username: teacher1, password: teacher123)");
+                log.info("✓ 선생님 계정 생성 완료 (username: teacher1)");
             }
 
             if (userRepository.findByUsername("teacher2").isEmpty()) {
@@ -77,7 +77,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(teacher2);
-                log.info("✓ 선생님 계정 생성 완료 (username: teacher2, password: teacher123)");
+                log.info("✓ 선생님 계정 생성 완료 (username: teacher2)");
             }
 
             // 학부모 계정 생성
@@ -92,7 +92,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(parent1);
-                log.info("✓ 학부모 계정 생성 완료 (username: parent1, password: parent123)");
+                log.info("✓ 학부모 계정 생성 완료 (username: parent1)");
             }
 
             // 테스트 학생 데이터 생성
@@ -144,14 +144,13 @@ public class DataSeeder {
 
             log.info("=== 초기 데이터 로딩 완료 ===");
             log.info("");
-            log.info("📋 로그인 정보:");
-            log.info("  관리자: admin / admin123");
-            log.info("  선생님1: teacher1 / teacher123");
-            log.info("  선생님2: teacher2 / teacher123");
-            log.info("  학부모: parent1 / parent123");
+            log.info("📋 초기 계정 생성됨 (비밀번호는 CREDENTIALS.md 참조)");
+            log.info("  - admin (관리자)");
+            log.info("  - teacher1, teacher2 (선생님)");
+            log.info("  - parent1 (학부모)");
             log.info("");
             log.info("🌐 Swagger UI: http://localhost:8080/swagger-ui.html");
-            log.info("🗄️  H2 Console: http://localhost:8080/h2-console");
+            log.info("🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN 계정 필요)");
             log.info("");
         };
     }
