@@ -82,10 +82,7 @@ public class LevelTestService {
                     .orElseThrow(() -> new ResourceNotFoundException("선생님을 찾을 수 없습니다"));
         }
 
-        levelTest.setTeacher(teacher);
-        levelTest.setTestDate(request.getTestDate());
-        levelTest.setTestTime(request.getTestTime());
-        levelTest.setMemo(request.getMemo());
+        levelTest.updateDetails(teacher, request.getTestDate(), request.getTestTime(), request.getMemo());
 
         log.info("레벨테스트 수정: ID={}", id);
         return toResponse(levelTest);
@@ -96,7 +93,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.setTestStatus("COMPLETED");
+        levelTest.markAsCompleted();
         log.info("레벨테스트 완료: 학생={}", levelTest.getStudent().getStudentName());
         return toResponse(levelTest);
     }
@@ -119,7 +116,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.setTestStatus("CANCELLED");
+        levelTest.markAsCancelled();
         log.info("레벨테스트 취소: 학생={}", levelTest.getStudent().getStudentName());
         return toResponse(levelTest);
     }
@@ -129,10 +126,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.setTestResult(level);
-        levelTest.setTestScore(score);
-        levelTest.setFeedback(feedback);
-        levelTest.setTestStatus("COMPLETED");
+        levelTest.saveResult(level, score, feedback);
 
         log.info("레벨테스트 결과 저장: 학생={}, 레벨={}, 점수={}",
                 levelTest.getStudent().getStudentName(), level, score);
@@ -275,6 +269,7 @@ public class LevelTestService {
                 .testTime(levelTest.getTestTime())
                 .testStatus(levelTest.getTestStatus())
                 .testResult(levelTest.getTestResult())
+                .testScore(levelTest.getTestScore())
                 .feedback(levelTest.getFeedback())
                 .strengths(levelTest.getStrengths())
                 .improvements(levelTest.getImprovements())

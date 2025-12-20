@@ -22,6 +22,7 @@ public class LevelTestResponse {
     private LocalTime testTime;
     private String testStatus;
     private String testResult;
+    private Integer testScore;
     private String feedback;
     private String strengths;
     private String improvements;
