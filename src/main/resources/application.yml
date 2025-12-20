@@ -10,6 +10,11 @@ spring:
         format_sql: true
         use_sql_comments: true
     show-sql: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 # JWT 설정
 jwt:
@@ -54,13 +59,6 @@ portone:
   pg-provider: ${PORTONE_PG_PROVIDER:nice}  # 기본 PG사 (nice, kcp, inicis, kakaopay 등)
   api-url: ${PORTONE_API_URL:https://api.iamport.kr}
   test-mode: ${PORTONE_TEST_MODE:true}  # 테스트 모드
-
-spring:
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 50MB
-      max-request-size: 50MB
 
 ---
 # 개발 환경 (H2 Database)
