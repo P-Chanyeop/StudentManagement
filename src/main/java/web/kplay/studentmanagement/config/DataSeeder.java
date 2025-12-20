@@ -97,42 +97,81 @@ public class DataSeeder {
 
             // 테스트 학생 데이터 생성
             if (studentRepository.count() == 0) {
+                // 학생1용 User 계정
+                User studentUser1 = User.builder()
+                        .username("student1")
+                        .password(passwordEncoder.encode("student123"))
+                        .name("홍길동")
+                        .email("student1@kplay.web")
+                        .phoneNumber("010-5678-9012")
+                        .role(UserRole.STUDENT)
+                        .isActive(true)
+                        .build();
+                studentUser1 = userRepository.save(studentUser1);
+
                 Student student1 = Student.builder()
+                        .user(studentUser1)
                         .studentName("홍길동")
                         .birthDate(LocalDate.of(2010, 3, 15))
-                        .phoneNumber("010-5678-9012")
-                        .parentPhoneNumber("010-4567-8901")
+                        .studentPhone("010-5678-9012")
+                        .parentPhone("010-4567-8901")
                         .parentName("박학부모")
                         .school("서울초등학교")
-                        .grade(6)
+                        .grade("6")
                         .address("서울시 강남구 테헤란로 123")
                         .memo("영어 초급반")
                         .isActive(true)
                         .build();
                 studentRepository.save(student1);
 
+                // 학생2용 User 계정
+                User studentUser2 = User.builder()
+                        .username("student2")
+                        .password(passwordEncoder.encode("student123"))
+                        .name("김민수")
+                        .email("student2@kplay.web")
+                        .phoneNumber("010-6789-0123")
+                        .role(UserRole.STUDENT)
+                        .isActive(true)
+                        .build();
+                studentUser2 = userRepository.save(studentUser2);
+
                 Student student2 = Student.builder()
+                        .user(studentUser2)
                         .studentName("김민수")
                         .birthDate(LocalDate.of(2011, 7, 20))
-                        .phoneNumber("010-6789-0123")
-                        .parentPhoneNumber("010-7890-1234")
+                        .studentPhone("010-6789-0123")
+                        .parentPhone("010-7890-1234")
                         .parentName("김학부모")
                         .school("서울초등학교")
-                        .grade(5)
+                        .grade("5")
                         .address("서울시 강남구 역삼동 456")
                         .memo("수학 중급반")
                         .isActive(true)
                         .build();
                 studentRepository.save(student2);
 
+                // 학생3용 User 계정
+                User studentUser3 = User.builder()
+                        .username("student3")
+                        .password(passwordEncoder.encode("student123"))
+                        .name("이지은")
+                        .email("student3@kplay.web")
+                        .phoneNumber("010-7890-1234")
+                        .role(UserRole.STUDENT)
+                        .isActive(true)
+                        .build();
+                studentUser3 = userRepository.save(studentUser3);
+
                 Student student3 = Student.builder()
+                        .user(studentUser3)
                         .studentName("이지은")
                         .birthDate(LocalDate.of(2012, 11, 5))
-                        .phoneNumber("010-7890-1234")
-                        .parentPhoneNumber("010-8901-2345")
+                        .studentPhone("010-7890-1234")
+                        .parentPhone("010-8901-2345")
                         .parentName("이학부모")
                         .school("한강초등학교")
-                        .grade(4)
+                        .grade("4")
                         .address("서울시 서초구 반포동 789")
                         .memo("영어 중급반, 수학 초급반")
                         .isActive(true)
@@ -148,6 +187,7 @@ public class DataSeeder {
             log.info("  - admin (관리자)");
             log.info("  - teacher1, teacher2 (선생님)");
             log.info("  - parent1 (학부모)");
+            log.info("  - student1, student2, student3 (학생)");
             log.info("");
             log.info("🌐 Swagger UI: http://localhost:8080/swagger-ui.html");
             log.info("🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN 계정 필요)");
