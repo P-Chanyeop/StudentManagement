@@ -12,6 +12,7 @@ import java.time.LocalTime;
 @Entity
 @Table(name = "level_tests")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
