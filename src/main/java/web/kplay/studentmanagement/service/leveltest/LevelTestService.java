@@ -93,7 +93,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.markAsCompleted();
+        levelTest.complete(null, null, null, null, null, null);
         log.info("레벨테스트 완료: 학생={}", levelTest.getStudent().getStudentName());
         return toResponse(levelTest);
     }
@@ -104,7 +104,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.complete(testResult, feedback, strengths, improvements, recommendedLevel);
+        levelTest.complete(testResult, null, feedback, strengths, improvements, recommendedLevel);
         log.info("레벨테스트 완료: 학생={}, 결과={}",
                 levelTest.getStudent().getStudentName(), testResult);
 
@@ -116,7 +116,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.markAsCancelled();
+        levelTest.cancel();
         log.info("레벨테스트 취소: 학생={}", levelTest.getStudent().getStudentName());
         return toResponse(levelTest);
     }
@@ -126,7 +126,7 @@ public class LevelTestService {
         LevelTest levelTest = levelTestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("레벨테스트를 찾을 수 없습니다"));
 
-        levelTest.saveResult(level, score, feedback);
+        levelTest.complete(level, score, feedback, null, null, null);
 
         log.info("레벨테스트 결과 저장: 학생={}, 레벨={}, 점수={}",
                 levelTest.getStudent().getStudentName(), level, score);
