@@ -62,15 +62,28 @@ public class LevelTest extends BaseEntity {
     @Column
     private Boolean messageNotificationSent = false; // 문자 안내 발송 여부
 
-    // 테스트 완료 처리
-    public void complete(String testResult, String feedback, String strengths,
+    // 테스트 완료 처리 (null인 경우 기존 값 유지)
+    public void complete(String testResult, Integer testScore, String feedback, String strengths,
                          String improvements, String recommendedLevel) {
         this.testStatus = "COMPLETED";
-        this.testResult = testResult;
-        this.feedback = feedback;
-        this.strengths = strengths;
-        this.improvements = improvements;
-        this.recommendedLevel = recommendedLevel;
+        if (testResult != null) {
+            this.testResult = testResult;
+        }
+        if (testScore != null) {
+            this.testScore = testScore;
+        }
+        if (feedback != null) {
+            this.feedback = feedback;
+        }
+        if (strengths != null) {
+            this.strengths = strengths;
+        }
+        if (improvements != null) {
+            this.improvements = improvements;
+        }
+        if (recommendedLevel != null) {
+            this.recommendedLevel = recommendedLevel;
+        }
     }
 
     // 테스트 취소
@@ -113,23 +126,5 @@ public class LevelTest extends BaseEntity {
         if (memo != null) {
             this.memo = memo;
         }
-    }
-
-    // 완료 상태로 변경 (간단 버전)
-    public void markAsCompleted() {
-        this.testStatus = "COMPLETED";
-    }
-
-    // 취소 상태로 변경 (간단 버전)
-    public void markAsCancelled() {
-        this.testStatus = "CANCELLED";
-    }
-
-    // 테스트 결과 저장
-    public void saveResult(String level, Integer score, String feedback) {
-        this.testResult = level;
-        this.testScore = score;
-        this.feedback = feedback;
-        this.testStatus = "COMPLETED";
     }
 }
