@@ -101,9 +101,9 @@ public class ConsultationExcelService {
                 cell4.setCellValue(consultation.getConsultant() != null ? consultation.getConsultant().getName() : "");
                 cell4.setCellStyle(dataStyle);
 
-                // 비고
+                // 비고 (후속 조치 사항)
                 Cell cell5 = row.createCell(5);
-                cell5.setCellValue(consultation.getContent() != null ? consultation.getContent() : "");
+                cell5.setCellValue(consultation.getActionItems() != null ? consultation.getActionItems() : "");
                 cell5.setCellStyle(dataStyle);
             }
 

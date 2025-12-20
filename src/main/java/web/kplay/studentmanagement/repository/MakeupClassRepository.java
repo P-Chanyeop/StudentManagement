@@ -44,4 +44,7 @@ public interface MakeupClassRepository extends JpaRepository<MakeupClass, Long> 
 
     // 학생의 보강 수업 개수 조회
     Long countByStudentIdAndStatus(Long studentId, MakeupStatus status);
+
+    // 상태별 보강 수업 개수 조회
+    Long countByStatus(MakeupStatus status);
 }
