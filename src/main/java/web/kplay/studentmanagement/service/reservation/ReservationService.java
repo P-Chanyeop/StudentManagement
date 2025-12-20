@@ -125,13 +125,13 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
 
-        // 예약 취소 (전날 오후 6시까지만 가능)
-        reservation.cancel(reason);
-
-        // 수강권 횟수 복원
+        // 수강권 횟수 복원 (상태 변경 전에 먼저 수행 - race condition 방지)
         if (reservation.getEnrollment() != null) {
             reservation.getEnrollment().restoreCount();
         }
+
+        // 예약 취소 (전날 오후 6시까지만 가능)
+        reservation.cancel(reason);
 
         // 스케줄에서 학생 수 감소
         reservation.getSchedule().removeStudent();
@@ -148,13 +148,13 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("예약을 찾을 수 없습니다"));
 
-        // 관리자 강제 취소 (시간 제한 없음)
-        reservation.forceCancel(reason);
-
-        // 수강권 횟수 복원
+        // 수강권 횟수 복원 (상태 변경 전에 먼저 수행 - race condition 방지)
         if (reservation.getEnrollment() != null) {
             reservation.getEnrollment().restoreCount();
         }
+
+        // 관리자 강제 취소 (시간 제한 없음)
+        reservation.forceCancel(reason);
 
         // 스케줄에서 학생 수 감소
         reservation.getSchedule().removeStudent();
