@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { courseAPI } from '../services/api';
 import '../styles/Courses.css';
 
@@ -141,7 +142,11 @@ function Courses() {
   };
 
   if (isLoading) {
-    return <div className="courses-container">로딩 중...</div>;
+    return (
+      <div className="courses-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
@@ -181,17 +186,17 @@ function Courses() {
 
               <div className="course-details">
                 <div className="detail-item">
-                  <span className="icon">👥</span>
+                  <span className="icon"><i className="fas fa-users"></i></span>
                   <span className="label">정원:</span>
                   <span className="value">{course.capacity}명</span>
                 </div>
                 <div className="detail-item">
-                  <span className="icon">⏱️</span>
+                  <span className="icon"><i className="fas fa-clock"></i></span>
                   <span className="label">수업시간:</span>
                   <span className="value">{course.durationMinutes}분</span>
                 </div>
                 <div className="detail-item">
-                  <span className="icon">💰</span>
+                  <span className="icon"><i className="fas fa-dollar-sign"></i></span>
                   <span className="label">가격:</span>
                   <span className="value price">{course.price.toLocaleString()}원</span>
                 </div>

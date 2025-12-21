@@ -1,0 +1,90 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 40px;
+}
+
+.sun-loader {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 20px;
+}
+
+.ray {
+  position: absolute;
+  background: #4CAF50;
+  border-radius: 3px;
+  width: 5px;
+  height: 14px;
+  left: 50%;
+  top: 0;
+  transform-origin: 50% 30px;
+}
+
+.ray-1 {
+  transform: translateX(-50%) rotate(0deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0s;
+}
+
+.ray-2 {
+  transform: translateX(-50%) rotate(45deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0.15s;
+}
+
+.ray-3 {
+  transform: translateX(-50%) rotate(90deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0.3s;
+}
+
+.ray-4 {
+  transform: translateX(-50%) rotate(135deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0.45s;
+}
+
+.ray-5 {
+  transform: translateX(-50%) rotate(180deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0.6s;
+}
+
+.ray-6 {
+  transform: translateX(-50%) rotate(225deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0.75s;
+}
+
+.ray-7 {
+  transform: translateX(-50%) rotate(270deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 0.9s;
+}
+
+.ray-8 {
+  transform: translateX(-50%) rotate(315deg);
+  animation: fade 1.2s linear infinite;
+  animation-delay: 1.05s;
+}
+
+@keyframes fade {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  12.5% {
+    opacity: 1;
+  }
+}
+
+.loading-text {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+  font-weight: 500;
+}

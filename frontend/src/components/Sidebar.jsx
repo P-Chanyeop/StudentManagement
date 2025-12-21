@@ -13,16 +13,16 @@ function Sidebar() {
   };
 
   const menuItems = [
-    { path: '/dashboard', icon: '📊', label: '대시보드' },
-    { path: '/students', icon: '👥', label: '학생 관리' },
-    { path: '/courses', icon: '📚', label: '코스 관리' },
-    { path: '/attendance', icon: '✅', label: '출석 체크' },
-    { path: '/reservations', icon: '📅', label: '예약 관리' },
-    { path: '/enrollments', icon: '🎫', label: '수강권 관리' },
-    { path: '/makeup-classes', icon: '🔄', label: '보강 수업' },
-    { path: '/leveltests', icon: '📝', label: '레벨 테스트' },
-    { path: '/consultations', icon: '💬', label: '상담 내역' },
-    { path: '/messages', icon: '📨', label: '문자 발송' },
+    { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
+    { path: '/students', icon: <i className="fas fa-users"></i>, label: '학생 관리' },
+    { path: '/courses', icon: <i className="fas fa-book"></i>, label: '코스 관리' },
+    { path: '/attendance', icon: <i className="fas fa-check-circle"></i>, label: '출석 체크' },
+    { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 관리' },
+    { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
+    { path: '/makeup-classes', icon: <i className="fas fa-redo"></i>, label: '보강 수업' },
+    { path: '/leveltests', icon: <i className="fas fa-clipboard-list"></i>, label: '레벨 테스트' },
+    { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
+    { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
   ];
 
   return (
@@ -49,7 +49,7 @@ function Sidebar() {
 
       <div className="sidebar-footer">
         <button className="logout-btn" onClick={handleLogout}>
-          <span className="nav-icon">🚪</span>
+          <span className="nav-icon"><i className="fas fa-sign-out-alt"></i></span>
           <span className="nav-label">로그아웃</span>
         </button>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { makeupClassAPI, studentAPI, courseAPI } from '../services/api';
 import Layout from '../components/Layout';
 import '../styles/MakeupClasses.css';
@@ -194,7 +195,7 @@ function MakeupClasses() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="loading">로딩 중...</div>
+        <LoadingSpinner />
       </Layout>
     );
   }

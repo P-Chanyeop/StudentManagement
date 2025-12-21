@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { enrollmentAPI, studentAPI, courseAPI } from '../services/api';
 import '../styles/Enrollments.css';
 
@@ -179,7 +180,11 @@ function Enrollments() {
   };
 
   if (isLoading) {
-    return <div className="enrollments-container">로딩 중...</div>;
+    return (
+      <div className="enrollments-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (

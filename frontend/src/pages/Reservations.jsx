@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { reservationAPI, scheduleAPI, enrollmentAPI } from '../services/api';
 import '../styles/Reservations.css';
 
@@ -149,7 +150,11 @@ function Reservations() {
   };
 
   if (reservationsLoading || schedulesLoading) {
-    return <div className="reservations-container">로딩 중...</div>;
+    return (
+      <div className="reservations-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (

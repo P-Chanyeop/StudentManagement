@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { levelTestAPI, studentAPI } from '../services/api';
 import '../styles/LevelTests.css';
 
@@ -92,13 +93,17 @@ function LevelTests() {
   const sortedDates = Object.keys(groupedTests).sort((a, b) => new Date(a) - new Date(b));
 
   if (isLoading) {
-    return <div className="level-tests-container">로딩 중...</div>;
+    return (
+      <div className="level-tests-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
     <div className="level-tests-container">
       <div className="level-tests-header">
-        <h1>📋 레벨 테스트 일정 관리</h1>
+        <h1><i className="fas fa-clipboard-list"></i> 레벨 테스트 일정 관리</h1>
         <button className="btn-create-test" onClick={() => setShowCreateModal(true)}>
           + 레벨 테스트 예약
         </button>
@@ -125,7 +130,7 @@ function LevelTests() {
       <div className="calendar-view">
         {sortedDates.length === 0 ? (
           <div className="empty-state">
-            <p>📅 등록된 레벨 테스트 일정이 없습니다.</p>
+            <p><i className="fas fa-calendar-alt"></i> 등록된 레벨 테스트 일정이 없습니다.</p>
             <p className="empty-subtitle">위의 버튼을 눌러 새로운 테스트를 예약하세요.</p>
           </div>
         ) : (
@@ -161,7 +166,7 @@ function LevelTests() {
                           </div>
                           {test.memo && (
                             <div className="test-memo">
-                              <span className="memo-icon">📝</span>
+                              <span className="memo-icon"><i className="fas fa-edit"></i></span>
                               <span>{test.memo}</span>
                             </div>
                           )}
@@ -176,7 +181,7 @@ function LevelTests() {
                           )}
                           {test.messageNotificationSent && (
                             <div className="meta-item notification-sent">
-                              <span className="meta-icon">✉️</span>
+                              <span className="meta-icon"><i className="fas fa-envelope"></i></span>
                               <span>알림 발송 완료</span>
                             </div>
                           )}
@@ -195,7 +200,7 @@ function LevelTests() {
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>📋 레벨 테스트 예약</h2>
+              <h2><i className="fas fa-clipboard-list"></i> 레벨 테스트 예약</h2>
               <button className="modal-close" onClick={() => setShowCreateModal(false)}>
                 ×
               </button>

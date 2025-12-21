@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { attendanceAPI, scheduleAPI } from '../services/api';
 import '../styles/Attendance.css';
 
@@ -104,7 +105,7 @@ function Attendance() {
     <Layout>
       <div className="attendance-page">
         <div className="page-header">
-          <h1 className="page-title">📋 출석부</h1>
+          <h1 className="page-title"><i className="fas fa-clipboard-list"></i> 출석부</h1>
           <p className="page-subtitle">학생 등원/하원 관리</p>
         </div>
 
@@ -133,7 +134,7 @@ function Attendance() {
         <div className="schedule-section">
           <h2 className="section-title">오늘의 수업</h2>
           {schedulesLoading ? (
-            <div className="loading">수업 목록 로딩 중...</div>
+            <LoadingSpinner />
           ) : schedules && schedules.length > 0 ? (
             <div className="schedule-grid">
               {schedules.map((schedule) => (
@@ -152,7 +153,7 @@ function Attendance() {
                   </div>
                   <div className="schedule-info">
                     <span className="schedule-students">
-                      👥 {schedule.currentStudents}/{schedule.maxStudents}명
+                      <i className="fas fa-users"></i> {schedule.currentStudents}/{schedule.maxStudents}명
                     </span>
                     {schedule.isCancelled && (
                       <span className="cancelled-badge">수업취소</span>
