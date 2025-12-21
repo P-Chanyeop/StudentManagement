@@ -70,8 +70,8 @@ dependencies {
     implementation 'org.apache.poi:poi:5.2.5'
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
-    // Swagger/OpenAPI Documentation (Spring Boot 4.0 compatible)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    // Swagger/OpenAPI Documentation - Spring Boot 4.0 호환성 문제로 임시 제거
+    // implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
