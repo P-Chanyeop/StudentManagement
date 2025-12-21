@@ -1,5 +1,9 @@
 .makeup-classes-page {
-  padding: 24px;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
 }
 
 .page-header {

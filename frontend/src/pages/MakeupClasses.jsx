@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { makeupClassAPI, studentAPI, courseAPI } from '../services/api';
-import Layout from '../components/Layout';
 import '../styles/MakeupClasses.css';
 
 function MakeupClasses() {
@@ -194,21 +193,23 @@ function MakeupClasses() {
 
   if (isLoading) {
     return (
-      <Layout>
-        <LoadingSpinner />
-      </Layout>
+      <div className="main-content">
+        <div className="makeup-classes-page">
+          <LoadingSpinner />
+        </div>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <div className="main-content">
       <div className="makeup-classes-page">
-        <div className="page-header">
-          <h1>보강 수업 관리</h1>
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
-            보강 수업 등록
-          </button>
-        </div>
+      <div className="page-header">
+        <h1>보강 수업 관리</h1>
+        <button className="btn-primary" onClick={() => setShowModal(true)}>
+          보강 수업 등록
+        </button>
+      </div>
 
         <div className="filter-section">
           <select
@@ -409,7 +410,7 @@ function MakeupClasses() {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
 

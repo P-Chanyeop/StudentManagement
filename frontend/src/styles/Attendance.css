@@ -1,7 +1,9 @@
 .attendance-page {
-  max-width: 1600px;
-  margin: 0 auto;
   padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
 }
 
 /* 날짜 선택 */

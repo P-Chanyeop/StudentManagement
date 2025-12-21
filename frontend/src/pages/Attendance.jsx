@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { attendanceAPI, scheduleAPI } from '../services/api';
 import '../styles/Attendance.css';
@@ -102,15 +101,10 @@ function Attendance() {
     : [];
 
   return (
-    <Layout>
+    <div className="main-content">
       <div className="attendance-page">
-        <div className="page-header">
-          <h1 className="page-title"><i className="fas fa-clipboard-list"></i> 출석부</h1>
-          <p className="page-subtitle">학생 등원/하원 관리</p>
-        </div>
-
-        {/* 날짜 선택 */}
-        <div className="date-selector">
+      {/* 날짜 선택 */}
+      <div className="date-selector">
           <input
             type="date"
             value={selectedDate}
@@ -277,7 +271,7 @@ function Attendance() {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
 
