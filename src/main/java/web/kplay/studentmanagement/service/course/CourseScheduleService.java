@@ -62,6 +62,14 @@ public class CourseScheduleService {
     }
 
     @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getAvailableSchedulesByDate(LocalDate date) {
+        return scheduleRepository.findActiveSchedulesByDate(date).stream()
+                .filter(schedule -> schedule.getCurrentStudents() < schedule.getCourse().getMaxStudents())
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<CourseScheduleResponse> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
         return scheduleRepository.findByScheduleDateBetween(startDate, endDate).stream()
                 .map(this::toResponse)
@@ -110,12 +118,16 @@ public class CourseScheduleService {
                 .id(schedule.getId())
                 .courseId(schedule.getCourse().getId())
                 .courseName(schedule.getCourse().getCourseName())
+                .courseLevel(schedule.getCourse().getLevel())
+                .teacherName(schedule.getCourse().getTeacher() != null ? schedule.getCourse().getTeacher().getName() : "미배정")
                 .scheduleDate(schedule.getScheduleDate())
                 .startTime(schedule.getStartTime())
                 .endTime(schedule.getEndTime())
                 .dayOfWeek(schedule.getDayOfWeek())
                 .currentStudents(schedule.getCurrentStudents())
                 .maxStudents(schedule.getCourse().getMaxStudents())
+                .currentCount(schedule.getCurrentStudents())
+                .maxCapacity(schedule.getCourse().getMaxStudents())
                 .isCancelled(schedule.getIsCancelled())
                 .cancelReason(schedule.getCancelReason())
                 .memo(schedule.getMemo())

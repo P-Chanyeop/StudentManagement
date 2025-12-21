@@ -6,6 +6,30 @@
   min-height: 100vh;
 }
 
+/* 비고 입력 필드 스타일 */
+.remarks-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.remarks-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+/* 테이블 컬럼 너비 조정 */
+.col-completed {
+  width: 80px;
+  text-align: center;
+}
+
+.col-remarks {
+  width: 150px;
+}
+
 /* 날짜 선택 */
 .date-selector {
   display: flex;
@@ -444,4 +468,43 @@
   .attendance-table td {
     padding: 10px 8px;
   }
+}
+/* 정렬 버튼 스타일 */
+.sort-buttons {
+  display: flex;
+  gap: 8px;
+  margin-right: 16px;
+}
+
+.sort-btn {
+  padding: 8px 16px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  border-color: var(--naver-green);
+  color: var(--naver-green);
+}
+
+.sort-btn.active {
+  background: var(--naver-green);
+  border-color: var(--naver-green);
+  color: white;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.attendance-summary {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
 }

@@ -44,6 +44,14 @@ public class CourseScheduleController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/available/{date}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT', 'STUDENT')")
+    public ResponseEntity<List<CourseScheduleResponse>> getAvailableSchedulesByDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<CourseScheduleResponse> responses = scheduleService.getAvailableSchedulesByDate(date);
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping("/range")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<CourseScheduleResponse>> getSchedulesByDateRange(

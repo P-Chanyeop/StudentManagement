@@ -24,5 +24,7 @@ public class EnrollmentResponse {
     private Integer usedCount;
     private Integer remainingCount;
     private Boolean isActive;
+    private Integer customDurationMinutes; // 개별 수업 시간
+    private Integer actualDurationMinutes; // 실제 적용되는 수업 시간
     private String memo;
 }

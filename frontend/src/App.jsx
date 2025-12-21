@@ -6,6 +6,7 @@ import Students from './pages/Students';
 import Courses from './pages/Courses';
 import Attendance from './pages/Attendance';
 import Reservations from './pages/Reservations';
+import ParentReservation from './pages/ParentReservation';
 import Enrollments from './pages/Enrollments';
 import LevelTests from './pages/LevelTests';
 import Consultations from './pages/Consultations';
@@ -64,6 +65,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Reservations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/parent-reservation"
+        element={
+          <ProtectedRoute>
+            <ParentReservation />
           </ProtectedRoute>
         }
       />
