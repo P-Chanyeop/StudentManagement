@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학원 관리 시스템 - 새로운 디자인 미리보기</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --naver-green: #03C75A;
+            --naver-green-dark: #02B350;
+            --naver-green-light: #E8F8F0;
+            --naver-green-lighter: #F0FDF7;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 헤더 - rallyz.co.kr 스타일 */
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--naver-green);
+        }
+
+        .logo i {
+            font-size: 32px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 48px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s;
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-menu a:hover {
+            color: var(--naver-green);
+        }
+
+        .nav-menu a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--naver-green);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: var(--gray-50);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-info:hover {
+            background: var(--naver-green-light);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--naver-green) 0%, var(--naver-green-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* 히어로 섹션 */
+        .hero {
+            background: linear-gradient(135deg, var(--naver-green) 0%, var(--naver-green-dark) 100%);
+            padding: 64px 32px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .hero-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        /* 메인 컨텐츠 */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        /* 통계 카드 - rallyz 스타일 개선 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--naver-green), var(--naver-green-dark));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(3, 199, 90, 0.15);
+            border-color: var(--naver-green-light);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            background: linear-gradient(135deg, var(--naver-green) 0%, var(--naver-green-dark) 100%);
+            box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--naver-green);
+            background: var(--naver-green-lighter);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .stat-content h3 {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .stat-footer {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--gray-100);
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        /* 섹션 헤더 */
+        .section-header {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .section-subtitle {
+            font-size: 15px;
+            color: var(--gray-600);
+        }
+
+        /* 대시보드 그리드 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--gray-50);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--naver-green);
+        }
+
+        .card-badge {
+            background: var(--naver-green);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        .list-item {
+            padding: 20px 28px;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s;
+        }
+
+        .list-item:hover {
+            background: var(--gray-50);
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--naver-green-light);
+            color: var(--naver-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .item-subtitle {
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .item-badge {
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-success {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .badge-warning {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .badge-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        /* 기능 카드 그리드 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 16px 32px rgba(3, 199, 90, 0.12);
+            border-color: var(--naver-green);
+        }
+
+        .feature-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--naver-green-light) 0%, var(--naver-green-lighter) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--naver-green);
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: var(--gray-600);
+            line-height: 1.6;
+        }
+
+        /* CTA 섹션 */
+        .cta-section {
+            background: linear-gradient(135deg, var(--naver-green) 0%, var(--naver-green-dark) 100%);
+            border-radius: 20px;
+            padding: 64px 48px;
+            text-align: center;
+            color: white;
+            margin-bottom: 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 32px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button {
+            background: white;
+            color: var(--naver-green);
+            padding: 16px 40px;
+            border-radius: 28px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 푸터 */
+        .footer {
+            background: var(--gray-900);
+            color: var(--gray-400);
+            padding: 48px 32px;
+            margin-top: 64px;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer p {
+            margin-bottom: 8px;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 0 16px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .hero {
+                padding: 48px 16px;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .main-content {
+                padding: 32px 16px;
+            }
+
+            .stats-grid,
+            .dashboard-grid,
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>K-Play Academy</span>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#" class="active">대시보드</a></li>
+                    <li><a href="#">학생 관리</a></li>
+                    <li><a href="#">수업 관리</a></li>
+                    <li><a href="#">출석 관리</a></li>
+                    <li><a href="#">통계</a></li>
+                </ul>
+            </nav>
+            <div class="user-section">
+                <div class="user-info">
+                    <div class="user-avatar">관</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 14px; color: var(--gray-900);">관리자</div>
+                        <div style="font-size: 12px; color: var(--gray-500);">admin@kplay.web</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="color: var(--gray-500);"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 히어로 섹션 -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>안녕하세요, 관리자님! 👋</h1>
+            <p>오늘도 학원 운영을 효율적으로 관리하세요</p>
+        </div>
+    </section>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-content">
+        <!-- 통계 카드 -->
+        <div class="stats-grid animate">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        12%
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h3>전체 학생</h3>
+                    <div class="stat-value">248<span style="font-size: 20px; color: var(--gray-500); margin-left: 4px;">명</span></div>
+                </div>
+                <div class="stat-footer">
+                    <i class="fas fa-info-circle"></i> 지난달 대비 12% 증가
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        8%
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h3>진행중인 수업</h3>
+                    <div class="stat-value">32<span style="font-size: 20px; color: var(--gray-500); margin-left: 4px;">개</span></div>
+                </div>
+                <div class="stat-footer">
+                    <i class="fas fa-info-circle"></i> 오늘 예정된 수업
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-trend" style="color: var(--naver-green); background: var(--naver-green-lighter);">
+                        <i class="fas fa-check"></i>
+                        95%
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h3>오늘 출석률</h3>
+                    <div class="stat-value">95<span style="font-size: 20px; color: var(--gray-500); margin-left: 4px;">%</span></div>
+                </div>
+                <div class="stat-footer">
+                    <i class="fas fa-info-circle"></i> 평균 출석률보다 높음
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-won-sign"></i>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        24%
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h3>이번 달 매출</h3>
+                    <div class="stat-value">18.5<span style="font-size: 20px; color: var(--gray-500); margin-left: 4px;">M</span></div>
+                </div>
+                <div class="stat-footer">
+                    <i class="fas fa-info-circle"></i> 목표 달성률 102%
+                </div>
+            </div>
+        </div>
+
+        <!-- 섹션 헤더 -->
+        <div class="section-header animate">
+            <h2 class="section-title">오늘의 주요 활동</h2>
+            <p class="section-subtitle">실시간으로 업데이트되는 학원 운영 현황을 확인하세요</p>
+        </div>
+
+        <!-- 대시보드 그리드 -->
+        <div class="dashboard-grid animate">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-day"></i>
+                        오늘의 수업
+                    </h3>
+                    <span class="card-badge">8개</span>
+                </div>
+                <div class="card-body">
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">초급 영어 회화</div>
+                            <div class="item-subtitle">09:00 - 10:30 · 김영어 선생님</div>
+                        </div>
+                        <span class="item-badge badge-info">진행중</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">중급 수학</div>
+                            <div class="item-subtitle">11:00 - 12:30 · 이수학 선생님</div>
+                        </div>
+                        <span class="item-badge badge-warning">대기중</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">토론 및 발표</div>
+                            <div class="item-subtitle">14:00 - 15:30 · 박토론 선생님</div>
+                        </div>
+                        <span class="item-badge badge-success">예정</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-check"></i>
+                        최근 출석 현황
+                    </h3>
+                    <span class="card-badge">23명</span>
+                </div>
+                <div class="card-body">
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">홍길동</div>
+                            <div class="item-subtitle">체크인: 08:55 · 초급 영어 회화</div>
+                        </div>
+                        <span class="item-badge badge-success">출석</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">김민수</div>
+                            <div class="item-subtitle">체크인: 09:05 · 초급 영어 회화</div>
+                        </div>
+                        <span class="item-badge badge-warning">지각</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">이지은</div>
+                            <div class="item-subtitle">체크인: 08:50 · 초급 영어 회화</div>
+                        </div>
+                        <span class="item-badge badge-success">출석</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        만료 임박 수강권
+                    </h3>
+                    <span class="card-badge" style="background: #FEF3C7; color: #D97706;">5개</span>
+                </div>
+                <div class="card-body">
+                    <div class="list-item">
+                        <div class="item-icon" style="background: #FEF3C7; color: #D97706;">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">홍길동 - 영어 초급반</div>
+                            <div class="item-subtitle">남은 횟수: 2회 · 종료일: 2025-01-05</div>
+                        </div>
+                        <span class="item-badge badge-warning">3일 남음</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon" style="background: #FEE2E2; color: #DC2626;">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">김민수 - 수학 중급반</div>
+                            <div class="item-subtitle">남은 횟수: 1회 · 종료일: 2024-12-24</div>
+                        </div>
+                        <span class="item-badge" style="background: #FEE2E2; color: #DC2626;">1일 남음</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon" style="background: #FEF3C7; color: #D97706;">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">이지은 - 영어 중급반</div>
+                            <div class="item-subtitle">남은 횟수: 3회 · 종료일: 2025-01-08</div>
+                        </div>
+                        <span class="item-badge badge-warning">7일 남음</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-check"></i>
+                        오늘 예약 현황
+                    </h3>
+                    <span class="card-badge">12건</span>
+                </div>
+                <div class="card-body">
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">박지성 - 레벨 테스트</div>
+                            <div class="item-subtitle">10:00 · 영어 평가</div>
+                        </div>
+                        <span class="item-badge badge-success">확정</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">최민지 - 상담</div>
+                            <div class="item-subtitle">13:00 · 학부모 상담</div>
+                        </div>
+                        <span class="item-badge badge-warning">대기중</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-icon">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">정수민 - 보강 수업</div>
+                            <div class="item-subtitle">15:30 · 수학 보강</div>
+                        </div>
+                        <span class="item-badge badge-success">확정</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 기능 섹션 -->
+        <div class="section-header animate">
+            <h2 class="section-title">모든 기능을 한 곳에서</h2>
+            <p class="section-subtitle">학원 운영에 필요한 모든 것을 관리하세요</p>
+        </div>
+
+        <div class="feature-grid animate">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3 class="feature-title">학생 관리</h3>
+                <p class="feature-description">학생 정보, 학부모 연락처, 성적 이력을 체계적으로 관리합니다</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h3 class="feature-title">수업 관리</h3>
+                <p class="feature-description">강좌 개설, 시간표 구성, 강사 배정을 효율적으로 처리합니다</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h3 class="feature-title">출결 관리</h3>
+                <p class="feature-description">실시간 출석 체크와 통계로 학생들의 출결을 관리합니다</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h3 class="feature-title">수강권 관리</h3>
+                <p class="feature-description">수강권 발급, 사용 내역, 만료 알림을 자동으로 처리합니다</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <h3 class="feature-title">상담 관리</h3>
+                <p class="feature-description">학부모 상담 일정과 내용을 기록하고 관리합니다</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">통계 분석</h3>
+                <p class="feature-description">매출, 출석률, 학생 증감 등 다양한 통계를 확인합니다</p>
+            </div>
+        </div>
+
+        <!-- CTA 섹션 -->
+        <div class="cta-section animate">
+            <h2>지금 바로 시작하세요</h2>
+            <p>학원 관리의 새로운 기준을 경험해보세요</p>
+            <button class="cta-button">
+                <i class="fas fa-rocket" style="margin-right: 8px;"></i>
+                무료로 시작하기
+            </button>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p><strong>K-Play Academy Management System</strong></p>
+            <p>© 2025 K-Play Academy. All rights reserved.</p>
+            <p style="margin-top: 16px; font-size: 13px;">문의: support@kplay.web | 전화: 02-1234-5678</p>
+        </div>
+    </footer>
+</body>
+</html>
