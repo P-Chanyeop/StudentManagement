@@ -46,6 +46,9 @@ public class Enrollment extends BaseEntity {
     @Column(nullable = false)
     private Boolean isActive = true;
 
+    @Column
+    private Integer customDurationMinutes; // 학생별 개별 수업 시간 (분)
+
     @Column(length = 500)
     private String memo;
 
@@ -95,6 +98,16 @@ public class Enrollment extends BaseEntity {
     // 메모 업데이트
     public void updateMemo(String memo) {
         this.memo = memo;
+    }
+
+    // 개별 수업 시간 설정
+    public void setCustomDuration(Integer durationMinutes) {
+        this.customDurationMinutes = durationMinutes;
+    }
+
+    // 실제 수업 시간 반환 (개별 설정이 있으면 개별 시간, 없으면 코스 기본 시간)
+    public Integer getActualDurationMinutes() {
+        return customDurationMinutes != null ? customDurationMinutes : course.getDurationMinutes();
     }
 
     // 기간 연장 (입력 검증 추가)

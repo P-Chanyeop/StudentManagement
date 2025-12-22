@@ -30,7 +30,7 @@ class LevelTestTest {
                 .id(1L)
                 .studentName("홍길동")
                 .birthDate(LocalDate.of(2010, 3, 15))
-                .phoneNumber("010-1234-5678")
+                .studentPhone("010-1234-5678")
                 .build();
 
         teacher = User.builder()

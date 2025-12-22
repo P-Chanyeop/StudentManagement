@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { consultationAPI, studentAPI } from '../services/api';
 import '../styles/Consultations.css';
 
@@ -85,7 +86,11 @@ function Consultations() {
   };
 
   if (isLoading && selectedStudent) {
-    return <div className="consultations-container">로딩 중...</div>;
+    return (
+      <div className="consultations-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
@@ -130,7 +135,7 @@ function Consultations() {
               <div key={consultation.id} className="consultation-card">
                 <div className="consultation-header">
                   <div className="date-info">
-                    <span className="icon">📅</span>
+                    <span className="icon"><i className="fas fa-calendar-alt"></i></span>
                     <span className="date">
                       {new Date(consultation.consultationDate).toLocaleDateString('ko-KR')}
                     </span>

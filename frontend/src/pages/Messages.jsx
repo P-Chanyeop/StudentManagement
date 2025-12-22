@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { messageAPI, studentAPI } from '../services/api';
 import '../styles/Messages.css';
 
@@ -100,16 +101,20 @@ function Messages() {
   const getTypeIcon = (type) => {
     const typeMap = {
       GENERAL: '📧',
-      ATTENDANCE: '✅',
-      PAYMENT: '💰',
-      RESERVATION: '📅',
+      ATTENDANCE: '<i className="fas fa-check-circle"></i>',
+      PAYMENT: '<i className="fas fa-dollar-sign"></i>',
+      RESERVATION: '<i className="fas fa-calendar-alt"></i>',
       EMERGENCY: '🚨',
     };
     return typeMap[type] || '📧';
   };
 
   if (isLoading) {
-    return <div className="messages-container">로딩 중...</div>;
+    return (
+      <div className="messages-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (

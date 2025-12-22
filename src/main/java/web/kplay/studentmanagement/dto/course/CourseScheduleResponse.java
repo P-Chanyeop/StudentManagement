@@ -16,12 +16,16 @@ public class CourseScheduleResponse {
     private Long id;
     private Long courseId;
     private String courseName;
+    private String courseLevel;
+    private String teacherName;
     private LocalDate scheduleDate;
     private LocalTime startTime;
     private LocalTime endTime;
     private String dayOfWeek;
     private Integer currentStudents;
     private Integer maxStudents;
+    private Integer currentCount;
+    private Integer maxCapacity;
     private Boolean isCancelled;
     private String cancelReason;
     private String memo;

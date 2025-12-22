@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { mypageAPI } from '../services/api';
 import '../styles/MyPage.css';
 
@@ -21,7 +22,7 @@ function MyPage() {
       <Layout>
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>로딩 중...</p>
+          <LoadingSpinner />
         </div>
       </Layout>
     );
@@ -95,21 +96,21 @@ function MyPage() {
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">📅</div>
+              <div className="stat-icon"><i className="fas fa-calendar-alt"></i></div>
               <div className="stat-content">
                 <div className="stat-value">{stats.upcomingReservationCount}</div>
                 <div className="stat-label">예정 예약</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">✅</div>
+              <div className="stat-icon"><i className="fas fa-check-circle"></i></div>
               <div className="stat-content">
                 <div className="stat-value">{stats.monthlyAttendanceCount}</div>
                 <div className="stat-label">이번 달 출석</div>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">📊</div>
+              <div className="stat-icon"><i className="fas fa-chart-bar"></i></div>
               <div className="stat-content">
                 <div className="stat-value">{stats.totalAttendanceCount}</div>
                 <div className="stat-label">총 출석</div>
@@ -160,7 +161,7 @@ function MyPage() {
               <div className="overview-grid">
                 {/* 수강권 정보 */}
                 <div className="info-section">
-                  <h2 className="section-title">📚 활성 수강권</h2>
+                  <h2 className="section-title"><i className="fas fa-book"></i> 활성 수강권</h2>
                   {activeEnrollments && activeEnrollments.length > 0 ? (
                     <div className="enrollment-cards">
                       {activeEnrollments.map((enrollment) => (

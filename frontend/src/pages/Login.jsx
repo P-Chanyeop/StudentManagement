@@ -49,7 +49,7 @@ function Login() {
       <div className="login-box">
         <div className="login-header">
           <div className="logo">
-            <div className="logo-icon">📚</div>
+            <div className="logo-icon"><i className="fas fa-book"></i></div>
             <h1>학원 관리 시스템</h1>
           </div>
           <p className="subtitle">출석·수업·예약 통합 관리</p>

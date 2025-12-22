@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { enrollmentAPI, studentAPI, courseAPI } from '../services/api';
+import { holidayService } from '../services/holidayService';
 import '../styles/Enrollments.css';
 
 function Enrollments() {
@@ -10,6 +12,36 @@ function Enrollments() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+
+  // 남은 영업일 표시 컴포넌트
+  const RemainingBusinessDays = ({ startDate, endDate }) => {
+    const [remainingDays, setRemainingDays] = useState(null);
+
+    useEffect(() => {
+      const calculateDays = async () => {
+        try {
+          const days = await holidayService.calculateRemainingBusinessDays(startDate, endDate);
+          setRemainingDays(days);
+        } catch (error) {
+          console.error('남은 영업일 계산 실패:', error);
+          setRemainingDays('계산 실패');
+        }
+      };
+
+      calculateDays();
+    }, [startDate, endDate]);
+
+    if (remainingDays === null) return <span>계산 중...</span>;
+    
+    const isExpiringSoon = remainingDays <= 20; // 20일 이하면 경고
+    const isExpired = remainingDays <= 0;
+
+    return (
+      <span className={`remaining-days ${isExpired ? 'expired' : isExpiringSoon ? 'warning' : ''}`}>
+        {isExpired ? '만료됨' : `${remainingDays}일`}
+      </span>
+    );
+  };
   const [newEnrollment, setNewEnrollment] = useState({
     studentId: '',
     courseId: '',
@@ -17,9 +49,34 @@ function Enrollments() {
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     totalCount: 0,
+    weeks: 12, // 주 단위 추가
     price: 0,
     notes: '',
   });
+
+  // 시작일이나 주 수가 변경될 때 자동으로 종료일 계산
+  useEffect(() => {
+    if (newEnrollment.type === 'PERIOD_BASED' && newEnrollment.startDate && newEnrollment.weeks) {
+      calculateEndDate();
+    }
+  }, [newEnrollment.startDate, newEnrollment.weeks, newEnrollment.type]);
+
+  // 공휴일을 고려한 종료일 계산
+  const calculateEndDate = async () => {
+    try {
+      const endDate = await holidayService.calculateEndDate(
+        newEnrollment.startDate, 
+        parseInt(newEnrollment.weeks)
+      );
+      
+      setNewEnrollment(prev => ({
+        ...prev,
+        endDate: endDate.toISOString().split('T')[0]
+      }));
+    } catch (error) {
+      console.error('종료일 계산 실패:', error);
+    }
+  };
 
   // 전체 수강권 조회
   const { data: enrollments = [], isLoading } = useQuery({
@@ -97,6 +154,18 @@ function Enrollments() {
     },
   });
 
+  // 개별 수업 시간 설정 mutation
+  const setDurationMutation = useMutation({
+    mutationFn: ({ id, durationMinutes }) => enrollmentAPI.setCustomDuration(id, durationMinutes),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      alert('개별 수업 시간이 설정되었습니다.');
+    },
+    onError: (error) => {
+      alert(`설정 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
   const handleCreateEnrollment = () => {
     if (!newEnrollment.studentId || !newEnrollment.courseId) {
       alert('학생과 코스를 선택해주세요.');
@@ -130,6 +199,13 @@ function Enrollments() {
       newEndDate.setDate(newEndDate.getDate() + parseInt(days));
       const formattedDate = newEndDate.toISOString().split('T')[0];
       extendMutation.mutate({ id, newEndDate: formattedDate });
+    }
+  };
+
+  const handleSetCustomDuration = (id, currentDuration) => {
+    const duration = prompt('개별 수업 시간을 입력하세요 (분):', currentDuration || '60');
+    if (duration && !isNaN(duration) && parseInt(duration) > 0) {
+      setDurationMutation.mutate({ id, durationMinutes: parseInt(duration) });
     }
   };
 
@@ -179,7 +255,11 @@ function Enrollments() {
   };
 
   if (isLoading) {
-    return <div className="enrollments-container">로딩 중...</div>;
+    return (
+      <div className="enrollments-container">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
@@ -248,6 +328,21 @@ function Enrollments() {
                       <div className="detail-item">
                         <span className="label">기간</span>
                         <span className="value">
+                          {enrollment.startDate} ~ {enrollment.endDate}
+                        </span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="label">남은 영업일</span>
+                        <span className="value">
+                          <RemainingBusinessDays 
+                            startDate={enrollment.startDate} 
+                            endDate={enrollment.endDate} 
+                          />
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                        <span className="value">
                           {new Date(enrollment.startDate).toLocaleDateString()} ~{' '}
                           {new Date(enrollment.endDate).toLocaleDateString()}
                         </span>
@@ -285,6 +380,15 @@ function Enrollments() {
                       </div>
                     </>
                   )}
+                  <div className="detail-item">
+                    <span className="label">수업 시간</span>
+                    <span className="value">
+                      {enrollment.actualDurationMinutes || enrollment.course.durationMinutes}분
+                      {enrollment.customDurationMinutes && (
+                        <span className="custom-duration"> (개별설정)</span>
+                      )}
+                    </span>
+                  </div>
                   <div className="detail-item">
                     <span className="label">가격</span>
                     <span className="value price">
@@ -385,6 +489,22 @@ function Enrollments() {
                         setNewEnrollment({ ...newEnrollment, startDate: e.target.value })
                       }
                     />
+                  </div>
+                  <div className="form-group">
+                    <label>수강 기간 (주) *</label>
+                    <select
+                      value={newEnrollment.weeks}
+                      onChange={(e) =>
+                        setNewEnrollment({ ...newEnrollment, weeks: parseInt(e.target.value) })
+                      }
+                    >
+                      <option value={4}>4주</option>
+                      <option value={8}>8주</option>
+                      <option value={12}>12주</option>
+                      <option value={16}>16주</option>
+                      <option value={24}>24주</option>
+                    </select>
+                    <small className="form-help">공휴일을 제외한 영업일 기준으로 종료일이 자동 계산됩니다.</small>
                   </div>
                   <div className="form-group">
                     <label>종료일 *</label>
@@ -537,6 +657,16 @@ function Enrollments() {
                   )}
 
                   <div className="detail-info-item">
+                    <span className="info-label">수업 시간</span>
+                    <span className="info-value">
+                      {selectedEnrollment.actualDurationMinutes || selectedEnrollment.course.durationMinutes}분
+                      {selectedEnrollment.customDurationMinutes && (
+                        <span className="custom-duration"> (개별설정)</span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="detail-info-item">
                     <span className="info-label">가격</span>
                     <span className="info-value price">
                       {selectedEnrollment.price.toLocaleString()}원
@@ -564,6 +694,15 @@ function Enrollments() {
                       기간 연장
                     </button>
                   )}
+                  <button
+                    className="btn-set-duration"
+                    onClick={() => handleSetCustomDuration(
+                      selectedEnrollment.id, 
+                      selectedEnrollment.actualDurationMinutes || selectedEnrollment.course.durationMinutes
+                    )}
+                  >
+                    수업시간 설정
+                  </button>
                   <button
                     className="btn-cancel-enrollment"
                     onClick={() => handleCancelEnrollment(selectedEnrollment.id)}

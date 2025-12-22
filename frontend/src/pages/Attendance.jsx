@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import Layout from '../components/Layout';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { attendanceAPI, scheduleAPI } from '../services/api';
 import '../styles/Attendance.css';
 
@@ -31,6 +31,30 @@ function Attendance() {
     },
     enabled: !!selectedSchedule,
   });
+
+  // 출석 목록 정렬
+  const sortedAttendances = attendances ? [...attendances].sort((a, b) => {
+    if (sortBy === 'arrival') {
+      // 등원순 정렬 (체크인 시간 기준)
+      if (!a.checkInTime && !b.checkInTime) return 0;
+      if (!a.checkInTime) return 1;
+      if (!b.checkInTime) return -1;
+      return new Date(a.checkInTime) - new Date(b.checkInTime);
+    } else if (sortBy === 'departure') {
+      // 하원순 정렬 (체크아웃 시간 기준, 미하원자는 뒤로)
+      if (!a.checkOutTime && !b.checkOutTime) {
+        // 둘 다 미하원이면 등원 시간순
+        if (!a.checkInTime && !b.checkInTime) return 0;
+        if (!a.checkInTime) return 1;
+        if (!b.checkInTime) return -1;
+        return new Date(a.checkInTime) - new Date(b.checkInTime);
+      }
+      if (!a.checkOutTime) return 1;
+      if (!b.checkOutTime) return -1;
+      return new Date(a.checkOutTime) - new Date(b.checkOutTime);
+    }
+    return 0;
+  }) : [];
 
   // 출석 체크인 mutation
   const checkInMutation = useMutation({
@@ -83,33 +107,48 @@ function Attendance() {
     });
   };
 
-  // 출석 데이터 정렬
-  const sortedAttendances = attendances
-    ? [...attendances].sort((a, b) => {
-        if (sortBy === 'arrival') {
-          // 등원 시간순 정렬 (빠른 순)
-          if (!a.checkInTime) return 1;
-          if (!b.checkInTime) return -1;
-          return new Date(a.checkInTime) - new Date(b.checkInTime);
-        } else {
-          // 하원 시간순 정렬 (빠른 순)
-          if (!a.checkOutTime) return 1;
-          if (!b.checkOutTime) return -1;
-          return new Date(a.checkOutTime) - new Date(b.checkOutTime);
-        }
-      })
-    : [];
+  // 수업 완료 상태 업데이트
+  const updateClassCompleted = useMutation({
+    mutationFn: async ({ attendanceId, completed }) => {
+      if (completed) {
+        return await attendanceAPI.completeClass(attendanceId);
+      } else {
+        return await attendanceAPI.uncompleteClass(attendanceId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances']);
+    },
+  });
+
+  // 비고 업데이트
+  const updateRemarks = useMutation({
+    mutationFn: async ({ attendanceId, memo }) => {
+      return await attendanceAPI.updateMemo(attendanceId, memo);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances']);
+    },
+  });
+
+  // 수업 완료 체크박스 핸들러
+  const handleClassCompleted = (attendanceId, completed) => {
+    updateClassCompleted.mutate({ attendanceId, completed });
+  };
+
+  // 비고 입력 핸들러 (디바운스 적용)
+  const handleRemarksChange = (attendanceId, memo) => {
+    clearTimeout(window.remarksTimeout);
+    window.remarksTimeout = setTimeout(() => {
+      updateRemarks.mutate({ attendanceId, memo });
+    }, 1000); // 1초 후 저장
+  };
 
   return (
-    <Layout>
+    <div className="main-content">
       <div className="attendance-page">
-        <div className="page-header">
-          <h1 className="page-title">📋 출석부</h1>
-          <p className="page-subtitle">학생 등원/하원 관리</p>
-        </div>
-
-        {/* 날짜 선택 */}
-        <div className="date-selector">
+      {/* 날짜 선택 */}
+      <div className="date-selector">
           <input
             type="date"
             value={selectedDate}
@@ -133,7 +172,7 @@ function Attendance() {
         <div className="schedule-section">
           <h2 className="section-title">오늘의 수업</h2>
           {schedulesLoading ? (
-            <div className="loading">수업 목록 로딩 중...</div>
+            <LoadingSpinner />
           ) : schedules && schedules.length > 0 ? (
             <div className="schedule-grid">
               {schedules.map((schedule) => (
@@ -152,7 +191,7 @@ function Attendance() {
                   </div>
                   <div className="schedule-info">
                     <span className="schedule-students">
-                      👥 {schedule.currentStudents}/{schedule.maxStudents}명
+                      <i className="fas fa-users"></i> {schedule.currentStudents}/{schedule.maxStudents}명
                     </span>
                     {schedule.isCancelled && (
                       <span className="cancelled-badge">수업취소</span>
@@ -215,6 +254,7 @@ function Attendance() {
                       <th className="col-time">등원 시간</th>
                       <th className="col-time">하원 시간</th>
                       <th className="col-time">예상 하원</th>
+                      <th className="col-completed">수업 완료</th>
                       <th className="col-remarks">비고</th>
                       <th className="col-actions">하원 처리</th>
                     </tr>
@@ -248,8 +288,22 @@ function Attendance() {
                         <td className="col-time expected-time">
                           {attendance.expectedLeaveTime || '-'}
                         </td>
+                        <td className="col-completed">
+                          <input
+                            type="checkbox"
+                            checked={attendance.classCompleted || false}
+                            onChange={(e) => handleClassCompleted(attendance.id, e.target.checked)}
+                            disabled={!attendance.checkInTime}
+                          />
+                        </td>
                         <td className="col-remarks">
-                          {attendance.memo || attendance.reason || '-'}
+                          <input
+                            type="text"
+                            value={attendance.memo || ''}
+                            onChange={(e) => handleRemarksChange(attendance.id, e.target.value)}
+                            placeholder="비고 입력"
+                            className="remarks-input"
+                          />
                         </td>
                         <td className="col-actions">
                           {!attendance.checkOutTime ? (
@@ -276,7 +330,7 @@ function Attendance() {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
 

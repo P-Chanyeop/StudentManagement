@@ -228,6 +228,23 @@ public class EnrollmentService {
         return toResponse(enrollment);
     }
 
+    /**
+     * 개별 수업 시간 설정
+     */
+    @Transactional
+    public EnrollmentResponse setCustomDuration(Long enrollmentId, Integer durationMinutes) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("수강권을 찾을 수 없습니다: " + enrollmentId));
+
+        // 유효성 검증
+        if (durationMinutes != null && (durationMinutes < 30 || durationMinutes > 300)) {
+            throw new IllegalArgumentException("수업 시간은 30분에서 300분 사이여야 합니다: " + durationMinutes);
+        }
+
+        enrollment.setCustomDuration(durationMinutes);
+        return toResponse(enrollment);
+    }
+
     private EnrollmentResponse toResponse(Enrollment enrollment) {
         return EnrollmentResponse.builder()
                 .id(enrollment.getId())
@@ -241,6 +258,8 @@ public class EnrollmentService {
                 .usedCount(enrollment.getUsedCount())
                 .remainingCount(enrollment.getRemainingCount())
                 .isActive(enrollment.getIsActive())
+                .customDurationMinutes(enrollment.getCustomDurationMinutes())
+                .actualDurationMinutes(enrollment.getActualDurationMinutes())
                 .memo(enrollment.getMemo())
                 .build();
     }

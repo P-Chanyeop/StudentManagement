@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { noticeAPI } from '../services/api';
 import '../styles/Notices.css';
 
@@ -74,7 +75,7 @@ function Notices() {
     <Layout>
       <div className="notices-page">
         <div className="page-header">
-          <h1 className="page-title">📢 공지사항</h1>
+          <h1 className="page-title"><i className="fas fa-bullhorn"></i> 공지사항</h1>
           <p className="page-subtitle">학원의 중요한 소식을 확인하세요</p>
         </div>
 
@@ -89,7 +90,7 @@ function Notices() {
               className="search-input"
             />
             <button type="submit" className="search-button">
-              🔍 검색
+              <i className="fas fa-search"></i> 검색
             </button>
             {searchKeyword && (
               <button
@@ -124,7 +125,7 @@ function Notices() {
                   <div className="notice-meta">
                     <span className="notice-author">{notice.authorName}</span>
                     <span className="notice-date">{formatDate(notice.createdAt)}</span>
-                    <span className="notice-views">👁️ {notice.viewCount}</span>
+                    <span className="notice-views"><i className="fas fa-eye"></i> {notice.viewCount}</span>
                   </div>
                 </div>
               ))}
@@ -134,9 +135,9 @@ function Notices() {
 
         {/* 공지사항 목록 */}
         <div className="notices-section">
-          <h2 className="section-title">📋 전체 공지</h2>
+          <h2 className="section-title"><i className="fas fa-clipboard-list"></i> 전체 공지</h2>
           {isLoading ? (
-            <div className="loading">로딩 중...</div>
+            <LoadingSpinner />
           ) : noticesPage && noticesPage.content && noticesPage.content.length > 0 ? (
             <>
               <div className="notice-list">

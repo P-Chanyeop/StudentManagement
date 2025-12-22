@@ -74,7 +74,7 @@ function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon" style={{ background: '#E8F8F0' }}>
-            👥
+            <i className="fas fa-users"></i>
           </div>
           <div className="stat-content">
             <div className="stat-label">전체 학생</div>
@@ -84,7 +84,7 @@ function Dashboard() {
 
         <div className="stat-card">
           <div className="stat-icon" style={{ background: '#FFF5E6' }}>
-            ✅
+            <i className="fas fa-check-circle"></i>
           </div>
           <div className="stat-content">
             <div className="stat-label">오늘 출석</div>
@@ -94,7 +94,7 @@ function Dashboard() {
 
         <div className="stat-card">
           <div className="stat-icon" style={{ background: '#E6F7FF' }}>
-            📅
+            <i className="fas fa-calendar-alt"></i>
           </div>
           <div className="stat-content">
             <div className="stat-label">오늘 예약</div>
@@ -104,7 +104,7 @@ function Dashboard() {
 
         <div className="stat-card">
           <div className="stat-icon" style={{ background: '#FFF0F6' }}>
-            ⚠️
+            <i className="fas fa-exclamation-triangle"></i>
           </div>
           <div className="stat-content">
             <div className="stat-label">만료 임박 수강권</div>

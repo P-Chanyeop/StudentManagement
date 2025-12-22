@@ -127,6 +127,18 @@ public class EnrollmentController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 개별 수업 시간 설정
+     */
+    @PatchMapping("/{id}/duration")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<EnrollmentResponse> setCustomDuration(
+            @PathVariable Long id,
+            @RequestParam Integer durationMinutes) {
+        EnrollmentResponse response = enrollmentService.setCustomDuration(id, durationMinutes);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivateEnrollment(@PathVariable Long id) {

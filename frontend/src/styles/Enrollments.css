@@ -6,6 +6,26 @@
   min-height: 100vh;
 }
 
+/* 남은 영업일 스타일 */
+.remaining-days {
+  font-weight: 600;
+}
+
+.remaining-days.warning {
+  color: #ff9800;
+}
+
+.remaining-days.expired {
+  color: #f44336;
+}
+
+.form-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
 .enrollments-header {
   display: flex;
   justify-content: space-between;
@@ -542,4 +562,25 @@
     font-size: 0.85rem;
     padding: 0.6rem 1rem;
   }
+}
+/* 개별 수업 시간 관련 스타일 */
+.custom-duration {
+  font-size: 0.8em;
+  color: var(--naver-green);
+  font-weight: 600;
+}
+
+.btn-set-duration {
+  padding: 0.6rem 1rem;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-set-duration:hover {
+  background: #1976D2;
 }
