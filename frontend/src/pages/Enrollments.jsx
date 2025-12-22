@@ -353,27 +353,7 @@ function Enrollments() {
                         </span>
                       </div>
                     </>
-                  ) : (
-                        <span className="value">
-                          {new Date(enrollment.startDate).toLocaleDateString()} ~{' '}
-                          {new Date(enrollment.endDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {enrollment.status === 'ACTIVE' && (
-                        <div className="detail-item">
-                          <span className="label">남은 일수</span>
-                          <span
-                            className="value remaining"
-                            style={{
-                              color: getRemainingDays(enrollment.endDate) < 7 ? '#FF3B30' : '#03C75A',
-                            }}
-                          >
-                            {getRemainingDays(enrollment.endDate)}일
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
+                  ) : enrollment.type === 'COUNT_BASED' ? (
                     <>
                       <div className="detail-item">
                         <span className="label">전체 횟수</span>
