@@ -9,7 +9,7 @@ function Attendance() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [sortBy, setSortBy] = useState('arrival');
+  const [sortBy, setSortBy] = useState('name');
   const [searchName, setSearchName] = useState('');
   const [tableSearchName, setTableSearchName] = useState('');
 
@@ -56,6 +56,22 @@ function Attendance() {
     },
   });
 
+  // 사유 업데이트 mutation
+  const updateReasonMutation = useMutation({
+    mutationFn: ({ attendanceId, reason }) => 
+      attendanceAPI.updateReason(attendanceId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances', selectedDate]);
+    },
+  });
+
+  // 사유 입력 후 포커스 해제 시 자동 저장
+  const handleReasonBlur = (attendanceId, reason) => {
+    if (attendanceId && reason !== undefined) {
+      updateReasonMutation.mutate({ attendanceId, reason });
+    }
+  };
+
   // 학생 검색 필터링
   const filteredStudents = allStudents ? allStudents
     .filter(student => student.name && student.name.includes(searchName))
@@ -73,24 +89,32 @@ function Attendance() {
   // 출석 목록 정렬
   const sortedAttendances = attendances ? [...attendances].sort((a, b) => {
     if (sortBy === 'arrival') {
-      // 출석한 학생 먼저, 그 다음 등원 시간순
-      if (!a.checkInTime && !b.checkInTime) return 0;
-      if (!a.checkInTime) return 1;
-      if (!b.checkInTime) return -1;
-      return new Date(a.checkInTime) - new Date(b.checkInTime);
-    } else if (sortBy === 'departure') {
-      // 하원한 학생 먼저, 그 다음 하원 시간순
-      if (!a.checkOutTime && !b.checkOutTime) {
-        if (!a.checkInTime && !b.checkInTime) return 0;
-        if (!a.checkInTime) return 1;
-        if (!b.checkInTime) return -1;
+      // 출석한 학생 먼저 (등원 시간순), 그 다음 미출석 학생 (이름순)
+      if (a.checkInTime && b.checkInTime) {
         return new Date(a.checkInTime) - new Date(b.checkInTime);
       }
-      if (!a.checkOutTime) return 1;
-      if (!b.checkOutTime) return -1;
-      return new Date(a.checkOutTime) - new Date(b.checkOutTime);
+      if (a.checkInTime && !b.checkInTime) return -1;
+      if (!a.checkInTime && b.checkInTime) return 1;
+      // 둘 다 미출석이면 이름순
+      return a.studentName.localeCompare(b.studentName);
+    } else if (sortBy === 'departure') {
+      // 하원한 학생 먼저 (하원 시간순), 그 다음 미하원 학생 (등원 시간순 또는 이름순)
+      if (a.checkOutTime && b.checkOutTime) {
+        return new Date(a.checkOutTime) - new Date(b.checkOutTime);
+      }
+      if (a.checkOutTime && !b.checkOutTime) return -1;
+      if (!a.checkOutTime && b.checkOutTime) return 1;
+      // 둘 다 미하원이면 등원한 학생 먼저, 그 다음 이름순
+      if (a.checkInTime && b.checkInTime) {
+        return new Date(a.checkInTime) - new Date(b.checkInTime);
+      }
+      if (a.checkInTime && !b.checkInTime) return -1;
+      if (!a.checkInTime && b.checkInTime) return 1;
+      return a.studentName.localeCompare(b.studentName);
+    } else {
+      // 기본: 이름순
+      return a.studentName.localeCompare(b.studentName);
     }
-    return 0;
   }) : [];
 
   // 테이블 필터링된 출석 목록
@@ -141,6 +165,7 @@ function Attendance() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
+              <option value="name">이름순</option>
               <option value="arrival">등원순</option>
               <option value="departure">하원순</option>
             </select>
@@ -259,9 +284,10 @@ function Attendance() {
                   <td className="notes">
                     <input
                       type="text"
-                      placeholder="비고 입력..."
-                      defaultValue={attendance.notes || ''}
+                      placeholder="결석/지각 사유 입력..."
+                      defaultValue={attendance.reason || ''}
                       className="notes-input"
+                      onBlur={(e) => handleReasonBlur(attendance.id, e.target.value)}
                     />
                   </td>
                   <td className="check-actions">

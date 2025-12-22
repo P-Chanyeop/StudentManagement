@@ -113,6 +113,8 @@ export const attendanceAPI = {
     api.get(`/attendances/student/${studentId}/range?startDate=${startDate}&endDate=${endDate}`),
   updateClassComplete: (attendanceId, isComplete) => 
     api.patch(`/attendances/${attendanceId}/complete`, { isComplete }),
+  updateReason: (attendanceId, reason) => 
+    api.patch(`/attendances/${attendanceId}/reason`, { reason }),
 };
 
 // 예약 API

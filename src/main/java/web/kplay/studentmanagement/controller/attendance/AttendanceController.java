@@ -14,6 +14,7 @@ import web.kplay.studentmanagement.service.attendance.AttendanceService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/attendances")
@@ -172,6 +173,19 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<AttendanceResponse> uncompleteClass(@PathVariable Long id) {
         AttendanceResponse response = attendanceService.uncompleteClass(id);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 사유 업데이트
+     */
+    @PatchMapping("/{id}/reason")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> updateReason(
+            @PathVariable Long id, 
+            @RequestBody Map<String, String> request) {
+        String reason = request.get("reason");
+        AttendanceResponse response = attendanceService.updateReason(id, reason);
         return ResponseEntity.ok(response);
     }
 }
