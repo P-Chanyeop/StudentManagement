@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { reservationAPI } from '../services/api';
+import { holidayService } from '../services/holidayService';
 import '../styles/ParentReservation.css';
 
 function ParentReservation() {
@@ -24,6 +25,41 @@ function ParentReservation() {
 
   const [errors, setErrors] = useState({});
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [holidays, setHolidays] = useState({});
+  const [loadedYears, setLoadedYears] = useState(new Set());
+
+  // 특정 년도의 공휴일 로드
+  const loadHolidaysForYear = async (year) => {
+    if (loadedYears.has(year)) return; // 이미 로드된 년도는 스킵
+
+    try {
+      const yearHolidays = await holidayService.getHolidays(year);
+      setHolidays(prev => ({
+        ...prev,
+        [year]: yearHolidays
+      }));
+      setLoadedYears(prev => new Set([...prev, year]));
+    } catch (error) {
+      console.error(`${year}년 공휴일 조회 실패:`, error);
+      setHolidays(prev => ({
+        ...prev,
+        [year]: holidayService.getDefaultHolidays(year)
+      }));
+      setLoadedYears(prev => new Set([...prev, year]));
+    }
+  };
+
+  // 페이지 로딩 시 현재 년도 공휴일 로드
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    loadHolidaysForYear(currentYear);
+  }, []);
+
+  // 년도가 변경될 때만 공휴일 로드
+  useEffect(() => {
+    const year = currentMonth.getFullYear();
+    loadHolidaysForYear(year);
+  }, [currentMonth.getFullYear()]);
 
   // 캘린더 관련 함수들
   const getDaysInMonth = (date) => {
@@ -42,7 +78,13 @@ function ParentReservation() {
     const date = new Date(year, month, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date < today;
+    
+    // 과거 날짜는 비활성화
+    if (date < today) return true;
+    
+    // 해당 년도 공휴일이 로드되었다면 주말과 공휴일 체크
+    const yearHolidays = holidays[year] || [];
+    return holidayService.isWeekend(date) || holidayService.isHoliday(date, yearHolidays);
   };
 
   const handleDateSelect = (year, month, day) => {
@@ -87,12 +129,17 @@ function ParentReservation() {
     for (let day = 1; day <= daysInMonth; day++) {
       const isDisabled = isDateDisabled(year, month, day);
       const isSelected = formData.preferredDate === formatDate(year, month, day);
+      const date = new Date(year, month, day);
+      const yearHolidays = holidays[year] || [];
+      const isHolidayDate = holidayService.isHoliday(date, yearHolidays);
+      const isWeekendDate = holidayService.isWeekend(date);
       
       days.push(
         <div
           key={day}
-          className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+          className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''}`}
           onClick={() => !isDisabled && handleDateSelect(year, month, day)}
+          title={isHolidayDate ? yearHolidays.find(h => holidayService.isHoliday(date, [h]))?.name : ''}
         >
           {day}
         </div>
@@ -221,9 +268,9 @@ function ParentReservation() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-calendar-plus"></i>
-              수업 예약
+              상담 예약
             </h1>
-            <p className="page-subtitle">원하시는 수업을 예약해주세요</p>
+            <p className="page-subtitle">원하시는 상담을 예약해주세요</p>
           </div>
         </div>
       </div>

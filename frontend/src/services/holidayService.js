@@ -9,8 +9,14 @@ class HolidayService {
   // 특정 연도의 공휴일 조회
   async getHolidays(year) {
     try {
+      // API 키가 없으면 기본 공휴일 반환
+      if (!this.serviceKey || this.serviceKey === 'YOUR_API_KEY') {
+        console.warn('공휴일 API 키가 설정되지 않았습니다. 기본 공휴일을 사용합니다.');
+        return this.getDefaultHolidays(year);
+      }
+
       const response = await fetch(
-        `${this.apiUrl}/getRestDeInfo?serviceKey=${this.serviceKey}&solYear=${year}&_type=json`
+        `${this.apiUrl}/getHoliDeInfo?serviceKey=${this.serviceKey}&solYear=${year}&numOfRows=100&_type=json`
       );
       const data = await response.json();
       
@@ -44,7 +50,10 @@ class HolidayService {
 
   // 날짜가 공휴일인지 확인
   isHoliday(date, holidays) {
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
     return holidays.some(holiday => holiday.date === dateStr);
   }
 

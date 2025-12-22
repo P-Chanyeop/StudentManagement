@@ -192,6 +192,20 @@
   background: #f5f5f5;
 }
 
+.calendar-day.weekend {
+  color: #ff6b6b;
+}
+
+.calendar-day.holiday {
+  color: #ff6b6b;
+  background: #fff5f5;
+}
+
+.calendar-day.holiday.disabled {
+  color: #ffcccc;
+  background: #f5f5f5;
+}
+
 .calendar-day.empty {
   cursor: default;
   background: transparent;

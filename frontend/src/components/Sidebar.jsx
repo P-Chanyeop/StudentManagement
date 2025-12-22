@@ -24,7 +24,7 @@ function Sidebar() {
     { path: '/courses', icon: <i className="fas fa-book"></i>, label: '코스 관리' },
     { path: '/attendance', icon: <i className="fas fa-check-circle"></i>, label: '출석 체크' },
     { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 관리' },
-    { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '수업 예약' },
+    { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '상담 예약' },
     { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
     { path: '/makeup-classes', icon: <i className="fas fa-redo"></i>, label: '보강 수업' },
     { path: '/leveltests', icon: <i className="fas fa-clipboard-list"></i>, label: '레벨 테스트' },
