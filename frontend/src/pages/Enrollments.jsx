@@ -256,56 +256,68 @@ function Enrollments() {
 
   if (isLoading) {
     return (
-      <div className="enrollments-container">
+      <div className="page-wrapper">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="enrollments-container">
-      <div className="enrollments-header">
-        <h1>수강권 관리</h1>
-        <button className="btn-create-enrollment" onClick={() => setShowCreateModal(true)}>
-          + 수강권 등록
-        </button>
-      </div>
-
-      <div className="enrollments-filters">
-        <div className="filter-left">
-          <div className="status-filters">
-            {['ALL', 'ACTIVE', 'EXPIRED', 'CANCELLED'].map((status) => (
-              <button
-                key={status}
-                className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
-                onClick={() => setStatusFilter(status)}
-              >
-                {status === 'ALL' ? '전체' : status === 'ACTIVE' ? '활성' : status === 'EXPIRED' ? '만료' : '취소'}
-                <span className="count">
-                  ({status === 'ALL' ? enrollments.length : enrollments.filter(e => e.status === status).length})
-                </span>
-              </button>
-            ))}
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-receipt"></i>
+              수강권 관리
+            </h1>
+            <p className="page-subtitle">학생들의 수강권 등록 및 관리</p>
           </div>
-        </div>
-        <div className="filter-right">
-          <input
-            type="text"
-            placeholder="학생명 또는 코스명으로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
+          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+            <i className="fas fa-plus"></i> 수강권 등록
+          </button>
         </div>
       </div>
 
-      <div className="enrollments-grid">
-        {filteredEnrollments.length === 0 ? (
-          <div className="empty-state">
-            {searchQuery ? '검색 결과가 없습니다.' : '등록된 수강권이 없습니다.'}
+      <div className="page-content">
+        <div className="enrollments-filters">
+          <div className="filter-left">
+            <div className="status-filters">
+              {['ALL', 'ACTIVE', 'EXPIRED', 'CANCELLED'].map((status) => (
+                <button
+                  key={status}
+                  className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
+                  onClick={() => setStatusFilter(status)}
+                >
+                  {status === 'ALL' ? '전체' : status === 'ACTIVE' ? '활성' : status === 'EXPIRED' ? '만료' : '취소'}
+                  <span className="count">
+                    ({status === 'ALL' ? enrollments.length : enrollments.filter(e => e.status === status).length})
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          filteredEnrollments.map((enrollment) => (
+          <div className="filter-right">
+            <div className="search-input-wrapper">
+              <i className="fas fa-search search-icon"></i>
+              <input
+                type="text"
+                placeholder="학생명 또는 코스명으로 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="enrollments-grid">
+          {filteredEnrollments.length === 0 ? (
+            <div className="empty-state">
+              {searchQuery ? '검색 결과가 없습니다.' : '등록된 수강권이 없습니다.'}
+            </div>
+          ) : (
+            filteredEnrollments.map((enrollment) => (
             <div
               key={enrollment.id}
               className="enrollment-card"
@@ -398,8 +410,9 @@ function Enrollments() {
                 </div>
               </div>
             </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       {/* 수강권 생성 모달 */}

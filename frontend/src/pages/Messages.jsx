@@ -111,50 +111,60 @@ function Messages() {
 
   if (isLoading) {
     return (
-      <div className="messages-container">
+      <div className="page-wrapper">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="messages-container">
-      <div className="messages-header">
-        <h1>문자 발송 관리</h1>
-        <button className="btn-send-message" onClick={() => setShowSendModal(true)}>
-          + 문자 발송
-        </button>
-      </div>
-
-      <div className="messages-stats">
-        <div className="stat-card">
-          <span className="stat-label">전체 발송</span>
-          <span className="stat-value">{messages.length}건</span>
-        </div>
-        <div className="stat-card success">
-          <span className="stat-label">발송 완료</span>
-          <span className="stat-value">
-            {messages.filter((m) => m.sendStatus === 'SENT').length}건
-          </span>
-        </div>
-        <div className="stat-card pending">
-          <span className="stat-label">대기</span>
-          <span className="stat-value">
-            {messages.filter((m) => m.sendStatus === 'PENDING').length}건
-          </span>
-        </div>
-        <div className="stat-card failed">
-          <span className="stat-label">실패</span>
-          <span className="stat-value">
-            {messages.filter((m) => m.sendStatus === 'FAILED').length}건
-          </span>
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-envelope"></i>
+              문자 발송 관리
+            </h1>
+            <p className="page-subtitle">학생 및 학부모에게 문자를 발송합니다</p>
+          </div>
+          <button className="btn-primary" onClick={() => setShowSendModal(true)}>
+            <i className="fas fa-paper-plane"></i> 문자 발송
+          </button>
         </div>
       </div>
 
-      <div className="messages-list">
-        {messages.length === 0 ? (
-          <div className="empty-state">발송된 문자가 없습니다.</div>
-        ) : (
+      <div className="page-content">
+
+        <div className="messages-stats">
+          <div className="stat-card">
+            <span className="stat-label">전체 발송</span>
+            <span className="stat-value">{messages.length}건</span>
+          </div>
+          <div className="stat-card success">
+            <span className="stat-label">발송 완료</span>
+            <span className="stat-value">
+              {messages.filter((m) => m.sendStatus === 'SENT').length}건
+            </span>
+          </div>
+          <div className="stat-card pending">
+            <span className="stat-label">대기</span>
+            <span className="stat-value">
+              {messages.filter((m) => m.sendStatus === 'PENDING').length}건
+            </span>
+          </div>
+          <div className="stat-card failed">
+            <span className="stat-label">실패</span>
+            <span className="stat-value">
+              {messages.filter((m) => m.sendStatus === 'FAILED').length}건
+            </span>
+          </div>
+        </div>
+
+        <div className="messages-list">
+          {messages.length === 0 ? (
+            <div className="empty-state">발송된 문자가 없습니다.</div>
+          ) : (
           messages.map((message) => (
             <div key={message.id} className="message-card">
               <div className="message-header">
@@ -182,9 +192,10 @@ function Messages() {
                   <span className="error-message">오류: {message.errorMessage}</span>
                 )}
               </div>
-            </div>
-          ))
-        )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* 문자 발송 모달 */}

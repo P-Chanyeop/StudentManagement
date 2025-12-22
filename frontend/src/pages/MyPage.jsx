@@ -71,23 +71,27 @@ function MyPage() {
 
   return (
     <Layout>
-      <div className="mypage-container">
+      <div className="page-wrapper">
         {/* 헤더 */}
-        <div className="mypage-header">
-          <div className="student-profile">
-            <div className="profile-avatar">
-              {studentInfo.studentName.charAt(0)}
+        <div className="page-header">
+          <div className="page-header-content mypage-header">
+            <div className="student-profile">
+              <div className="profile-avatar">
+                {studentInfo.studentName.charAt(0)}
+              </div>
+              <div className="profile-info">
+                <h1 className="page-title">
+                  <i className="fas fa-user"></i>
+                  {studentInfo.studentName}님
+                </h1>
+                <p className="page-subtitle student-details">
+                  {studentInfo.school} {studentInfo.grade} | 레벨: {studentInfo.englishLevel || '-'}
+                </p>
+              </div>
             </div>
-            <div className="profile-info">
-              <h1>{studentInfo.studentName}님</h1>
-              <p className="student-details">
-                {studentInfo.school} {studentInfo.grade} | 레벨: {studentInfo.englishLevel || '-'}
-              </p>
-            </div>
-          </div>
 
-          {/* 통계 요약 */}
-          <div className="stats-grid">
+            {/* 통계 요약 */}
+            <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon">🎓</div>
               <div className="stat-content">
@@ -116,11 +120,13 @@ function MyPage() {
                 <div className="stat-label">총 출석</div>
               </div>
             </div>
+            </div>
           </div>
         </div>
 
-        {/* 탭 네비게이션 */}
-        <div className="tab-navigation">
+        <div className="page-content">
+          {/* 탭 네비게이션 */}
+          <div className="tab-navigation">
           <button
             className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
@@ -151,10 +157,10 @@ function MyPage() {
           >
             받은 메시지
           </button>
-        </div>
+          </div>
 
-        {/* 탭 컨텐츠 */}
-        <div className="tab-content">
+          {/* 탭 컨텐츠 */}
+          <div className="tab-content">
           {/* 개요 탭 */}
           {activeTab === 'overview' && (
             <div className="overview-tab">
@@ -260,8 +266,8 @@ function MyPage() {
             <div className="enrollments-tab">
               <h2 className="tab-title">📚 수강권 상세 정보</h2>
               {activeEnrollments && activeEnrollments.length > 0 ? (
-                <div className="enrollment-table-wrapper">
-                  <table className="enrollment-table">
+                <div className="table-wrapper">
+                  <table className="data-table">
                     <thead>
                       <tr>
                         <th>수업명</th>
@@ -297,8 +303,8 @@ function MyPage() {
             <div className="attendance-tab">
               <h2 className="tab-title">✅ 출석 기록</h2>
               {recentAttendances && recentAttendances.length > 0 ? (
-                <div className="attendance-table-wrapper">
-                  <table className="attendance-table">
+                <div className="table-wrapper">
+                  <table className="data-table">
                     <thead>
                       <tr>
                         <th>등원 시간</th>
@@ -332,8 +338,8 @@ function MyPage() {
             <div className="reservations-tab">
               <h2 className="tab-title">📅 예약 내역</h2>
               {upcomingReservations && upcomingReservations.length > 0 ? (
-                <div className="reservation-table-wrapper">
-                  <table className="reservation-table">
+                <div className="table-wrapper">
+                  <table className="data-table">
                     <thead>
                       <tr>
                         <th>날짜</th>
@@ -380,7 +386,8 @@ function MyPage() {
                 <p className="empty-message">받은 메시지가 없습니다</p>
               )}
             </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </Layout>

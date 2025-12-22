@@ -145,10 +145,22 @@ function Attendance() {
   };
 
   return (
-    <div className="main-content">
-      <div className="attendance-page">
-      {/* 날짜 선택 */}
-      <div className="date-selector">
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-clipboard-check"></i>
+              출석 관리
+            </h1>
+            <p className="page-subtitle">학생들의 출석 및 하원을 관리합니다</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="page-content">
+        {/* 날짜 선택 */}
+        <div className="date-selector">
           <input
             type="date"
             value={selectedDate}
@@ -241,8 +253,8 @@ function Attendance() {
             </div>
 
             {sortedAttendances && sortedAttendances.length > 0 ? (
-              <div className="attendance-table-wrapper">
-                <table className="attendance-table">
+              <div className="table-wrapper">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th className="col-checkbox">
@@ -308,10 +320,10 @@ function Attendance() {
                         <td className="col-actions">
                           {!attendance.checkOutTime ? (
                             <button
-                              className="btn-checkout"
+                              className="btn-primary"
                               onClick={() => handleCheckOut(attendance.id)}
                             >
-                              하원 체크
+                              <i className="fas fa-sign-out-alt"></i> 하원 체크
                             </button>
                           ) : (
                             <span className="checkout-done">완료</span>

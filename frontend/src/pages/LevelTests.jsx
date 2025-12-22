@@ -94,46 +94,58 @@ function LevelTests() {
 
   if (isLoading) {
     return (
-      <div className="level-tests-container">
+      <div className="page-wrapper">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="level-tests-container">
-      <div className="level-tests-header">
-        <h1><i className="fas fa-clipboard-list"></i> 레벨 테스트 일정 관리</h1>
-        <button className="btn-create-test" onClick={() => setShowCreateModal(true)}>
-          + 레벨 테스트 예약
-        </button>
-      </div>
-
-      <div className="level-tests-filters">
-        <div className="date-range">
-          <label>시작일:</label>
-          <input
-            type="date"
-            value={dateRange.start}
-            onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-          />
-          <label>종료일:</label>
-          <input
-            type="date"
-            value={dateRange.end}
-            onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-          />
-        </div>
-        <span className="result-count">총 {levelTests.length}건</span>
-      </div>
-
-      <div className="calendar-view">
-        {sortedDates.length === 0 ? (
-          <div className="empty-state">
-            <p><i className="fas fa-calendar-alt"></i> 등록된 레벨 테스트 일정이 없습니다.</p>
-            <p className="empty-subtitle">위의 버튼을 눌러 새로운 테스트를 예약하세요.</p>
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-clipboard-list"></i>
+              레벨 테스트 일정 관리
+            </h1>
+            <p className="page-subtitle">학생들의 레벨 테스트 일정을 관리합니다</p>
           </div>
-        ) : (
+          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+            <i className="fas fa-plus"></i> 레벨 테스트 예약
+          </button>
+        </div>
+      </div>
+
+      <div className="page-content">
+        <div className="search-section">
+          <div className="date-range">
+            <label>시작일:</label>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+            />
+            <label>종료일:</label>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+            />
+          </div>
+          <div className="result-count">
+            <i className="fas fa-clipboard-list"></i>
+            총 <strong>{levelTests.length}</strong>건
+          </div>
+        </div>
+
+        <div className="calendar-view">
+          {sortedDates.length === 0 ? (
+            <div className="empty-state">
+              <p><i className="fas fa-calendar-alt"></i> 등록된 레벨 테스트 일정이 없습니다.</p>
+              <p className="empty-subtitle">위의 버튼을 눌러 새로운 테스트를 예약하세요.</p>
+            </div>
+          ) : (
           sortedDates.map((date) => (
             <div key={date} className="date-section">
               <div className="date-header">
@@ -191,8 +203,9 @@ function LevelTests() {
                   ))}
               </div>
             </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       {/* 레벨 테스트 예약 모달 */}

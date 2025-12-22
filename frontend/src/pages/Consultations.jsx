@@ -87,50 +87,62 @@ function Consultations() {
 
   if (isLoading && selectedStudent) {
     return (
-      <div className="consultations-container">
+      <div className="page-wrapper">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="consultations-container">
-      <div className="consultations-header">
-        <h1>상담 내역 관리</h1>
-        <button
-          className="btn-create-consultation"
-          onClick={() => setShowCreateModal(true)}
-          disabled={!selectedStudent}
-        >
-          + 상담 내역 등록
-        </button>
-      </div>
-
-      <div className="consultations-filters">
-        <div className="student-selector">
-          <label>학생 선택:</label>
-          <select
-            value={selectedStudent}
-            onChange={(e) => setSelectedStudent(e.target.value)}
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-comments"></i>
+              상담 내역 관리
+            </h1>
+            <p className="page-subtitle">학생들의 상담 내역을 기록하고 관리합니다</p>
+          </div>
+          <button
+            className="btn-primary"
+            onClick={() => setShowCreateModal(true)}
+            disabled={!selectedStudent}
           >
-            <option value="">학생을 선택하세요</option>
-            {students.map((student) => (
-              <option key={student.id} value={student.id}>
-                {student.studentName} ({student.studentPhone})
-              </option>
-            ))}
-          </select>
+            <i className="fas fa-plus"></i> 상담 내역 등록
+          </button>
         </div>
-        {selectedStudent && (
-          <span className="result-count">총 {consultations.length}건</span>
-        )}
       </div>
 
-      {selectedStudent ? (
-        <div className="consultations-list">
-          {consultations.length === 0 ? (
-            <div className="empty-state">등록된 상담 내역이 없습니다.</div>
-          ) : (
+      <div className="page-content">
+        <div className="search-section">
+          <div className="student-selector">
+            <label>학생 선택:</label>
+            <select
+              value={selectedStudent}
+              onChange={(e) => setSelectedStudent(e.target.value)}
+            >
+              <option value="">학생을 선택하세요</option>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.studentName} ({student.studentPhone})
+                </option>
+              ))}
+            </select>
+          </div>
+          {selectedStudent && (
+            <div className="result-count">
+              <i className="fas fa-comments"></i>
+              총 <strong>{consultations.length}</strong>건
+            </div>
+          )}
+        </div>
+
+        {selectedStudent ? (
+          <div className="consultations-list">
+            {consultations.length === 0 ? (
+              <div className="empty-state">등록된 상담 내역이 없습니다.</div>
+            ) : (
             consultations.map((consultation) => (
               <div key={consultation.id} className="consultation-card">
                 <div className="consultation-header">
@@ -167,12 +179,13 @@ function Consultations() {
                   </span>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      ) : (
-        <div className="empty-state">학생을 선택하면 상담 내역이 표시됩니다.</div>
-      )}
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="empty-state">학생을 선택하면 상담 내역이 표시됩니다.</div>
+        )}
+      </div>
 
       {/* 상담 내역 등록 모달 */}
       {showCreateModal && (

@@ -83,45 +83,57 @@ function ParentReservation() {
   maxDate.setMonth(maxDate.getMonth() + 2); // 2개월 후까지
   const maxDateStr = maxDate.toISOString().split('T')[0];
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return (
+    <div className="page-wrapper">
+      <LoadingSpinner />
+    </div>
+  );
 
   return (
-    <div className="parent-reservation-container">
-      <div className="reservation-header">
-        <h1>수업 예약</h1>
-        <p>원하는 날짜와 시간을 선택하여 수업을 예약하세요</p>
-      </div>
-
-      <div className="reservation-filters">
-        <div className="filter-group">
-          <label>학생 선택</label>
-          <select 
-            value={selectedStudent} 
-            onChange={(e) => setSelectedStudent(e.target.value)}
-          >
-            <option value="">학생을 선택하세요</option>
-            {students.map(student => (
-              <option key={student.id} value={student.id}>
-                {student.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label>날짜 선택</label>
-          <input
-            type="date"
-            value={selectedDate}
-            min={today}
-            max={maxDateStr}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-calendar-check"></i>
+              수업 예약
+            </h1>
+            <p className="page-subtitle">원하는 날짜와 시간을 선택하여 수업을 예약하세요</p>
+          </div>
         </div>
       </div>
 
-      {selectedStudent && enrollments.length > 0 && (
-        <div className="active-enrollments">
+      <div className="page-content">
+        <div className="search-section reservation-filters">
+          <div className="filter-group">
+            <label>학생 선택</label>
+            <select
+              value={selectedStudent}
+              onChange={(e) => setSelectedStudent(e.target.value)}
+            >
+              <option value="">학생을 선택하세요</option>
+              {students.map(student => (
+                <option key={student.id} value={student.id}>
+                  {student.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>날짜 선택</label>
+            <input
+              type="date"
+              value={selectedDate}
+              min={today}
+              max={maxDateStr}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {selectedStudent && enrollments.length > 0 && (
+          <div className="active-enrollments">
           <h3>보유 수강권</h3>
           <div className="enrollment-cards">
             {enrollments.map(enrollment => (
@@ -131,13 +143,13 @@ function ParentReservation() {
                   남은 횟수: <span className="count">{enrollment.remainingCount}회</span>
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {selectedStudent && selectedDate && (
-        <div className="available-schedules">
+        {selectedStudent && selectedDate && (
+          <div className="available-schedules">
           <h3>{new Date(selectedDate).toLocaleDateString()} 예약 가능한 수업</h3>
           
           {availableSchedules.length === 0 ? (
@@ -178,12 +190,12 @@ function ParentReservation() {
                     </div>
 
                     {hasEnrollment ? (
-                      <button 
-                        className="btn-reserve"
+                      <button
+                        className="btn-primary"
                         onClick={() => handleReservation(schedule)}
                         disabled={schedule.currentCount >= schedule.maxCapacity}
                       >
-                        {schedule.currentCount >= schedule.maxCapacity ? '정원 마감' : '예약하기'}
+                        <i className="fas fa-calendar-plus"></i> {schedule.currentCount >= schedule.maxCapacity ? '정원 마감' : '예약하기'}
                       </button>
                     ) : (
                       <div className="no-enrollment">
@@ -192,11 +204,12 @@ function ParentReservation() {
                     )}
                   </div>
                 );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
