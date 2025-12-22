@@ -71,7 +71,8 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
 
     // Swagger/OpenAPI Documentation (Spring Boot 4.0 compatible)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    // Temporarily disabled due to compatibility issues
+    // implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
