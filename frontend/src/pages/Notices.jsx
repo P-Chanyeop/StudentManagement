@@ -73,43 +73,54 @@ function Notices() {
 
   return (
     <Layout>
-      <div className="notices-page">
+      <div className="page-wrapper">
         <div className="page-header">
-          <h1 className="page-title"><i className="fas fa-bullhorn"></i> 공지사항</h1>
-          <p className="page-subtitle">학원의 중요한 소식을 확인하세요</p>
+          <div className="page-header-content">
+            <div className="page-title-section">
+              <h1 className="page-title">
+                <i className="fas fa-bell"></i>
+                공지사항
+              </h1>
+              <p className="page-subtitle">학원의 중요한 소식을 확인하세요</p>
+            </div>
+          </div>
         </div>
 
-        {/* 검색 */}
-        <div className="search-section">
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              placeholder="제목이나 내용으로 검색..."
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              className="search-input"
-            />
-            <button type="submit" className="search-button">
-              <i className="fas fa-search"></i> 검색
-            </button>
-            {searchKeyword && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchKeyword('');
-                  setCurrentPage(0);
-                }}
-                className="clear-button"
-              >
-                초기화
+        <div className="page-content">
+          {/* 검색 */}
+          <div className="search-section">
+            <form onSubmit={handleSearch} className="search-form">
+              <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon"></i>
+                <input
+                  type="text"
+                  placeholder="제목이나 내용으로 검색..."
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  className="search-input"
+                />
+              </div>
+              <button type="submit" className="btn-primary">
+                <i className="fas fa-search"></i> 검색
               </button>
-            )}
-          </form>
-        </div>
+              {searchKeyword && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchKeyword('');
+                    setCurrentPage(0);
+                  }}
+                  className="btn-secondary"
+                >
+                  초기화
+                </button>
+              )}
+            </form>
+          </div>
 
-        {/* 상단 고정 공지 */}
-        {pinnedNotices && pinnedNotices.length > 0 && (
-          <div className="pinned-section">
+          {/* 상단 고정 공지 */}
+          {pinnedNotices && pinnedNotices.length > 0 && (
+            <div className="pinned-section">
             <h2 className="section-title">📌 중요 공지</h2>
             <div className="pinned-notices">
               {pinnedNotices.map((notice) => (
@@ -128,13 +139,13 @@ function Notices() {
                     <span className="notice-views"><i className="fas fa-eye"></i> {notice.viewCount}</span>
                   </div>
                 </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 공지사항 목록 */}
-        <div className="notices-section">
+          {/* 공지사항 목록 */}
+          <div className="notices-section">
           <h2 className="section-title"><i className="fas fa-clipboard-list"></i> 전체 공지</h2>
           {isLoading ? (
             <LoadingSpinner />
@@ -188,11 +199,12 @@ function Notices() {
                 </button>
               </div>
             </>
-          ) : (
-            <div className="empty-state">
-              <p>공지사항이 없습니다</p>
-            </div>
-          )}
+            ) : (
+              <div className="empty-state">
+                <p>공지사항이 없습니다</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 공지사항 상세 모달 */}
@@ -224,7 +236,7 @@ function Notices() {
               </div>
               <div className="modal-footer">
                 <button
-                  className="close-button"
+                  className="btn-secondary"
                   onClick={() => setSelectedNotice(null)}
                 >
                   닫기

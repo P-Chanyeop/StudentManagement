@@ -151,28 +151,38 @@ function Reservations() {
 
   if (reservationsLoading || schedulesLoading) {
     return (
-      <div className="reservations-container">
+      <div className="page-wrapper">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="reservations-container">
-      <div className="reservations-header">
-        <h1>예약 관리</h1>
-        <div className="date-selector">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-calendar-alt"></i>
+              예약 관리
+            </h1>
+            <p className="page-subtitle">수업 예약 현황을 관리합니다</p>
+          </div>
+          <div className="date-selector">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="reservations-content">
-        {/* 왼쪽: 스케줄 목록 */}
-        <div className="schedules-section">
+      <div className="page-content">
+
+        <div className="reservations-content">
+          {/* 왼쪽: 스케줄 목록 */}
+          <div className="schedules-section">
           <div className="section-header">
             <h2>수업 스케줄</h2>
             <span className="count-badge">{schedules.length}개</span>
@@ -211,10 +221,10 @@ function Reservations() {
                     </div>
                     {isAvailable && (
                       <button
-                        className="btn-create"
+                        className="btn-primary"
                         onClick={() => openCreateModal(schedule)}
                       >
-                        예약 등록
+                        <i className="fas fa-plus"></i> 예약 등록
                       </button>
                     )}
                   </div>
@@ -282,20 +292,20 @@ function Reservations() {
                   <div className="reservation-actions">
                     {reservation.status === 'PENDING' && (
                       <button
-                        className="btn-confirm"
+                        className="btn-primary"
                         onClick={() => handleConfirm(reservation.id)}
                       >
-                        확정
+                        <i className="fas fa-check"></i> 확정
                       </button>
                     )}
                     {reservation.status === 'CONFIRMED' && (
                       <>
                         {canCancelReservation(reservation) ? (
                           <button
-                            className="btn-cancel"
+                            className="btn-table-delete"
                             onClick={() => handleCancel(reservation.id)}
                           >
-                            취소
+                            <i className="fas fa-times"></i> 취소
                           </button>
                         ) : (
                           <>
@@ -303,10 +313,10 @@ function Reservations() {
                               취소 마감 (전날 18:00)
                             </span>
                             <button
-                              className="btn-force-cancel"
+                              className="btn-secondary"
                               onClick={() => handleForceCancel(reservation.id)}
                             >
-                              관리자 취소
+                              <i className="fas fa-ban"></i> 관리자 취소
                             </button>
                           </>
                         )}

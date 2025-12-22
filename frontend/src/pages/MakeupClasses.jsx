@@ -193,25 +193,32 @@ function MakeupClasses() {
 
   if (isLoading) {
     return (
-      <div className="main-content">
-        <div className="makeup-classes-page">
-          <LoadingSpinner />
-        </div>
+      <div className="page-wrapper">
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="main-content">
-      <div className="makeup-classes-page">
+    <div className="page-wrapper">
       <div className="page-header">
-        <h1>보강 수업 관리</h1>
-        <button className="btn-primary" onClick={() => setShowModal(true)}>
-          보강 수업 등록
-        </button>
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-redo-alt"></i>
+              보강 수업 관리
+            </h1>
+            <p className="page-subtitle">결석한 학생들의 보강 수업을 관리합니다</p>
+          </div>
+          <button className="btn-primary" onClick={() => setShowModal(true)}>
+            <i className="fas fa-plus"></i> 보강 수업 등록
+          </button>
+        </div>
       </div>
 
-        <div className="filter-section">
+      <div className="page-content">
+
+        <div className="search-section">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -222,11 +229,16 @@ function MakeupClasses() {
             <option value="COMPLETED">완료</option>
             <option value="CANCELLED">취소</option>
           </select>
+          <div className="result-count">
+            <i className="fas fa-redo-alt"></i>
+            총 <strong>{makeupClasses?.length || 0}</strong>건
+          </div>
         </div>
 
         <div className="makeup-list">
           {makeupClasses && makeupClasses.length > 0 ? (
-            <table className="makeup-table">
+            <div className="table-wrapper">
+              <table className="data-table">
               <thead>
                 <tr>
                   <th>학생명</th>
@@ -258,41 +270,43 @@ function MakeupClasses() {
                         {makeup.status === 'SCHEDULED' && (
                           <>
                             <button
-                              className="btn-small btn-success"
+                              className="btn-primary"
                               onClick={() => handleComplete(makeup.id)}
                             >
-                              완료
+                              <i className="fas fa-check"></i> 완료
                             </button>
                             <button
-                              className="btn-small btn-warning"
+                              className="btn-secondary"
                               onClick={() => handleCancel(makeup.id)}
                             >
-                              취소
+                              <i className="fas fa-times"></i> 취소
                             </button>
                             <button
-                              className="btn-small btn-secondary"
+                              className="btn-table-edit"
                               onClick={() => handleEdit(makeup)}
                             >
-                              수정
+                              <i className="fas fa-edit"></i> 수정
                             </button>
                           </>
                         )}
                         <button
-                          className="btn-small btn-danger"
+                          className="btn-table-delete"
                           onClick={() => handleDelete(makeup.id)}
                         >
-                          삭제
+                          <i className="fas fa-trash"></i> 삭제
                         </button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           ) : (
-            <div className="empty-message">등록된 보강 수업이 없습니다.</div>
+            <div className="empty-state">등록된 보강 수업이 없습니다.</div>
           )}
         </div>
+      </div>
 
         {showModal && (
           <div className="modal-overlay" onClick={() => {
@@ -409,7 +423,6 @@ function MakeupClasses() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

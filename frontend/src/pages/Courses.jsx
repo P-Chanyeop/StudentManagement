@@ -143,79 +143,95 @@ function Courses() {
 
   if (isLoading) {
     return (
-      <div className="courses-container">
+      <div className="page-wrapper">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="courses-container">
-      <div className="courses-header">
-        <h1>코스 관리</h1>
-        <button className="btn-create-course" onClick={() => setShowCreateModal(true)}>
-          + 코스 생성
-        </button>
-      </div>
-
-      <div className="courses-filters">
-        <input
-          type="text"
-          placeholder="코스명, 설명, 레벨로 검색..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="search-input"
-        />
-        <span className="result-count">총 {filteredCourses.length}개 코스</span>
-      </div>
-
-      <div className="courses-grid">
-        {filteredCourses.length === 0 ? (
-          <div className="empty-state">
-            {searchQuery ? '검색 결과가 없습니다.' : '등록된 코스가 없습니다.'}
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-book-reader"></i>
+              코스 관리
+            </h1>
+            <p className="page-subtitle">학원의 강좌 및 과정을 관리합니다</p>
           </div>
-        ) : (
-          filteredCourses.map((course) => (
-            <div key={course.id} className="course-card">
-              <div className="course-header">
-                <h3>{course.name}</h3>
-                {getLevelBadge(course.level)}
-              </div>
+          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+            <i className="fas fa-plus"></i> 코스 생성
+          </button>
+        </div>
+      </div>
 
-              <p className="course-description">{course.description}</p>
+      <div className="page-content">
+        <div className="search-section">
+          <div className="search-input-wrapper">
+            <i className="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              placeholder="코스명, 설명, 레벨로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <div className="result-count">
+            <i className="fas fa-book-reader"></i>
+            총 <strong>{filteredCourses.length}</strong>개
+          </div>
+        </div>
 
-              <div className="course-details">
-                <div className="detail-item">
-                  <span className="icon"><i className="fas fa-users"></i></span>
-                  <span className="label">정원:</span>
-                  <span className="value">{course.capacity}명</span>
-                </div>
-                <div className="detail-item">
-                  <span className="icon"><i className="fas fa-clock"></i></span>
-                  <span className="label">수업시간:</span>
-                  <span className="value">{course.durationMinutes}분</span>
-                </div>
-                <div className="detail-item">
-                  <span className="icon"><i className="fas fa-dollar-sign"></i></span>
-                  <span className="label">가격:</span>
-                  <span className="value price">{course.price.toLocaleString()}원</span>
-                </div>
-              </div>
-
-              <div className="course-actions">
-                <button className="btn-edit" onClick={() => openEditModal(course)}>
-                  수정
-                </button>
-                <button
-                  className="btn-delete"
-                  onClick={() => handleDeleteCourse(course.id, course.name)}
-                >
-                  삭제
-                </button>
-              </div>
+        <div className="courses-grid">
+          {filteredCourses.length === 0 ? (
+            <div className="empty-state">
+              {searchQuery ? '검색 결과가 없습니다.' : '등록된 코스가 없습니다.'}
             </div>
-          ))
-        )}
+          ) : (
+            filteredCourses.map((course) => (
+              <div key={course.id} className="course-card">
+                <div className="course-header">
+                  <h3>{course.name}</h3>
+                  {getLevelBadge(course.level)}
+                </div>
+
+                <p className="course-description">{course.description}</p>
+
+                <div className="course-details">
+                  <div className="detail-item">
+                    <span className="icon"><i className="fas fa-users"></i></span>
+                    <span className="label">정원:</span>
+                    <span className="value">{course.capacity}명</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="icon"><i className="fas fa-clock"></i></span>
+                    <span className="label">수업시간:</span>
+                    <span className="value">{course.durationMinutes}분</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="icon"><i className="fas fa-dollar-sign"></i></span>
+                    <span className="label">가격:</span>
+                    <span className="value price">{course.price.toLocaleString()}원</span>
+                  </div>
+                </div>
+
+                <div className="course-actions">
+                  <button className="btn-table-edit" onClick={() => openEditModal(course)}>
+                    <i className="fas fa-edit"></i> 수정
+                  </button>
+                  <button
+                    className="btn-table-delete"
+                    onClick={() => handleDeleteCourse(course.id, course.name)}
+                  >
+                    <i className="fas fa-trash"></i> 삭제
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* 코스 생성 모달 */}

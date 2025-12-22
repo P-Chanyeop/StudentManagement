@@ -1,130 +1,131 @@
-.enrollments-container {
-  padding: 2rem;
+/* Students Page - Modern Design */
+
+/* 페이지 래퍼 */
+.page-wrapper {
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+/* 페이지 헤더 */
+.page-header {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 32px 0;
+}
+
+.page-header-content {
   max-width: 1400px;
   margin: 0 auto;
-  background: #f8f9fa;
-  min-height: 100vh;
-}
-
-/* 남은 영업일 스타일 */
-.remaining-days {
-  font-weight: 600;
-}
-
-.remaining-days.warning {
-  color: #ff9800;
-}
-
-.remaining-days.expired {
-  color: #f44336;
-}
-
-.form-help {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #666;
-}
-
-.enrollments-header {
+  padding: 0 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.enrollments-header h1 {
-  font-size: 1.8rem;
-  color: #333;
+.page-title-section {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title i {
+  color: var(--naver-green);
+  font-size: 28px;
+}
+
+.page-subtitle {
+  font-size: 15px;
+  color: var(--gray-600);
   margin: 0;
 }
 
-.btn-create-enrollment {
-  padding: 0.8rem 1.5rem;
+/* 버튼 스타일 */
+.btn-primary {
   background: var(--naver-green);
   color: white;
   border: none;
+  padding: 12px 24px;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(3, 199, 90, 0.2);
 }
 
-.btn-create-enrollment:hover {
+.btn-primary:hover {
   background: var(--naver-green-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
 }
 
-/* 필터 섹션 */
-.enrollments-filters {
+.btn-with-icon {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  gap: 8px;
 }
 
-.filter-left {
-  flex: 1;
-}
-
-.status-filters {
-  display: flex;
-  gap: 0.8rem;
-}
-
-.filter-btn {
-  padding: 0.7rem 1.2rem;
-  background: #f5f5f5;
-  border: 2px solid transparent;
+.btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: none;
+  padding: 12px 24px;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 15px;
   font-weight: 600;
-  color: #666;
   cursor: pointer;
   transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  background: var(--gray-200);
+}
+
+/* 페이지 컨텐츠 */
+.page-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* 검색 섹션 */
+.search-section {
   display: flex;
+  gap: 16px;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 24px;
 }
 
-.filter-btn:hover {
-  background: #e8f8f0;
-  color: var(--naver-green);
+.search-input-wrapper {
+  flex: 1;
+  position: relative;
 }
 
-.filter-btn.active {
-  background: var(--naver-green);
-  color: white;
-  border-color: var(--naver-green);
-}
-
-.filter-btn .count {
-  font-size: 0.85rem;
-  opacity: 0.8;
-}
-
-.filter-right {
-  min-width: 300px;
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  font-size: 16px;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.8rem 1rem;
-  border: 2px solid #e0e0e0;
+  padding: 12px 16px 12px 48px;
+  border: 2px solid var(--gray-200);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 15px;
   transition: all 0.3s;
+  background: white;
 }
 
 .search-input:focus {
@@ -133,117 +134,169 @@
   box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
 }
 
-/* 수강권 그리드 */
-.enrollments-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-.enrollment-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.3s;
-  border: 2px solid transparent;
-}
-
-.enrollment-card:hover {
-  border-color: var(--naver-green);
-  box-shadow: 0 6px 16px rgba(3, 199, 90, 0.15);
-  transform: translateY(-4px);
-}
-
-.enrollment-header {
+.result-count {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.badges {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.status-badge,
-.type-badge {
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  color: white;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.enrollment-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.student-name {
-  font-size: 1.3rem;
-  color: #333;
-  margin: 0;
-  font-weight: 700;
-}
-
-.course-name {
-  font-size: 1rem;
-  color: #666;
-  margin: 0;
-}
-
-.enrollment-details {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.95rem;
+  gap: 8px;
+  padding: 12px 20px;
+  background: white;
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--gray-700);
+  white-space: nowrap;
+  border: 1px solid var(--gray-200);
 }
 
-.detail-item .label {
-  color: #888;
-  font-weight: 500;
-}
-
-.detail-item .value {
-  color: #333;
-  font-weight: 600;
-}
-
-.detail-item .value.remaining {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.detail-item .value.price {
+.result-count i {
   color: var(--naver-green);
-  font-size: 1.1rem;
+}
+
+.result-count strong {
+  color: var(--naver-green);
   font-weight: 700;
 }
 
-/* 빈 상태 */
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 4rem 1rem;
-  color: #999;
-  font-size: 1.1rem;
+/* 테이블 */
+.table-wrapper {
   background: white;
   border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--gray-200);
 }
 
-/* 모달 공통 스타일 */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background: var(--gray-50);
+}
+
+.data-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.data-table tbody tr {
+  transition: background 0.2s;
+}
+
+.data-table tbody tr:hover {
+  background: var(--gray-50);
+}
+
+.data-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 14px;
+  color: var(--gray-800);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.student-info i {
+  color: var(--naver-green);
+  font-size: 18px;
+}
+
+.student-info strong {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+/* 레벨 배지 */
+.level-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+/* 액션 버튼 */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-table-detail,
+.btn-table-edit,
+.btn-table-delete {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-table-detail {
+  background: var(--info-light);
+  color: var(--info-dark);
+}
+
+.btn-table-detail:hover {
+  background: var(--info);
+  color: white;
+}
+
+.btn-table-edit {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.btn-table-edit:hover {
+  background: var(--success);
+  color: white;
+}
+
+.btn-table-delete {
+  background: var(--error-light);
+  color: var(--error-dark);
+}
+
+.btn-table-delete:hover {
+  background: var(--error);
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--gray-400);
+}
+
+.empty-state i {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* 모달 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -255,97 +308,112 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  padding: 20px;
 }
 
 .modal-content {
   background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
+  border-radius: 16px;
+  max-width: 800px;
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  animation: slideUp 0.3s ease-in-out;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modal-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--gray-200);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--gray-50);
 }
 
 .modal-header h2 {
-  font-size: 1.3rem;
-  color: #333;
   margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--gray-900);
 }
 
 .modal-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #999;
-  cursor: pointer;
   width: 40px;
   height: 40px;
+  border: none;
+  background: none;
+  font-size: 32px;
+  color: var(--gray-400);
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: all 0.3s;
+  border-radius: 8px;
 }
 
 .modal-close:hover {
-  background: #f0f0f0;
-  color: #333;
+  background: var(--gray-200);
+  color: var(--gray-700);
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 32px;
+}
+
+.modal-footer {
+  padding: 20px 32px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: var(--gray-50);
+}
+
+/* 폼 스타일 */
+.form-section {
+  margin-bottom: 32px;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.form-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--naver-green);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #333;
+  font-size: 14px;
   font-weight: 600;
-  font-size: 0.95rem;
+  color: var(--gray-700);
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-  width: 100%;
-  padding: 0.8rem;
-  border: 2px solid #e0e0e0;
+  padding: 10px 14px;
+  border: 2px solid var(--gray-200);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 14px;
   transition: all 0.3s;
   font-family: inherit;
 }
@@ -363,224 +431,154 @@
   min-height: 80px;
 }
 
-.radio-group {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-weight: 500;
-  color: #666;
-}
-
-.radio-label input[type="radio"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-}
-
-.radio-label input[type="radio"]:checked + span {
-  color: var(--naver-green);
-  font-weight: 700;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  border-top: 1px solid #f0f0f0;
-}
-
-.btn-primary,
-.btn-secondary,
-.btn-extend,
-.btn-cancel-enrollment {
-  flex: 1;
-  padding: 0.9rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.btn-primary {
-  background: var(--naver-green);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--naver-green-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
-}
-
-.btn-primary:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: #f0f0f0;
-  color: #666;
-}
-
-.btn-secondary:hover {
-  background: #e0e0e0;
-  color: #333;
-}
-
-.btn-extend {
-  background: #0066FF;
-  color: white;
-}
-
-.btn-extend:hover {
-  background: #0052CC;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
-}
-
-.btn-cancel-enrollment {
-  background: #FF3B30;
-  color: white;
-}
-
-.btn-cancel-enrollment:hover {
-  background: #E63027;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
-}
-
-/* 상세 모달 전용 스타일 */
+/* 상세 정보 */
 .detail-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  margin-bottom: 32px;
 }
 
-.detail-info-grid {
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--naver-green);
+}
+
+.detail-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: 20px;
 }
 
-.detail-info-item {
+.detail-item {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
+  gap: 6px;
 }
 
-.detail-info-item.full-width {
+.detail-item.full-width {
   grid-column: 1 / -1;
 }
 
-.info-label {
-  font-size: 0.85rem;
-  color: #888;
+.detail-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.detail-value {
+  font-size: 15px;
+  color: var(--gray-900);
   font-weight: 500;
 }
 
-.info-value {
-  font-size: 1rem;
-  color: #333;
-  font-weight: 600;
+.memo-content {
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+  margin: 0;
+  line-height: 1.6;
+  color: var(--gray-800);
 }
 
-.info-value.price {
-  color: var(--naver-green);
-  font-size: 1.2rem;
-  font-weight: 700;
+/* Loading Spinner */
+.students-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-50);
 }
 
-/* 반응형 디자인 */
+/* 반응형 */
 @media (max-width: 1024px) {
-  .enrollments-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  .page-header-content {
+    padding: 0 24px;
   }
 
-  .enrollments-filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .filter-right {
-    min-width: auto;
-  }
-
-  .status-filters {
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
+  .page-content {
+    padding: 24px;
   }
 }
 
 @media (max-width: 768px) {
-  .enrollments-container {
-    padding: 1rem;
+  .page-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 0 16px;
   }
 
-  .enrollments-header {
+  .page-title {
+    font-size: 24px;
+  }
+
+  .page-title i {
+    font-size: 22px;
+  }
+
+  .page-content {
+    padding: 16px;
+  }
+
+  .search-section {
     flex-direction: column;
-    gap: 1rem;
     align-items: stretch;
   }
 
-  .enrollments-header h1 {
-    font-size: 1.5rem;
+  .result-count {
+    justify-content: center;
   }
 
-  .btn-create-enrollment {
-    width: 100%;
+  .table-wrapper {
+    overflow-x: auto;
   }
 
-  .enrollments-grid {
+  .data-table {
+    min-width: 800px;
+  }
+
+  .form-row {
     grid-template-columns: 1fr;
   }
 
-  .detail-info-grid {
+  .detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
   }
 
   .modal-content {
-    width: 95%;
+    max-width: 100%;
   }
 
-  .status-filters {
-    flex-wrap: nowrap;
-  }
-
-  .filter-btn {
-    white-space: nowrap;
-    font-size: 0.85rem;
-    padding: 0.6rem 1rem;
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 16px 20px;
   }
 }
-/* 개별 수업 시간 관련 스타일 */
-.custom-duration {
-  font-size: 0.8em;
-  color: var(--naver-green);
-  font-weight: 600;
-}
 
-.btn-set-duration {
-  padding: 0.6rem 1rem;
-  background: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+@media (max-width: 480px) {
+  .page-header {
+    padding: 20px 0;
+  }
 
-.btn-set-duration:hover {
-  background: #1976D2;
+  .page-title {
+    font-size: 20px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
 }
