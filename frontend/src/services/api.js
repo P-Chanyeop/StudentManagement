@@ -100,17 +100,19 @@ export const enrollmentAPI = {
 
 // 출석 API
 export const attendanceAPI = {
-  checkIn: (data) => api.post('/attendance/checkin', data),
-  checkOut: (id) => api.post(`/attendance/${id}/checkout`),
-  updateStatus: (id, status, reason) => api.patch(`/attendance/${id}/status?status=${status}${reason ? `&reason=${reason}` : ''}`),
-  completeClass: (id) => api.post(`/attendance/${id}/complete`),
-  uncompleteClass: (id) => api.post(`/attendance/${id}/uncomplete`),
-  updateMemo: (id, memo) => api.patch(`/attendance/${id}/memo`, { memo }),
-  getByDate: (date) => api.get(`/attendance/date/${date}`),
-  getByStudent: (studentId) => api.get(`/attendance/student/${studentId}`),
-  getBySchedule: (scheduleId) => api.get(`/attendance/schedule/${scheduleId}`),
+  checkIn: (data) => api.post('/attendances/checkin', data),
+  checkOut: (id) => api.post(`/attendances/${id}/checkout`),
+  updateStatus: (id, status, reason) => api.patch(`/attendances/${id}/status?status=${status}${reason ? `&reason=${reason}` : ''}`),
+  completeClass: (id) => api.post(`/attendances/${id}/complete`),
+  uncompleteClass: (id) => api.post(`/attendances/${id}/uncomplete`),
+  updateMemo: (id, memo) => api.patch(`/attendances/${id}/memo`, { memo }),
+  getByDate: (date) => api.get(`/attendances/date/${date}`),
+  getByStudent: (studentId) => api.get(`/attendances/student/${studentId}`),
+  getBySchedule: (scheduleId) => api.get(`/attendances/schedule/${scheduleId}`),
   getByStudentAndRange: (studentId, startDate, endDate) =>
-    api.get(`/attendance/student/${studentId}/range?startDate=${startDate}&endDate=${endDate}`),
+    api.get(`/attendances/student/${studentId}/range?startDate=${startDate}&endDate=${endDate}`),
+  updateClassComplete: (attendanceId, isComplete) => 
+    api.patch(`/attendances/${attendanceId}/complete`, { isComplete }),
 };
 
 // 예약 API

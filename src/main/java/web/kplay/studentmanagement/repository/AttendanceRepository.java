@@ -58,4 +58,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Long countByStudentIdAndStatus(Long studentId, AttendanceStatus status);
 
     Long countByStudentIdAndCheckInTimeBetween(Long studentId, LocalDateTime start, LocalDateTime end);
+
+    // 학생과 스케줄로 출석 데이터 조회
+    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId")
+    java.util.Optional<Attendance> findByStudentIdAndScheduleId(@Param("studentId") Long studentId, @Param("scheduleId") Long scheduleId);
 }

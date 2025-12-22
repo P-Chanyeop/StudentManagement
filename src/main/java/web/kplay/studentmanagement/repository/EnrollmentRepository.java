@@ -16,6 +16,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     List<Enrollment> findByCourseId(Long courseId);
 
+    List<Enrollment> findByCourseAndIsActiveTrue(web.kplay.studentmanagement.domain.course.Course course);
+
     List<Enrollment> findByStudentIdAndIsActive(Long studentId, Boolean isActive);
 
     @Query("SELECT e FROM Enrollment e WHERE e.student.id = :studentId AND e.course.id = :courseId AND e.isActive = true")

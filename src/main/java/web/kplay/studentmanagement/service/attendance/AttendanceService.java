@@ -21,7 +21,9 @@ import web.kplay.studentmanagement.repository.StudentRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -147,9 +149,47 @@ public class AttendanceService {
 
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
-        return attendanceRepository.findByDate(date).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        // 해당 날짜의 모든 스케줄 조회
+        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDate(date);
+        
+        // 각 스케줄에 등록된 모든 학생들의 출석 데이터 생성/조회
+        List<AttendanceResponse> responses = new ArrayList<>();
+        
+        for (CourseSchedule schedule : schedules) {
+            // 해당 스케줄에 등록된 학생들 조회
+            List<Enrollment> enrollments = enrollmentRepository.findByCourseAndIsActiveTrue(schedule.getCourse());
+            
+            for (Enrollment enrollment : enrollments) {
+                Student student = enrollment.getStudent();
+                
+                // 기존 출석 데이터 조회
+                Optional<Attendance> existingAttendance = attendanceRepository
+                    .findByStudentIdAndScheduleId(student.getId(), schedule.getId());
+                
+                if (existingAttendance.isPresent()) {
+                    responses.add(toResponse(existingAttendance.get()));
+                } else {
+                    // 출석 데이터가 없으면 미출석으로 생성해서 반환
+                    AttendanceResponse response = AttendanceResponse.builder()
+                        .id(null)
+                        .studentId(student.getId())
+                        .studentName(student.getStudentName())
+                        .scheduleId(schedule.getId())
+                        .courseName(schedule.getCourse().getCourseName())
+                        .startTime(schedule.getStartTime().toString())
+                        .endTime(schedule.getEndTime().toString())
+                        .status(AttendanceStatus.ABSENT)
+                        .checkInTime(null)
+                        .checkOutTime(null)
+                        .classCompleted(false)
+                        .memo("")
+                        .build();
+                    responses.add(response);
+                }
+            }
+        }
+        
+        return responses;
     }
 
     @Transactional(readOnly = true)
@@ -284,6 +324,8 @@ public class AttendanceService {
                 .studentName(attendance.getStudent().getStudentName())
                 .scheduleId(attendance.getSchedule().getId())
                 .courseName(attendance.getSchedule().getCourse().getCourseName())
+                .startTime(attendance.getSchedule().getStartTime().toString())
+                .endTime(attendance.getSchedule().getEndTime().toString())
                 .status(attendance.getStatus())
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())

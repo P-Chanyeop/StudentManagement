@@ -19,6 +19,8 @@ public class AttendanceResponse {
     private String studentName;
     private Long scheduleId;
     private String courseName;
+    private String startTime;
+    private String endTime;
     private AttendanceStatus status;
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;

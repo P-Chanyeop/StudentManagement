@@ -14,6 +14,8 @@ public interface CourseScheduleRepository extends JpaRepository<CourseSchedule, 
 
     List<CourseSchedule> findByCourseId(Long courseId);
 
+    List<CourseSchedule> findByScheduleDate(LocalDate scheduleDate);
+
     List<CourseSchedule> findByScheduleDateBetween(LocalDate startDate, LocalDate endDate);
 
     @Query("SELECT cs FROM CourseSchedule cs WHERE cs.scheduleDate = :date AND cs.isCancelled = false")

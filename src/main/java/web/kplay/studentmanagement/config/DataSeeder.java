@@ -7,13 +7,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import web.kplay.studentmanagement.domain.course.Course;
+import web.kplay.studentmanagement.domain.course.CourseSchedule;
+import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.domain.user.UserRole;
-import web.kplay.studentmanagement.repository.StudentRepository;
-import web.kplay.studentmanagement.repository.UserRepository;
+import web.kplay.studentmanagement.repository.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 /**
  * 개발 환경용 초기 데이터 시더
@@ -28,6 +32,9 @@ public class DataSeeder {
 
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
+    private final CourseRepository courseRepository;
+    private final CourseScheduleRepository scheduleRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Bean
@@ -178,7 +185,89 @@ public class DataSeeder {
                         .build();
                 studentRepository.save(student3);
 
-                log.info("✓ 테스트 학생 3명 생성 완료");
+                // 추가 학생 4-10
+                String[] names = {"박서준", "최유나", "정민호", "강하늘", "윤서아", "임재현", "송지우"};
+                String[] schools = {"서울초등학교", "한강초등학교", "강남초등학교"};
+                
+                for (int i = 0; i < names.length; i++) {
+                    User studentUser = User.builder()
+                            .username("student" + (i + 4))
+                            .password(passwordEncoder.encode("student123"))
+                            .name(names[i])
+                            .email("student" + (i + 4) + "@kplay.web")
+                            .phoneNumber("010-" + String.format("%04d", 8000 + i) + "-" + String.format("%04d", 1234 + i))
+                            .role(UserRole.STUDENT)
+                            .isActive(true)
+                            .build();
+                    studentUser = userRepository.save(studentUser);
+
+                    Student student = Student.builder()
+                            .user(studentUser)
+                            .studentName(names[i])
+                            .birthDate(LocalDate.of(2010 + (i % 3), (i % 12) + 1, (i % 28) + 1))
+                            .studentPhone("010-" + String.format("%04d", 8000 + i) + "-" + String.format("%04d", 1234 + i))
+                            .parentPhone("010-" + String.format("%04d", 9000 + i) + "-" + String.format("%04d", 2345 + i))
+                            .parentName(names[i].substring(0, 1) + "학부모")
+                            .school(schools[i % 3])
+                            .grade(String.valueOf(4 + (i % 3)))
+                            .address("서울시 강남구 " + (i + 1) + "번지")
+                            .memo("테스트 학생")
+                            .isActive(true)
+                            .build();
+                    studentRepository.save(student);
+                }
+
+                log.info("✓ 테스트 학생 10명 생성 완료");
+            }
+
+            // 테스트 수업 및 스케줄 생성
+            if (courseRepository.count() == 0) {
+                // 선생님 조회
+                User teacher = userRepository.findByUsername("teacher1").orElse(null);
+                
+                // 수업 생성
+                Course englishCourse = Course.builder()
+                        .courseName("초급 영어")
+                        .description("초등학생 대상 기초 영어 수업")
+                        .teacher(teacher)
+                        .maxStudents(8)
+                        .durationMinutes(120)
+                        .level("초급")
+                        .color("#4CAF50")
+                        .isActive(true)
+                        .build();
+                courseRepository.save(englishCourse);
+
+                // 오늘 스케줄 생성
+                CourseSchedule todaySchedule = CourseSchedule.builder()
+                        .course(englishCourse)
+                        .scheduleDate(LocalDate.now())
+                        .startTime(LocalTime.of(14, 0))
+                        .endTime(LocalTime.of(16, 0))
+                        .dayOfWeek(LocalDate.now().getDayOfWeek().name())
+                        .currentStudents(0)
+                        .isCancelled(false)
+                        .build();
+                scheduleRepository.save(todaySchedule);
+
+                // 학생들에게 수강권 할당
+                List<Student> students = studentRepository.findAll();
+                for (int i = 0; i < Math.min(5, students.size()); i++) {
+                    Student student = students.get(i);
+                    Enrollment enrollment = Enrollment.builder()
+                            .student(student)
+                            .course(englishCourse)
+                            .startDate(LocalDate.now())
+                            .endDate(LocalDate.now().plusMonths(3))
+                            .totalCount(20)
+                            .usedCount(0)
+                            .remainingCount(20)
+                            .isActive(true)
+                            .build();
+                    enrollmentRepository.save(enrollment);
+                }
+
+                log.info("✓ 테스트 수업 및 스케줄 생성 완료 (오늘 14:00-16:00)");
             }
 
             log.info("=== 초기 데이터 로딩 완료 ===");
