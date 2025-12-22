@@ -84,8 +84,8 @@ function Header() {
       <div className="header-container">
         {/* 로고 */}
         <Link to="/" className="logo">
-          <i className="fas fa-graduation-cap"></i>
-          <span>K-Play Academy</span>
+          {/*<i className="fas fa-graduation-cap"></i>*/}
+          {/*<span></span>*/}
         </Link>
 
         {/* 네비게이션 메뉴 */}

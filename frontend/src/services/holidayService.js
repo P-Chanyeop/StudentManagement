@@ -3,7 +3,7 @@ class HolidayService {
   constructor() {
     // 한국천문연구원 특일정보 API 사용
     this.apiUrl = 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService';
-    this.serviceKey = process.env.REACT_APP_HOLIDAY_API_KEY || 'YOUR_API_KEY';
+    this.serviceKey = import.meta.env.VITE_HOLIDAY_API_KEY || 'YOUR_API_KEY';
   }
 
   // 특정 연도의 공휴일 조회
