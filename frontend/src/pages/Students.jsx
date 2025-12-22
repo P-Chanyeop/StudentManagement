@@ -165,73 +165,103 @@ function Students() {
   }
 
   return (
-    <div className="students-container">
-      <div className="students-header">
-        <h1>학생 관리</h1>
-        <button className="btn-create-student" onClick={() => setShowCreateModal(true)}>
-          + 학생 등록
-        </button>
-      </div>
-
-      <div className="students-filters">
-        <input
-          type="text"
-          placeholder="학생 이름 또는 학부모 이름으로 검색..."
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          className="search-input"
-        />
-        <span className="result-count">총 {filteredStudents.length}명</span>
-      </div>
-
-      <div className="students-table-wrapper">
-        {filteredStudents.length === 0 ? (
-          <div className="empty-state">
-            {searchKeyword ? '검색 결과가 없습니다.' : '등록된 학생이 없습니다.'}
+    <div className="page-wrapper">
+      {/* 페이지 헤더 */}
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-user-graduate"></i>
+              학생 관리
+            </h1>
+            <p className="page-subtitle">학생 정보를 등록하고 관리합니다</p>
           </div>
-        ) : (
-          <table className="students-table">
-            <thead>
-              <tr>
-                <th>번호</th>
-                <th>학생명</th>
-                <th>학년</th>
-                <th>영어 레벨</th>
-                <th>학부모명</th>
-                <th>연락처</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStudents.map((student, index) => (
-                <tr key={student.id}>
-                  <td>{index + 1}</td>
-                  <td className="student-name">{student.studentName}</td>
-                  <td>{student.grade ? `${student.grade}학년` : '-'}</td>
-                  <td>{getLevelBadge(student.englishLevel)}</td>
-                  <td>{student.parentName || '-'}</td>
-                  <td>{student.parentPhone || '-'}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-detail" onClick={() => openDetailModal(student)}>
-                        상세
-                      </button>
-                      <button className="btn-edit" onClick={() => openEditModal(student)}>
-                        수정
-                      </button>
-                      <button
-                        className="btn-delete"
-                        onClick={() => handleDeactivate(student.id, student.studentName)}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </td>
+          <button className="btn-primary btn-with-icon" onClick={() => setShowCreateModal(true)}>
+            <i className="fas fa-plus"></i>
+            학생 등록
+          </button>
+        </div>
+      </div>
+
+      {/* 메인 컨텐츠 */}
+      <div className="page-content">
+        {/* 검색 및 필터 */}
+        <div className="search-section">
+          <div className="search-input-wrapper">
+            <i className="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              placeholder="학생 이름 또는 학부모 이름으로 검색..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <div className="result-count">
+            <i className="fas fa-users"></i>
+            총 <strong>{filteredStudents.length}</strong>명
+          </div>
+        </div>
+
+        {/* 테이블 */}
+        <div className="table-wrapper">
+          {filteredStudents.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-user-slash"></i>
+              <p>{searchKeyword ? '검색 결과가 없습니다.' : '등록된 학생이 없습니다.'}</p>
+            </div>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>번호</th>
+                  <th>학생명</th>
+                  <th>학년</th>
+                  <th>영어 레벨</th>
+                  <th>학부모명</th>
+                  <th>연락처</th>
+                  <th>관리</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody>
+                {filteredStudents.map((student, index) => (
+                  <tr key={student.id}>
+                    <td>{index + 1}</td>
+                    <td>
+                      <div className="student-info">
+                        <i className="fas fa-user-circle"></i>
+                        <strong>{student.studentName}</strong>
+                      </div>
+                    </td>
+                    <td>{student.grade ? `${student.grade}학년` : '-'}</td>
+                    <td>{getLevelBadge(student.englishLevel)}</td>
+                    <td>{student.parentName || '-'}</td>
+                    <td>{student.parentPhone || '-'}</td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="btn-table-detail" onClick={() => openDetailModal(student)}>
+                          <i className="fas fa-eye"></i>
+                          상세
+                        </button>
+                        <button className="btn-table-edit" onClick={() => openEditModal(student)}>
+                          <i className="fas fa-edit"></i>
+                          수정
+                        </button>
+                        <button
+                          className="btn-table-delete"
+                          onClick={() => handleDeactivate(student.id, student.studentName)}
+                        >
+                          <i className="fas fa-trash"></i>
+                          삭제
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* 학생 등록 모달 */}
