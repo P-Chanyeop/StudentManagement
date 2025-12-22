@@ -329,6 +329,7 @@ function Reservations() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* 예약 생성 모달 */}
       {showCreateModal && (
