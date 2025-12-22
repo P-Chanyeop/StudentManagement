@@ -435,7 +435,7 @@ function ParentReservation() {
               className="submit-btn"
               disabled={createReservation.isPending}
             >
-              {createReservation.isPending ? '예약 요청 중...' : '예약 요청하기'}
+              {createReservation.isPending ? '예약 중...' : '예약 하기'}
             </button>
           </div>
         </form>

@@ -1,10 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
 function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [sidebarTop, setSidebarTop] = useState(window.innerHeight / 2);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let timeoutId;
+    
+    const handleScroll = () => {
+      // 기존 타이머 클리어
+      clearTimeout(timeoutId);
+      
+      // 0.05초 후에 현재 화면 정중앙으로 이동
+      timeoutId = setTimeout(() => {
+        const newTop = window.scrollY + (window.innerHeight / 2);
+        setSidebarTop(newTop);
+      }, 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   const handleLogout = () => {
     if (window.confirm('로그아웃 하시겠습니까?')) {
@@ -33,7 +55,12 @@ function Sidebar() {
   ];
 
   return (
-    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+    <div 
+      className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
+      style={{
+        top: `${sidebarTop}px`
+      }}
+    >
       <button className="toggle-btn" onClick={toggleSidebar}>
         <i className={`fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
       </button>

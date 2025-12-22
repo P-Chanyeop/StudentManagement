@@ -8,9 +8,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
+  margin-left: 300px;
   min-height: 100vh;
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-content {
@@ -19,7 +19,7 @@
 }
 
 .layout:has(.sidebar.collapsed) .content-wrapper {
-  margin-left: 10px;
+  margin-left: 110px;
 }
 
 /* 반응형 디자인 */
