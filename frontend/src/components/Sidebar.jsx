@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
 function Sidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -10,6 +12,10 @@ function Sidebar() {
       localStorage.removeItem('refreshToken');
       navigate('/login');
     }
+  };
+
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   const menuItems = [
@@ -27,12 +33,15 @@ function Sidebar() {
   ];
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="logo">
           <span className="logo-icon">🎓</span>
-          <h2>학원 관리 시스템</h2>
+          {!isCollapsed && <h2>학원 관리 시스템</h2>}
         </div>
+        <button className="toggle-btn" onClick={toggleSidebar}>
+          <i className={`fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -41,17 +50,18 @@ function Sidebar() {
             key={item.path}
             to={item.path}
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            title={isCollapsed ? item.label : ''}
           >
             <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
+            {!isCollapsed && <span className="nav-label">{item.label}</span>}
           </NavLink>
         ))}
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
+        <button className="logout-btn" onClick={handleLogout} title={isCollapsed ? '로그아웃' : ''}>
           <span className="nav-icon"><i className="fas fa-sign-out-alt"></i></span>
-          <span className="nav-label">로그아웃</span>
+          {!isCollapsed && <span className="nav-label">로그아웃</span>}
         </button>
       </div>
     </div>
