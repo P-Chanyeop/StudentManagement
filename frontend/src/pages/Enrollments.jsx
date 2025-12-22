@@ -371,7 +371,7 @@ function Enrollments() {
                         </span>
                       </div>
                     </>
-                  )}
+                  ) : null}
                   <div className="detail-item">
                     <span className="label">수업 시간</span>
                     <span className="value">
