@@ -11,6 +11,7 @@
   z-index: 100;
   border-right: 1px solid #e0e0e0;
   transition: width 0.3s ease;
+  position: relative;
 }
 
 .sidebar.collapsed {
@@ -21,7 +22,6 @@
   padding: 2rem 1.5rem;
   border-bottom: 2px solid #f0f0f0;
   background: white;
-  position: relative;
 }
 
 .sidebar.collapsed .sidebar-header {

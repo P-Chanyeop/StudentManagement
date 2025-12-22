@@ -34,14 +34,15 @@ function Sidebar() {
 
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+      <button className="toggle-btn" onClick={toggleSidebar}>
+        <i className={`fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+      </button>
+      
       <div className="sidebar-header">
         <div className="logo">
           <span className="logo-icon">🎓</span>
           {!isCollapsed && <h2>학원 관리 시스템</h2>}
         </div>
-        <button className="toggle-btn" onClick={toggleSidebar}>
-          <i className={`fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
-        </button>
       </div>
 
       <nav className="sidebar-nav">
