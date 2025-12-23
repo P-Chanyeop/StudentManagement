@@ -65,6 +65,7 @@ export const authAPI = {
 export const studentAPI = {
   getAll: () => api.get('/students'),
   getActive: () => api.get('/students/active'),
+  getMyStudents: () => api.get('/students/my-students'),
   getById: (id) => api.get(`/students/${id}`),
   search: (keyword) => api.get(`/students/search?keyword=${keyword}`),
   create: (data) => api.post('/students', data),

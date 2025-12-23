@@ -45,40 +45,52 @@ public class HolidayService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     /**
-     * 서버 시작 시 10년치 공휴일 데이터 초기화
+     * 서버 시작 시 3년치 공휴일 데이터 초기화
      */
     @PostConstruct
+    @Transactional
     public void initializeHolidayData() {
         int currentYear = LocalDate.now().getYear();
         
-        for (int year = currentYear; year < currentYear + 10; year++) {
-            // DB에 해당 년도 데이터가 없으면 API에서 가져와서 저장
-            LocalDate startOfYear = LocalDate.of(year, 1, 1);
-            LocalDate endOfYear = LocalDate.of(year, 12, 31);
-            List<Holiday> existingHolidays = holidayRepository.findByDateRange(startOfYear, endOfYear);
+        // 현재 년도부터 3년치만 초기화 (API 데이터 제공 범위 고려)
+        for (int year = currentYear; year <= currentYear + 2; year++) {
+            // 해당 년도에 데이터가 하나라도 있으면 건너뛰기
+            boolean hasData = holidayRepository.existsByYear(year);
             
-            if (existingHolidays.isEmpty()) {
+            if (!hasData) {
                 try {
                     List<Holiday> apiHolidays = fetchHolidaysFromApi(year);
                     if (!apiHolidays.isEmpty()) {
-                        holidayRepository.saveAll(apiHolidays);
-                        log.info("공휴일 API 데이터 저장 완료: {}년 {}개", year, apiHolidays.size());
+                        // 각 공휴일을 개별적으로 중복 체크 후 저장
+                        int savedCount = 0;
+                        for (Holiday holiday : apiHolidays) {
+                            if (!holidayRepository.existsByDate(holiday.getDate())) {
+                                holidayRepository.save(holiday);
+                                savedCount++;
+                            }
+                        }
+                        log.info("공휴일 API 데이터 저장 완료: {}년 {}개", year, savedCount);
                     } else {
                         // API 실패 시 기본 공휴일 저장
                         List<Holiday> defaultHolidays = createDefaultHolidays(year);
-                        holidayRepository.saveAll(defaultHolidays);
-                        log.warn("공휴일 API 실패, 기본 데이터 저장: {}년 {}개", year, defaultHolidays.size());
+                        int savedCount = 0;
+                        for (Holiday holiday : defaultHolidays) {
+                            if (!holidayRepository.existsByDate(holiday.getDate())) {
+                                holidayRepository.save(holiday);
+                                savedCount++;
+                            }
+                        }
+                        log.info("공휴일 기본 데이터 저장 완료: {}년 {}개", year, savedCount);
                     }
                 } catch (Exception e) {
                     log.error("공휴일 데이터 초기화 실패: {}년 - {}", year, e.getMessage());
-                    // 예외 발생 시에도 기본 공휴일 저장
-                    List<Holiday> defaultHolidays = createDefaultHolidays(year);
-                    holidayRepository.saveAll(defaultHolidays);
                 }
+            } else {
+                log.info("공휴일 데이터 이미 존재: {}년", year);
             }
         }
         
-        log.info("10년치 공휴일 데이터 초기화 완료 ({}-{})", currentYear, currentYear + 9);
+        log.info("3년치 공휴일 데이터 초기화 완료 ({}-{})", currentYear, currentYear + 2);
     }
     
     /**

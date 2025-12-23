@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.student.StudentCreateRequest;
 import web.kplay.studentmanagement.dto.student.StudentResponse;
@@ -44,6 +45,14 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<StudentResponse>> getActiveStudents() {
         List<StudentResponse> responses = studentService.getActiveStudents();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/my-students")
+    @PreAuthorize("hasAnyRole('PARENT', 'STUDENT')")
+    public ResponseEntity<List<StudentResponse>> getMyStudents(Authentication authentication) {
+        String username = authentication.getName();
+        List<StudentResponse> responses = studentService.getMyStudents(username);
         return ResponseEntity.ok(responses);
     }
 

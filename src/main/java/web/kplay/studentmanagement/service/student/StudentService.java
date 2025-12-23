@@ -87,6 +87,27 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
+    public List<StudentResponse> getMyStudents(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        List<Student> students;
+        if (user.getRole() == UserRole.PARENT) {
+            // 부모님은 자녀 조회 (부모 전화번호로 매칭)
+            students = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        } else if (user.getRole() == UserRole.STUDENT) {
+            // 학생은 본인만 조회 (학생 전화번호로 매칭)
+            students = studentRepository.findByStudentPhoneAndIsActive(user.getPhoneNumber(), true);
+        } else {
+            students = List.of();
+        }
+        
+        return students.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<StudentResponse> searchStudents(String keyword) {
         return studentRepository.searchByKeyword(keyword).stream()
                 .map(this::toResponse)

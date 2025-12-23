@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { studentAPI } from '../services/api';
+import { studentAPI, authAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/Students.css';
 
@@ -26,13 +26,29 @@ function Students() {
     memo: '',
   });
 
-  // 학생 목록 조회
-  const { data: students = [], isLoading } = useQuery({
-    queryKey: ['students'],
+  // 사용자 프로필 조회
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      const response = await studentAPI.getActive();
+      const response = await authAPI.getProfile();
       return response.data;
     },
+  });
+
+  // 학생 목록 조회
+  const { data: students = [], isLoading } = useQuery({
+    queryKey: ['students', profile?.role],
+    queryFn: async () => {
+      if (profile?.role === 'ADMIN' || profile?.role === 'TEACHER') {
+        const response = await studentAPI.getActive();
+        return response.data;
+      } else if (profile?.role === 'PARENT' || profile?.role === 'STUDENT') {
+        const response = await studentAPI.getMyStudents();
+        return response.data;
+      }
+      return [];
+    },
+    enabled: !!profile,
   });
 
   // 학생 생성 mutation
@@ -176,10 +192,12 @@ function Students() {
             </h1>
             <p className="page-subtitle">학생 정보를 등록하고 관리합니다</p>
           </div>
-          <button className="btn-primary btn-with-icon" onClick={() => setShowCreateModal(true)}>
-            <i className="fas fa-plus"></i>
-            학생 등록
-          </button>
+          {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+            <button className="btn-primary btn-with-icon" onClick={() => setShowCreateModal(true)}>
+              <i className="fas fa-plus"></i>
+              학생 등록
+            </button>
+          )}
         </div>
       </div>
 
@@ -229,7 +247,6 @@ function Students() {
                     <td>{index + 1}</td>
                     <td>
                       <div className="student-info">
-                        <i className="fas fa-user-circle"></i>
                         <strong>{student.studentName}</strong>
                       </div>
                     </td>

@@ -25,6 +25,14 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
     @Query("SELECT h FROM Holiday h WHERE YEAR(h.date) = :year ORDER BY h.date")
     List<Holiday> findByYear(@Param("year") int year);
 
+    // 특정 연도의 공휴일 개수 조회
+    @Query("SELECT COUNT(h) FROM Holiday h WHERE YEAR(h.date) = :year")
+    long countByYear(@Param("year") int year);
+
+    // 특정 연도에 공휴일 데이터 존재 여부 확인
+    @Query("SELECT CASE WHEN COUNT(h) > 0 THEN true ELSE false END FROM Holiday h WHERE YEAR(h.date) = :year")
+    boolean existsByYear(@Param("year") int year);
+
     // 날짜 존재 여부 확인
     boolean existsByDate(LocalDate date);
 }
