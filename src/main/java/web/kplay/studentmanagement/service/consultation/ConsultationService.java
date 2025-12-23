@@ -60,11 +60,79 @@ public class ConsultationService {
         return toResponse(savedConsultation);
     }
 
+    /**
+     * 특정 학생의 상담 이력 조회
+     * @param studentId 학생 ID
+     * @return 해당 학생의 상담 이력 목록 (최신순)
+     */
     @Transactional(readOnly = true)
     public List<ConsultationResponse> getConsultationsByStudent(Long studentId) {
         return consultationRepository.findByStudentIdOrderByDateDesc(studentId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 부모님의 자녀들 상담 이력 조회
+     * @param username 부모님 사용자명
+     * @return 자녀들의 모든 상담 이력 목록 (최신순)
+     */
+    @Transactional(readOnly = true)
+    public List<ConsultationResponse> getConsultationsByParent(String username) {
+        User parent = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("부모님 정보를 찾을 수 없습니다."));
+        
+        List<Student> children = studentRepository.findByParentUser(parent);
+        
+        return children.stream()
+                .flatMap(child -> consultationRepository.findByStudentIdOrderByDateDesc(child.getId()).stream())
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 상담 기록 수정 (제목, 내용, 파일 등)
+     * @param id 상담 기록 ID
+     * @param request 수정할 상담 정보
+     * @return 수정된 상담 기록 정보
+     */
+    @Transactional
+    public ConsultationResponse updateConsultation(Long id, ConsultationRequest request) {
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("상담 기록을 찾을 수 없습니다."));
+        
+        consultation.updateContent(request.getTitle(), request.getContent(), request.getConsultationType());
+        
+        if (request.getRecordingFileUrl() != null) {
+            consultation.addRecordingFile(request.getRecordingFileUrl());
+        }
+        
+        if (request.getAttachmentFileUrl() != null) {
+            consultation.addAttachmentFile(request.getAttachmentFileUrl());
+        }
+        
+        if (request.getActionItems() != null) {
+            consultation.updateActionItems(request.getActionItems());
+        }
+        
+        if (request.getNextConsultationDate() != null) {
+            consultation.scheduleNextConsultation(request.getNextConsultationDate());
+        }
+        
+        return toResponse(consultation);
+    }
+
+    /**
+     * 상담 기록 삭제
+     * @param id 삭제할 상담 기록 ID
+     * @return void
+     */
+    @Transactional
+    public void deleteConsultation(Long id) {
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("상담 기록을 찾을 수 없습니다."));
+        
+        consultationRepository.delete(consultation);
     }
 
     private ConsultationResponse toResponse(Consultation consultation) {

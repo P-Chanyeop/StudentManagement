@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.consultation.ConsultationRequest;
 import web.kplay.studentmanagement.dto.consultation.ConsultationResponse;
@@ -28,6 +29,11 @@ public class ConsultationController {
     private final ConsultationService consultationService;
     private final ConsultationExcelService consultationExcelService;
 
+    /**
+     * 상담 기록 생성
+     * @param request 상담 정보 (학생ID, 제목, 내용, 파일 등)
+     * @return 생성된 상담 기록 정보
+     */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<ConsultationResponse> createConsultation(@Valid @RequestBody ConsultationRequest request) {
@@ -35,11 +41,56 @@ public class ConsultationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * 특정 학생의 상담 이력 조회
+     * @param studentId 학생 ID
+     * @return 해당 학생의 상담 이력 목록
+     */
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<ConsultationResponse>> getConsultationsByStudent(@PathVariable Long studentId) {
         List<ConsultationResponse> responses = consultationService.getConsultationsByStudent(studentId);
         return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 부모님의 자녀들 상담 이력 조회
+     * @param authentication 인증된 부모님 정보
+     * @return 자녀들의 모든 상담 이력 목록
+     */
+    @GetMapping("/my-children")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<ConsultationResponse>> getMyChildrenConsultations(Authentication authentication) {
+        String username = authentication.getName();
+        List<ConsultationResponse> responses = consultationService.getConsultationsByParent(username);
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * 상담 기록 수정
+     * @param id 상담 기록 ID
+     * @param request 수정할 상담 정보
+     * @return 수정된 상담 기록 정보
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<ConsultationResponse> updateConsultation(
+            @PathVariable Long id, 
+            @Valid @RequestBody ConsultationRequest request) {
+        ConsultationResponse response = consultationService.updateConsultation(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 상담 기록 삭제
+     * @param id 삭제할 상담 기록 ID
+     * @return 204 No Content
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Void> deleteConsultation(@PathVariable Long id) {
+        consultationService.deleteConsultation(id);
+        return ResponseEntity.noContent().build();
     }
 
     /**

@@ -26,7 +26,9 @@ public class FileUploadController {
     private final FileStorageService fileStorageService;
 
     /**
-     * 녹음 파일 업로드
+     * 녹음 파일 업로드 (상담용)
+     * @param file 업로드할 녹음 파일 (MultipartFile)
+     * @return 업로드된 파일 정보 (파일명, 경로, 크기)
      */
     @PostMapping("/upload/audio")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
@@ -47,7 +49,9 @@ public class FileUploadController {
     }
 
     /**
-     * 첨부 파일 업로드
+     * 첨부 파일 업로드 (상담용 문서)
+     * @param file 업로드할 문서 파일 (MultipartFile)
+     * @return 업로드된 파일 정보 (파일명, 경로, 크기)
      */
     @PostMapping("/upload/document")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
@@ -68,7 +72,9 @@ public class FileUploadController {
     }
 
     /**
-     * 파일 다운로드
+     * 파일 다운로드 (보안 검증 포함)
+     * @param filePath 다운로드할 파일 경로
+     * @return 파일 리소스 (바이너리 데이터)
      * Path Traversal 방지를 위한 보안 검증 추가
      */
     @GetMapping("/download/**")
@@ -126,7 +132,9 @@ public class FileUploadController {
     }
 
     /**
-     * 파일 삭제
+     * 파일 삭제 (관리자/선생님만 가능)
+     * @param filePath 삭제할 파일 경로
+     * @return 삭제 결과 메시지
      */
     @DeleteMapping("/delete")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")

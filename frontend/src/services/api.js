@@ -152,10 +152,34 @@ export const levelTestAPI = {
   getByStudent: (studentId) => api.get(`/leveltests/student/${studentId}`),
 };
 
+// 파일 업로드 API
+export const fileAPI = {
+  uploadAudio: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/files/upload/audio', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  uploadDocument: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/files/upload/document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  download: (filePath) => api.get(`/files/download?filePath=${encodeURIComponent(filePath)}`, { responseType: 'blob' }),
+  delete: (filePath) => api.delete(`/files/delete?filePath=${encodeURIComponent(filePath)}`),
+};
+
 // 상담 API
 export const consultationAPI = {
   create: (data) => api.post('/consultations', data),
   getByStudent: (studentId) => api.get(`/consultations/student/${studentId}`),
+  getMyChildren: () => api.get('/consultations/my-children'),
+  update: (id, data) => api.put(`/consultations/${id}`, data),
+  delete: (id) => api.delete(`/consultations/${id}`),
+  exportByStudent: (studentId) => api.get(`/consultations/export/student/${studentId}`, { responseType: 'blob' }),
 };
 
 // 문자 API
