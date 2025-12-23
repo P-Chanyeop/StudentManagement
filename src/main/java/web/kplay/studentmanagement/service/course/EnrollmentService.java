@@ -37,8 +37,19 @@ public class EnrollmentService {
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
 
-        // 기간+횟수 검증 (모든 수강권에 적용)
-        if (request.getEndDate().isBefore(request.getStartDate())) {
+        // 종료일 계산 (공휴일 제외)
+        LocalDate endDate;
+        if (request.getEndDate() != null) {
+            endDate = request.getEndDate();
+        } else {
+            // 시작일 + 총 횟수로 공휴일 제외하여 종료일 계산
+            endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
+            log.info("공휴일 제외 종료일 계산: 시작={}, 수업일수={}, 종료={}", 
+                    request.getStartDate(), request.getTotalCount(), endDate);
+        }
+
+        // 기간+횟수 검증
+        if (endDate.isBefore(request.getStartDate())) {
             throw new BusinessException("종료일은 시작일보다 이후여야 합니다");
         }
 
@@ -46,7 +57,7 @@ public class EnrollmentService {
                 .student(student)
                 .course(course)
                 .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
+                .endDate(endDate)
                 .totalCount(request.getTotalCount())
                 .usedCount(0)
                 .remainingCount(request.getTotalCount())
@@ -57,7 +68,7 @@ public class EnrollmentService {
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
         log.info("새 수강권 등록: 학생={}, 수업={}, 기간={} ~ {}, 횟수={}/{}",
                 student.getStudentName(), course.getCourseName(),
-                request.getStartDate(), request.getEndDate(),
+                request.getStartDate(), endDate,
                 request.getTotalCount(), request.getTotalCount());
 
         return toResponse(savedEnrollment);

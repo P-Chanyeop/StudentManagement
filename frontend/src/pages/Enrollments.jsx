@@ -56,17 +56,28 @@ function Enrollments() {
 
   // 시작일이나 주 수가 변경될 때 자동으로 종료일 계산
   useEffect(() => {
-    if (newEnrollment.type === 'PERIOD_BASED' && newEnrollment.startDate && newEnrollment.weeks) {
+    if (newEnrollment.startDate && (newEnrollment.weeks || newEnrollment.totalCount)) {
       calculateEndDate();
     }
-  }, [newEnrollment.startDate, newEnrollment.weeks, newEnrollment.type]);
+  }, [newEnrollment.startDate, newEnrollment.weeks, newEnrollment.totalCount, newEnrollment.type]);
 
   // 공휴일을 고려한 종료일 계산
   const calculateEndDate = async () => {
     try {
+      let businessDays;
+      if (newEnrollment.type === 'PERIOD_BASED' && newEnrollment.weeks) {
+        // 주 단위 계산 (주 * 5일)
+        businessDays = parseInt(newEnrollment.weeks) * 5;
+      } else if (newEnrollment.totalCount) {
+        // 횟수 기반 계산
+        businessDays = parseInt(newEnrollment.totalCount);
+      } else {
+        return;
+      }
+
       const endDate = await holidayService.calculateEndDate(
         newEnrollment.startDate, 
-        parseInt(newEnrollment.weeks)
+        businessDays
       );
       
       setNewEnrollment(prev => ({
@@ -172,8 +183,8 @@ function Enrollments() {
       return;
     }
 
-    if (newEnrollment.type === 'PERIOD_BASED' && !newEnrollment.endDate) {
-      alert('종료일을 선택해주세요.');
+    if (!newEnrollment.totalCount || newEnrollment.totalCount <= 0) {
+      alert('총 횟수를 입력해주세요.');
       return;
     }
 
@@ -219,8 +230,8 @@ function Enrollments() {
     const matchesStatus = statusFilter === 'ALL' || enrollment.status === statusFilter;
     const matchesSearch =
       searchQuery === '' ||
-      enrollment.student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enrollment.course.name.toLowerCase().includes(searchQuery.toLowerCase());
+      enrollment.student?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      enrollment.course?.name?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -331,8 +342,8 @@ function Enrollments() {
               </div>
 
               <div className="enrollment-body">
-                <h3 className="student-name">{enrollment.student.name}</h3>
-                <p className="course-name">{enrollment.course.name}</p>
+                <h3 className="student-name">{enrollment.student?.name || '학생 정보 없음'}</h3>
+                <p className="course-name">{enrollment.course?.name || '수업 정보 없음'}</p>
 
                 <div className="enrollment-details">
                   {enrollment.type === 'PERIOD_BASED' ? (
@@ -384,7 +395,7 @@ function Enrollments() {
                   <div className="detail-item">
                     <span className="label">가격</span>
                     <span className="value price">
-                      {enrollment.price.toLocaleString()}원
+                      {enrollment.price?.toLocaleString() || '0'}원
                     </span>
                   </div>
                 </div>
@@ -500,14 +511,19 @@ function Enrollments() {
                     <small className="form-help">공휴일을 제외한 영업일 기준으로 종료일이 자동 계산됩니다.</small>
                   </div>
                   <div className="form-group">
-                    <label>종료일 *</label>
+                    <label>종료일 (자동 계산)</label>
                     <input
                       type="date"
                       value={newEnrollment.endDate}
                       onChange={(e) =>
                         setNewEnrollment({ ...newEnrollment, endDate: e.target.value })
                       }
+                      placeholder="시작일과 횟수로 자동 계산됩니다"
                     />
+                    <small className="form-help">
+                      시작일과 총 횟수를 기준으로 공휴일을 제외하여 자동 계산됩니다. 
+                      직접 입력하면 수동 설정됩니다.
+                    </small>
                   </div>
                 </>
               ) : (
@@ -584,19 +600,19 @@ function Enrollments() {
                 <div className="detail-info-grid">
                   <div className="detail-info-item">
                     <span className="info-label">학생</span>
-                    <span className="info-value">{selectedEnrollment.student.name}</span>
+                    <span className="info-value">{selectedEnrollment.student?.name || '학생 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
                     <span className="info-label">연락처</span>
-                    <span className="info-value">{selectedEnrollment.student.phone}</span>
+                    <span className="info-value">{selectedEnrollment.student?.phone || '연락처 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
                     <span className="info-label">코스</span>
-                    <span className="info-value">{selectedEnrollment.course.name}</span>
+                    <span className="info-value">{selectedEnrollment.course?.name || '수업 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
                     <span className="info-label">레벨</span>
-                    <span className="info-value">{selectedEnrollment.course.level}</span>
+                    <span className="info-value">{selectedEnrollment.course?.level || '레벨 정보 없음'}</span>
                   </div>
 
                   {selectedEnrollment.type === 'PERIOD_BASED' ? (

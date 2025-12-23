@@ -213,7 +213,7 @@ function Courses() {
                   <div className="detail-item">
                     <span className="icon"><i className="fas fa-dollar-sign"></i></span>
                     <span className="label">가격:</span>
-                    <span className="value price">{course.price.toLocaleString()}원</span>
+                    <span className="value price">{course.price?.toLocaleString() || '미정'}원</span>
                   </div>
                 </div>
 

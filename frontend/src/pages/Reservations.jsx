@@ -201,12 +201,12 @@ function Reservations() {
                 return (
                   <div key={schedule.id} className="schedule-card">
                     <div className="schedule-info">
-                      <h3>{schedule.course.name}</h3>
+                      <h3>{schedule.course?.name || '수업명 미정'}</h3>
                       <p className="schedule-time">
                         {schedule.startTime} - {schedule.endTime}
                       </p>
                       <p className="schedule-teacher">
-                        강사: {schedule.teacher.name}
+                        강사: {schedule.teacher?.name || '미배정'}
                       </p>
                       <div className="schedule-capacity">
                         <span className={`capacity-badge ${isAvailable ? 'available' : 'full'}`}>

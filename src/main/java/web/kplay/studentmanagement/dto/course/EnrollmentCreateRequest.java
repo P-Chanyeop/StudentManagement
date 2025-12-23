@@ -23,7 +23,7 @@ public class EnrollmentCreateRequest {
     @NotNull(message = "시작일은 필수입니다")
     private LocalDate startDate;
 
-    @NotNull(message = "종료일은 필수입니다")
+    // 종료일 (선택사항 - 없으면 시작일 + 총횟수로 공휴일 제외하여 자동 계산)
     private LocalDate endDate;
 
     @NotNull(message = "총 횟수는 필수입니다")

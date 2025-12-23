@@ -211,10 +211,10 @@ function Dashboard() {
                           {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} · {schedule.teacherName}
                         </div>
                       </div>
-                      <div className={`item-badge badge-${schedule.status.toLowerCase()}`}>
+                      <div className={`item-badge badge-${schedule.status?.toLowerCase() || 'default'}`}>
                         {schedule.status === 'SCHEDULED' ? '예정' :
                          schedule.status === 'COMPLETED' ? '완료' :
-                         schedule.status === 'CANCELLED' ? '취소' : schedule.status}
+                         schedule.status === 'CANCELLED' ? '취소' : schedule.status || '미정'}
                       </div>
                     </div>
                   ))}

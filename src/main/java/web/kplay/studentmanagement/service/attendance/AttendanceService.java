@@ -325,7 +325,7 @@ public class AttendanceService {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
-        attendance.updateReason(reason);
+        attendance.updateStatus(attendance.getStatus(), reason);
         log.info("사유 업데이트: 학생={}, 사유={}", attendance.getStudent().getStudentName(), reason);
 
         return toResponse(attendance);
