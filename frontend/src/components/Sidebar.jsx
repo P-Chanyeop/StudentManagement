@@ -65,6 +65,7 @@ function Sidebar() {
       { path: '/leveltests', icon: <i className="fas fa-clipboard-list"></i>, label: '레벨 테스트' },
       { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
       { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
+      { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
 
     const studentParentMenus = [
