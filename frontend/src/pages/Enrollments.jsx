@@ -678,7 +678,7 @@ function Enrollments() {
                   <div className="detail-info-item">
                     <span className="info-label">가격</span>
                     <span className="info-value price">
-                      {selectedEnrollment.price.toLocaleString()}원
+                      {selectedEnrollment.price?.toLocaleString() || '0'}원
                     </span>
                   </div>
 
