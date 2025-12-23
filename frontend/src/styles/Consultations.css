@@ -350,6 +350,286 @@
   color: white;
 }
 
+/* 상담 이력 목록 */
+.consultations-section {
+  margin-top: 24px;
+}
+
+.consultations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.consultation-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.consultation-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.consultation-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--gray-50);
+}
+
+.consultation-info h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.consultation-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.student-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--naver-green);
+  background: rgba(3, 199, 90, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.student-name::before {
+  content: '\f007';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.consultation-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.consultation-date::before {
+  content: '\f073';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.consultation-type {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: white;
+}
+
+.consultation-type.type-학습상담 {
+  background: var(--naver-green);
+}
+
+.consultation-type.type-학부모상담 {
+  background: var(--naver-green-dark);
+}
+
+.consultation-type.type-진로상담 {
+  background: #2563eb;
+}
+
+.consultation-type.type-생활상담 {
+  background: #7c3aed;
+}
+
+.consultation-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit, .btn-delete {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.btn-edit {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.btn-edit:hover {
+  background: var(--success);
+  color: white;
+  transform: scale(1.05);
+}
+
+.btn-delete {
+  background: var(--error-light);
+  color: var(--error-dark);
+}
+
+.btn-delete:hover {
+  background: var(--error);
+  color: white;
+  transform: scale(1.05);
+}
+
+.consultation-content {
+  padding: 24px;
+}
+
+.consultation-content > p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gray-800);
+  margin: 0 0 20px 0;
+  background: var(--gray-50);
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid var(--naver-green);
+}
+
+.action-items {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: rgba(3, 199, 90, 0.05);
+  border-radius: 8px;
+  border-left: 4px solid var(--naver-green);
+}
+
+.action-items strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--naver-green-dark);
+  margin-bottom: 8px;
+}
+
+.action-items strong::before {
+  content: '\f0ae';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.action-items p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--gray-700);
+  margin: 0;
+  white-space: pre-line;
+}
+
+.next-consultation {
+  padding: 12px 16px;
+  background: rgba(37, 99, 235, 0.05);
+  border-radius: 8px;
+  border-left: 4px solid #2563eb;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.next-consultation strong {
+  color: #2563eb;
+}
+
+.consultation-files {
+  padding: 16px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.file-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-download-btn.audio {
+  background: rgba(3, 199, 90, 0.1);
+  color: var(--naver-green-dark);
+  border: 1px solid var(--naver-green);
+}
+
+.file-download-btn.audio:hover {
+  background: var(--naver-green);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.file-download-btn.document {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1e40af;
+  border: 1px solid #2563eb;
+}
+
+.file-download-btn.document:hover {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.consultation-footer {
+  padding: 12px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.consultant {
+  font-size: 13px;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.consultant::before {
+  content: '\f4fd';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -366,6 +646,126 @@
 .empty-state p {
   font-size: 16px;
   margin: 0;
+}
+
+/* 학생 체크박스 컨테이너 */
+.student-checkbox-container {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--gray-50);
+}
+
+.student-search-wrapper {
+  margin-bottom: 16px;
+}
+
+.student-search-wrapper .search-input-wrapper {
+  position: relative;
+}
+
+.student-search-wrapper .search-input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 16px 8px 40px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.student-search-wrapper .search-input:focus {
+  outline: none;
+  border-color: var(--naver-green);
+  box-shadow: 0 0 0 2px rgba(3, 199, 90, 0.1);
+}
+
+.student-search-wrapper .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  font-size: 14px;
+}
+
+.select-all-wrapper {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.student-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.no-students {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 20px;
+  color: var(--gray-500);
+  font-size: 14px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: var(--gray-700);
+  background: white;
+  border: 1px solid var(--gray-200);
+}
+
+.checkbox-label:hover {
+  background: rgba(3, 199, 90, 0.05);
+  border-color: var(--naver-green);
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--gray-300);
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: var(--naver-green);
+  border-color: var(--naver-green);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.select-all-wrapper .checkbox-label {
+  font-weight: 600;
+  color: var(--naver-green);
+  background: rgba(3, 199, 90, 0.1);
+  border-color: var(--naver-green);
 }
 
 /* 모달 */
@@ -464,13 +864,18 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 24px;
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
 }
 
 .form-group label {

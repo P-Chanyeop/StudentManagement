@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
 import web.kplay.studentmanagement.domain.course.Enrollment;
+import web.kplay.studentmanagement.domain.consultation.Consultation;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.domain.user.UserRole;
@@ -35,6 +36,7 @@ public class DataSeeder {
     private final CourseRepository courseRepository;
     private final CourseScheduleRepository scheduleRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final ConsultationRepository consultationRepository;
     private final PasswordEncoder passwordEncoder;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
@@ -291,6 +293,101 @@ public class DataSeeder {
                 log.info("✓ 테스트 수업 및 스케줄 생성 완료 (오늘 14:00-16:00)");
             }
 
+            // 테스트 상담 데이터 생성
+            if (consultationRepository.count() == 0) {
+                User admin = userRepository.findByUsername("admin").orElse(null);
+                User teacher = userRepository.findByUsername("teacher1").orElse(null);
+                List<Student> students = studentRepository.findAll();
+
+                if (admin != null && teacher != null && !students.isEmpty()) {
+                    // 상담 1: 홍길동 - 학습 계획 수립
+                    Consultation consultation1 = Consultation.builder()
+                            .student(students.get(0))
+                            .consultant(teacher)
+                            .title("첫 상담 - 학습 계획 수립")
+                            .content("홍길동 학생의 현재 영어 실력을 평가하고 향후 학습 계획을 논의했습니다. " +
+                                    "기초 문법이 부족하여 기본기 강화가 필요합니다. " +
+                                    "매일 단어 암기와 간단한 문장 만들기 연습을 권장합니다.")
+                            .consultationType("학습상담")
+                            .consultationDate(LocalDate.now().minusDays(7))
+                            .actionItems("1. 기초 문법 교재 제공\n2. 매일 단어 10개씩 암기\n3. 주 2회 추가 과제 제공")
+                            .nextConsultationDate(LocalDate.now().plusDays(7))
+                            .build();
+                    consultationRepository.save(consultation1);
+
+                    // 상담 2: 홍길동 - 학부모 상담
+                    Consultation consultation2 = Consultation.builder()
+                            .student(students.get(0))
+                            .consultant(admin)
+                            .title("학부모 상담 - 진도 점검")
+                            .content("홍길동 학생의 1주차 학습 진도를 점검했습니다. " +
+                                    "단어 암기는 잘 하고 있으나 문법 적용에 어려움을 보입니다. " +
+                                    "좀 더 체계적인 문법 학습이 필요합니다.")
+                            .consultationType("학부모상담")
+                            .consultationDate(LocalDate.now().minusDays(3))
+                            .actionItems("1. 문법 기초 강화 수업 추가\n2. 가정에서 영어 일기 쓰기 지도")
+                            .recordingFileUrl("/uploads/audio/consultation_001.mp3")
+                            .build();
+                    consultationRepository.save(consultation2);
+
+                    // 상담 3: 김민수 - 중급 과정 진입
+                    if (students.size() > 1) {
+                        Consultation consultation3 = Consultation.builder()
+                                .student(students.get(1))
+                                .consultant(teacher)
+                                .title("중급 과정 진입 상담")
+                                .content("김민수 학생이 중급 과정으로 진입하면서 학습 방향을 조정했습니다. " +
+                                        "읽기 실력은 우수하나 말하기에 자신감이 부족합니다. " +
+                                        "회화 연습을 늘리고 발표 기회를 제공하기로 했습니다.")
+                                .consultationType("학습상담")
+                                .consultationDate(LocalDate.now().minusDays(5))
+                                .actionItems("1. 주 1회 영어 발표 시간 마련\n2. 원어민 회화 수업 추가 검토\n3. 자신감 향상을 위한 격려")
+                                .nextConsultationDate(LocalDate.now().plusDays(14))
+                                .attachmentFileUrl("/uploads/documents/speaking_practice_plan.pdf")
+                                .build();
+                        consultationRepository.save(consultation3);
+                    }
+
+                    // 상담 4: 이지은 - 진로 상담
+                    if (students.size() > 2) {
+                        Consultation consultation4 = Consultation.builder()
+                                .student(students.get(2))
+                                .consultant(admin)
+                                .title("영어 특기자 진로 상담")
+                                .content("이지은 학생의 뛰어난 영어 실력을 바탕으로 특목고 진학과 " +
+                                        "영어 인증시험 준비에 대해 상담했습니다. " +
+                                        "TOEFL Junior 시험 준비를 시작하기로 결정했습니다.")
+                                .consultationType("진로상담")
+                                .consultationDate(LocalDate.now().minusDays(1))
+                                .actionItems("1. TOEFL Junior 교재 준비\n2. 모의고사 일정 수립\n3. 고급 독해 자료 제공")
+                                .nextConsultationDate(LocalDate.now().plusDays(10))
+                                .recordingFileUrl("/uploads/audio/consultation_002.mp3")
+                                .attachmentFileUrl("/uploads/documents/toefl_study_plan.pdf")
+                                .build();
+                        consultationRepository.save(consultation4);
+                    }
+
+                    // 상담 5: 김민수 - 생활 상담
+                    if (students.size() > 1) {
+                        Consultation consultation5 = Consultation.builder()
+                                .student(students.get(1))
+                                .consultant(teacher)
+                                .title("학습 태도 개선 상담")
+                                .content("최근 김민수 학생의 수업 참여도가 떨어지는 것에 대해 상담했습니다. " +
+                                        "개인적인 고민이 있어 집중력이 저하된 것으로 파악됩니다. " +
+                                        "학부모와의 추가 상담이 필요합니다.")
+                                .consultationType("생활상담")
+                                .consultationDate(LocalDate.now())
+                                .actionItems("1. 학부모 면담 일정 조율\n2. 개별 학습 지도 강화\n3. 심리적 지원 방안 모색")
+                                .nextConsultationDate(LocalDate.now().plusDays(3))
+                                .build();
+                        consultationRepository.save(consultation5);
+                    }
+
+                    log.info("✓ 테스트 상담 데이터 5건 생성 완료");
+                }
+            }
+
             log.info("=== 초기 데이터 로딩 완료 ===");
             log.info("");
             log.info("📋 초기 계정 생성됨 (비밀번호는 CREDENTIALS.md 참조)");
@@ -298,6 +395,7 @@ public class DataSeeder {
             log.info("  - teacher1, teacher2 (선생님)");
             log.info("  - parent1 (학부모)");
             log.info("  - student1, student2, student3 (학생)");
+            log.info("📝 테스트 상담 데이터 5건 생성됨");
             log.info("");
             log.info("🌐 Swagger UI: http://localhost:8080/swagger-ui.html");
             log.info("🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN 계정 필요)");

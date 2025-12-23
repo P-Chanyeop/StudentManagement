@@ -12,6 +12,8 @@ function Consultations() {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
   const [documentFile, setDocumentFile] = useState(null);
+  const [selectedStudentsForConsultation, setSelectedStudentsForConsultation] = useState([]);
+  const [studentSearchTerm, setStudentSearchTerm] = useState('');
   const [newConsultation, setNewConsultation] = useState({
     studentId: '',
     title: '',
@@ -105,6 +107,8 @@ function Consultations() {
       actionItems: '',
       nextConsultationDate: '',
     });
+    setSelectedStudentsForConsultation([]);
+    setStudentSearchTerm('');
     setAudioFile(null);
     setDocumentFile(null);
   };
@@ -121,8 +125,37 @@ function Consultations() {
     }
   };
 
+  const handleStudentToggle = (studentId) => {
+    setSelectedStudentsForConsultation(prev => 
+      prev.includes(studentId) 
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedStudentsForConsultation.length === filteredStudents.length) {
+      setSelectedStudentsForConsultation([]);
+    } else {
+      setSelectedStudentsForConsultation(filteredStudents.map(student => student.id));
+    }
+  };
+
+  // 학생 목록 필터링 및 정렬
+  const filteredStudents = students
+    .filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
+      student.parentName.toLowerCase().includes(studentSearchTerm.toLowerCase())
+    )
+    .sort((a, b) => a.studentName.localeCompare(b.studentName, 'ko'));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (selectedStudentsForConsultation.length === 0) {
+      alert('학생을 선택해주세요.');
+      return;
+    }
     
     let recordingFileUrl = '';
     let attachmentFileUrl = '';
@@ -138,14 +171,23 @@ function Consultations() {
       if (!attachmentFileUrl) return;
     }
 
-    const consultationData = {
-      ...newConsultation,
-      consultationDate: new Date().toISOString().split('T')[0],
-      recordingFileUrl,
-      attachmentFileUrl
-    };
-
-    createMutation.mutate(consultationData);
+    // 선택된 각 학생에 대해 상담 기록 생성
+    for (const studentId of selectedStudentsForConsultation) {
+      const consultationData = {
+        ...newConsultation,
+        studentId,
+        consultationDate: new Date().toISOString().split('T')[0],
+        recordingFileUrl,
+        attachmentFileUrl
+      };
+      
+      await createMutation.mutateAsync(consultationData);
+    }
+    
+    queryClient.invalidateQueries(['consultations']);
+    setShowCreateModal(false);
+    resetForm();
+    alert(`${selectedStudentsForConsultation.length}명의 학생에 대한 상담 기록이 등록되었습니다.`);
   };
 
   const handleEdit = (consultation) => {
@@ -357,18 +399,49 @@ function Consultations() {
               <div className="modal-body">
                 <div className="form-group">
                   <label>학생 선택 *</label>
-                  <select 
-                    value={newConsultation.studentId} 
-                    onChange={(e) => setNewConsultation({...newConsultation, studentId: e.target.value})}
-                    required
-                  >
-                    <option value="">학생을 선택하세요</option>
-                    {students.map(student => (
-                      <option key={student.id} value={student.id}>
-                        {student.studentName} ({student.parentName})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="student-checkbox-container">
+                    <div className="student-search-wrapper">
+                      <div className="search-input-wrapper">
+                        <i className="fas fa-search search-icon"></i>
+                        <input 
+                          type="text"
+                          className="search-input"
+                          placeholder="학생 이름 또는 학부모 이름으로 검색..."
+                          value={studentSearchTerm}
+                          onChange={(e) => setStudentSearchTerm(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="select-all-wrapper">
+                      <label className="checkbox-label">
+                        <input 
+                          type="checkbox"
+                          checked={selectedStudentsForConsultation.length === filteredStudents.length && filteredStudents.length > 0}
+                          onChange={handleSelectAll}
+                        />
+                        <span className="checkmark"></span>
+                        전체 선택 ({filteredStudents.length}명)
+                      </label>
+                    </div>
+                    <div className="student-list">
+                      {filteredStudents.map(student => (
+                        <label key={student.id} className="checkbox-label">
+                          <input 
+                            type="checkbox"
+                            checked={selectedStudentsForConsultation.includes(student.id)}
+                            onChange={() => handleStudentToggle(student.id)}
+                          />
+                          <span className="checkmark"></span>
+                          {student.studentName} ({student.parentName})
+                        </label>
+                      ))}
+                      {filteredStudents.length === 0 && (
+                        <div className="no-students">
+                          검색 결과가 없습니다.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="form-row">
