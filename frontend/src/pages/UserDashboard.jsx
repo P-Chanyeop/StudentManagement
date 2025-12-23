@@ -19,7 +19,7 @@ function UserDashboard() {
       const response = await enrollmentAPI.getMyEnrollments();
       return response.data;
     },
-    enabled: profile && (profile.role === 'STUDENT' || profile.role === 'PARENT'),
+    enabled: profile && profile.role === 'PARENT',
   });
 
   if (isLoading) {
@@ -46,7 +46,7 @@ function UserDashboard() {
       <section className="hero">
         <div className="hero-container">
           <h1>안녕하세요, {profile?.name || '사용자'}님! 👋</h1>
-          <p>{profile?.role === 'PARENT' ? '자녀의 학습 현황을 확인하세요' : '나의 학습 현황을 확인하세요'}</p>
+          <p>자녀의 학습 현황을 확인하세요</p>
         </div>
       </section>
 
@@ -152,7 +152,7 @@ function UserDashboard() {
             <div className="card-header">
               <h2 className="card-title">
                 <i className="fas fa-book-open"></i>
-                {profile?.role === 'PARENT' ? '자녀 수업 현황' : '내 수업 현황'}
+                자녀 수업 현황
               </h2>
               <span className="card-badge">{activeEnrollments.length}개</span>
             </div>

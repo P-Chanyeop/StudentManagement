@@ -97,12 +97,7 @@ public class EnrollmentService {
         
         List<Enrollment> enrollments;
         
-        if (user.getRole() == UserRole.STUDENT) {
-            // 학생인 경우 본인의 수강권만 조회
-            Student student = studentRepository.findByUser(user)
-                    .orElseThrow(() -> new IllegalArgumentException("학생 정보를 찾을 수 없습니다"));
-            enrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
-        } else if (user.getRole() == UserRole.PARENT) {
+        if (user.getRole() == UserRole.PARENT) {
             // 학부모인 경우 자녀들의 수강권 조회
             List<Student> children = studentRepository.findByParentUser(user);
             enrollments = children.stream()

@@ -42,7 +42,7 @@ function Students() {
       if (profile?.role === 'ADMIN' || profile?.role === 'TEACHER') {
         const response = await studentAPI.getActive();
         return response.data;
-      } else if (profile?.role === 'PARENT' || profile?.role === 'STUDENT') {
+      } else if (profile?.role === 'PARENT') {
         const response = await studentAPI.getMyStudents();
         return response.data;
       }

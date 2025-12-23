@@ -19,10 +19,6 @@ public class Student extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_user_id")
     private User parentUser; // 학부모 계정과의 연결

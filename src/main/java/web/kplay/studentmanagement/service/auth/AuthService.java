@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
+import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.auth.JwtResponse;
 import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
@@ -156,22 +157,27 @@ public class AuthService {
                 .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole().name());
 
-        // 학생인 경우 수강권 정보 조회
-        Optional<Student> studentOpt = studentRepository.findByUserId(userId);
-        if (studentOpt.isPresent()) {
-            Student student = studentOpt.get();
-            builder.studentId(student.getId())
-                    .studentName(student.getStudentName());
+        // 부모인 경우 자녀 정보 조회
+        if (user.getRole() == UserRole.PARENT) {
+            List<Student> children = studentRepository.findByParentUser(user);
+            if (!children.isEmpty()) {
+                // 첫 번째 자녀 정보를 기본으로 설정
+                Student firstChild = children.get(0);
+                builder.studentId(firstChild.getId())
+                        .studentName(firstChild.getStudentName());
 
-            // 활성 수강권 목록 조회
-            List<Enrollment> activeEnrollments = enrollmentRepository
-                    .findByStudentIdAndIsActiveTrue(student.getId());
+                // 활성 수강권 목록 조회
+                List<Enrollment> activeEnrollments = enrollmentRepository
+                        .findByStudentIdAndIsActiveTrue(firstChild.getId());
 
-            List<UserProfileResponse.EnrollmentSummary> summaries = activeEnrollments.stream()
-                    .map(this::toEnrollmentSummary)
-                    .collect(Collectors.toList());
+                List<UserProfileResponse.EnrollmentSummary> summaries = activeEnrollments.stream()
+                        .map(this::toEnrollmentSummary)
+                        .collect(Collectors.toList());
 
-            builder.enrollmentSummaries(summaries);
+                builder.enrollmentSummaries(summaries);
+            } else {
+                builder.enrollmentSummaries(List.of());
+            }
         } else {
             builder.enrollmentSummaries(List.of());
         }

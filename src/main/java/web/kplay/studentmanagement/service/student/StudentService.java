@@ -28,22 +28,8 @@ public class StudentService {
 
     @Transactional
     public StudentResponse createStudent(StudentCreateRequest request) {
-        // User 생성
-        String username = generateUsername(request.getStudentName());
-        User user = User.builder()
-                .username(username)
-                .password(passwordEncoder.encode("student123")) // 기본 비밀번호
-                .name(request.getStudentName())
-                .phoneNumber(request.getStudentPhone())
-                .email(request.getParentEmail())
-                .role(UserRole.STUDENT)
-                .isActive(true)
-                .build();
-        userRepository.save(user);
-
-        // Student 생성
+        // Student 생성 (User 생성 없이)
         Student student = Student.builder()
-                .user(user)
                 .studentName(request.getStudentName())
                 .studentPhone(request.getStudentPhone())
                 .birthDate(request.getBirthDate())
@@ -95,9 +81,6 @@ public class StudentService {
         if (user.getRole() == UserRole.PARENT) {
             // 부모님은 자녀 조회 (부모 전화번호로 매칭)
             students = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
-        } else if (user.getRole() == UserRole.STUDENT) {
-            // 학생은 본인만 조회 (학생 전화번호로 매칭)
-            students = studentRepository.findByStudentPhoneAndIsActive(user.getPhoneNumber(), true);
         } else {
             students = List.of();
         }
@@ -150,7 +133,7 @@ public class StudentService {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
         student.deactivate();
-        student.getUser().deactivate();
+        // student.getUser().deactivate(); // User 제거됨
         log.info("학생 비활성화: {}", student.getStudentName());
     }
 
@@ -171,17 +154,5 @@ public class StudentService {
                 .parentEmail(student.getParentEmail())
                 .isActive(student.getIsActive())
                 .build();
-    }
-
-    private String generateUsername(String name) {
-        String baseUsername = name.replaceAll("\\s+", "").toLowerCase();
-        String username = baseUsername;
-        int suffix = 1;
-
-        while (userRepository.existsByUsername(username)) {
-            username = baseUsername + suffix++;
-        }
-
-        return username;
     }
 }

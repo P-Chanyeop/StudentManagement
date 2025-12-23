@@ -49,7 +49,7 @@ public class StudentController {
     }
 
     @GetMapping("/my-students")
-    @PreAuthorize("hasAnyRole('PARENT', 'STUDENT')")
+    @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<StudentResponse>> getMyStudents(Authentication authentication) {
         String username = authentication.getName();
         List<StudentResponse> responses = studentService.getMyStudents(username);

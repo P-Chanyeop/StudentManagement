@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 import web.kplay.studentmanagement.domain.reservation.ReservationStatus;
 import web.kplay.studentmanagement.domain.student.Student;
+import web.kplay.studentmanagement.domain.user.User;
+import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.attendance.AttendanceResponse;
 import web.kplay.studentmanagement.dto.consultation.ConsultationResponse;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 public class MyPageService {
 
     private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final AttendanceRepository attendanceRepository;
     private final ReservationRepository reservationRepository;
@@ -52,10 +55,18 @@ public class MyPageService {
      * User ID로 마이페이지 정보 조회 (로그인한 사용자)
      */
     public MyPageResponse getMyPageByUserId(Long userId) {
-        Student student = studentRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("학생 정보를 찾을 수 없습니다"));
-
-        return buildMyPageResponse(student);
+        // 학생 계정이 제거되었으므로 부모 계정으로 자녀 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
+        
+        if (user.getRole() == UserRole.PARENT) {
+            List<Student> children = studentRepository.findByParentUser(user);
+            if (!children.isEmpty()) {
+                return buildMyPageResponse(children.get(0)); // 첫 번째 자녀 정보
+            }
+        }
+        
+        throw new ResourceNotFoundException("학생 정보를 찾을 수 없습니다");
     }
 
     /**

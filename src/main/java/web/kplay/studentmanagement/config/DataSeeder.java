@@ -105,6 +105,8 @@ public class DataSeeder {
 
             // 테스트 학생 데이터 생성
             if (studentRepository.count() == 0) {
+                // 학생 데이터는 User 없이 생성하므로 주석 처리
+                /*
                 // 학생1용 User 계정
                 User studentUser1 = User.builder()
                         .username("student1")
@@ -112,13 +114,14 @@ public class DataSeeder {
                         .name("홍길동")
                         .email("student1@kplay.web")
                         .phoneNumber("010-5678-9012")
-                        .role(UserRole.STUDENT)
+                        .role(UserRole.PARENT) // STUDENT 제거됨
                         .isActive(true)
                         .build();
                 studentUser1 = userRepository.save(studentUser1);
+                */
 
                 Student student1 = Student.builder()
-                        .user(studentUser1)
+                        // .user(studentUser1) // 제거
                         .studentName("홍길동")
                         .birthDate(LocalDate.of(2010, 3, 15))
                         .studentPhone("010-5678-9012")
@@ -133,19 +136,19 @@ public class DataSeeder {
                 studentRepository.save(student1);
 
                 // 학생2용 User 계정
-                User studentUser2 = User.builder()
-                        .username("student2")
-                        .password(passwordEncoder.encode("student123"))
-                        .name("김민수")
-                        .email("student2@kplay.web")
-                        .phoneNumber("010-6789-0123")
-                        .role(UserRole.STUDENT)
-                        .isActive(true)
-                        .build();
-                studentUser2 = userRepository.save(studentUser2);
+//                User studentUser2 = User.builder()
+//                        .username("student2")
+//                        .password(passwordEncoder.encode("student123"))
+//                        .name("김민수")
+//                        .email("student2@kplay.web")
+//                        .phoneNumber("010-6789-0123")
+//                        .role(UserRole.STUDENT)
+//                        .isActive(true)
+//                        .build();
+//                studentUser2 = userRepository.save(studentUser2);
 
                 Student student2 = Student.builder()
-                        .user(studentUser2)
+//                        .user(studentUser2)
                         .studentName("김민수")
                         .birthDate(LocalDate.of(2011, 7, 20))
                         .studentPhone("010-6789-0123")
@@ -160,19 +163,19 @@ public class DataSeeder {
                 studentRepository.save(student2);
 
                 // 학생3용 User 계정
-                User studentUser3 = User.builder()
-                        .username("student3")
-                        .password(passwordEncoder.encode("student123"))
-                        .name("이지은")
-                        .email("student3@kplay.web")
-                        .phoneNumber("010-7890-1234")
-                        .role(UserRole.STUDENT)
-                        .isActive(true)
-                        .build();
-                studentUser3 = userRepository.save(studentUser3);
+//                User studentUser3 = User.builder()
+//                        .username("student3")
+//                        .password(passwordEncoder.encode("student123"))
+//                        .name("이지은")
+//                        .email("student3@kplay.web")
+//                        .phoneNumber("010-7890-1234")
+//                        .role(UserRole.STUDENT)
+//                        .isActive(true)
+//                        .build();
+//                studentUser3 = userRepository.save(studentUser3);
 
                 Student student3 = Student.builder()
-                        .user(studentUser3)
+//                        .user(studentUser3)
                         .studentName("이지은")
                         .birthDate(LocalDate.of(2012, 11, 5))
                         .studentPhone("010-7890-1234")
@@ -191,19 +194,19 @@ public class DataSeeder {
                 String[] schools = {"서울초등학교", "한강초등학교", "강남초등학교"};
                 
                 for (int i = 0; i < names.length; i++) {
-                    User studentUser = User.builder()
-                            .username("student" + (i + 4))
-                            .password(passwordEncoder.encode("student123"))
-                            .name(names[i])
-                            .email("student" + (i + 4) + "@kplay.web")
-                            .phoneNumber("010-" + String.format("%04d", 8000 + i) + "-" + String.format("%04d", 1234 + i))
-                            .role(UserRole.STUDENT)
-                            .isActive(true)
-                            .build();
-                    studentUser = userRepository.save(studentUser);
+//                    User studentUser = User.builder()
+//                            .username("student" + (i + 4))
+//                            .password(passwordEncoder.encode("student123"))
+//                            .name(names[i])
+//                            .email("student" + (i + 4) + "@kplay.web")
+//                            .phoneNumber("010-" + String.format("%04d", 8000 + i) + "-" + String.format("%04d", 1234 + i))
+//                            .role(UserRole.STUDENT)
+//                            .isActive(true)
+//                            .build();
+//                    studentUser = userRepository.save(studentUser);
 
                     Student student = Student.builder()
-                            .user(studentUser)
+//                            .user(studentUser)
                             .studentName(names[i])
                             .birthDate(LocalDate.of(2010 + (i % 3), (i % 12) + 1, (i % 28) + 1))
                             .studentPhone("010-" + String.format("%04d", 8000 + i) + "-" + String.format("%04d", 1234 + i))

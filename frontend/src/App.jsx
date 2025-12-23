@@ -42,8 +42,8 @@ function RoleDashboard() {
     return <div>로딩 중...</div>;
   }
 
-  // 학생이나 학부모는 UserDashboard, 관리자/선생님은 Dashboard
-  if (profile?.role === 'STUDENT' || profile?.role === 'PARENT') {
+  // 부모님은 UserDashboard, 관리자/선생님은 Dashboard
+  if (profile?.role === 'PARENT') {
     return <UserDashboard />;
   } else {
     return <Dashboard />;

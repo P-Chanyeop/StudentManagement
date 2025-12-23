@@ -79,7 +79,7 @@ function Sidebar() {
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
 
-    if (profile?.role === 'STUDENT' || profile?.role === 'PARENT') {
+    if (profile?.role === 'PARENT') {
       return studentParentMenus;
     }
     return adminTeacherMenus;

@@ -12,8 +12,6 @@ import java.util.Optional;
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
-    Optional<Student> findByUserId(Long userId);
-
     List<Student> findByIsActive(Boolean isActive);
 
     @Query("SELECT s FROM Student s WHERE s.studentName LIKE %:keyword% OR s.parentName LIKE %:keyword%")
@@ -26,9 +24,5 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     
     List<Student> findByParentPhoneAndIsActive(String parentPhone, Boolean isActive);
     
-    List<Student> findByStudentPhoneAndIsActive(String studentPhone, Boolean isActive);
-    
     List<Student> findByParentUser(web.kplay.studentmanagement.domain.user.User parentUser);
-    
-    Optional<Student> findByUser(web.kplay.studentmanagement.domain.user.User user);
 }
