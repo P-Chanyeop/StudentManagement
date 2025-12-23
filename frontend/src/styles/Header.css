@@ -152,7 +152,174 @@
   transform: rotate(180deg);
 }
 
-/* 드롭다운 메뉴 */
+/* 수강권 드롭다운 */
+.enrollment-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  min-width: 320px;
+  max-width: 400px;
+  z-index: 1000;
+  margin-top: 8px;
+}
+
+.enrollment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.enrollment-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #374151;
+}
+
+.enrollment-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.no-enrollments {
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.enrollment-item {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.enrollment-item:last-child {
+  border-bottom: none;
+}
+
+.enrollment-course {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.enrollment-student {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.enrollment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.detail-row .label {
+  color: #6b7280;
+}
+
+.detail-row .value {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.detail-row .value.warning {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* 드롭다운 메뉴 내 수강권 정보 */
+.enrollment-section {
+  padding: 8px 0;
+}
+
+.enrollment-header-small h4 {
+  margin: 0 0 8px 0;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.enrollment-list-small {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.no-enrollments-small {
+  padding: 12px 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.enrollment-item-small {
+  padding: 8px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.enrollment-item-small:last-child {
+  border-bottom: none;
+}
+
+.enrollment-course-small {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.enrollment-student-small {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.enrollment-details-small {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.enrollment-details-small .warning {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* 기존 드롭다운 메뉴 스타일 */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);

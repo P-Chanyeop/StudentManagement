@@ -7,13 +7,18 @@ import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.student.Student;
+import web.kplay.studentmanagement.domain.user.User;
+import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
+import web.kplay.studentmanagement.dto.course.CourseResponse;
+import web.kplay.studentmanagement.dto.student.StudentResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.CourseRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
+import web.kplay.studentmanagement.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +32,7 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
     @Transactional
@@ -79,6 +85,37 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
         return toResponse(enrollment);
+    }
+
+    /**
+     * 사용자별 수강권 조회 (학생 본인 또는 학부모의 자녀)
+     */
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponse> getEnrollmentsByUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username));
+        
+        List<Enrollment> enrollments;
+        
+        if (user.getRole() == UserRole.STUDENT) {
+            // 학생인 경우 본인의 수강권만 조회
+            Student student = studentRepository.findByUser(user)
+                    .orElseThrow(() -> new IllegalArgumentException("학생 정보를 찾을 수 없습니다"));
+            enrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+        } else if (user.getRole() == UserRole.PARENT) {
+            // 학부모인 경우 자녀들의 수강권 조회
+            List<Student> children = studentRepository.findByParentUser(user);
+            enrollments = children.stream()
+                    .flatMap(child -> enrollmentRepository.findByStudentAndIsActiveTrue(child).stream())
+                    .toList();
+        } else {
+            // 관리자나 선생님은 빈 리스트 반환
+            enrollments = List.of();
+        }
+        
+        return enrollments.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -261,8 +298,16 @@ public class EnrollmentService {
                 .id(enrollment.getId())
                 .studentId(enrollment.getStudent().getId())
                 .studentName(enrollment.getStudent().getStudentName())
+                .student(StudentResponse.builder()
+                        .id(enrollment.getStudent().getId())
+                        .studentName(enrollment.getStudent().getStudentName())
+                        .build())
                 .courseId(enrollment.getCourse().getId())
                 .courseName(enrollment.getCourse().getCourseName())
+                .course(CourseResponse.builder()
+                        .id(enrollment.getCourse().getId())
+                        .courseName(enrollment.getCourse().getCourseName())
+                        .build())
                 .startDate(enrollment.getStartDate())
                 .endDate(enrollment.getEndDate())
                 .totalCount(enrollment.getTotalCount())

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import web.kplay.studentmanagement.dto.student.StudentResponse;
 
 import java.time.LocalDate;
 
@@ -15,8 +16,10 @@ public class EnrollmentResponse {
     private Long id;
     private Long studentId;
     private String studentName;
+    private StudentResponse student; // 학생 객체 추가
     private Long courseId;
     private String courseName;
+    private CourseResponse course; // 수업 객체 추가
     // 모든 수강권은 기간 + 횟수를 모두 가짐
     private LocalDate startDate;
     private LocalDate endDate;

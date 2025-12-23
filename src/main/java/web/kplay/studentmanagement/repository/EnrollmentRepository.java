@@ -43,6 +43,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     // 마이페이지용 메서드
     List<Enrollment> findByStudentIdAndIsActiveTrue(Long studentId);
+    
+    List<Enrollment> findByStudentAndIsActiveTrue(web.kplay.studentmanagement.domain.student.Student student);
 
     Integer countByStudentIdAndIsActiveTrue(Long studentId);
 }

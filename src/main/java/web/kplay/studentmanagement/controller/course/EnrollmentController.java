@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.course.EnrollmentAdjustRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
@@ -26,6 +27,12 @@ public class EnrollmentController {
     public ResponseEntity<EnrollmentResponse> createEnrollment(@Valid @RequestBody EnrollmentCreateRequest request) {
         EnrollmentResponse response = enrollmentService.createEnrollment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<EnrollmentResponse>> getMyEnrollments(Authentication authentication) {
+        List<EnrollmentResponse> enrollments = enrollmentService.getEnrollmentsByUser(authentication.getName());
+        return ResponseEntity.ok(enrollments);
     }
 
     @GetMapping

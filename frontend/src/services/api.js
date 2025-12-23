@@ -85,6 +85,7 @@ export const courseAPI = {
 
 // 수강권 API
 export const enrollmentAPI = {
+  getMyEnrollments: () => api.get('/enrollments/my'),
   getAll: () => api.get('/enrollments'),
   getByStudent: (studentId) => api.get(`/enrollments/student/${studentId}`),
   getActiveByStudent: (studentId) => api.get(`/enrollments/student/${studentId}/active`),

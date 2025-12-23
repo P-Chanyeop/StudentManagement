@@ -219,6 +219,19 @@ public class DataSeeder {
                 }
 
                 log.info("✓ 테스트 학생 10명 생성 완료");
+                
+                // 기존 학생에 parentUser 연결
+                User parent1 = userRepository.findByUsername("parent1").orElse(null);
+                if (parent1 != null) {
+                    List<Student> studentsToUpdate = studentRepository.findByParentPhone("010-4567-8901");
+                    for (Student student : studentsToUpdate) {
+                        if (student.getParentUser() == null) {
+                            student.setParentUser(parent1);
+                            studentRepository.save(student);
+                            log.info("✓ 학생 {} 에게 학부모 계정 연결 완료", student.getStudentName());
+                        }
+                    }
+                }
             }
 
             // 테스트 수업 및 스케줄 생성

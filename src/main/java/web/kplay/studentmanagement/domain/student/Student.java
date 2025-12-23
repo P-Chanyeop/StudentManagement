@@ -23,6 +23,10 @@ public class Student extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_user_id")
+    private User parentUser; // 학부모 계정과의 연결
+
     @Column(nullable = false, length = 50)
     private String studentName;
 
@@ -79,6 +83,11 @@ public class Student extends BaseEntity {
         this.parentName = parentName;
         this.parentPhone = parentPhone;
         this.parentEmail = parentEmail;
+    }
+
+    // 학부모 계정 연결
+    public void setParentUser(User parentUser) {
+        this.parentUser = parentUser;
     }
 
     // 영어 레벨 업데이트

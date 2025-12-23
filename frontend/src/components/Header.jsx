@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { authAPI, enrollmentAPI } from '../services/api';
 import '../styles/Header.css';
 
 function Header() {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showEnrollments, setShowEnrollments] = useState(false);
   const location = useLocation();
 
   // 사용자 프로필 조회
@@ -16,6 +17,17 @@ function Header() {
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5분 동안 캐시 유지
+  });
+
+  // 사용자 수강권 조회 (학생/학부모만)
+  const { data: myEnrollments = [] } = useQuery({
+    queryKey: ['myEnrollments'],
+    queryFn: async () => {
+      const response = await enrollmentAPI.getMyEnrollments();
+      return response.data;
+    },
+    enabled: profile && (profile.role === 'STUDENT' || profile.role === 'PARENT'),
+    staleTime: 2 * 60 * 1000, // 2분 동안 캐시 유지
   });
 
   useEffect(() => {
@@ -111,7 +123,10 @@ function Header() {
           <div className="user-menu">
             <button
               className="user-button"
-              onClick={() => setShowDropdown(!showDropdown)}
+              onClick={() => {
+                setShowDropdown(!showDropdown);
+                setShowEnrollments(false);
+              }}
             >
               <div className="user-avatar">
                 {getInitial()}
@@ -146,6 +161,42 @@ function Header() {
                   <p className="dropdown-name">{profile.name}</p>
                   <p className="dropdown-email">{profile.email || profile.username}</p>
                 </div>
+                
+                {(profile?.role === 'STUDENT' || profile?.role === 'PARENT') && (
+                  <>
+                    <div className="dropdown-divider"></div>
+                    <div className="enrollment-section">
+                      <div className="enrollment-header-small">
+                        <h4>내 수강권 정보</h4>
+                      </div>
+                      <div className="enrollment-list-small">
+                        {myEnrollments.length === 0 ? (
+                          <div className="no-enrollments-small">
+                            등록된 수강권이 없습니다.
+                          </div>
+                        ) : (
+                          myEnrollments.map((enrollment) => (
+                            <div key={enrollment.id} className="enrollment-item-small">
+                              <div className="enrollment-course-small">
+                                {enrollment.course?.courseName || enrollment.courseName || '수업 정보 없음'}
+                              </div>
+                              <div className="enrollment-student-small">
+                                {enrollment.student?.studentName || enrollment.studentName || '학생 정보 없음'}
+                              </div>
+                              <div className="enrollment-details-small">
+                                <span>만료일: {enrollment.endDate}</span>
+                                <span className={enrollment.remainingCount < 3 ? 'warning' : ''}>
+                                  잔여: {enrollment.remainingCount}회
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+                
                 <div className="dropdown-divider"></div>
                 <Link to="/mypage" className="dropdown-item">
                   <i className="fas fa-user"></i>

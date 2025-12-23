@@ -23,4 +23,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     @Query("SELECT s FROM Student s WHERE s.parentPhone = :phone")
     List<Student> findByParentPhone(@Param("phone") String phone);
+    
+    List<Student> findByParentUser(web.kplay.studentmanagement.domain.user.User parentUser);
+    
+    Optional<Student> findByUser(web.kplay.studentmanagement.domain.user.User user);
 }
