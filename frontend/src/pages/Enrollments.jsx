@@ -13,14 +13,45 @@ function Enrollments() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
 
-  // 남은 영업일 표시 컴포넌트
+  // 공휴일 데이터 캐시
+  const [holidays, setHolidays] = useState([]);
+  const [holidaysLoaded, setHolidaysLoaded] = useState(false);
+
+  // 페이지 로딩 시 공휴일 데이터 한 번만 가져오기 (현재년도 + 다음년도)
+  useEffect(() => {
+    const loadHolidays = async () => {
+      try {
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        
+        // 현재년도와 다음년도 공휴일을 동시에 가져오기
+        const [currentYearHolidays, nextYearHolidays] = await Promise.all([
+          holidayService.getHolidays(currentYear),
+          holidayService.getHolidays(nextYear)
+        ]);
+        
+        // 두 년도 공휴일을 합쳐서 캐시
+        const allHolidays = [...currentYearHolidays, ...nextYearHolidays];
+        setHolidays(allHolidays);
+        setHolidaysLoaded(true);
+      } catch (error) {
+        console.error('공휴일 데이터 로딩 실패:', error);
+        setHolidaysLoaded(true); // 실패해도 로딩 완료로 처리
+      }
+    };
+    loadHolidays();
+  }, []);
+
+  // 남은 영업일 표시 컴포넌트 - 캐시된 공휴일 데이터 사용
   const RemainingBusinessDays = ({ startDate, endDate }) => {
     const [remainingDays, setRemainingDays] = useState(null);
 
     useEffect(() => {
-      const calculateDays = async () => {
+      if (!holidaysLoaded) return;
+      
+      const calculateDays = () => {
         try {
-          const days = await holidayService.calculateRemainingBusinessDays(startDate, endDate);
+          const days = holidayService.calculateRemainingBusinessDaysWithCache(startDate, endDate, holidays);
           setRemainingDays(days);
         } catch (error) {
           console.error('남은 영업일 계산 실패:', error);
@@ -29,7 +60,7 @@ function Enrollments() {
       };
 
       calculateDays();
-    }, [startDate, endDate]);
+    }, [startDate, endDate, holidaysLoaded, holidays]);
 
     if (remainingDays === null) return <span>계산 중...</span>;
     
@@ -45,40 +76,29 @@ function Enrollments() {
   const [newEnrollment, setNewEnrollment] = useState({
     studentId: '',
     courseId: '',
-    type: 'PERIOD_BASED',
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
-    totalCount: 0,
-    weeks: 12, // 주 단위 추가
+    totalCount: 24, // 기본 24회
+    weeks: 12, // 기본 12주
     price: 0,
     notes: '',
   });
 
   // 시작일이나 주 수가 변경될 때 자동으로 종료일 계산
   useEffect(() => {
-    if (newEnrollment.startDate && (newEnrollment.weeks || newEnrollment.totalCount)) {
+    if (newEnrollment.startDate && newEnrollment.weeks) {
       calculateEndDate();
     }
-  }, [newEnrollment.startDate, newEnrollment.weeks, newEnrollment.totalCount, newEnrollment.type]);
+  }, [newEnrollment.startDate, newEnrollment.weeks]);
 
   // 공휴일을 고려한 종료일 계산
   const calculateEndDate = async () => {
     try {
-      let businessDays;
-      if (newEnrollment.type === 'PERIOD_BASED' && newEnrollment.weeks) {
-        // 주 단위 계산 (주 * 5일)
-        businessDays = parseInt(newEnrollment.weeks) * 5;
-      } else if (newEnrollment.totalCount) {
-        // 횟수 기반 계산
-        businessDays = parseInt(newEnrollment.totalCount);
-      } else {
-        return;
-      }
-
-      const endDate = await holidayService.calculateEndDate(
-        newEnrollment.startDate, 
-        businessDays
-      );
+      // 주 단위를 일 단위로 변환 (주 * 7일)
+      const totalDays = parseInt(newEnrollment.weeks) * 7;
+      
+      const endDate = new Date(newEnrollment.startDate);
+      endDate.setDate(endDate.getDate() + totalDays);
       
       setNewEnrollment(prev => ({
         ...prev,
@@ -125,10 +145,10 @@ function Enrollments() {
       setNewEnrollment({
         studentId: '',
         courseId: '',
-        type: 'PERIOD_BASED',
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
-        totalCount: 0,
+        totalCount: 24,
+        weeks: 12,
         price: 0,
         notes: '',
       });
@@ -184,12 +204,12 @@ function Enrollments() {
     }
 
     if (!newEnrollment.totalCount || newEnrollment.totalCount <= 0) {
-      alert('총 횟수를 입력해주세요.');
+      alert('총 횟수를 선택해주세요.');
       return;
     }
 
-    if (newEnrollment.type === 'COUNT_BASED' && newEnrollment.totalCount <= 0) {
-      alert('수강 횟수를 입력해주세요.');
+    if (!newEnrollment.weeks || newEnrollment.weeks <= 0) {
+      alert('수강 기간을 선택해주세요.');
       return;
     }
 
@@ -346,43 +366,36 @@ function Enrollments() {
                 <p className="course-name">{enrollment.course?.name || '수업 정보 없음'}</p>
 
                 <div className="enrollment-details">
-                  {enrollment.type === 'PERIOD_BASED' ? (
-                    <>
-                      <div className="detail-item">
-                        <span className="label">기간</span>
-                        <span className="value">
-                          {enrollment.startDate} ~ {enrollment.endDate}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">남은 영업일</span>
-                        <span className="value">
-                          <RemainingBusinessDays 
-                            startDate={enrollment.startDate} 
-                            endDate={enrollment.endDate} 
-                          />
-                        </span>
-                      </div>
-                    </>
-                  ) : enrollment.type === 'COUNT_BASED' ? (
-                    <>
-                      <div className="detail-item">
-                        <span className="label">전체 횟수</span>
-                        <span className="value">{enrollment.totalCount}회</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="label">남은 횟수</span>
-                        <span
-                          className="value remaining"
-                          style={{
-                            color: enrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
-                          }}
-                        >
-                          {enrollment.remainingCount}회
-                        </span>
-                      </div>
-                    </>
-                  ) : null}
+                  <div className="detail-item">
+                    <span className="label">기간</span>
+                    <span className="value">
+                      {enrollment.startDate} ~ {enrollment.endDate}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">만료일까지</span>
+                    <span className="value">
+                      <RemainingBusinessDays 
+                        startDate={enrollment.startDate} 
+                        endDate={enrollment.endDate} 
+                      />
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">전체 횟수</span>
+                    <span className="value">{enrollment.totalCount}회</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="label">남은 횟수</span>
+                    <span
+                      className="value remaining"
+                      style={{
+                        color: enrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
+                      }}
+                    >
+                      {enrollment.remainingCount}회
+                    </span>
+                  </div>
                   <div className="detail-item">
                     <span className="label">수업 시간</span>
                     <span className="value">
@@ -401,9 +414,8 @@ function Enrollments() {
                 </div>
               </div>
             </div>
-            ))
-          )}
-        </div>
+          ))
+        )}
       </div>
 
       {/* 수강권 생성 모달 */}
@@ -453,94 +465,61 @@ function Enrollments() {
               </div>
 
               <div className="form-group">
-                <label>수강권 타입 *</label>
-                <div className="radio-group">
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="type"
-                      value="PERIOD_BASED"
-                      checked={newEnrollment.type === 'PERIOD_BASED'}
-                      onChange={(e) =>
-                        setNewEnrollment({ ...newEnrollment, type: e.target.value })
-                      }
-                    />
-                    <span>기간제</span>
-                  </label>
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="type"
-                      value="COUNT_BASED"
-                      checked={newEnrollment.type === 'COUNT_BASED'}
-                      onChange={(e) =>
-                        setNewEnrollment({ ...newEnrollment, type: e.target.value })
-                      }
-                    />
-                    <span>횟수제</span>
-                  </label>
-                </div>
+                <label>시작일 *</label>
+                <input
+                  type="date"
+                  value={newEnrollment.startDate}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, startDate: e.target.value })
+                  }
+                />
               </div>
-
-              {newEnrollment.type === 'PERIOD_BASED' ? (
-                <>
-                  <div className="form-group">
-                    <label>시작일 *</label>
-                    <input
-                      type="date"
-                      value={newEnrollment.startDate}
-                      onChange={(e) =>
-                        setNewEnrollment({ ...newEnrollment, startDate: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>수강 기간 (주) *</label>
-                    <select
-                      value={newEnrollment.weeks}
-                      onChange={(e) =>
-                        setNewEnrollment({ ...newEnrollment, weeks: parseInt(e.target.value) })
-                      }
-                    >
-                      <option value={4}>4주</option>
-                      <option value={8}>8주</option>
-                      <option value={12}>12주</option>
-                      <option value={16}>16주</option>
-                      <option value={24}>24주</option>
-                    </select>
-                    <small className="form-help">공휴일을 제외한 영업일 기준으로 종료일이 자동 계산됩니다.</small>
-                  </div>
-                  <div className="form-group">
-                    <label>종료일 (자동 계산)</label>
-                    <input
-                      type="date"
-                      value={newEnrollment.endDate}
-                      onChange={(e) =>
-                        setNewEnrollment({ ...newEnrollment, endDate: e.target.value })
-                      }
-                      placeholder="시작일과 횟수로 자동 계산됩니다"
-                    />
-                    <small className="form-help">
-                      시작일과 총 횟수를 기준으로 공휴일을 제외하여 자동 계산됩니다. 
-                      직접 입력하면 수동 설정됩니다.
-                    </small>
-                  </div>
-                </>
-              ) : (
-                <div className="form-group">
-                  <label>수강 횟수 *</label>
-                  <input
-                    type="number"
-                    value={newEnrollment.totalCount}
-                    onChange={(e) =>
-                      setNewEnrollment({ ...newEnrollment, totalCount: parseInt(e.target.value) || 0 })
-                    }
-                    placeholder="예: 10"
-                    min="1"
-                  />
-                </div>
-              )}
-
+              
+              <div className="form-group">
+                <label>수강 기간 (주) *</label>
+                <select
+                  value={newEnrollment.weeks}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, weeks: parseInt(e.target.value) })
+                  }
+                >
+                  <option value={4}>4주</option>
+                  <option value={8}>8주</option>
+                  <option value={12}>12주 (추천)</option>
+                  <option value={16}>16주</option>
+                  <option value={24}>24주</option>
+                </select>
+                <small className="form-help">수강권 유효 기간입니다.</small>
+              </div>
+              
+              <div className="form-group">
+                <label>총 수강 횟수 *</label>
+                <select
+                  value={newEnrollment.totalCount}
+                  onChange={(e) =>
+                    setNewEnrollment({ ...newEnrollment, totalCount: parseInt(e.target.value) })
+                  }
+                >
+                  <option value={12}>12회</option>
+                  <option value={24}>24회 (추천)</option>
+                  <option value={36}>36회</option>
+                  <option value={48}>48회</option>
+                </select>
+                <small className="form-help">설정한 기간 안에 사용할 수 있는 총 횟수입니다.</small>
+              </div>
+              
+              <div className="form-group">
+                <label>종료일 (자동 계산)</label>
+                <input
+                  type="date"
+                  value={newEnrollment.endDate}
+                  readOnly
+                />
+                <small className="form-help">
+                  시작일과 수강 기간을 기준으로 자동 계산됩니다.
+                </small>
+              </div>
+              
               <div className="form-group">
                 <label>가격 *</label>
                 <input
@@ -727,6 +706,7 @@ function Enrollments() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

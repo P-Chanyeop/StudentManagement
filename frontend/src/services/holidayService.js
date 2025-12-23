@@ -99,6 +99,27 @@ class HolidayService {
     return currentDate;
   }
 
+  // 남은 영업일 계산 (캐시된 공휴일 데이터 사용)
+  calculateRemainingBusinessDaysWithCache(startDate, endDate, holidays) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    
+    if (today > end) return 0;
+    
+    let businessDaysCount = 0;
+    let currentDate = new Date(Math.max(today, start));
+    
+    while (currentDate <= end) {
+      if (this.isBusinessDay(currentDate, holidays)) {
+        businessDaysCount++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return businessDaysCount;
+  }
+
   // 남은 영업일 계산
   async calculateRemainingBusinessDays(startDate, endDate) {
     const start = new Date(startDate);

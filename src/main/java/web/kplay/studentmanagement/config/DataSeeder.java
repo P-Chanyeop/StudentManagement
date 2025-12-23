@@ -250,18 +250,21 @@ public class DataSeeder {
                         .build();
                 scheduleRepository.save(todaySchedule);
 
-                // 학생들에게 수강권 할당
+                // 학생들에게 수강권 할당 (12주 기간 + 24회 사용 가능)
                 List<Student> students = studentRepository.findAll();
                 for (int i = 0; i < Math.min(5, students.size()); i++) {
                     Student student = students.get(i);
+                    LocalDate startDate = LocalDate.now();
+                    LocalDate endDate = startDate.plusWeeks(12); // 12주 후
+                    
                     Enrollment enrollment = Enrollment.builder()
                             .student(student)
                             .course(englishCourse)
-                            .startDate(LocalDate.now())
-                            .endDate(LocalDate.now().plusMonths(3))
-                            .totalCount(20)
-                            .usedCount(0)
-                            .remainingCount(20)
+                            .startDate(startDate)
+                            .endDate(endDate)
+                            .totalCount(24) // 12주 동안 24회 사용 가능
+                            .usedCount(i * 2) // 학생별로 다른 사용 횟수
+                            .remainingCount(24 - (i * 2))
                             .isActive(true)
                             .build();
                     enrollmentRepository.save(enrollment);
