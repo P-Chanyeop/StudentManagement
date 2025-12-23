@@ -13,6 +13,7 @@ import LevelTests from './pages/LevelTests';
 import Consultations from './pages/Consultations';
 import Messages from './pages/Messages';
 import MakeupClasses from './pages/MakeupClasses';
+import Notices from './pages/Notices';
 import { useQuery } from '@tanstack/react-query';
 import { authAPI } from './services/api';
 
@@ -138,6 +139,14 @@ function App() {
         element={
           <ProtectedRoute>
             <MakeupClasses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notices"
+        element={
+          <ProtectedRoute>
+            <Notices />
           </ProtectedRoute>
         }
       />
