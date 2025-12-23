@@ -264,13 +264,15 @@ function Students() {
                           <i className="fas fa-edit"></i>
                           수정
                         </button>
-                        <button
-                          className="btn-table-delete"
-                          onClick={() => handleDeactivate(student.id, student.studentName)}
-                        >
-                          <i className="fas fa-trash"></i>
-                          삭제
-                        </button>
+                        {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+                          <button
+                            className="btn-table-delete"
+                            onClick={() => handleDeactivate(student.id, student.studentName)}
+                          >
+                            <i className="fas fa-trash"></i>
+                            삭제
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
