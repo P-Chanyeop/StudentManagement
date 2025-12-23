@@ -18,6 +18,11 @@ function Consultations() {
   const [existingDocumentFiles, setExistingDocumentFiles] = useState([]);
   const [selectedStudentsForConsultation, setSelectedStudentsForConsultation] = useState([]);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportDateRange, setExportDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
   const [newConsultation, setNewConsultation] = useState({
     studentId: '',
     title: '',
@@ -289,6 +294,77 @@ function Consultations() {
     }
   };
 
+  /**
+   * Excel 파일 다운로드 처리
+   * @param {Blob} blob Excel 파일 데이터
+   * @param {string} fileName 파일명
+   */
+  const downloadExcelFile = (blob, fileName) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  /**
+   * 전체 상담 이력 Excel 다운로드
+   */
+  const handleExportAll = async () => {
+    try {
+      const response = await consultationAPI.exportAll();
+      const fileName = `전체_상담이력_${new Date().toISOString().split('T')[0]}.xlsx`;
+      downloadExcelFile(response.data, fileName);
+      alert('전체 상담 이력이 다운로드되었습니다.');
+    } catch (error) {
+      alert('Excel 다운로드에 실패했습니다.');
+    }
+  };
+
+  /**
+   * 선택된 학생의 상담 이력 Excel 다운로드
+   */
+  const handleExportByStudent = async () => {
+    if (!selectedStudent) {
+      alert('학생을 먼저 선택해주세요.');
+      return;
+    }
+    
+    try {
+      const response = await consultationAPI.exportByStudent(selectedStudent);
+      const studentName = students.find(s => s.id == selectedStudent)?.studentName || '학생';
+      const fileName = `${studentName}_상담이력_${new Date().toISOString().split('T')[0]}.xlsx`;
+      downloadExcelFile(response.data, fileName);
+      alert(`${studentName} 학생의 상담 이력이 다운로드되었습니다.`);
+    } catch (error) {
+      alert('Excel 다운로드에 실패했습니다.');
+    }
+  };
+
+  /**
+   * 기간별 상담 이력 Excel 다운로드
+   */
+  const handleExportByDateRange = async () => {
+    if (!exportDateRange.startDate || !exportDateRange.endDate) {
+      alert('시작일과 종료일을 모두 선택해주세요.');
+      return;
+    }
+    
+    try {
+      const response = await consultationAPI.exportByDateRange(exportDateRange.startDate, exportDateRange.endDate);
+      const fileName = `상담이력_${exportDateRange.startDate}_${exportDateRange.endDate}.xlsx`;
+      downloadExcelFile(response.data, fileName);
+      setShowExportModal(false);
+      setExportDateRange({ startDate: '', endDate: '' });
+      alert('기간별 상담 이력이 다운로드되었습니다.');
+    } catch (error) {
+      alert('Excel 다운로드에 실패했습니다.');
+    }
+  };
+
   if (isLoading) return <LoadingSpinner />;
 
   return (
@@ -305,13 +381,19 @@ function Consultations() {
             </p>
           </div>
           {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
-            <button className="btn-primary btn-with-icon" onClick={() => {
-              resetForm();
-              setShowCreateModal(true);
-            }}>
-              <i className="fas fa-plus"></i>
-              상담 등록
-            </button>
+            <div className="header-actions">
+              <button className="btn-secondary btn-with-icon" onClick={() => setShowExportModal(true)}>
+                <i className="fas fa-file-excel"></i>
+                Excel 내보내기
+              </button>
+              <button className="btn-primary btn-with-icon" onClick={() => {
+                resetForm();
+                setShowCreateModal(true);
+              }}>
+                <i className="fas fa-plus"></i>
+                상담 등록
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -334,9 +416,17 @@ function Consultations() {
               </select>
             </div>
             {selectedStudent && (
-              <div className="result-count">
-                <i className="fas fa-comments"></i>
-                총 <strong>{consultations.length}</strong>건의 상담 기록
+              <div className="result-count-actions">
+                <div className="result-count">
+                  <i className="fas fa-comments"></i>
+                  총 <strong>{consultations.length}</strong>건의 상담 기록
+                </div>
+                {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+                  <button className="btn-export" onClick={handleExportByStudent}>
+                    <i className="fas fa-download"></i>
+                    이 학생 Excel 다운로드
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -873,6 +963,73 @@ function Consultations() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Excel 내보내기 모달 */}
+      {showExportModal && (
+        <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>상담 이력 Excel 내보내기</h2>
+              <button className="modal-close" onClick={() => setShowExportModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="export-options">
+                <button className="export-option-btn" onClick={handleExportAll}>
+                  <i className="fas fa-globe"></i>
+                  <div>
+                    <h3>전체 상담 이력</h3>
+                    <p>모든 학생의 상담 이력을 다운로드합니다</p>
+                  </div>
+                </button>
+                
+                <button 
+                  className="export-option-btn" 
+                  onClick={handleExportByStudent}
+                  disabled={!selectedStudent}
+                >
+                  <i className="fas fa-user"></i>
+                  <div>
+                    <h3>선택된 학생 상담 이력</h3>
+                    <p>{selectedStudent ? 
+                      `${students.find(s => s.id == selectedStudent)?.studentName} 학생의 상담 이력` : 
+                      '학생을 먼저 선택해주세요'
+                    }</p>
+                  </div>
+                </button>
+                
+                <div className="export-option-btn date-range">
+                  <i className="fas fa-calendar-alt"></i>
+                  <div>
+                    <h3>기간별 상담 이력</h3>
+                    <div className="date-inputs">
+                      <input 
+                        type="date" 
+                        value={exportDateRange.startDate}
+                        onChange={(e) => setExportDateRange({...exportDateRange, startDate: e.target.value})}
+                        placeholder="시작일"
+                      />
+                      <span>~</span>
+                      <input 
+                        type="date" 
+                        value={exportDateRange.endDate}
+                        onChange={(e) => setExportDateRange({...exportDateRange, endDate: e.target.value})}
+                        placeholder="종료일"
+                      />
+                      <button 
+                        className="btn-primary btn-sm"
+                        onClick={handleExportByDateRange}
+                        disabled={!exportDateRange.startDate || !exportDateRange.endDate}
+                      >
+                        다운로드
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

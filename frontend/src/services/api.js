@@ -194,6 +194,8 @@ export const consultationAPI = {
   update: (id, data) => api.put(`/consultations/${id}`, data),
   delete: (id) => api.delete(`/consultations/${id}`),
   exportByStudent: (studentId) => api.get(`/consultations/export/student/${studentId}`, { responseType: 'blob' }),
+  exportAll: () => api.get('/consultations/export/all', { responseType: 'blob' }),
+  exportByDateRange: (startDate, endDate) => api.get(`/consultations/export/date-range?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' })
 };
 
 // 문자 API
