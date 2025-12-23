@@ -19,22 +19,28 @@ function Notices() {
     },
   });
 
-  // 공지사항 목록 조회
-  const { data: noticesPage, isLoading } = useQuery({
-    queryKey: ['notices', currentPage, searchKeyword],
+  // 전체 공지사항 목록 조회 (한 번만)
+  const { data: allNotices = [], isLoading } = useQuery({
+    queryKey: ['notices', 'all'],
     queryFn: async () => {
-      if (searchKeyword) {
-        const response = await noticeAPI.search(searchKeyword, currentPage, pageSize);
-        return response.data;
-      } else {
-        const response = await noticeAPI.getAll(currentPage, pageSize);
-        return response.data;
-      }
+      const response = await noticeAPI.getAll(0, 1000); // 충분히 큰 사이즈로 전체 조회
+      return response.data.content || [];
     },
   });
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  // 클라이언트 사이드 필터링
+  const filteredNotices = allNotices.filter(notice => 
+    notice.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+    notice.content.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
+
+  // 페이지네이션 처리
+  const totalPages = Math.ceil(filteredNotices.length / pageSize);
+  const startIndex = currentPage * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentNotices = filteredNotices.slice(startIndex, endIndex);
+
+  const handleSearch = () => {
     setCurrentPage(0);
   };
 
@@ -89,18 +95,18 @@ function Notices() {
       <div className="page-content">
         {/* 검색 */}
         <div className="search-section">
-          <form onSubmit={handleSearch} className="search-form">
-            <div className="search-input-wrapper">
-              <i className="fas fa-search search-icon"></i>
-              <input
-                type="text"
-                placeholder="제목이나 내용으로 검색..."
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                className="search-input"
-              />
-            </div>
-            <button type="submit" className="btn-primary">
+          <div className="search-input-wrapper">
+            <i className="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              placeholder="제목이나 내용으로 검색..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <div className="search-buttons">
+            <button type="button" className="btn-primary" onClick={handleSearch}>
               <i className="fas fa-search"></i> 검색
             </button>
             {searchKeyword && (
@@ -115,7 +121,7 @@ function Notices() {
                 초기화
               </button>
             )}
-          </form>
+          </div>
         </div>
 
         {/* 상단 고정 공지 */}
@@ -147,10 +153,10 @@ function Notices() {
         {/* 공지사항 목록 */}
         <div className="notices-section">
         <h2 className="section-title"><i className="fas fa-clipboard-list"></i> 전체 공지</h2>
-        {noticesPage && noticesPage.content && noticesPage.content.length > 0 ? (
+        {currentNotices && currentNotices.length > 0 ? (
           <>
             <div className="notice-list">
-              {noticesPage.content.map((notice) => (
+              {currentNotices.map((notice) => (
                 <div
                   key={notice.id}
                   className="notice-item"
@@ -186,11 +192,11 @@ function Notices() {
                 이전
               </button>
               <span className="page-info">
-                {currentPage + 1} / {noticesPage.totalPages || 1}
+                {currentPage + 1} / {totalPages || 1}
               </span>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage >= (noticesPage.totalPages || 1) - 1}
+                disabled={currentPage >= totalPages - 1}
                 className="page-button"
               >
                 다음
@@ -201,7 +207,7 @@ function Notices() {
             <div className="empty-state">
               <i className="fas fa-bell"></i>
               <h3>공지사항이 없습니다</h3>
-              <p>아직 등록된 공지사항이 없습니다.</p>
+              <p>{searchKeyword ? '검색 결과가 없습니다.' : '아직 등록된 공지사항이 없습니다.'}</p>
             </div>
           )}
         </div>

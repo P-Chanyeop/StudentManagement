@@ -224,6 +224,17 @@
   margin-bottom: 24px;
 }
 
+.search-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.search-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 /* 학생 선택기 */
 .student-selector {
   flex: 1;

@@ -11,6 +11,7 @@ import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
 import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.consultation.Consultation;
+import web.kplay.studentmanagement.domain.notice.Notice;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.domain.user.UserRole;
@@ -37,6 +38,7 @@ public class DataSeeder {
     private final CourseScheduleRepository scheduleRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final ConsultationRepository consultationRepository;
+    private final NoticeRepository noticeRepository;
     private final PasswordEncoder passwordEncoder;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
@@ -385,6 +387,94 @@ public class DataSeeder {
                     }
 
                     log.info("✓ 테스트 상담 데이터 5건 생성 완료");
+                }
+            }
+
+            // 테스트 공지사항 데이터 생성
+            if (noticeRepository.count() == 0) {
+                User admin = userRepository.findByUsername("admin").orElse(null);
+                User teacher = userRepository.findByUsername("teacher1").orElse(null);
+
+                if (admin != null && teacher != null) {
+                    // 공지사항 1: 중요 공지 (상단 고정)
+                    Notice notice1 = Notice.builder()
+                            .title("📢 2025년 새학기 개강 안내")
+                            .content("안녕하세요. 학부모님들께 새학기 개강 일정을 안내드립니다.\n\n" +
+                                    "• 개강일: 2025년 3월 4일(월)\n" +
+                                    "• 수업 시간: 기존과 동일\n" +
+                                    "• 교재비: 별도 안내 예정\n\n" +
+                                    "궁금한 사항이 있으시면 언제든 연락 주세요.")
+                            .author(admin)
+                            .isPinned(true)
+                            .isActive(true)
+                            .viewCount(45)
+                            .build();
+                    noticeRepository.save(notice1);
+
+                    // 공지사항 2: 일반 공지
+                    Notice notice2 = Notice.builder()
+                            .title("겨울방학 특강 수강생 모집")
+                            .content("겨울방학 동안 진행될 특강 프로그램 수강생을 모집합니다.\n\n" +
+                                    "• 기간: 12월 26일 ~ 1월 31일\n" +
+                                    "• 대상: 초등 3~6학년\n" +
+                                    "• 과목: 영어 집중반, 수학 심화반\n" +
+                                    "• 신청: 12월 20일까지\n\n" +
+                                    "자세한 내용은 학원으로 문의해 주세요.")
+                            .author(teacher)
+                            .isPinned(false)
+                            .isActive(true)
+                            .viewCount(23)
+                            .build();
+                    noticeRepository.save(notice2);
+
+                    // 공지사항 3: 시험 안내
+                    Notice notice3 = Notice.builder()
+                            .title("12월 정기 레벨테스트 안내")
+                            .content("12월 정기 레벨테스트를 다음과 같이 실시합니다.\n\n" +
+                                    "• 일시: 12월 28일(목) 오후 2시\n" +
+                                    "• 대상: 전체 수강생\n" +
+                                    "• 준비물: 필기구, 계산기\n" +
+                                    "• 결과 발표: 1월 2일\n\n" +
+                                    "시험 결과에 따라 반 편성이 조정될 수 있습니다.")
+                            .author(admin)
+                            .isPinned(true)
+                            .isActive(true)
+                            .viewCount(67)
+                            .build();
+                    noticeRepository.save(notice3);
+
+                    // 공지사항 4: 휴원 안내
+                    Notice notice4 = Notice.builder()
+                            .title("연말연시 휴원 안내")
+                            .content("연말연시 휴원 일정을 안내드립니다.\n\n" +
+                                    "• 휴원 기간: 12월 30일(토) ~ 1월 2일(화)\n" +
+                                    "• 정상 수업: 1월 3일(수)부터\n" +
+                                    "• 보강 수업: 별도 공지 예정\n\n" +
+                                    "새해 복 많이 받으세요!")
+                            .author(admin)
+                            .isPinned(false)
+                            .isActive(true)
+                            .viewCount(34)
+                            .build();
+                    noticeRepository.save(notice4);
+
+                    // 공지사항 5: 학부모 상담 안내
+                    Notice notice5 = Notice.builder()
+                            .title("1월 학부모 개별 상담 신청 안내")
+                            .content("자녀의 학습 상황을 점검하는 개별 상담을 진행합니다.\n\n" +
+                                    "• 상담 기간: 1월 8일 ~ 1월 19일\n" +
+                                    "• 상담 시간: 1회 30분\n" +
+                                    "• 신청 방법: 전화 또는 방문 접수\n" +
+                                    "• 상담 내용: 학습 진도, 성취도, 향후 계획\n\n" +
+                                    "많은 참여 부탁드립니다.")
+                            .author(teacher)
+                            .isPinned(false)
+                            .isActive(true)
+                            .viewCount(18)
+                            .build();
+                    noticeRepository.save(notice5);
+
+                    log.info("✓ 테스트 공지사항 데이터 5건 생성 완료");
                 }
             }
 
