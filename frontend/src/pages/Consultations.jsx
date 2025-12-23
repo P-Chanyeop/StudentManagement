@@ -111,6 +111,12 @@ function Consultations() {
     setStudentSearchTerm('');
     setAudioFile(null);
     setDocumentFile(null);
+    
+    // 파일 input 초기화
+    const audioInput = document.getElementById('audio-file');
+    const documentInput = document.getElementById('document-file');
+    if (audioInput) audioInput.value = '';
+    if (documentInput) documentInput.value = '';
   };
 
   const handleFileUpload = async (file, type) => {
@@ -267,7 +273,10 @@ function Consultations() {
             </p>
           </div>
           {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
-            <button className="btn-primary btn-with-icon" onClick={() => setShowCreateModal(true)}>
+            <button className="btn-primary btn-with-icon" onClick={() => {
+              resetForm();
+              setShowCreateModal(true);
+            }}>
               <i className="fas fa-plus"></i>
               상담 등록
             </button>
@@ -393,7 +402,10 @@ function Consultations() {
           <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>상담 등록</h2>
-              <button className="modal-close" onClick={() => setShowCreateModal(false)}>×</button>
+              <button className="modal-close" onClick={() => {
+                setShowCreateModal(false);
+                resetForm();
+              }}>×</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
@@ -499,24 +511,67 @@ function Consultations() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>녹음 파일</label>
-                    <input 
-                      type="file" 
-                      accept="audio/*"
-                      onChange={(e) => setAudioFile(e.target.files[0])}
-                    />
+                    <div className="file-input-wrapper">
+                      <input 
+                        type="file" 
+                        id="audio-file"
+                        accept="audio/*"
+                        onChange={(e) => setAudioFile(e.target.files[0])}
+                        className="file-input-hidden"
+                      />
+                      <label htmlFor="audio-file" className="file-input-custom audio">
+                        <i className="fas fa-microphone"></i>
+                        <span>{audioFile ? audioFile.name : '녹음 파일 선택'}</span>
+                      </label>
+                      {audioFile && (
+                        <button 
+                          type="button" 
+                          className="file-remove-btn"
+                          onClick={() => {
+                            setAudioFile(null);
+                            document.getElementById('audio-file').value = '';
+                          }}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>첨부 파일</label>
-                    <input 
-                      type="file" 
-                      accept=".pdf,.doc,.docx,.hwp,.txt"
-                      onChange={(e) => setDocumentFile(e.target.files[0])}
-                    />
+                    <div className="file-input-wrapper">
+                      <input 
+                        type="file" 
+                        id="document-file"
+                        accept=".pdf,.doc,.docx,.hwp,.txt"
+                        onChange={(e) => setDocumentFile(e.target.files[0])}
+                        className="file-input-hidden"
+                      />
+                      <label htmlFor="document-file" className="file-input-custom document">
+                        <i className="fas fa-file-alt"></i>
+                        <span>{documentFile ? documentFile.name : '문서 파일 선택'}</span>
+                      </label>
+                      {documentFile && (
+                        <button 
+                          type="button" 
+                          className="file-remove-btn"
+                          onClick={() => {
+                            setDocumentFile(null);
+                            document.getElementById('document-file').value = '';
+                          }}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>
+                <button type="button" className="btn-secondary" onClick={() => {
+                  setShowCreateModal(false);
+                  resetForm();
+                }}>
                   취소
                 </button>
                 <button type="submit" className="btn-primary">
@@ -593,25 +648,41 @@ function Consultations() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>새 녹음 파일</label>
-                    <input 
-                      type="file" 
-                      accept="audio/*"
-                      onChange={(e) => setAudioFile(e.target.files[0])}
-                    />
-                    {selectedConsultation?.recordingFileUrl && (
-                      <small>현재: 녹음 파일 있음</small>
-                    )}
+                    <div className="file-input-wrapper">
+                      <input 
+                        type="file" 
+                        id="edit-audio-file"
+                        accept="audio/*"
+                        onChange={(e) => setAudioFile(e.target.files[0])}
+                        className="file-input-hidden"
+                      />
+                      <label htmlFor="edit-audio-file" className="file-input-custom audio">
+                        <i className="fas fa-microphone"></i>
+                        <span>{audioFile ? audioFile.name : '새 녹음 파일 선택'}</span>
+                      </label>
+                      {selectedConsultation?.recordingFileUrl && (
+                        <small>현재: 녹음 파일 있음</small>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>새 첨부 파일</label>
-                    <input 
-                      type="file" 
-                      accept=".pdf,.doc,.docx,.hwp,.txt"
-                      onChange={(e) => setDocumentFile(e.target.files[0])}
-                    />
-                    {selectedConsultation?.attachmentFileUrl && (
-                      <small>현재: 첨부 파일 있음</small>
-                    )}
+                    <div className="file-input-wrapper">
+                      <input 
+                        type="file" 
+                        id="edit-document-file"
+                        accept=".pdf,.doc,.docx,.hwp,.txt"
+                        onChange={(e) => setDocumentFile(e.target.files[0])}
+                        className="file-input-hidden"
+                      />
+                      <label htmlFor="edit-document-file" className="file-input-custom document">
+                        <i className="fas fa-file-alt"></i>
+                        <span>{documentFile ? documentFile.name : '새 문서 파일 선택'}</span>
+                      </label>
+                      {selectedConsultation?.attachmentFileUrl && (
+                        <small>현재: 첨부 파일 있음</small>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
