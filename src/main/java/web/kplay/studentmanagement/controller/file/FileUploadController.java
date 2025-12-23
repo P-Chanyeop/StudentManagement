@@ -49,6 +49,39 @@ public class FileUploadController {
     }
 
     /**
+     * 다중 녹음 파일 업로드 (상담용)
+     * @param files 업로드할 녹음 파일들 (MultipartFile[])
+     * @return 업로드된 파일들 정보
+     */
+    @PostMapping("/upload/audio/multiple")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Object>> uploadMultipleAudioFiles(
+            @RequestParam("files") MultipartFile[] files) {
+
+        log.info("다중 녹음 파일 업로드 요청: {}개 파일", files.length);
+
+        java.util.List<Map<String, String>> uploadedFiles = new java.util.ArrayList<>();
+        
+        for (MultipartFile file : files) {
+            String filePath = fileStorageService.storeFile(file, "audio");
+            
+            Map<String, String> fileInfo = new HashMap<>();
+            fileInfo.put("fileName", file.getOriginalFilename());
+            fileInfo.put("filePath", filePath);
+            fileInfo.put("fileSize", String.valueOf(file.getSize()));
+            
+            uploadedFiles.add(fileInfo);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("files", uploadedFiles);
+        response.put("count", files.length);
+        response.put("message", files.length + "개 녹음 파일 업로드 성공");
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * 첨부 파일 업로드 (상담용 문서)
      * @param file 업로드할 문서 파일 (MultipartFile)
      * @return 업로드된 파일 정보 (파일명, 경로, 크기)
@@ -67,6 +100,39 @@ public class FileUploadController {
         response.put("filePath", filePath);
         response.put("fileSize", String.valueOf(file.getSize()));
         response.put("message", "첨부 파일 업로드 성공");
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 다중 첨부 파일 업로드 (상담용 문서)
+     * @param files 업로드할 문서 파일들 (MultipartFile[])
+     * @return 업로드된 파일들 정보
+     */
+    @PostMapping("/upload/document/multiple")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Object>> uploadMultipleDocumentFiles(
+            @RequestParam("files") MultipartFile[] files) {
+
+        log.info("다중 첨부 파일 업로드 요청: {}개 파일", files.length);
+
+        java.util.List<Map<String, String>> uploadedFiles = new java.util.ArrayList<>();
+        
+        for (MultipartFile file : files) {
+            String filePath = fileStorageService.storeFile(file, "document");
+            
+            Map<String, String> fileInfo = new HashMap<>();
+            fileInfo.put("fileName", file.getOriginalFilename());
+            fileInfo.put("filePath", filePath);
+            fileInfo.put("fileSize", String.valueOf(file.getSize()));
+            
+            uploadedFiles.add(fileInfo);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("files", uploadedFiles);
+        response.put("count", files.length);
+        response.put("message", files.length + "개 첨부 파일 업로드 성공");
 
         return ResponseEntity.ok(response);
     }

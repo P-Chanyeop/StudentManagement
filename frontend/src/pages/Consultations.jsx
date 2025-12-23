@@ -14,6 +14,8 @@ function Consultations() {
   const [documentFile, setDocumentFile] = useState(null);
   const [audioFiles, setAudioFiles] = useState([]);
   const [documentFiles, setDocumentFiles] = useState([]);
+  const [existingAudioFiles, setExistingAudioFiles] = useState([]);
+  const [existingDocumentFiles, setExistingDocumentFiles] = useState([]);
   const [selectedStudentsForConsultation, setSelectedStudentsForConsultation] = useState([]);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
   const [newConsultation, setNewConsultation] = useState({
@@ -123,12 +125,21 @@ function Consultations() {
     if (documentInput) documentInput.value = '';
   };
 
-  const handleFileUpload = async (file, type) => {
+  const handleFileUpload = async (files, type) => {
     try {
-      const response = type === 'audio' 
-        ? await fileAPI.uploadAudio(file)
-        : await fileAPI.uploadDocument(file);
-      return response.data.filePath;
+      if (files.length === 1) {
+        // 단일 파일
+        const response = type === 'audio' 
+          ? await fileAPI.uploadAudio(files[0])
+          : await fileAPI.uploadDocument(files[0]);
+        return response.data.filePath;
+      } else {
+        // 다중 파일
+        const response = type === 'audio' 
+          ? await fileAPI.uploadMultipleAudio(files)
+          : await fileAPI.uploadMultipleDocument(files);
+        return response.data.files.map(file => file.filePath).join(',');
+      }
     } catch (error) {
       alert('파일 업로드에 실패했습니다.');
       return null;
@@ -171,13 +182,13 @@ function Consultations() {
     let attachmentFileUrl = '';
 
     // 파일 업로드
-    if (audioFile) {
-      recordingFileUrl = await handleFileUpload(audioFile, 'audio');
+    if (audioFiles.length > 0) {
+      recordingFileUrl = await handleFileUpload(audioFiles, 'audio');
       if (!recordingFileUrl) return;
     }
     
-    if (documentFile) {
-      attachmentFileUrl = await handleFileUpload(documentFile, 'document');
+    if (documentFiles.length > 0) {
+      attachmentFileUrl = await handleFileUpload(documentFiles, 'document');
       if (!attachmentFileUrl) return;
     }
 
@@ -210,6 +221,23 @@ function Consultations() {
       actionItems: consultation.actionItems || '',
       nextConsultationDate: consultation.nextConsultationDate || '',
     });
+    
+    // 기존 파일들을 새 파일 배열에 통합
+    const audioFiles = consultation.recordingFileUrl ? consultation.recordingFileUrl.split(',') : [];
+    const documentFiles = consultation.attachmentFileUrl ? consultation.attachmentFileUrl.split(',') : [];
+    
+    setAudioFiles(audioFiles.map((url, index) => ({
+      name: url.trim().split('/').pop() || `녹음파일_${index + 1}`,
+      isExisting: true,
+      url: url.trim()
+    })));
+    
+    setDocumentFiles(documentFiles.map((url, index) => ({
+      name: url.trim().split('/').pop() || `첨부파일_${index + 1}`,
+      isExisting: true,
+      url: url.trim()
+    })));
+    
     setShowEditModal(true);
   };
 
@@ -370,22 +398,32 @@ function Consultations() {
                   {(consultation.recordingFileUrl || consultation.attachmentFileUrl) && (
                     <div className="consultation-files">
                       {consultation.recordingFileUrl && (
-                        <button 
-                          className="file-download-btn audio"
-                          onClick={() => handleFileDownload(consultation.recordingFileUrl, `상담녹음_${consultation.studentName}_${consultation.consultationDate}.mp3`)}
-                        >
-                          <i className="fas fa-microphone"></i>
-                          녹음 파일 다운로드
-                        </button>
+                        <div className="file-download-item">
+                          <button 
+                            className="file-download-btn audio"
+                            onClick={() => handleFileDownload(consultation.recordingFileUrl, `상담녹음_${consultation.studentName}_${consultation.consultationDate}.mp3`)}
+                          >
+                            <i className="fas fa-microphone"></i>
+                            녹음 파일 다운로드
+                          </button>
+                          <div className="file-name">
+                            상담녹음_{consultation.studentName}_{consultation.consultationDate}.mp3
+                          </div>
+                        </div>
                       )}
                       {consultation.attachmentFileUrl && (
-                        <button 
-                          className="file-download-btn document"
-                          onClick={() => handleFileDownload(consultation.attachmentFileUrl, `상담자료_${consultation.studentName}_${consultation.consultationDate}`)}
-                        >
-                          <i className="fas fa-file-alt"></i>
-                          첨부 파일 다운로드
-                        </button>
+                        <div className="file-download-item">
+                          <button 
+                            className="file-download-btn document"
+                            onClick={() => handleFileDownload(consultation.attachmentFileUrl, `상담자료_${consultation.studentName}_${consultation.consultationDate}`)}
+                          >
+                            <i className="fas fa-file-alt"></i>
+                            첨부 파일 다운로드
+                          </button>
+                          <div className="file-name">
+                            상담자료_{consultation.studentName}_{consultation.consultationDate}
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
@@ -703,42 +741,126 @@ function Consultations() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>새 녹음 파일</label>
+                    <label>녹음 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">
                       <input 
                         type="file" 
                         id="edit-audio-file"
                         accept="audio/*"
-                        onChange={(e) => setAudioFile(e.target.files[0])}
+                        multiple
+                        onChange={(e) => {
+                          const newFiles = [...e.target.files].map(file => ({
+                            name: file.name,
+                            file: file,
+                            isExisting: false
+                          }));
+                          setAudioFiles(prev => [...prev.filter(f => f.isExisting), ...newFiles]);
+                        }}
                         className="file-input-hidden"
                       />
                       <label htmlFor="edit-audio-file" className="file-input-custom audio">
                         <i className="fas fa-microphone"></i>
-                        <span>{audioFile ? audioFile.name : '새 녹음 파일 선택'}</span>
+                        <span>
+                          {audioFiles.length > 0 
+                            ? `${audioFiles.length}개 파일 선택됨` 
+                            : '녹음 파일 선택'
+                          }
+                        </span>
                       </label>
-                      {selectedConsultation?.recordingFileUrl && (
-                        <small>현재: 녹음 파일 있음</small>
+                      {audioFiles.length > 0 && (
+                        <button 
+                          type="button" 
+                          className="file-remove-btn"
+                          onClick={() => {
+                            setAudioFiles([]);
+                            document.getElementById('edit-audio-file').value = '';
+                          }}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
                       )}
                     </div>
+                    {audioFiles.length > 0 && (
+                      <div className="file-list">
+                        {audioFiles.map((file, index) => (
+                          <div key={index} className={`file-item ${file.isExisting ? 'existing' : ''}`}>
+                            <i className="fas fa-microphone"></i>
+                            <span>{file.name}</span>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newFiles = audioFiles.filter((_, i) => i !== index);
+                                setAudioFiles(newFiles);
+                              }}
+                              className="file-item-remove"
+                            >
+                              <i className="fas fa-times"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>새 첨부 파일</label>
+                    <label>첨부 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">
                       <input 
                         type="file" 
                         id="edit-document-file"
                         accept=".pdf,.doc,.docx,.hwp,.txt"
-                        onChange={(e) => setDocumentFile(e.target.files[0])}
+                        multiple
+                        onChange={(e) => {
+                          const newFiles = [...e.target.files].map(file => ({
+                            name: file.name,
+                            file: file,
+                            isExisting: false
+                          }));
+                          setDocumentFiles(prev => [...prev.filter(f => f.isExisting), ...newFiles]);
+                        }}
                         className="file-input-hidden"
                       />
                       <label htmlFor="edit-document-file" className="file-input-custom document">
                         <i className="fas fa-file-alt"></i>
-                        <span>{documentFile ? documentFile.name : '새 문서 파일 선택'}</span>
+                        <span>
+                          {documentFiles.length > 0 
+                            ? `${documentFiles.length}개 파일 선택됨` 
+                            : '문서 파일 선택'
+                          }
+                        </span>
                       </label>
-                      {selectedConsultation?.attachmentFileUrl && (
-                        <small>현재: 첨부 파일 있음</small>
+                      {documentFiles.length > 0 && (
+                        <button 
+                          type="button" 
+                          className="file-remove-btn"
+                          onClick={() => {
+                            setDocumentFiles([]);
+                            document.getElementById('edit-document-file').value = '';
+                          }}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
                       )}
                     </div>
+                    {documentFiles.length > 0 && (
+                      <div className="file-list">
+                        {documentFiles.map((file, index) => (
+                          <div key={index} className={`file-item ${file.isExisting ? 'existing' : ''}`}>
+                            <i className="fas fa-file-alt"></i>
+                            <span>{file.name}</span>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newFiles = documentFiles.filter((_, i) => i !== index);
+                                setDocumentFiles(newFiles);
+                              }}
+                              className="file-item-remove"
+                            >
+                              <i className="fas fa-times"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

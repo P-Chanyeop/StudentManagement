@@ -161,10 +161,24 @@ export const fileAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  uploadMultipleAudio: (files) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    return api.post('/files/upload/audio/multiple', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
   uploadDocument: (file) => {
     const formData = new FormData();
     formData.append('file', file);
     return api.post('/files/upload/document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  uploadMultipleDocument: (files) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    return api.post('/files/upload/document/multiple', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
