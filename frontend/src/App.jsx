@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import UserDashboard from './pages/UserDashboard';
 import Students from './pages/Students';
 import Courses from './pages/Courses';
 import Attendance from './pages/Attendance';
@@ -12,6 +13,8 @@ import LevelTests from './pages/LevelTests';
 import Consultations from './pages/Consultations';
 import Messages from './pages/Messages';
 import MakeupClasses from './pages/MakeupClasses';
+import { useQuery } from '@tanstack/react-query';
+import { authAPI } from './services/api';
 
 // 보호된 라우트 컴포넌트
 function ProtectedRoute({ children }) {
@@ -24,6 +27,28 @@ function ProtectedRoute({ children }) {
   return <Layout>{children}</Layout>;
 }
 
+// 역할별 대시보드 라우팅
+function RoleDashboard() {
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const response = await authAPI.getProfile();
+      return response.data;
+    },
+  });
+
+  if (isLoading) {
+    return <div>로딩 중...</div>;
+  }
+
+  // 학생이나 학부모는 UserDashboard, 관리자/선생님은 Dashboard
+  if (profile?.role === 'STUDENT' || profile?.role === 'PARENT') {
+    return <UserDashboard />;
+  } else {
+    return <Dashboard />;
+  }
+}
+
 function App() {
   return (
     <Routes>
@@ -32,7 +57,7 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <RoleDashboard />
           </ProtectedRoute>
         }
       />
