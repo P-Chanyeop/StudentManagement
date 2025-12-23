@@ -86,19 +86,24 @@ function Enrollments() {
 
   // 시작일이나 주 수가 변경될 때 자동으로 종료일 계산
   useEffect(() => {
-    if (newEnrollment.startDate && newEnrollment.weeks) {
+    if (newEnrollment.startDate && newEnrollment.weeks && holidaysLoaded) {
       calculateEndDate();
     }
-  }, [newEnrollment.startDate, newEnrollment.weeks]);
+  }, [newEnrollment.startDate, newEnrollment.weeks, holidaysLoaded]);
 
-  // 공휴일을 고려한 종료일 계산
-  const calculateEndDate = async () => {
+  // 공휴일을 고려한 종료일 계산 (캐시된 데이터 사용)
+  const calculateEndDate = () => {
+    if (!holidaysLoaded) return; // 공휴일 데이터 로딩 완료 대기
+    
     try {
-      // 주 단위를 일 단위로 변환 (주 * 7일)
-      const totalDays = parseInt(newEnrollment.weeks) * 7;
+      // 주 단위를 영업일로 변환 (주 * 5일)
+      const businessDays = parseInt(newEnrollment.weeks) * 5;
       
-      const endDate = new Date(newEnrollment.startDate);
-      endDate.setDate(endDate.getDate() + totalDays);
+      const endDate = holidayService.calculateEndDateWithCache(
+        newEnrollment.startDate, 
+        businessDays,
+        holidays
+      );
       
       setNewEnrollment(prev => ({
         ...prev,

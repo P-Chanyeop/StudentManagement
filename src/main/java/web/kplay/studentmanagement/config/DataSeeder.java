@@ -36,6 +36,7 @@ public class DataSeeder {
     private final CourseScheduleRepository scheduleRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
     @Bean
     @Profile("dev") // dev 프로파일에서만 실행
@@ -255,7 +256,8 @@ public class DataSeeder {
                 for (int i = 0; i < Math.min(5, students.size()); i++) {
                     Student student = students.get(i);
                     LocalDate startDate = LocalDate.now();
-                    LocalDate endDate = startDate.plusWeeks(12); // 12주 후
+                    // 영업일 기준 12주 (60영업일) 계산
+                    LocalDate endDate = holidayService.calculateEndDate(startDate, 60);
                     
                     Enrollment enrollment = Enrollment.builder()
                             .student(student)

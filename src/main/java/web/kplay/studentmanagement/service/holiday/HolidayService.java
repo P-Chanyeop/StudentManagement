@@ -1,23 +1,32 @@
 package web.kplay.studentmanagement.service.holiday;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import web.kplay.studentmanagement.domain.holiday.Holiday;
 import web.kplay.studentmanagement.repository.HolidayRepository;
 
+import jakarta.annotation.PostConstruct;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 공휴일 관리 서비스
  * - 공휴일 정보 저장 및 조회
  * - 수강권 기간 계산 시 공휴일 제외
+ * - 공휴일 데이터 캐싱
  */
 @Slf4j
 @Service
@@ -25,13 +34,211 @@ import java.util.List;
 public class HolidayService {
 
     private final HolidayRepository holidayRepository;
+    
+    // 공휴일 캐시 (년도별)
+    private final Map<Integer, List<Holiday>> holidayCache = new ConcurrentHashMap<>();
+    
+    @Value("${holiday.api.key:}")
+    private String holidayApiKey;
+    
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    /**
+     * 서버 시작 시 10년치 공휴일 데이터 초기화
+     */
+    @PostConstruct
+    public void initializeHolidayData() {
+        int currentYear = LocalDate.now().getYear();
+        
+        for (int year = currentYear; year < currentYear + 10; year++) {
+            // DB에 해당 년도 데이터가 없으면 API에서 가져와서 저장
+            LocalDate startOfYear = LocalDate.of(year, 1, 1);
+            LocalDate endOfYear = LocalDate.of(year, 12, 31);
+            List<Holiday> existingHolidays = holidayRepository.findByDateRange(startOfYear, endOfYear);
+            
+            if (existingHolidays.isEmpty()) {
+                try {
+                    List<Holiday> apiHolidays = fetchHolidaysFromApi(year);
+                    if (!apiHolidays.isEmpty()) {
+                        holidayRepository.saveAll(apiHolidays);
+                        log.info("공휴일 API 데이터 저장 완료: {}년 {}개", year, apiHolidays.size());
+                    } else {
+                        // API 실패 시 기본 공휴일 저장
+                        List<Holiday> defaultHolidays = createDefaultHolidays(year);
+                        holidayRepository.saveAll(defaultHolidays);
+                        log.warn("공휴일 API 실패, 기본 데이터 저장: {}년 {}개", year, defaultHolidays.size());
+                    }
+                } catch (Exception e) {
+                    log.error("공휴일 데이터 초기화 실패: {}년 - {}", year, e.getMessage());
+                    // 예외 발생 시에도 기본 공휴일 저장
+                    List<Holiday> defaultHolidays = createDefaultHolidays(year);
+                    holidayRepository.saveAll(defaultHolidays);
+                }
+            }
+        }
+        
+        log.info("10년치 공휴일 데이터 초기화 완료 ({}-{})", currentYear, currentYear + 9);
+    }
+    
+    /**
+     * 공공데이터 포탈 API에서 공휴일 데이터 가져오기
+     */
+    private List<Holiday> fetchHolidaysFromApi(int year) {
+        if (holidayApiKey == null || holidayApiKey.isEmpty()) {
+            log.warn("공휴일 API 키가 설정되지 않음");
+            return new ArrayList<>();
+        }
+        
+        try {
+            String url = String.format(
+                "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo" +
+                "?serviceKey=%s&solYear=%d&numOfRows=100&_type=json",
+                holidayApiKey, year
+            );
+            
+            String response = restTemplate.getForObject(url, String.class);
+            return parseHolidayResponse(response, year);
+            
+        } catch (Exception e) {
+            log.error("공휴일 API 호출 실패: {}년 - {}", year, e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * API 응답 파싱
+     */
+    private List<Holiday> parseHolidayResponse(String response, int year) {
+        List<Holiday> holidays = new ArrayList<>();
+        
+        try {
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode responseNode = root.path("response");
+            JsonNode bodyNode = responseNode.path("body");
+            JsonNode itemsNode = bodyNode.path("items");
+            JsonNode itemNode = itemsNode.path("item");
+            
+            if (itemNode.isArray()) {
+                for (JsonNode holiday : itemNode) {
+                    String isHoliday = holiday.path("isHoliday").asText();
+                    if ("Y".equals(isHoliday)) {
+                        String locdate = holiday.path("locdate").asText();
+                        String dateName = holiday.path("dateName").asText();
+                        
+                        // 날짜 파싱 (yyyyMMdd 형식)
+                        LocalDate date = LocalDate.parse(locdate, DateTimeFormatter.ofPattern("yyyyMMdd"));
+                        
+                        Holiday holidayEntity = Holiday.builder()
+                                .date(date)
+                                .name(dateName)
+                                .isRecurring(false)
+                                .build();
+                        
+                        holidays.add(holidayEntity);
+                    }
+                }
+            } else if (!itemNode.isMissingNode()) {
+                // 단일 항목인 경우
+                String isHoliday = itemNode.path("isHoliday").asText();
+                if ("Y".equals(isHoliday)) {
+                    String locdate = itemNode.path("locdate").asText();
+                    String dateName = itemNode.path("dateName").asText();
+                    
+                    LocalDate date = LocalDate.parse(locdate, DateTimeFormatter.ofPattern("yyyyMMdd"));
+                    
+                    Holiday holidayEntity = Holiday.builder()
+                            .date(date)
+                            .name(dateName)
+                            .isRecurring(false)
+                            .build();
+                    
+                    holidays.add(holidayEntity);
+                }
+            }
+            
+            log.info("공휴일 API 파싱 완료: {}년 {}개", year, holidays.size());
+            
+        } catch (Exception e) {
+            log.error("공휴일 API 응답 파싱 실패: {}", e.getMessage());
+        }
+        
+        return holidays;
+    }
+    
+    /**
+     * 기본 공휴일 생성 (API 실패 시 대체)
+     */
+    private List<Holiday> createDefaultHolidays(int year) {
+        List<Holiday> holidays = new ArrayList<>();
+        
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 1, 1)).name("신정").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 3, 1)).name("삼일절").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 5, 5)).name("어린이날").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 6, 6)).name("현충일").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 8, 15)).name("광복절").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 10, 3)).name("개천절").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 10, 9)).name("한글날").isRecurring(false).build());
+        holidays.add(Holiday.builder().date(LocalDate.of(year, 12, 25)).name("크리스마스").isRecurring(false).build());
+        
+        return holidays;
+    }
 
     /**
-     * 특정 날짜가 공휴일인지 확인
+     * 특정 년도의 공휴일 조회 (캐시 사용)
      */
-    @Transactional(readOnly = true)
+    public List<Holiday> getHolidaysByYear(int year) {
+        return holidayCache.computeIfAbsent(year, y -> {
+            LocalDate startOfYear = LocalDate.of(y, 1, 1);
+            LocalDate endOfYear = LocalDate.of(y, 12, 31);
+            List<Holiday> holidays = holidayRepository.findByDateRange(startOfYear, endOfYear);
+            log.info("공휴일 데이터 캐시됨: {}년 {}개", y, holidays.size());
+            return holidays;
+        });
+    }
+
+    /**
+     * 캐시된 공휴일 데이터로 특정 날짜가 공휴일인지 확인
+     */
     public boolean isHoliday(LocalDate date) {
-        return holidayRepository.existsByDate(date);
+        List<Holiday> holidays = getHolidaysByYear(date.getYear());
+        return holidays.stream().anyMatch(h -> h.getDate().equals(date));
+    }
+
+    /**
+     * 영업일 계산 (주말, 공휴일 제외)
+     */
+    public LocalDate calculateEndDate(LocalDate startDate, int businessDays) {
+        LocalDate currentDate = startDate;
+        int count = 0;
+        
+        // 시작일이 영업일이면 1로 시작
+        if (isBusinessDay(currentDate)) {
+            count = 1;
+        }
+        
+        while (count < businessDays) {
+            currentDate = currentDate.plusDays(1);
+            if (isBusinessDay(currentDate)) {
+                count++;
+            }
+        }
+        
+        return currentDate;
+    }
+
+    /**
+     * 영업일인지 확인 (주말, 공휴일 제외)
+     */
+    public boolean isBusinessDay(LocalDate date) {
+        // 주말 체크
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            return false;
+        }
+        
+        // 공휴일 체크
+        return !isHoliday(date);
     }
 
     /**
@@ -54,7 +261,7 @@ public class HolidayService {
 
         while (!current.isAfter(endDate)) {
             // 주말이 아니고 공휴일이 아닌 경우만 카운트
-            if (!isWeekend(current) && !isHoliday(current)) {
+            if (isBusinessDay(current)) {
                 totalDays++;
             }
             current = current.plusDays(1);
@@ -75,7 +282,7 @@ public class HolidayService {
         while (daysAdded < businessDays) {
             current = current.plusDays(1);
             // 주말이 아니고 공휴일이 아닌 경우만 카운트
-            if (!isWeekend(current) && !isHoliday(current)) {
+            if (isBusinessDay(current)) {
                 daysAdded++;
             }
         }
@@ -112,14 +319,6 @@ public class HolidayService {
         log.info("공휴일 등록: 날짜={}, 이름={}", date, name);
 
         return saved;
-    }
-
-    /**
-     * 특정 연도의 공휴일 조회
-     */
-    @Transactional(readOnly = true)
-    public List<Holiday> getHolidaysByYear(int year) {
-        return holidayRepository.findByYear(year);
     }
 
     /**

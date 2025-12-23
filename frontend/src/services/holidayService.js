@@ -68,6 +68,27 @@ class HolidayService {
     return !this.isWeekend(date) && !this.isHoliday(date, holidays);
   }
 
+  // 수강권 만료일 계산 (캐시된 공휴일 데이터 사용)
+  calculateEndDateWithCache(startDate, businessDays, holidays) {
+    const start = new Date(startDate);
+    let businessDaysCount = 0;
+    let currentDate = new Date(start);
+    
+    // 시작일도 영업일에 포함되므로 1부터 시작
+    if (this.isBusinessDay(currentDate, holidays)) {
+      businessDaysCount = 1;
+    }
+    
+    while (businessDaysCount < businessDays) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      if (this.isBusinessDay(currentDate, holidays)) {
+        businessDaysCount++;
+      }
+    }
+    
+    return currentDate;
+  }
+
   // 수강권 만료일 계산 (영업일 기준)
   async calculateEndDate(startDate, weeks) {
     const start = new Date(startDate);
