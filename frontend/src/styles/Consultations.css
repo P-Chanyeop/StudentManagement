@@ -987,6 +987,64 @@
   font-style: italic;
 }
 
+/* 파일 목록 */
+.file-list {
+  margin-top: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  background: white;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 13px;
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-item i {
+  color: var(--naver-green);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.file-item span {
+  flex: 1;
+  color: var(--gray-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-item-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: var(--error-light);
+  color: var(--error-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.file-item-remove:hover {
+  background: var(--error);
+  color: white;
+}
+
 .form-group input,
 .form-group select,
 .form-group textarea {

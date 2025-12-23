@@ -12,6 +12,8 @@ function Consultations() {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
   const [documentFile, setDocumentFile] = useState(null);
+  const [audioFiles, setAudioFiles] = useState([]);
+  const [documentFiles, setDocumentFiles] = useState([]);
   const [selectedStudentsForConsultation, setSelectedStudentsForConsultation] = useState([]);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
   const [newConsultation, setNewConsultation] = useState({
@@ -111,6 +113,8 @@ function Consultations() {
     setStudentSearchTerm('');
     setAudioFile(null);
     setDocumentFile(null);
+    setAudioFiles([]);
+    setDocumentFiles([]);
     
     // 파일 input 초기화
     const audioInput = document.getElementById('audio-file');
@@ -510,25 +514,31 @@ function Consultations() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>녹음 파일</label>
+                    <label>녹음 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">
                       <input 
                         type="file" 
                         id="audio-file"
                         accept="audio/*"
-                        onChange={(e) => setAudioFile(e.target.files[0])}
+                        multiple
+                        onChange={(e) => setAudioFiles([...e.target.files])}
                         className="file-input-hidden"
                       />
                       <label htmlFor="audio-file" className="file-input-custom audio">
                         <i className="fas fa-microphone"></i>
-                        <span>{audioFile ? audioFile.name : '녹음 파일 선택'}</span>
+                        <span>
+                          {audioFiles.length > 0 
+                            ? `${audioFiles.length}개 파일 선택됨` 
+                            : '녹음 파일 선택'
+                          }
+                        </span>
                       </label>
-                      {audioFile && (
+                      {audioFiles.length > 0 && (
                         <button 
                           type="button" 
                           className="file-remove-btn"
                           onClick={() => {
-                            setAudioFile(null);
+                            setAudioFiles([]);
                             document.getElementById('audio-file').value = '';
                           }}
                         >
@@ -536,27 +546,53 @@ function Consultations() {
                         </button>
                       )}
                     </div>
+                    {audioFiles.length > 0 && (
+                      <div className="file-list">
+                        {audioFiles.map((file, index) => (
+                          <div key={index} className="file-item">
+                            <i className="fas fa-microphone"></i>
+                            <span>{file.name}</span>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newFiles = audioFiles.filter((_, i) => i !== index);
+                                setAudioFiles(newFiles);
+                              }}
+                              className="file-item-remove"
+                            >
+                              <i className="fas fa-times"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="form-group">
-                    <label>첨부 파일</label>
+                    <label>첨부 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">
                       <input 
                         type="file" 
                         id="document-file"
                         accept=".pdf,.doc,.docx,.hwp,.txt"
-                        onChange={(e) => setDocumentFile(e.target.files[0])}
+                        multiple
+                        onChange={(e) => setDocumentFiles([...e.target.files])}
                         className="file-input-hidden"
                       />
                       <label htmlFor="document-file" className="file-input-custom document">
                         <i className="fas fa-file-alt"></i>
-                        <span>{documentFile ? documentFile.name : '문서 파일 선택'}</span>
+                        <span>
+                          {documentFiles.length > 0 
+                            ? `${documentFiles.length}개 파일 선택됨` 
+                            : '문서 파일 선택'
+                          }
+                        </span>
                       </label>
-                      {documentFile && (
+                      {documentFiles.length > 0 && (
                         <button 
                           type="button" 
                           className="file-remove-btn"
                           onClick={() => {
-                            setDocumentFile(null);
+                            setDocumentFiles([]);
                             document.getElementById('document-file').value = '';
                           }}
                         >
@@ -564,6 +600,26 @@ function Consultations() {
                         </button>
                       )}
                     </div>
+                    {documentFiles.length > 0 && (
+                      <div className="file-list">
+                        {documentFiles.map((file, index) => (
+                          <div key={index} className="file-item">
+                            <i className="fas fa-file-alt"></i>
+                            <span>{file.name}</span>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newFiles = documentFiles.filter((_, i) => i !== index);
+                                setDocumentFiles(newFiles);
+                              }}
+                              className="file-item-remove"
+                            >
+                              <i className="fas fa-times"></i>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
