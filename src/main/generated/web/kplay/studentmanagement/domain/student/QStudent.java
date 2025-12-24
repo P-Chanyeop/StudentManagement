@@ -49,6 +49,8 @@ public class QStudent extends EntityPathBase<Student> {
 
     public final StringPath parentPhone = createString("parentPhone");
 
+    public final web.kplay.studentmanagement.domain.user.QUser parentUser;
+
     public final StringPath school = createString("school");
 
     public final StringPath studentName = createString("studentName");
@@ -57,8 +59,6 @@ public class QStudent extends EntityPathBase<Student> {
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
-
-    public final web.kplay.studentmanagement.domain.user.QUser user;
 
     public QStudent(String variable) {
         this(Student.class, forVariable(variable), INITS);
@@ -78,7 +78,7 @@ public class QStudent extends EntityPathBase<Student> {
 
     public QStudent(Class<? extends Student> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.user = inits.isInitialized("user") ? new web.kplay.studentmanagement.domain.user.QUser(forProperty("user")) : null;
+        this.parentUser = inits.isInitialized("parentUser") ? new web.kplay.studentmanagement.domain.user.QUser(forProperty("parentUser")) : null;
     }
 
 }

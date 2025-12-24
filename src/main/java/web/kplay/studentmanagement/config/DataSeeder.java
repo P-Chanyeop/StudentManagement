@@ -128,11 +128,13 @@ public class DataSeeder {
                         // .user(studentUser1) // 제거
                         .studentName("홍길동")
                         .birthDate(LocalDate.of(2010, 3, 15))
+                        .gender("FEMALE")
                         .studentPhone("010-5678-9012")
                         .parentPhone("010-4567-8901")
                         .parentName("박학부모")
                         .school("서울초등학교")
                         .grade("6")
+                        .englishLevel("BEGINNER")
                         .address("서울시 강남구 테헤란로 123")
                         .memo("영어 초급반")
                         .isActive(true)
@@ -155,11 +157,13 @@ public class DataSeeder {
 //                        .user(studentUser2)
                         .studentName("김민수")
                         .birthDate(LocalDate.of(2011, 7, 20))
+                        .gender("MALE")
                         .studentPhone("010-6789-0123")
                         .parentPhone("010-7890-1234")
                         .parentName("김학부모")
                         .school("서울초등학교")
                         .grade("5")
+                        .englishLevel("INTERMEDIATE")
                         .address("서울시 강남구 역삼동 456")
                         .memo("수학 중급반")
                         .isActive(true)
@@ -182,11 +186,13 @@ public class DataSeeder {
 //                        .user(studentUser3)
                         .studentName("이지은")
                         .birthDate(LocalDate.of(2012, 11, 5))
+                        .gender("FEMALE")
                         .studentPhone("010-7890-1234")
                         .parentPhone("010-8901-2345")
                         .parentName("이학부모")
                         .school("한강초등학교")
                         .grade("4")
+                        .englishLevel("ADVANCED")
                         .address("서울시 서초구 반포동 789")
                         .memo("영어 중급반, 수학 초급반")
                         .isActive(true)
@@ -195,6 +201,8 @@ public class DataSeeder {
 
                 // 추가 학생 4-10
                 String[] names = {"박서준", "최유나", "정민호", "강하늘", "윤서아", "임재현", "송지우"};
+                String[] genders = {"MALE", "FEMALE", "MALE", "FEMALE", "FEMALE", "MALE", "MALE"};
+                String[] levels = {"BEGINNER", "INTERMEDIATE", "BEGINNER", "ADVANCED", "INTERMEDIATE", "BEGINNER", "INTERMEDIATE"};
                 String[] schools = {"서울초등학교", "한강초등학교", "강남초등학교"};
                 
                 for (int i = 0; i < names.length; i++) {
@@ -213,11 +221,13 @@ public class DataSeeder {
 //                            .user(studentUser)
                             .studentName(names[i])
                             .birthDate(LocalDate.of(2010 + (i % 3), (i % 12) + 1, (i % 28) + 1))
+                            .gender(genders[i])
                             .studentPhone("010-" + String.format("%04d", 8000 + i) + "-" + String.format("%04d", 1234 + i))
                             .parentPhone("010-" + String.format("%04d", 9000 + i) + "-" + String.format("%04d", 2345 + i))
                             .parentName(names[i].substring(0, 1) + "학부모")
                             .school(schools[i % 3])
                             .grade(String.valueOf(4 + (i % 3)))
+                            .englishLevel(levels[i])
                             .address("서울시 강남구 " + (i + 1) + "번지")
                             .memo("테스트 학생")
                             .isActive(true)

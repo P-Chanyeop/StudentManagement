@@ -29,6 +29,8 @@ public class QEnrollment extends EntityPathBase<Enrollment> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
+    public final NumberPath<Integer> customDurationMinutes = createNumber("customDurationMinutes", Integer.class);
+
     public final DatePath<java.time.LocalDate> endDate = createDate("endDate", java.time.LocalDate.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);

@@ -18,7 +18,7 @@ function Students() {
     gender: 'MALE',
     address: '',
     school: '',
-    grade: 1,
+    grade: '1',
     parentName: '',
     parentPhone: '',
     parentEmail: '',
@@ -64,7 +64,7 @@ function Students() {
         gender: 'MALE',
         address: '',
         school: '',
-        grade: 1,
+        grade: '1',
         parentName: '',
         parentPhone: '',
         parentEmail: '',
@@ -353,10 +353,10 @@ function Students() {
                     <label>학년</label>
                     <select
                       value={newStudent.grade}
-                      onChange={(e) => setNewStudent({ ...newStudent, grade: parseInt(e.target.value) })}
+                      onChange={(e) => setNewStudent({ ...newStudent, grade: e.target.value })}
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
-                        <option key={grade} value={grade}>
+                        <option key={grade} value={grade.toString()}>
                           {grade}학년
                         </option>
                       ))}
@@ -517,13 +517,13 @@ function Students() {
                   <div className="form-group">
                     <label>학년</label>
                     <select
-                      value={selectedStudent.grade || 1}
+                      value={selectedStudent.grade || '1'}
                       onChange={(e) =>
-                        setSelectedStudent({ ...selectedStudent, grade: parseInt(e.target.value) })
+                        setSelectedStudent({ ...selectedStudent, grade: e.target.value })
                       }
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
-                        <option key={grade} value={grade}>
+                        <option key={grade} value={grade.toString()}>
                           {grade}학년
                         </option>
                       ))}
