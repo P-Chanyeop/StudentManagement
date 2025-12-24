@@ -14,6 +14,19 @@
   min-width: 300px;
 }
 
+.student-name-td {
+  /*display: flex;*/
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--naver-green);
+  text-align: center;
+  /* background: rgba(3, 199, 90, 0.1); */
+  padding: 1rem !important;
+  /*border-radius: 20px;*/
+}
+
 .student-checkin h3 {
   margin: 0 0 1rem 0;
   color: #374151;
@@ -246,10 +259,10 @@
 
 .attendance-table td {
   padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  /*border-bottom: 1px solid #e5e7eb;*/
   vertical-align: middle;
   text-align: center;
-  height: 60px;
+  /*height: 60px;*/
 }
 
 .attendance-row.absent {
@@ -293,8 +306,8 @@
 }
 
 .attendance-row .status-badge {
-  background: #dcfce7;
-  color: #166534;
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .attendance-row.absent .status-badge {

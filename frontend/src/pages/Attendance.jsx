@@ -246,7 +246,7 @@ function Attendance() {
                   key={attendance.id}
                   className={`attendance-row ${!attendance.checkInTime ? 'absent' : ''}`}
                 >
-                  <td className="student-name">
+                  <td className="student-name-td">
                     <div className="student-info">
                       <span className="name">{attendance.studentName}</span>
                       <span className="status-badge">

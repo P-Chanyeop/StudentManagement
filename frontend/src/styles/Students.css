@@ -212,12 +212,6 @@
 .student-info {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.student-info i {
-  color: var(--naver-green);
-  font-size: 18px;
 }
 
 .student-info strong {
