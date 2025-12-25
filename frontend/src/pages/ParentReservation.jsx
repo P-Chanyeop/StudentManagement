@@ -10,14 +10,19 @@ function ParentReservation() {
     parentName: '',
     parentPhone: '',
     
-    // 학생 정보
-    studentName: '',
-    studentPhone: '',
+    // 학생 정보 (여러 명 가능)
+    students: [
+      {
+        studentName: '',
+        studentPhone: '',
+        school: ''
+      }
+    ],
     
     // 예약 정보
     preferredDate: '',
     preferredTime: '',
-    courseType: '',
+    consultationType: '',
     
     // 요청사항
     requirements: ''
@@ -29,6 +34,34 @@ function ParentReservation() {
   const [loadedYears, setLoadedYears] = useState(new Set());
 
   // 특정 년도의 공휴일 로드
+  // 학생 추가
+  const addStudent = () => {
+    setFormData(prev => ({
+      ...prev,
+      students: [...prev.students, { studentName: '', studentPhone: '', school: '' }]
+    }));
+  };
+
+  // 학생 제거
+  const removeStudent = (index) => {
+    if (formData.students.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        students: prev.students.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // 학생 정보 변경
+  const handleStudentChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      students: prev.students.map((student, i) => 
+        i === index ? { ...student, [field]: value } : student
+      )
+    }));
+  };
+
   const loadHolidaysForYear = async (year) => {
     if (loadedYears.has(year)) return; // 이미 로드된 년도는 스킵
 
@@ -165,11 +198,16 @@ function ParentReservation() {
       setFormData({
         parentName: '',
         parentPhone: '',
-        studentName: '',
-        studentPhone: '',
+        students: [
+          {
+            studentName: '',
+            studentPhone: '',
+            school: ''
+          }
+        ],
         preferredDate: '',
         preferredTime: '',
-        courseType: '',
+        consultationType: '',
         requirements: ''
       });
       setErrors({});
@@ -209,15 +247,16 @@ function ParentReservation() {
       newErrors.parentPhone = '전화번호 형식이 올바르지 않습니다. (010-0000-0000)';
     }
     
-    if (!formData.studentName.trim()) {
-      newErrors.studentName = '학생 이름을 입력해주세요.';
-    }
-    
-    if (!formData.studentPhone.trim()) {
-      newErrors.studentPhone = '학생 전화번호를 입력해주세요.';
-    } else if (!/^010-\d{4}-\d{4}$/.test(formData.studentPhone)) {
-      newErrors.studentPhone = '전화번호 형식이 올바르지 않습니다. (010-0000-0000)';
-    }
+    // 학생 정보 검증
+    formData.students.forEach((student, index) => {
+      if (!student.studentName.trim()) {
+        newErrors[`studentName_${index}`] = '학생 이름을 입력해주세요.';
+      }
+      if (!student.school.trim()) {
+        newErrors[`school_${index}`] = '학교를 입력해주세요.';
+      }
+    });
+
     
     if (!formData.preferredDate) {
       newErrors.preferredDate = '희망 날짜를 선택해주세요.';
@@ -227,8 +266,8 @@ function ParentReservation() {
       newErrors.preferredTime = '희망 시간을 선택해주세요.';
     }
     
-    if (!formData.courseType) {
-      newErrors.courseType = '수업 유형을 선택해주세요.';
+    if (!formData.consultationType) {
+      newErrors.consultationType = '상담 유형을 선택해주세요.';
     }
     
     setErrors(newErrors);
@@ -245,15 +284,87 @@ function ParentReservation() {
     createReservation.mutate(formData);
   };
 
-  const courseTypes = [
-    { value: 'beginner', label: '초급 영어' },
-    { value: 'intermediate', label: '중급 영어' },
-    { value: 'advanced', label: '고급 영어' },
-    { value: 'conversation', label: '영어 회화' },
-    { value: 'grammar', label: '영어 문법' },
-    { value: 'toeic', label: 'TOEIC' },
-    { value: 'toefl', label: 'TOEFL' },
-    { value: 'ielts', label: 'IELTS' }
+  // 상담 유형별 안내 문구
+  const getConsultationInfo = (type) => {
+    switch(type) {
+      case '재원생상담':
+        return {
+          title: "'재원생' 수업 예약 시스템입니다. 메모란에 '아이이름 정목초' 형태로 예약 부탁드립니다.",
+          content: `예약 시 확인해 주세요
+1. 어머니 성함이 아닌 '아이이름 정목초' 형태로 이름 설정하시어 예약 부탁드립니다.
+2. 예약 취소는 전날 오후 12시까지 가능하시며 당일 취소는 횟수가 차감됩니다.
+3. 수업 시간보다 늦게 도착하여 시작한 학생은 등록한 시간보다 일찍 끝날 수 있으니 꼭! 시간에 맞춰서 등원 부탁드립니다.
+4. 수업 시간보다 일찍 도착시 밖에서 대기할 수 있습니다.
+
+원활한 수업 진행을 위하여 최대한 시간에 맞추어 등원 부탁드립니다:)
+
+주차비 무료
+건물 앞 뒤로 무료 주차 가능하십니다 ^^`
+        };
+      case '레벨테스트':
+        return {
+          title: "(평일) 레벨테스트& 1회 체험 수업 예약",
+          content: `리틀베어 리딩클럽이 처음인 학부모님들을 대상으로
+레벨테스트 응시시 체험 수업 1회를 무료로 제공해드리는 이벤트를 진행합니다:)
+
+*레벨테스트와 체험수업은 총 1시간 20분 가량 소요 예정입니다.
+*레벨테스트 비용은 2만원입니다.
+*평일 한정 이벤트 입니다.
+
+예약 시 확인해 주세요
+꼭 확인해 주세요!
+>>아이 이름, 학교 및 학년, (SR 점수 있을 경우 기재) 부탁 드립니다.
+
+>> 자세한 수강료 상담은 상담 방문시에만 가능합니다.
+
+>> 개인적인 사유로 인한 취소시 반드시 하루 전에 취소 및 연락 부탁드립니다.
+
+>> 레벨테스트 비용은 2만원입니다.
+
+주차정보
+주차비 무료
+건물 앞 뒤로 무료 주차 가능하십니다 ^^`
+        };
+      case '입학상담':
+        return {
+          title: "(토요일) 레벨테스트 및 상담 예약",
+          content: `리틀베어 리딩클럽 레벨테스트 및 상담 예약창입니다:)
+
+* SR test, interview, essay writing 순으로 진행됩니다.
+* 약 1시간 소요 예정입니다.
+* 비용은 2만원 발생합니다.
+* 레벨테스트 후 커리큐럼 및 학습 방향에 대한 자세한 상담 도와드립니다.
+
+예약 시 확인해 주세요
+꼭 확인해 주세요!
+>>이름, 학교 및 학년, SR 점수(있을 경우) 부탁 드립니다.
+
+>> 자세한 수강료 상담은 상담 방문 시에만 가능합니다.
+
+>>레벨테스트 비용은 2만원이며, 예약금은 1만원입니다.
+
+>> 개인적인 사유로 인한 취소 시 반드시 하루 전에 취소 및 연락 부탁 드립니다. 당일 취소 시, 예약금 환불은 불가합니다.
+
+주차정보
+주차비 무료
+건물 앞 뒤로 무료 주차 가능하십니다 ^^`
+        };
+      default:
+        return {
+          title: "상담 예약",
+          content: `상담 예약을 위해 필요한 정보를 입력해주세요.
+
+주차정보
+주차비 무료
+건물 앞 뒤로 무료 주차 가능하십니다 ^^`
+        };
+    }
+  };
+
+  const consultationTypes = [
+    { value: '재원생상담', label: '재원생 예약 시스템' },
+    { value: '레벨테스트', label: '(평일) 레벨테스트 & 1회 체험 수업 예약' },
+    { value: '입학상담', label: '(토요일) 레벨테스트 및 상담 예약' }
   ];
 
   const timeSlots = [
@@ -340,36 +451,65 @@ function ParentReservation() {
 
           {/* 학생 정보 */}
           <div className="form-section">
-            <h2>학생 정보</h2>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="studentName">학생 이름 *</label>
-                <input
-                  type="text"
-                  id="studentName"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  placeholder="학생 이름을 입력해주세요"
-                  className={errors.studentName ? 'error' : ''}
-                />
-                {errors.studentName && <span className="error-message">{errors.studentName}</span>}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="studentPhone">학생 전화번호 *</label>
-                <input
-                  type="tel"
-                  id="studentPhone"
-                  name="studentPhone"
-                  value={formData.studentPhone}
-                  onChange={handleInputChange}
-                  placeholder="010-0000-0000"
-                  className={errors.studentPhone ? 'error' : ''}
-                />
-                {errors.studentPhone && <span className="error-message">{errors.studentPhone}</span>}
-              </div>
+            <div className="section-header">
+              <h2>학생 정보</h2>
+              <button type="button" onClick={addStudent} className="btn-add-student">
+                <i className="fas fa-plus"></i> 학생 추가
+              </button>
             </div>
+            
+            {formData.students.map((student, index) => (
+              <div key={index} className="student-form-group">
+                <div className="student-header">
+                  <h3>학생 {index + 1}</h3>
+                  {formData.students.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => removeStudent(index)}
+                      className="btn-remove-student"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>학생 이름 *</label>
+                    <input
+                      type="text"
+                      value={student.studentName}
+                      onChange={(e) => handleStudentChange(index, 'studentName', e.target.value)}
+                      placeholder="학생 이름을 입력해주세요"
+                      className={errors[`studentName_${index}`] ? 'error' : ''}
+                    />
+                    {errors[`studentName_${index}`] && <span className="error-message">{errors[`studentName_${index}`]}</span>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>학교 *</label>
+                    <input
+                      type="text"
+                      value={student.school}
+                      onChange={(e) => handleStudentChange(index, 'school', e.target.value)}
+                      placeholder="예: 정목초, 정목중, 정목고"
+                      className={errors[`school_${index}`] ? 'error' : ''}
+                    />
+                    {errors[`school_${index}`] && <span className="error-message">{errors[`school_${index}`]}</span>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>학생 전화번호</label>
+                    <input
+                      type="tel"
+                      value={student.studentPhone}
+                      onChange={(e) => handleStudentChange(index, 'studentPhone', e.target.value)}
+                      placeholder="010-0000-0000 (선택사항)"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* 예약 정보 */}
@@ -394,22 +534,37 @@ function ParentReservation() {
               </div>
               
               <div className="form-group">
-                <label htmlFor="courseType">수업 유형 *</label>
+                <label htmlFor="consultationType">상담 유형 *</label>
                 <select
-                  id="courseType"
-                  name="courseType"
-                  value={formData.courseType}
+                  id="consultationType"
+                  name="consultationType"
+                  value={formData.consultationType}
                   onChange={handleInputChange}
-                  className={errors.courseType ? 'error' : ''}
+                  className={errors.consultationType ? 'error' : ''}
                 >
-                  <option value="">수업 유형을 선택해주세요</option>
-                  {courseTypes.map(course => (
-                    <option key={course.value} value={course.value}>{course.label}</option>
+                  <option value="">상담 유형을 선택해주세요</option>
+                  {consultationTypes.map(consultation => (
+                    <option key={consultation.value} value={consultation.value}>{consultation.label}</option>
                   ))}
                 </select>
-                {errors.courseType && <span className="error-message">{errors.courseType}</span>}
+                {errors.consultationType && <span className="error-message">{errors.consultationType}</span>}
               </div>
             </div>
+
+            {/* 상담 유형별 안내 문구 */}
+            {formData.consultationType && (
+              <div className="consultation-info">
+                <h3>{getConsultationInfo(formData.consultationType).title}</h3>
+                <div className="consultation-content">
+                  {getConsultationInfo(formData.consultationType).content.split('\n').map((line, index) => (
+                    <div key={index}>
+                      {line}
+                      {index < getConsultationInfo(formData.consultationType).content.split('\n').length - 1 && <br />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 요청사항 */}

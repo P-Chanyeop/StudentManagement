@@ -42,6 +42,9 @@ public class Reservation extends BaseEntity {
     @Column(length = 500)
     private String memo;
 
+    @Column(length = 50)
+    private String consultationType; // 상담 유형
+
     @Column(length = 200)
     private String cancelReason;
 

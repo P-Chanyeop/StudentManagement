@@ -65,6 +65,7 @@ public class ReservationService {
                 .enrollment(enrollment)
                 .status(ReservationStatus.CONFIRMED)
                 .memo(request.getMemo())
+                .consultationType(request.getConsultationType())
                 .reservationSource(request.getReservationSource())
                 .build();
 
@@ -211,6 +212,7 @@ public class ReservationService {
                 .enrollmentId(reservation.getEnrollment() != null ? reservation.getEnrollment().getId() : null)
                 .status(reservation.getStatus())
                 .memo(reservation.getMemo())
+                .consultationType(reservation.getConsultationType())
                 .cancelReason(reservation.getCancelReason())
                 .cancelledAt(reservation.getCancelledAt())
                 .reservationSource(reservation.getReservationSource())

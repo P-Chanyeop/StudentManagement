@@ -26,6 +26,7 @@ public class ReservationResponse {
     private Long enrollmentId;
     private ReservationStatus status;
     private String memo;
+    private String consultationType;
     private String cancelReason;
     private LocalDateTime cancelledAt;
     private String reservationSource;

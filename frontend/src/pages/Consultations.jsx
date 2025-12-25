@@ -27,7 +27,7 @@ function Consultations() {
     studentId: '',
     title: '',
     content: '',
-    consultationType: '학습상담',
+    consultationType: '재원생상담',
     actionItems: '',
     nextConsultationDate: '',
   });
@@ -112,7 +112,7 @@ function Consultations() {
       studentId: '',
       title: '',
       content: '',
-      consultationType: '학습상담',
+      consultationType: '재원생상담',
       actionItems: '',
       nextConsultationDate: '',
     });
@@ -604,10 +604,9 @@ function Consultations() {
                       value={newConsultation.consultationType}
                       onChange={(e) => setNewConsultation({...newConsultation, consultationType: e.target.value})}
                     >
-                      <option value="학습상담">학습상담</option>
-                      <option value="진로상담">진로상담</option>
-                      <option value="학부모상담">학부모상담</option>
-                      <option value="생활상담">생활상담</option>
+                      <option value="재원생상담">재원생 예약 시스템</option>
+                      <option value="레벨테스트">(평일) 레벨테스트 & 1회 체험 수업 예약</option>
+                      <option value="입학상담">(토요일) 레벨테스트 및 상담 예약</option>
                     </select>
                   </div>
                 </div>
@@ -793,10 +792,9 @@ function Consultations() {
                       value={newConsultation.consultationType}
                       onChange={(e) => setNewConsultation({...newConsultation, consultationType: e.target.value})}
                     >
-                      <option value="학습상담">학습상담</option>
-                      <option value="진로상담">진로상담</option>
-                      <option value="학부모상담">학부모상담</option>
-                      <option value="생활상담">생활상담</option>
+                      <option value="재원생상담">재원생 예약 시스템</option>
+                      <option value="레벨테스트">(평일) 레벨테스트 & 1회 체험 수업 예약</option>
+                      <option value="입학상담">(토요일) 레벨테스트 및 상담 예약</option>
                     </select>
                   </div>
                 </div>
