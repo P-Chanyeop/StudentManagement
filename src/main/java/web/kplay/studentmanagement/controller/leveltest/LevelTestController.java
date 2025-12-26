@@ -101,6 +101,12 @@ public class LevelTestController {
     public ResponseEntity<List<LevelTestResponse>> getLevelTestsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        // 날짜 유효성 검사
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+        }
+        
         List<LevelTestResponse> responses = levelTestService.getLevelTestsByDateRange(startDate, endDate);
         return ResponseEntity.ok(responses);
     }
@@ -132,6 +138,12 @@ public class LevelTestController {
     public ResponseEntity<List<LevelTestResponse>> getLevelTestsByWeek(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekEnd) {
+        
+        // 날짜 유효성 검사
+        if (weekStart.isAfter(weekEnd)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+        }
+        
         List<LevelTestResponse> responses = levelTestService.getLevelTestsByWeek(weekStart, weekEnd);
         return ResponseEntity.ok(responses);
     }
@@ -174,6 +186,12 @@ public class LevelTestController {
     public ResponseEntity<Map<String, Object>> getStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        // 날짜 유효성 검사
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+        }
+        
         Map<String, Object> statistics = levelTestService.getStatistics(startDate, endDate);
         return ResponseEntity.ok(statistics);
     }
