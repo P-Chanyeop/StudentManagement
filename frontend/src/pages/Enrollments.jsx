@@ -250,13 +250,20 @@ function Enrollments() {
     setShowDetailModal(true);
   };
 
+  // 학생 정보 찾기 함수
+  const getStudentInfo = (studentId) => {
+    return students?.find(student => student.id === studentId) || {};
+  };
+
   // 필터링 로직
   const filteredEnrollments = enrollments.filter((enrollment) => {
-    const matchesStatus = statusFilter === 'ALL' || enrollment.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || 
+      (statusFilter === 'ACTIVE' && enrollment.isActive) ||
+      (statusFilter === 'EXPIRED' && !enrollment.isActive);
     const matchesSearch =
       searchQuery === '' ||
-      enrollment.student?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enrollment.course?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      enrollment.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      enrollment.courseName?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -271,23 +278,25 @@ function Enrollments() {
 
   // 상태별 배지
   const getStatusBadge = (status) => {
+    console.log('Status value:', status); // 디버깅용
     const statusMap = {
       ACTIVE: { text: '활성', color: '#03C75A' },
       EXPIRED: { text: '만료', color: '#999' },
       CANCELLED: { text: '취소', color: '#FF3B30' },
     };
-    const { text, color } = statusMap[status] || { text: status, color: '#999' };
-    return <span className="status-badge" style={{ backgroundColor: color }}>{text}</span>;
+    const { text, color } = statusMap[status] || { text: status || '상태없음', color: '#999' };
+    return <span className="status-badge" style={{ backgroundColor: color, color: 'white', padding: '4px 8px', borderRadius: '4px' }}>{text}</span>;
   };
 
   // 타입별 배지
   const getTypeBadge = (type) => {
+    console.log('Type value:', type); // 디버깅용
     const typeMap = {
       PERIOD_BASED: { text: '기간제', color: '#0066FF' },
       COUNT_BASED: { text: '횟수제', color: '#FF9800' },
     };
-    const { text, color } = typeMap[type] || { text: type, color: '#999' };
-    return <span className="type-badge" style={{ backgroundColor: color }}>{text}</span>;
+    const { text, color } = typeMap[type] || { text: type || '타입없음', color: '#999' };
+    return <span className="type-badge" style={{ backgroundColor: color, color: 'white', padding: '4px 8px', borderRadius: '4px' }}>{text}</span>;
   };
 
   if (isLoading) {
@@ -338,7 +347,7 @@ function Enrollments() {
               <i className="fas fa-search search-icon"></i>
               <input
                 type="text"
-                placeholder="학생명 또는 코스명으로 검색..."
+                placeholder="학생명 또는 수업명으로 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input"
@@ -359,27 +368,19 @@ function Enrollments() {
               className="enrollment-card"
               onClick={() => openDetailModal(enrollment)}
             >
-              <div className="enrollment-header">
-                <div className="badges">
-                  {getTypeBadge(enrollment.type)}
-                  {getStatusBadge(enrollment.status)}
-                </div>
-              </div>
-
               <div className="enrollment-body">
-                <h3 className="student-name">{enrollment.student?.name || '학생 정보 없음'}</h3>
-                <p className="course-name">{enrollment.course?.name || '수업 정보 없음'}</p>
+                <div className="badges">
+                  {console.log('Full enrollment:', enrollment)}
+                  {getTypeBadge(enrollment.enrollmentType || 'COUNT_BASED')}
+                  {getStatusBadge(enrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
+                </div>
+                <h3 className="enrollment-student-name">{enrollment.studentName || '학생 정보 없음'}</h3>
+                <p className="enrollment-course-name">{enrollment.courseName || '수업 정보 없음'}</p>
 
                 <div className="enrollment-details">
                   <div className="detail-item">
-                    <span className="label">기간</span>
-                    <span className="value">
-                      {enrollment.startDate} ~ {enrollment.endDate}
-                    </span>
-                  </div>
-                  <div className="detail-item">
                     <span className="label">만료일까지</span>
-                    <span className="value">
+                    <span className="value remaining">
                       <RemainingBusinessDays 
                         startDate={enrollment.startDate} 
                         endDate={enrollment.endDate} 
@@ -387,8 +388,10 @@ function Enrollments() {
                     </span>
                   </div>
                   <div className="detail-item">
-                    <span className="label">전체 횟수</span>
-                    <span className="value">{enrollment.totalCount}회</span>
+                    <span className="label">수강 기간</span>
+                    <span className="value period">
+                      {new Date(enrollment.startDate).toLocaleDateString()} ~ {new Date(enrollment.endDate).toLocaleDateString()}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="label">남은 횟수</span>
@@ -408,12 +411,6 @@ function Enrollments() {
                       {enrollment.customDurationMinutes && (
                         <span className="custom-duration"> (개별설정)</span>
                       )}
-                    </span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">가격</span>
-                    <span className="value price">
-                      {enrollment.price?.toLocaleString() || '0'}원
                     </span>
                   </div>
                 </div>
@@ -577,26 +574,30 @@ function Enrollments() {
             <div className="modal-body">
               <div className="detail-section">
                 <div className="badges">
-                  {getTypeBadge(selectedEnrollment.type)}
-                  {getStatusBadge(selectedEnrollment.status)}
+                  {getTypeBadge(selectedEnrollment.enrollmentType || 'COUNT_BASED')}
+                  {getStatusBadge(selectedEnrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
                 </div>
 
                 <div className="detail-info-grid">
                   <div className="detail-info-item">
                     <span className="info-label">학생</span>
-                    <span className="info-value">{selectedEnrollment.student?.name || '학생 정보 없음'}</span>
+                    <span className="info-value">{selectedEnrollment.studentName || '학생 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
-                    <span className="info-label">연락처</span>
-                    <span className="info-value">{selectedEnrollment.student?.phone || '연락처 정보 없음'}</span>
+                    <span className="info-label">학생 연락처</span>
+                    <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.studentPhone || '연락처 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
-                    <span className="info-label">코스</span>
-                    <span className="info-value">{selectedEnrollment.course?.name || '수업 정보 없음'}</span>
+                    <span className="info-label">부모님 연락처</span>
+                    <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.parentPhone || '연락처 정보 없음'}</span>
+                  </div>
+                  <div className="detail-info-item">
+                    <span className="info-label">수업</span>
+                    <span className="info-value">{selectedEnrollment.courseName || '수업 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
                     <span className="info-label">레벨</span>
-                    <span className="info-value">{selectedEnrollment.course?.level || '레벨 정보 없음'}</span>
+                    <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.englishLevel || '레벨 정보 없음'}</span>
                   </div>
 
                   {selectedEnrollment.type === 'PERIOD_BASED' ? (

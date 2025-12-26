@@ -241,9 +241,9 @@ function Attendance() {
               </tr>
             </thead>
             <tbody>
-              {filteredAttendances.map((attendance) => (
+              {filteredAttendances.map((attendance, index) => (
                 <tr 
-                  key={attendance.id}
+                  key={attendance.id || `attendance-${index}`}
                   className={`attendance-row ${!attendance.checkInTime ? 'absent' : ''}`}
                 >
                   <td className="student-name-td">
