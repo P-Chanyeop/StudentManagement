@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { mypageAPI } from '../services/api';
 import '../styles/MyPage.css';
 
 function MyPage() {
-  const [activeTab, setActiveTab] = useState('overview'); // overview, enrollments, attendance, reservations, messages
+  const [activeTab, setActiveTab] = useState('overview');
 
   // 마이페이지 데이터 조회
   const { data: myPageData, isLoading } = useQuery({
@@ -18,23 +17,15 @@ function MyPage() {
   });
 
   if (isLoading) {
-    return (
-      <Layout>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <LoadingSpinner />
-        </div>
-      </Layout>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!myPageData) {
     return (
-      <Layout>
-        <div className="error-container">
-          <p>데이터를 불러올 수 없습니다</p>
-        </div>
-      </Layout>
+      <div className="empty-state">
+        <i className="fas fa-exclamation-triangle"></i>
+        <p>데이터를 불러올 수 없습니다</p>
+      </div>
     );
   }
 
@@ -70,190 +61,262 @@ function MyPage() {
   };
 
   return (
-    <Layout>
-      <div className="page-wrapper">
-        {/* 헤더 */}
-        <div className="page-header">
-          <div className="page-header-content mypage-header">
-            <div className="student-profile">
-              <div className="profile-avatar">
-                {studentInfo.studentName.charAt(0)}
-              </div>
-              <div className="profile-info">
-                <h1 className="page-title">
-                  <i className="fas fa-user"></i>
-                  {studentInfo.studentName}님
-                </h1>
-                <p className="page-subtitle student-details">
-                  {studentInfo.school} {studentInfo.grade} | 레벨: {studentInfo.englishLevel || '-'}
-                </p>
-              </div>
-            </div>
+    <div className="page-wrapper">
+      <div className="page-header">
+        <div className="page-header-content">
+          <div className="page-title-section">
+            <h1 className="page-title">
+              <i className="fas fa-user"></i>
+              마이페이지
+            </h1>
+            <p className="page-subtitle">
+              {studentInfo?.studentName}님의 학습 현황을 확인하세요
+            </p>
+          </div>
+        </div>
+      </div>
 
-            {/* 통계 요약 */}
-            <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">🎓</div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.activeEnrollmentCount}</div>
-                <div className="stat-label">활성 수강권</div>
-              </div>
+      <div className="page-content">
+        <div className="profile-section">
+          <div className="profile-card">
+            <div className="profile-avatar">
+              {studentInfo?.studentName?.charAt(0) || 'U'}
             </div>
-            <div className="stat-card">
-              <div className="stat-icon"><i className="fas fa-calendar-alt"></i></div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.upcomingReservationCount}</div>
-                <div className="stat-label">예정 예약</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon"><i className="fas fa-check-circle"></i></div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.monthlyAttendanceCount}</div>
-                <div className="stat-label">이번 달 출석</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon"><i className="fas fa-chart-bar"></i></div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.totalAttendanceCount}</div>
-                <div className="stat-label">총 출석</div>
-              </div>
-            </div>
+            <div className="profile-info">
+              <h2>{studentInfo?.studentName || '사용자'}</h2>
+              <p className="profile-details">
+                {studentInfo?.school} {studentInfo?.grade} | 레벨: {studentInfo?.englishLevel || '-'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="page-content">
-          {/* 탭 네비게이션 */}
-          <div className="tab-navigation">
-          <button
-            className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            개요
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'enrollments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('enrollments')}
-          >
-            수강권
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
-            onClick={() => setActiveTab('attendance')}
-          >
-            출석 기록
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'reservations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reservations')}
-          >
-            예약 내역
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'messages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('messages')}
-          >
-            받은 메시지
-          </button>
+        <div className="stats-section">
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-graduation-cap"></i>
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{stats?.activeEnrollmentCount || 0}</div>
+                <div className="stat-label">활성 수강권</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-calendar-check"></i>
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{stats?.attendanceRate || 0}%</div>
+                <div className="stat-label">출석률</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-clock"></i>
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{stats?.upcomingReservationCount || 0}</div>
+                <div className="stat-label">예정된 수업</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">
+                <i className="fas fa-comments"></i>
+              </div>
+              <div className="stat-content">
+                <div className="stat-value">{stats?.consultationCount || 0}</div>
+                <div className="stat-label">상담 이력</div>
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* 탭 컨텐츠 */}
-          <div className="tab-content">
-          {/* 개요 탭 */}
+        <div className="tab-section">
+          <div className="tab-navigation">
+            <button
+              className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('overview')}
+            >
+              <i className="fas fa-chart-pie"></i>
+              개요
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'enrollments' ? 'active' : ''}`}
+              onClick={() => setActiveTab('enrollments')}
+            >
+              <i className="fas fa-receipt"></i>
+              수강권
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'attendance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('attendance')}
+            >
+              <i className="fas fa-calendar-check"></i>
+              출석 기록
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'reservations' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reservations')}
+            >
+              <i className="fas fa-clock"></i>
+              예약 내역
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'messages' ? 'active' : ''}`}
+              onClick={() => setActiveTab('messages')}
+            >
+              <i className="fas fa-envelope"></i>
+              받은 메시지
+            </button>
+          </div>
+        </div>
+
+        <div className="tab-content">
           {activeTab === 'overview' && (
-            <div className="overview-tab">
-              <div className="overview-grid">
-                {/* 수강권 정보 */}
-                <div className="info-section">
-                  <h2 className="section-title"><i className="fas fa-book"></i> 활성 수강권</h2>
-                  {activeEnrollments && activeEnrollments.length > 0 ? (
-                    <div className="enrollment-cards">
-                      {activeEnrollments.map((enrollment) => (
-                        <div key={enrollment.id} className="enrollment-card">
-                          <div className="enrollment-header">
-                            <h3>{enrollment.courseName}</h3>
-                            <span className="enrollment-type">수강권</span>
-                          </div>
-                          <div className="enrollment-details">
-                            <p>시작일: {formatDate(enrollment.startDate)}</p>
-                            <p>종료일: {formatDate(enrollment.endDate)}</p>
-                            <p>남은 횟수: <strong>{enrollment.remainingCount}</strong> / {enrollment.totalCount}</p>
-                            <div className="progress-bar">
-                              <div
-                                className="progress-fill"
-                                style={{
-                                  width: `${(enrollment.remainingCount / enrollment.totalCount) * 100}%`,
-                                }}
-                              ></div>
+            <div className="overview-section">
+              <div className="content-grid">
+                {/* 활성 수강권 */}
+                <div className="content-card">
+                  <div className="card-header">
+                    <h3 className="card-title">
+                      <i className="fas fa-graduation-cap"></i>
+                      활성 수강권
+                    </h3>
+                    <span className="card-count">{activeEnrollments?.length || 0}</span>
+                  </div>
+                  <div className="card-body">
+                    {activeEnrollments && activeEnrollments.length > 0 ? (
+                      <div className="item-list">
+                        {activeEnrollments.map((enrollment) => (
+                          <div key={enrollment.id} className="item-card">
+                            <div className="item-header">
+                              <h4 className="item-title">{enrollment.courseName}</h4>
+                              <div className="item-meta">
+                                {formatDate(enrollment.startDate)} ~ {formatDate(enrollment.endDate)}
+                              </div>
+                            </div>
+                            <div className="progress-section">
+                              <div className="progress-info">
+                                <span className="progress-text">
+                                  남은 횟수 <strong>{enrollment.remainingCount}</strong> / {enrollment.totalCount}
+                                </span>
+                                <span className="progress-percent">
+                                  {Math.round((enrollment.remainingCount / enrollment.totalCount) * 100)}%
+                                </span>
+                              </div>
+                              <div className="progress-bar">
+                                <div
+                                  className="progress-fill"
+                                  style={{
+                                    width: `${(enrollment.remainingCount / enrollment.totalCount) * 100}%`,
+                                  }}
+                                ></div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="empty-message">활성 수강권이 없습니다</p>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-state-small">
+                        <i className="fas fa-graduation-cap"></i>
+                        <p>활성 수강권이 없습니다</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* 예정된 예약 */}
-                <div className="info-section">
-                  <h2 className="section-title">📅 예정된 예약</h2>
-                  {upcomingReservations && upcomingReservations.length > 0 ? (
-                    <div className="reservation-list">
-                      {upcomingReservations.slice(0, 5).map((reservation) => (
-                        <div key={reservation.id} className="reservation-item">
-                          <div className="reservation-date">
-                            {formatDate(reservation.scheduleDate)}
+                <div className="content-card">
+                  <div className="card-header">
+                    <h3 className="card-title">
+                      <i className="fas fa-calendar-alt"></i>
+                      예정된 예약
+                    </h3>
+                    <span className="card-count">{upcomingReservations?.length || 0}</span>
+                  </div>
+                  <div className="card-body">
+                    {upcomingReservations && upcomingReservations.length > 0 ? (
+                      <div className="item-list">
+                        {upcomingReservations.slice(0, 5).map((reservation) => (
+                          <div key={reservation.id} className="item-card">
+                            <div className="item-header">
+                              <h4 className="item-title">{reservation.courseName}</h4>
+                              <div className="item-status">
+                                {getStatusBadge(reservation.status)}
+                              </div>
+                            </div>
+                            <div className="item-meta">
+                              {formatDate(reservation.scheduleDate)} {reservation.scheduleTime}
+                            </div>
                           </div>
-                          <div className="reservation-info">
-                            <p className="reservation-time">{reservation.scheduleTime}</p>
-                            {getStatusBadge(reservation.status)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="empty-message">예정된 예약이 없습니다</p>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-state-small">
+                        <i className="fas fa-calendar-alt"></i>
+                        <p>예정된 예약이 없습니다</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* 레벨테스트 일정 */}
                 {upcomingLevelTests && upcomingLevelTests.length > 0 && (
-                  <div className="info-section">
-                    <h2 className="section-title">📝 예정된 레벨테스트</h2>
-                    <div className="leveltest-list">
-                      {upcomingLevelTests.map((test) => (
-                        <div key={test.id} className="leveltest-item">
-                          <div className="leveltest-date">
-                            {formatDate(test.testDate)} {test.testTime}
+                  <div className="content-card">
+                    <div className="card-header">
+                      <h3 className="card-title">
+                        <i className="fas fa-clipboard-check"></i>
+                        예정된 레벨테스트
+                      </h3>
+                      <span className="card-count">{upcomingLevelTests.length}</span>
+                    </div>
+                    <div className="card-body">
+                      <div className="item-list">
+                        {upcomingLevelTests.map((test) => (
+                          <div key={test.id} className="item-card">
+                            <div className="item-header">
+                              <h4 className="item-title">레벨테스트</h4>
+                              <div className="item-status">
+                                <span className="status-badge pending">{test.status}</span>
+                              </div>
+                            </div>
+                            <div className="item-meta">
+                              {formatDate(test.testDate)} {test.testTime}
+                            </div>
                           </div>
-                          <div className="leveltest-info">
-                            <p>현재 레벨: {test.currentLevel || '-'}</p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* 최근 상담 기록 */}
+                {/* 최근 상담 이력 */}
                 {recentConsultations && recentConsultations.length > 0 && (
-                  <div className="info-section">
-                    <h2 className="section-title">💬 최근 상담 기록</h2>
-                    <div className="consultation-list">
-                      {recentConsultations.map((consultation) => (
-                        <div key={consultation.id} className="consultation-item">
-                          <div className="consultation-header">
-                            <h4>{consultation.title}</h4>
-                            <span className="consultation-date">
+                  <div className="content-card">
+                    <div className="card-header">
+                      <h3 className="card-title">
+                        <i className="fas fa-comments"></i>
+                        최근 상담 이력
+                      </h3>
+                      <span className="card-count">{recentConsultations.length}</span>
+                    </div>
+                    <div className="card-body">
+                      <div className="item-list">
+                        {recentConsultations.slice(0, 3).map((consultation) => (
+                          <div key={consultation.id} className="item-card">
+                            <div className="item-header">
+                              <h4 className="item-title">{consultation.title}</h4>
+                              <div className="item-type">
+                                <span className="type-badge">{consultation.consultationType}</span>
+                              </div>
+                            </div>
+                            <div className="item-meta">
                               {formatDate(consultation.consultationDate)}
-                            </span>
+                            </div>
                           </div>
-                          <p className="consultation-content">{consultation.content}</p>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -261,136 +324,171 @@ function MyPage() {
             </div>
           )}
 
-          {/* 수강권 탭 */}
           {activeTab === 'enrollments' && (
-            <div className="enrollments-tab">
-              <h2 className="tab-title">📚 수강권 상세 정보</h2>
+            <div className="enrollments-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <i className="fas fa-receipt"></i>
+                  수강권 상세 정보
+                </h2>
+              </div>
               {activeEnrollments && activeEnrollments.length > 0 ? (
-                <div className="table-wrapper">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>수업명</th>
-                        <th>시작일</th>
-                        <th>종료일</th>
-                        <th>총 횟수</th>
-                        <th>남은 횟수</th>
-                        <th>메모</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {activeEnrollments.map((enrollment) => (
-                        <tr key={enrollment.id}>
-                          <td>{enrollment.courseName}</td>
-                          <td>{formatDate(enrollment.startDate)}</td>
-                          <td>{formatDate(enrollment.endDate)}</td>
-                          <td>{enrollment.totalCount}</td>
-                          <td><strong>{enrollment.remainingCount}</strong></td>
-                          <td>{enrollment.memo || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="enrollment-grid">
+                  {activeEnrollments.map((enrollment) => (
+                    <div key={enrollment.id} className="enrollment-card">
+                      <div className="enrollment-header">
+                        <h3 className="enrollment-title">{enrollment.courseName}</h3>
+                        <div className="enrollment-type">
+                          <span className="type-badge">
+                            {enrollment.type === 'PERIOD_BASED' ? '기간제' : '횟수제'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="enrollment-details">
+                        <div className="detail-item">
+                          <span className="detail-label">수강 기간</span>
+                          <span className="detail-value">
+                            {formatDate(enrollment.startDate)} ~ {formatDate(enrollment.endDate)}
+                          </span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="detail-label">남은 횟수</span>
+                          <span className="detail-value">
+                            <strong>{enrollment.remainingCount}</strong> / {enrollment.totalCount}
+                          </span>
+                        </div>
+                        <div className="progress-section">
+                          <div className="progress-bar">
+                            <div
+                              className="progress-fill"
+                              style={{
+                                width: `${(enrollment.remainingCount / enrollment.totalCount) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
+                          <span className="progress-percent">
+                            {Math.round((enrollment.remainingCount / enrollment.totalCount) * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <p className="empty-message">활성 수강권이 없습니다</p>
+                <div className="empty-state">
+                  <i className="fas fa-receipt"></i>
+                  <p>수강권이 없습니다</p>
+                </div>
               )}
             </div>
           )}
 
-          {/* 출석 기록 탭 */}
           {activeTab === 'attendance' && (
-            <div className="attendance-tab">
-              <h2 className="tab-title">✅ 출석 기록</h2>
+            <div className="attendance-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <i className="fas fa-calendar-check"></i>
+                  최근 출석 기록
+                </h2>
+              </div>
               {recentAttendances && recentAttendances.length > 0 ? (
-                <div className="table-wrapper">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>등원 시간</th>
-                        <th>하원 시간</th>
-                        <th>예상 하원</th>
-                        <th>상태</th>
-                        <th>비고</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentAttendances.map((attendance) => (
-                        <tr key={attendance.id}>
-                          <td>{formatDateTime(attendance.checkInTime)}</td>
-                          <td>{formatDateTime(attendance.checkOutTime)}</td>
-                          <td>{attendance.expectedLeaveTime || '-'}</td>
-                          <td>{getStatusBadge(attendance.status)}</td>
-                          <td>{attendance.memo || attendance.reason || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="attendance-list">
+                  {recentAttendances.map((attendance) => (
+                    <div key={attendance.id} className="attendance-item">
+                      <div className="attendance-info">
+                        <div className="attendance-course">
+                          <h4>{attendance.courseName}</h4>
+                          <span className="attendance-date">{formatDate(attendance.attendanceDate)}</span>
+                        </div>
+                        <div className="attendance-status">
+                          {getStatusBadge(attendance.status)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <p className="empty-message">출석 기록이 없습니다</p>
+                <div className="empty-state">
+                  <i className="fas fa-calendar-check"></i>
+                  <p>출석 기록이 없습니다</p>
+                </div>
               )}
             </div>
           )}
 
-          {/* 예약 내역 탭 */}
           {activeTab === 'reservations' && (
-            <div className="reservations-tab">
-              <h2 className="tab-title">📅 예약 내역</h2>
+            <div className="reservations-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <i className="fas fa-clock"></i>
+                  예약 내역
+                </h2>
+              </div>
               {upcomingReservations && upcomingReservations.length > 0 ? (
-                <div className="table-wrapper">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>날짜</th>
-                        <th>시간</th>
-                        <th>상태</th>
-                        <th>메모</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {upcomingReservations.map((reservation) => (
-                        <tr key={reservation.id}>
-                          <td>{formatDate(reservation.scheduleDate)}</td>
-                          <td>{reservation.scheduleTime}</td>
-                          <td>{getStatusBadge(reservation.status)}</td>
-                          <td>{reservation.memo || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="reservation-list">
+                  {upcomingReservations.map((reservation) => (
+                    <div key={reservation.id} className="reservation-item">
+                      <div className="reservation-info">
+                        <div className="reservation-course">
+                          <h4>{reservation.courseName}</h4>
+                          <span className="reservation-datetime">
+                            {formatDate(reservation.scheduleDate)} {reservation.scheduleTime}
+                          </span>
+                        </div>
+                        <div className="reservation-status">
+                          {getStatusBadge(reservation.status)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <p className="empty-message">예정된 예약이 없습니다</p>
+                <div className="empty-state">
+                  <i className="fas fa-clock"></i>
+                  <p>예약 내역이 없습니다</p>
+                </div>
               )}
             </div>
           )}
 
-          {/* 받은 메시지 탭 */}
           {activeTab === 'messages' && (
-            <div className="messages-tab">
-              <h2 className="tab-title">💌 받은 메시지</h2>
+            <div className="messages-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <i className="fas fa-envelope"></i>
+                  받은 메시지
+                </h2>
+              </div>
               {recentMessages && recentMessages.length > 0 ? (
                 <div className="message-list">
                   {recentMessages.map((message) => (
                     <div key={message.id} className="message-item">
                       <div className="message-header">
-                        <span className="message-type">{message.messageType}</span>
-                        <span className="message-date">{formatDateTime(message.sentAt)}</span>
+                        <div className="message-type">
+                          <i className="fas fa-envelope"></i>
+                          <span>{message.messageType}</span>
+                        </div>
+                        <div className="message-time">
+                          {formatDateTime(message.sentAt)}
+                        </div>
                       </div>
-                      <p className="message-content">{message.content}</p>
+                      <div className="message-content">
+                        {message.content}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="empty-message">받은 메시지가 없습니다</p>
+                <div className="empty-state">
+                  <i className="fas fa-envelope"></i>
+                  <p>받은 메시지가 없습니다</p>
+                </div>
               )}
             </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
 

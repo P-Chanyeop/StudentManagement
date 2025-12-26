@@ -14,6 +14,7 @@ import Consultations from './pages/Consultations';
 import Messages from './pages/Messages';
 import MakeupClasses from './pages/MakeupClasses';
 import Notices from './pages/Notices';
+import MyPage from './pages/MyPage';
 import { useQuery } from '@tanstack/react-query';
 import { authAPI } from './services/api';
 
@@ -147,6 +148,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Notices />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mypage"
+        element={
+          <ProtectedRoute>
+            <MyPage />
           </ProtectedRoute>
         }
       />
