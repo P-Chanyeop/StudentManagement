@@ -20,4 +20,5 @@ public class CourseResponse {
     private String level;
     private String color;
     private Boolean isActive;
+    private Integer currentEnrollments; // 현재 수강생 수
 }

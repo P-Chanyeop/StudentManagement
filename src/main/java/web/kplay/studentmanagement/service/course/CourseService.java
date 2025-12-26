@@ -10,6 +10,7 @@ import web.kplay.studentmanagement.dto.course.CourseCreateRequest;
 import web.kplay.studentmanagement.dto.course.CourseResponse;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.CourseRepository;
+import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     @Transactional
     public CourseResponse createCourse(CourseCreateRequest request) {
@@ -113,6 +115,9 @@ public class CourseService {
     }
 
     private CourseResponse toResponse(Course course) {
+        // 현재 활성 수강권 수 계산
+        Integer currentEnrollments = enrollmentRepository.countActiveByCourseId(course.getId());
+        
         return CourseResponse.builder()
                 .id(course.getId())
                 .courseName(course.getCourseName())
@@ -124,6 +129,7 @@ public class CourseService {
                 .level(course.getLevel())
                 .color(course.getColor())
                 .isActive(course.getIsActive())
+                .currentEnrollments(currentEnrollments)
                 .build();
     }
 }

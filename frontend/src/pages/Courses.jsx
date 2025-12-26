@@ -16,7 +16,6 @@ function Courses() {
     level: 'BEGINNER',
     capacity: 10,
     durationMinutes: 60,
-    price: 0,
   });
 
   // 코스 목록 조회
@@ -40,9 +39,8 @@ function Courses() {
         level: 'BEGINNER',
         capacity: 10,
         durationMinutes: 60,
-        price: 0,
       });
-      alert('코스가 생성되었습니다.');
+      alert('수업이 생성되었습니다.');
     },
     onError: (error) => {
       alert(`생성 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
@@ -103,13 +101,12 @@ function Courses() {
         level: selectedCourse.level,
         capacity: selectedCourse.capacity,
         durationMinutes: selectedCourse.durationMinutes,
-        price: selectedCourse.price,
       },
     });
   };
 
   const handleDeleteCourse = (id, name) => {
-    if (window.confirm(`"${name}" 코스를 삭제하시겠습니까?`)) {
+    if (window.confirm(`"${name}" 수업을 삭제하시겠습니까?`)) {
       deleteMutation.mutate(id);
     }
   };
@@ -137,8 +134,23 @@ function Courses() {
       ADVANCED: { text: '고급', color: '#FF9800' },
       EXPERT: { text: '전문가', color: '#9C27B0' },
     };
-    const { text, color } = levelMap[level] || { text: level, color: '#999' };
-    return <span className="level-badge" style={{ backgroundColor: color }}>{text}</span>;
+    const { text, color } = levelMap[level] || { text: level, color: '#03C75A' };
+    return (
+      <span 
+        className="course-level-badge" 
+        style={{ 
+          backgroundColor: color,
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          fontSize: '13px',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {text}
+      </span>
+    );
   };
 
   if (isLoading) {
@@ -155,13 +167,13 @@ function Courses() {
         <div className="page-header-content">
           <div className="page-title-section">
             <h1 className="page-title">
-              <i className="fas fa-book-reader"></i>
-              코스 관리
+              <i className="fas fa-chalkboard-teacher"></i>
+              수업 관리
             </h1>
-            <p className="page-subtitle">학원의 강좌 및 과정을 관리합니다</p>
+            <p className="page-subtitle">학원의 수업 과정을 관리합니다</p>
           </div>
           <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-            <i className="fas fa-plus"></i> 코스 생성
+            <i className="fas fa-plus"></i> 수업 생성
           </button>
         </div>
       </div>
@@ -172,14 +184,14 @@ function Courses() {
             <i className="fas fa-search search-icon"></i>
             <input
               type="text"
-              placeholder="코스명, 설명, 레벨로 검색..."
+              placeholder="수업명, 설명, 레벨로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
             />
           </div>
           <div className="result-count">
-            <i className="fas fa-book-reader"></i>
+            <i className="fas fa-chalkboard-teacher"></i>
             총 <strong>{filteredCourses.length}</strong>개
           </div>
         </div>
@@ -187,7 +199,7 @@ function Courses() {
         <div className="courses-grid">
           {filteredCourses.length === 0 ? (
             <div className="empty-state">
-              {searchQuery ? '검색 결과가 없습니다.' : '등록된 코스가 없습니다.'}
+              {searchQuery ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.'}
             </div>
           ) : (
             filteredCourses.map((course) => (
@@ -202,18 +214,13 @@ function Courses() {
                 <div className="course-details">
                   <div className="detail-item">
                     <span className="icon"><i className="fas fa-users"></i></span>
-                    <span className="label">정원:</span>
-                    <span className="value">{course.capacity}명</span>
+                    <span className="label">현재 수강생:</span>
+                    <span className="value">{course.currentEnrollments || 0}명</span>
                   </div>
                   <div className="detail-item">
                     <span className="icon"><i className="fas fa-clock"></i></span>
                     <span className="label">수업시간:</span>
                     <span className="value">{course.durationMinutes}분</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="icon"><i className="fas fa-dollar-sign"></i></span>
-                    <span className="label">가격:</span>
-                    <span className="value price">{course.price?.toLocaleString() || '미정'}원</span>
                   </div>
                 </div>
 
@@ -308,19 +315,6 @@ function Courses() {
                     min="1"
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>가격 *</label>
-                <input
-                  type="number"
-                  value={newCourse.price}
-                  onChange={(e) =>
-                    setNewCourse({ ...newCourse, price: parseInt(e.target.value) || 0 })
-                  }
-                  placeholder="300000"
-                  min="0"
-                />
               </div>
             </div>
 
@@ -419,19 +413,6 @@ function Courses() {
                     min="1"
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>가격 *</label>
-                <input
-                  type="number"
-                  value={selectedCourse.price}
-                  onChange={(e) =>
-                    setSelectedCourse({ ...selectedCourse, price: parseInt(e.target.value) || 0 })
-                  }
-                  placeholder="300000"
-                  min="0"
-                />
               </div>
             </div>
 

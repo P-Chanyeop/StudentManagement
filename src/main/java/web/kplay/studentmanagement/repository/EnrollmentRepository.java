@@ -47,4 +47,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     List<Enrollment> findByStudentAndIsActiveTrue(web.kplay.studentmanagement.domain.student.Student student);
 
     Integer countByStudentIdAndIsActiveTrue(Long studentId);
+    
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.course.id = :courseId AND e.isActive = true")
+    Integer countActiveByCourseId(@Param("courseId") Long courseId);
 }
