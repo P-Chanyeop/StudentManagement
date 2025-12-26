@@ -44,7 +44,7 @@ public class ReservationController {
     }
 
     @GetMapping("/date/{date}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<ReservationResponse>> getReservationsByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<ReservationResponse> responses = reservationService.getReservationsByDate(date);

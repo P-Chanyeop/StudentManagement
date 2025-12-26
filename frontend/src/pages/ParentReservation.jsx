@@ -34,6 +34,22 @@ function ParentReservation() {
   const [loadedYears, setLoadedYears] = useState(new Set());
 
   // 특정 년도의 공휴일 로드
+  const [selectedDateForTime, setSelectedDateForTime] = useState(null);
+  const [showTimeSelector, setShowTimeSelector] = useState(false);
+  const [reservedTimes, setReservedTimes] = useState([]);
+
+  // 선택된 날짜의 예약 현황 조회
+  const fetchReservedTimes = async (date) => {
+    try {
+      const response = await reservationAPI.getByDate(date);
+      const reserved = response.data.map(reservation => reservation.preferredTime || reservation.startTime);
+      setReservedTimes(reserved);
+    } catch (error) {
+      console.error('예약 현황 조회 실패:', error);
+      setReservedTimes([]);
+    }
+  };
+
   // 학생 추가
   const addStudent = () => {
     setFormData(prev => ({
@@ -94,6 +110,28 @@ function ParentReservation() {
     loadHolidaysForYear(year);
   }, [currentMonth.getFullYear()]);
 
+  // 상담 유형에 따른 예약 가능 날짜 체크
+  const isDateAvailable = (date, consultationType) => {
+    const dayOfWeek = date.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+    const dateString = date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const isHoliday = holidays[year] && holidays[year][dateString];
+
+    switch(consultationType) {
+      case '재원생상담':
+        // 일요일, 공휴일 제외 모두 예약 가능
+        return dayOfWeek !== 0 && !isHoliday;
+      case '레벨테스트':
+        // 평일(월-금, 공휴일 제외)만 예약 가능
+        return dayOfWeek >= 1 && dayOfWeek <= 5 && !isHoliday;
+      case '입학상담':
+        // 토요일만(공휴일 제외) 예약 가능
+        return dayOfWeek === 6 && !isHoliday;
+      default:
+        return true;
+    }
+  };
+
   // 캘린더 관련 함수들
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -115,17 +153,35 @@ function ParentReservation() {
     // 과거 날짜는 비활성화
     if (date < today) return true;
     
-    // 해당 년도 공휴일이 로드되었다면 주말과 공휴일 체크
+    // 공휴일은 항상 비활성화
     const yearHolidays = holidays[year] || [];
-    return holidayService.isWeekend(date) || holidayService.isHoliday(date, yearHolidays);
+    if (holidayService.isHoliday(date, yearHolidays)) return true;
+    
+    // 상담 유형이 선택되지 않았으면 기본적으로 주말 비활성화
+    if (!formData.consultationType) {
+      return holidayService.isWeekend(date);
+    }
+    
+    // 상담 유형에 따른 날짜 제한은 isDateAvailable에서 처리
+    return false;
   };
 
   const handleDateSelect = (year, month, day) => {
-    const selectedDate = formatDate(year, month, day);
+    const selectedDate = new Date(year, month, day);
+    
+    // 상담 유형에 따른 예약 가능 날짜 체크
+    if (!isDateAvailable(selectedDate, formData.consultationType)) {
+      return; // 예약 불가능한 날짜는 선택 불가
+    }
+    
+    const formattedDate = formatDate(year, month, day);
     setFormData(prev => ({
       ...prev,
-      preferredDate: selectedDate
+      preferredDate: formattedDate
     }));
+    
+    // 해당 날짜의 예약 현황 조회
+    fetchReservedTimes(formattedDate);
     
     if (errors.preferredDate) {
       setErrors(prev => ({
@@ -160,18 +216,22 @@ function ParentReservation() {
     
     // 현재 달의 날짜들
     for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
       const isDisabled = isDateDisabled(year, month, day);
       const isSelected = formData.preferredDate === formatDate(year, month, day);
-      const date = new Date(year, month, day);
       const yearHolidays = holidays[year] || [];
       const isHolidayDate = holidayService.isHoliday(date, yearHolidays);
       const isWeekendDate = holidayService.isWeekend(date);
       
+      // 상담 유형에 따른 예약 가능 여부 체크
+      const isAvailable = isDateAvailable(date, formData.consultationType);
+      const finalDisabled = isDisabled || !isAvailable;
+      
       days.push(
         <div
           key={day}
-          className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''}`}
-          onClick={() => !isDisabled && handleDateSelect(year, month, day)}
+          className={`calendar-day ${finalDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''} ${!isAvailable ? 'unavailable' : ''}`}
+          onClick={() => !finalDisabled && handleDateSelect(year, month, day)}
           title={isHolidayDate ? yearHolidays.find(h => holidayService.isHoliday(date, [h]))?.name : ''}
         >
           {day}
@@ -388,6 +448,44 @@ function ParentReservation() {
 
       <div className="page-content">
         <form onSubmit={handleSubmit} className="reservation-form">
+          {/* 예약 정보 - 가장 위로 이동 */}
+          <div className="form-section">
+            <h2>예약 정보</h2>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="consultationType">상담 유형 *</label>
+                <select
+                  id="consultationType"
+                  name="consultationType"
+                  value={formData.consultationType}
+                  onChange={handleInputChange}
+                  className={errors.consultationType ? 'error' : ''}
+                >
+                  <option value="">상담 유형을 선택해주세요</option>
+                  {consultationTypes.map(consultation => (
+                    <option key={consultation.value} value={consultation.value}>{consultation.label}</option>
+                  ))}
+                </select>
+                {errors.consultationType && <span className="error-message">{errors.consultationType}</span>}
+              </div>
+            </div>
+
+            {/* 상담 유형별 안내 문구 */}
+            {formData.consultationType && (
+              <div className="consultation-info">
+                <h3>{getConsultationInfo(formData.consultationType).title}</h3>
+                <div className="consultation-content">
+                  {getConsultationInfo(formData.consultationType).content.split('\n').map((line, index) => (
+                    <div key={index}>
+                      {line}
+                      {index < getConsultationInfo(formData.consultationType).content.split('\n').length - 1 && <br />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* 희망 날짜 선택 */}
           <div className="form-section">
             <h2>희망 날짜 선택</h2>
@@ -409,6 +507,37 @@ function ParentReservation() {
               {formData.preferredDate && (
                 <div className="selected-date">
                   선택된 날짜: {new Date(formData.preferredDate).toLocaleDateString('ko-KR')}
+                </div>
+              )}
+              
+              {/* 시간 선택 옵션 - 별도 박스 */}
+              {formData.preferredDate && (
+                <div className="selected-date time-selector">
+                  <h4>시간을 선택해주세요</h4>
+                  <div className="time-grid">
+                    {timeSlots.map(time => {
+                      const isReserved = reservedTimes.includes(time);
+                      return (
+                        <button
+                          key={time}
+                          type="button"
+                          className={`time-slot ${formData.preferredTime === time ? 'selected' : ''} ${isReserved ? 'reserved' : ''}`}
+                          onClick={() => {
+                            if (!isReserved) {
+                              setFormData(prev => ({ ...prev, preferredTime: time }));
+                              if (errors.preferredTime) {
+                                setErrors(prev => ({ ...prev, preferredTime: '' }));
+                              }
+                            }
+                          }}
+                          disabled={isReserved}
+                        >
+                          {time}
+                          {isReserved && <span className="reserved-text">예약됨</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               {errors.preferredDate && <span className="error-message">{errors.preferredDate}</span>}
@@ -510,61 +639,6 @@ function ParentReservation() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* 예약 정보 */}
-          <div className="form-section">
-            <h2>예약 정보</h2>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="preferredTime">희망 시간 *</label>
-                <select
-                  id="preferredTime"
-                  name="preferredTime"
-                  value={formData.preferredTime}
-                  onChange={handleInputChange}
-                  className={errors.preferredTime ? 'error' : ''}
-                >
-                  <option value="">시간을 선택해주세요</option>
-                  {timeSlots.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-                {errors.preferredTime && <span className="error-message">{errors.preferredTime}</span>}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="consultationType">상담 유형 *</label>
-                <select
-                  id="consultationType"
-                  name="consultationType"
-                  value={formData.consultationType}
-                  onChange={handleInputChange}
-                  className={errors.consultationType ? 'error' : ''}
-                >
-                  <option value="">상담 유형을 선택해주세요</option>
-                  {consultationTypes.map(consultation => (
-                    <option key={consultation.value} value={consultation.value}>{consultation.label}</option>
-                  ))}
-                </select>
-                {errors.consultationType && <span className="error-message">{errors.consultationType}</span>}
-              </div>
-            </div>
-
-            {/* 상담 유형별 안내 문구 */}
-            {formData.consultationType && (
-              <div className="consultation-info">
-                <h3>{getConsultationInfo(formData.consultationType).title}</h3>
-                <div className="consultation-content">
-                  {getConsultationInfo(formData.consultationType).content.split('\n').map((line, index) => (
-                    <div key={index}>
-                      {line}
-                      {index < getConsultationInfo(formData.consultationType).content.split('\n').length - 1 && <br />}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* 요청사항 */}
