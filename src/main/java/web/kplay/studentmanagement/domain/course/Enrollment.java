@@ -38,12 +38,14 @@ public class Enrollment extends BaseEntity {
     private Integer totalCount; // 총 횟수
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer usedCount = 0; // 사용 횟수
 
     @Column(nullable = false)
     private Integer remainingCount; // 남은 횟수
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column
@@ -212,5 +214,17 @@ public class Enrollment extends BaseEntity {
         } else if (!LocalDate.now().isAfter(endDate)) {
             this.isActive = true;
         }
+    }
+
+    /**
+     * 횟수 복원 (관리자 수동 조정용)
+     */
+    public void restoreCount(Integer count) {
+        if (count <= 0) {
+            throw new IllegalArgumentException("복원할 횟수는 0보다 커야 합니다");
+        }
+        this.remainingCount += count;
+        this.usedCount = Math.max(0, this.usedCount - count);
+        this.isActive = true;
     }
 }

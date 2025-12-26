@@ -103,6 +103,11 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.NO_SHOW;
     }
 
+    // 상태 업데이트 (자동 차감용)
+    public void updateStatus(ReservationStatus status) {
+        this.status = status;
+    }
+
     // 메모 업데이트
     public void updateMemo(String memo) {
         this.memo = memo;

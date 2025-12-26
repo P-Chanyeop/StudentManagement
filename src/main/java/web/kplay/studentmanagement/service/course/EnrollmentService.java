@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.Enrollment;
+import web.kplay.studentmanagement.domain.enrollment.EnrollmentAdjustment;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.domain.user.UserRole;
@@ -19,6 +20,7 @@ import web.kplay.studentmanagement.repository.CourseRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
+import web.kplay.studentmanagement.repository.enrollment.EnrollmentAdjustmentRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +35,7 @@ public class EnrollmentService {
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final EnrollmentAdjustmentRepository enrollmentAdjustmentRepository;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
     @Transactional
@@ -229,46 +232,11 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public EnrollmentResponse addCount(Long id, Integer additionalCount) {
-        Enrollment enrollment = enrollmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
-
-        enrollment.addCount(additionalCount);
-        log.info("수강권 횟수 추가: 수강권ID={}, 추가횟수={}", id, additionalCount);
-        return toResponse(enrollment);
-    }
-
-    @Transactional
     public void deactivateEnrollment(Long id) {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
         enrollment.deactivate();
         log.info("수강권 비활성화: 수강권ID={}", id);
-    }
-
-    /**
-     * 수동 횟수 조절 (관리자용)
-     * 결석/보강/연기 등으로 인한 수동 조절
-     * @param id 수강권 ID
-     * @param adjustment 조절 횟수 (양수: 증가, 음수: 감소)
-     * @param reason 조절 사유
-     */
-    @Transactional
-    public EnrollmentResponse manualAdjustCount(Long id, Integer adjustment, String reason) {
-        Enrollment enrollment = enrollmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
-
-        int beforeTotal = enrollment.getTotalCount();
-        int beforeRemaining = enrollment.getRemainingCount();
-
-        enrollment.manualAdjustCount(adjustment);
-
-        log.info("수강권 수동 조절: 수강권ID={}, 조절={}, 사유={}, 총횟수 {}→{}, 남은횟수 {}→{}",
-                id, adjustment, reason,
-                beforeTotal, enrollment.getTotalCount(),
-                beforeRemaining, enrollment.getRemainingCount());
-
-        return toResponse(enrollment);
     }
 
     /**
@@ -313,5 +281,89 @@ public class EnrollmentService {
                 .actualDurationMinutes(enrollment.getActualDurationMinutes())
                 .memo(enrollment.getMemo())
                 .build();
+    }
+
+    /**
+     * 수강권 횟수 자동 차감 (편의 메서드)
+     * @param enrollmentId 수강권 ID
+     * @param reason 차감 사유
+     */
+    @Transactional
+    public void deductCount(Long enrollmentId, String reason) {
+        adjustEnrollmentCount(enrollmentId, EnrollmentAdjustment.AdjustmentType.DEDUCT, 1, reason, null);
+    }
+
+    /**
+     * 수강권 횟수 통합 조정 메서드
+     * @param enrollmentId 수강권 ID
+     * @param adjustmentType 조정 유형 (DEDUCT, ADD, RESTORE)
+     * @param countChange 변경할 횟수
+     * @param reason 조정 사유
+     * @param adminId 관리자 ID (자동 차감인 경우 null)
+     * @throws ResourceNotFoundException 수강권 또는 관리자를 찾을 수 없는 경우
+     * @throws BusinessException 관리자 권한이 없거나 차감할 횟수가 부족한 경우
+     */
+    @Transactional
+    public void adjustEnrollmentCount(Long enrollmentId, EnrollmentAdjustment.AdjustmentType adjustmentType, 
+                                    Integer countChange, String reason, Long adminId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
+        
+        // 관리자 권한 확인 (자동 차감인 경우 제외)
+        User admin = null;
+        if (adminId != null) {
+            admin = userRepository.findById(adminId)
+                    .orElseThrow(() -> new ResourceNotFoundException("관리자를 찾을 수 없습니다"));
+            
+            if (!admin.getRole().equals(UserRole.ADMIN)) {
+                throw new BusinessException("관리자 권한이 필요합니다");
+            }
+        }
+        
+        // 횟수 조정
+        switch (adjustmentType) {
+            case DEDUCT:
+                if (enrollment.getRemainingCount() < countChange) {
+                    throw new BusinessException("차감할 수 있는 횟수가 부족합니다");
+                }
+                for (int i = 0; i < countChange; i++) {
+                    enrollment.useCount();
+                }
+                break;
+            case ADD:
+                enrollment.addCount(countChange);
+                break;
+            case RESTORE:
+                enrollment.restoreCount(countChange);
+                break;
+        }
+        
+        // 조정 이력 저장 (관리자 수동 조정인 경우만)
+        if (admin != null) {
+            EnrollmentAdjustment adjustment = EnrollmentAdjustment.builder()
+                    .enrollment(enrollment)
+                    .adjustmentType(adjustmentType)
+                    .countChange(countChange)
+                    .reason(reason)
+                    .admin(admin)
+                    .build();
+            
+            enrollmentAdjustmentRepository.save(adjustment);
+            
+            log.info("수강권 횟수 수동 조정 - ID: {}, 유형: {}, 변경량: {}, 관리자: {}", 
+                    enrollmentId, adjustmentType, countChange, admin.getUsername());
+        } else {
+            log.info("수강권 횟수 자동 차감 - ID: {}, 사유: {}", enrollmentId, reason);
+        }
+    }
+
+    /**
+     * 수강권 조정 이력 조회
+     * @param enrollmentId 수강권 ID
+     * @return 조정 이력 목록 (최신순)
+     */
+    @Transactional(readOnly = true)
+    public List<EnrollmentAdjustment> getAdjustmentHistory(Long enrollmentId) {
+        return enrollmentAdjustmentRepository.findByEnrollmentIdOrderByCreatedAtDesc(enrollmentId);
     }
 }

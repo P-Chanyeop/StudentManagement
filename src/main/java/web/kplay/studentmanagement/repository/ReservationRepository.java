@@ -35,4 +35,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.student.id = :studentId AND r.schedule.scheduleDate > :date")
     List<Reservation> findByStudentIdAndScheduleDateAfter(@Param("studentId") Long studentId,
                                                             @Param("date") LocalDate date);
+
+    // 자동 차감용 메서드
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.schedule.scheduleDate = :date " +
+           "AND r.status = :status " +
+           "AND r.status != 'AUTO_DEDUCTED'")
+    List<Reservation> findByScheduleDateAndStatusAndNotDeducted(@Param("date") LocalDate date,
+                                                                @Param("status") ReservationStatus status);
 }

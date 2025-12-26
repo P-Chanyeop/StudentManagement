@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.course.EnrollmentAdjustRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
+import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.course.EnrollmentService;
 
 import java.time.LocalDate;
@@ -111,27 +112,45 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PatchMapping("/{id}/add-count")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<EnrollmentResponse> addCount(
-            @PathVariable Long id,
-            @RequestParam Integer additionalCount) {
-        EnrollmentResponse response = enrollmentService.addCount(id, additionalCount);
-        return ResponseEntity.ok(response);
-    }
-
     /**
      * 수동 횟수 조절 (관리자용)
      * 결석/보강/연기 등으로 인한 수동 조절
+     * @param id 수강권 ID
+     * @param request 조정 요청 정보 (adjustment: 양수=추가, 음수=차감, reason: 조정 사유)
+     * @param authentication 현재 로그인한 사용자 인증 정보
+     * @return 조정 완료 메시지
      */
     @PatchMapping("/{id}/manual-adjust")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<EnrollmentResponse> manualAdjustCount(
+    public ResponseEntity<String> manualAdjustCount(
             @PathVariable Long id,
-            @Valid @RequestBody EnrollmentAdjustRequest request) {
-        EnrollmentResponse response = enrollmentService.manualAdjustCount(
-                id, request.getAdjustment(), request.getReason());
-        return ResponseEntity.ok(response);
+            @Valid @RequestBody EnrollmentAdjustRequest request,
+            Authentication authentication) {
+        Long currentUserId = getCurrentUserId(authentication);
+        web.kplay.studentmanagement.domain.enrollment.EnrollmentAdjustment.AdjustmentType adjustmentType;
+        if (request.getAdjustment() > 0) {
+            adjustmentType = web.kplay.studentmanagement.domain.enrollment.EnrollmentAdjustment.AdjustmentType.ADD;
+        } else {
+            adjustmentType = web.kplay.studentmanagement.domain.enrollment.EnrollmentAdjustment.AdjustmentType.DEDUCT;
+        }
+        
+        enrollmentService.adjustEnrollmentCount(id, adjustmentType, 
+            Math.abs(request.getAdjustment()), request.getReason(), currentUserId);
+        return ResponseEntity.ok("횟수가 성공적으로 조정되었습니다.");
+    }
+
+    /**
+     * 현재 로그인한 사용자 ID 조회
+     * @param authentication Spring Security 인증 객체
+     * @return 현재 사용자 ID
+     * @throws RuntimeException 인증된 사용자를 찾을 수 없는 경우
+     */
+    private Long getCurrentUserId(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            return userDetails.getId();
+        }
+        throw new RuntimeException("인증된 사용자를 찾을 수 없습니다.");
     }
 
     /**

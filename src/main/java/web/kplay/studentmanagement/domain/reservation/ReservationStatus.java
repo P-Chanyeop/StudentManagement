@@ -10,7 +10,8 @@ public enum ReservationStatus {
     CONFIRMED("예약확정", "예약 확정"),
     CANCELLED("예약취소", "예약 취소"),
     COMPLETED("수업완료", "수업 완료"),
-    NO_SHOW("노쇼", "무단결석");
+    NO_SHOW("노쇼", "무단결석"),
+    AUTO_DEDUCTED("자동차감", "수업 시작 10분 후 자동 차감");
 
     private final String name;
     private final String description;
