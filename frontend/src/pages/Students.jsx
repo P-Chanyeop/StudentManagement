@@ -260,10 +260,12 @@ function Students() {
                           <i className="fas fa-eye"></i>
                           상세
                         </button>
-                        <button className="btn-table-edit" onClick={() => openEditModal(student)}>
-                          <i className="fas fa-edit"></i>
-                          수정
-                        </button>
+                        {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+                          <button className="btn-table-edit" onClick={() => openEditModal(student)}>
+                            <i className="fas fa-edit"></i>
+                            수정
+                          </button>
+                        )}
                         {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
                           <button
                             className="btn-table-delete"
@@ -699,15 +701,17 @@ function Students() {
               <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
                 닫기
               </button>
-              <button
-                className="btn-primary"
-                onClick={() => {
-                  setShowDetailModal(false);
-                  openEditModal(selectedStudent);
-                }}
-              >
-                수정하기
-              </button>
+              {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    openEditModal(selectedStudent);
+                  }}
+                >
+                  수정하기
+                </button>
+              )}
             </div>
           </div>
         </div>
