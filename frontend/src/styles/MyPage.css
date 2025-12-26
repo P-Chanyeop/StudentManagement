@@ -846,70 +846,318 @@
 /* 수강권 그리드 */
 .enrollment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
   padding: 0 24px 24px;
 }
 
 .enrollment-card {
   background: white;
   border: 1px solid var(--gray-200);
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .enrollment-card:hover {
   border-color: var(--naver-green);
-  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(3, 199, 90, 0.15);
+  transform: translateY(-4px);
+}
+
+.enrollment-card.expiring-soon {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+}
+
+.enrollment-card.expired {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, white 100%);
+  opacity: 0.8;
 }
 
 .enrollment-header {
-  padding: 20px 24px 16px;
+  padding: 24px 24px 16px;
   border-bottom: 1px solid var(--gray-100);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   background: var(--gray-50);
 }
 
+.enrollment-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
 .enrollment-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--gray-900);
   margin: 0;
+  flex: 1;
 }
 
-.enrollment-details {
+.enrollment-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.warning-badge {
+  background: #fbbf24;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  animation: pulse 2s infinite;
+}
+
+.expired-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* 수강권 통계 */
+.enrollment-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   padding: 20px 24px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-100);
 }
 
-.detail-item {
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+.stat-item .stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--naver-green) 0%, #22c55e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-item .stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-900);
+  line-height: 1;
+}
+
+.stat-item .stat-label {
+  font-size: 12px;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+/* 상세 정보 섹션 */
+.enrollment-details {
+  padding: 24px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-section-title i {
+  color: var(--naver-green);
+  font-size: 16px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* 진행률 섹션 개선 */
+.progress-section {
+  background: var(--gray-50);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
 
-.detail-item:last-child {
-  margin-bottom: 0;
-}
-
-.detail-label {
+.progress-title {
   font-size: 14px;
-  color: var(--gray-600);
-  font-weight: 500;
-}
-
-.detail-value {
-  font-size: 14px;
-  color: var(--gray-900);
   font-weight: 600;
+  color: var(--gray-900);
 }
 
-.detail-value strong {
+.progress-text {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--naver-green) 0%, #22c55e 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-percent {
+  font-size: 16px;
+  font-weight: 700;
   color: var(--naver-green);
+}
+
+.remaining-text {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+/* 액션 버튼 */
+.enrollment-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn.primary {
+  background: var(--naver-green);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background: var(--naver-green-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
+}
+
+.action-btn.secondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+
+.action-btn.secondary:hover {
+  background: var(--gray-200);
+  border-color: var(--gray-300);
+}
+
+/* 반응형 개선 */
+@media (max-width: 768px) {
+  .enrollment-grid {
+    grid-template-columns: 1fr;
+    padding: 0 16px 16px;
+  }
+  
+  .enrollment-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .enrollment-actions {
+    flex-direction: column;
+  }
+  
+  .enrollment-title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }
 
 /* 출석 리스트 */

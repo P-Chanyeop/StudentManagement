@@ -334,50 +334,132 @@ function MyPage() {
               </div>
               {activeEnrollments && activeEnrollments.length > 0 ? (
                 <div className="enrollment-grid">
-                  {activeEnrollments.map((enrollment) => (
-                    <div key={enrollment.id} className="enrollment-card">
-                      <div className="enrollment-header">
-                        <h3 className="enrollment-title">{enrollment.courseName}</h3>
-                        <div className="enrollment-type">
-                          <span className="type-badge">
-                            {enrollment.type === 'PERIOD_BASED' ? '기간제' : '횟수제'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="enrollment-details">
-                        <div className="detail-item">
-                          <span className="detail-label">수강 기간</span>
-                          <span className="detail-value">
-                            {formatDate(enrollment.startDate)} ~ {formatDate(enrollment.endDate)}
-                          </span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="detail-label">남은 횟수</span>
-                          <span className="detail-value">
-                            <strong>{enrollment.remainingCount}</strong> / {enrollment.totalCount}
-                          </span>
-                        </div>
-                        <div className="progress-section">
-                          <div className="progress-bar">
-                            <div
-                              className="progress-fill"
-                              style={{
-                                width: `${(enrollment.remainingCount / enrollment.totalCount) * 100}%`,
-                              }}
-                            ></div>
+                  {activeEnrollments.map((enrollment) => {
+                    const usedCount = enrollment.totalCount - enrollment.remainingCount;
+                    const progressPercent = Math.round((usedCount / enrollment.totalCount) * 100);
+                    const daysLeft = Math.ceil((new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24));
+                    const isExpiringSoon = daysLeft <= 30 && daysLeft > 0;
+                    const isExpired = daysLeft <= 0;
+                    
+                    return (
+                      <div key={enrollment.id} className={`enrollment-card ${isExpiringSoon ? 'expiring-soon' : ''} ${isExpired ? 'expired' : ''}`}>
+                        <div className="enrollment-header">
+                          <div className="enrollment-title-section">
+                            <h3 className="enrollment-title">{enrollment.courseName}</h3>
+                            <div className="enrollment-badges">
+                              <span className="type-badge">
+                                {enrollment.type === 'PERIOD_BASED' ? '기간제' : '횟수제'}
+                              </span>
+                              {isExpiringSoon && <span className="warning-badge">만료임박</span>}
+                              {isExpired && <span className="expired-badge">만료됨</span>}
+                            </div>
                           </div>
-                          <span className="progress-percent">
-                            {Math.round((enrollment.remainingCount / enrollment.totalCount) * 100)}%
-                          </span>
+                        </div>
+                        
+                        <div className="enrollment-stats">
+                          <div className="stat-item">
+                            <div className="stat-icon">
+                              <i className="fas fa-calendar-check"></i>
+                            </div>
+                            <div className="stat-info">
+                              <span className="stat-value">{usedCount}</span>
+                              <span className="stat-label">사용한 횟수</span>
+                            </div>
+                          </div>
+                          <div className="stat-item">
+                            <div className="stat-icon">
+                              <i className="fas fa-clock"></i>
+                            </div>
+                            <div className="stat-info">
+                              <span className="stat-value">{enrollment.remainingCount}</span>
+                              <span className="stat-label">남은 횟수</span>
+                            </div>
+                          </div>
+                          <div className="stat-item">
+                            <div className="stat-icon">
+                              <i className="fas fa-calendar-alt"></i>
+                            </div>
+                            <div className="stat-info">
+                              <span className="stat-value">{daysLeft > 0 ? daysLeft : 0}</span>
+                              <span className="stat-label">남은 일수</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="enrollment-details">
+                          <div className="detail-section">
+                            <h4 className="detail-section-title">
+                              <i className="fas fa-info-circle"></i>
+                              기본 정보
+                            </h4>
+                            <div className="detail-grid">
+                              <div className="detail-item">
+                                <span className="detail-label">수강 시작일</span>
+                                <span className="detail-value">{formatDate(enrollment.startDate)}</span>
+                              </div>
+                              <div className="detail-item">
+                                <span className="detail-label">수강 종료일</span>
+                                <span className="detail-value">{formatDate(enrollment.endDate)}</span>
+                              </div>
+                              <div className="detail-item">
+                                <span className="detail-label">총 수강 횟수</span>
+                                <span className="detail-value">{enrollment.totalCount}회</span>
+                              </div>
+                              <div className="detail-item">
+                                <span className="detail-label">수강 진행률</span>
+                                <span className="detail-value">{progressPercent}%</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="progress-section">
+                            <div className="progress-header">
+                              <span className="progress-title">수강 진행률</span>
+                              <span className="progress-text">
+                                {usedCount} / {enrollment.totalCount} 회 완료
+                              </span>
+                            </div>
+                            <div className="progress-bar">
+                              <div
+                                className="progress-fill"
+                                style={{
+                                  width: `${progressPercent}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <div className="progress-footer">
+                              <span className="progress-percent">{progressPercent}%</span>
+                              <span className="remaining-text">
+                                {enrollment.remainingCount}회 남음
+                              </span>
+                            </div>
+                          </div>
+
+                          {enrollment.remainingCount > 0 && (
+                            <div className="enrollment-actions">
+                              <button className="action-btn primary">
+                                <i className="fas fa-calendar-plus"></i>
+                                수업 예약하기
+                              </button>
+                              <button className="action-btn secondary">
+                                <i className="fas fa-history"></i>
+                                수강 이력 보기
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="empty-state">
                   <i className="fas fa-receipt"></i>
                   <p>수강권이 없습니다</p>
+                  <button className="btn-primary" style={{marginTop: '16px'}}>
+                    <i className="fas fa-plus"></i>
+                    수강권 구매하기
+                  </button>
                 </div>
               )}
             </div>
