@@ -18,14 +18,29 @@ function LevelTests() {
     memo: '',
   });
 
-  // 날짜 범위로 레벨 테스트 조회
-  const { data: levelTests = [], isLoading } = useQuery({
-    queryKey: ['levelTests', dateRange.start, dateRange.end],
+  const [searchParams, setSearchParams] = useState({
+    start: new Date().toISOString().split('T')[0],
+    end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30일 후
+  });
+
+  // 날짜 범위로 레벨 테스트 조회 (수동 트리거)
+  const { data: levelTests = [], isLoading, refetch } = useQuery({
+    queryKey: ['levelTests', searchParams.start, searchParams.end],
     queryFn: async () => {
-      const response = await levelTestAPI.getByRange(dateRange.start, dateRange.end);
+      const response = await levelTestAPI.getByRange(searchParams.start, searchParams.end);
       return response.data;
     },
   });
+
+  // 검색 버튼 클릭 핸들러
+  const handleSearch = () => {
+    // 날짜 유효성 검사
+    if (dateRange.start > dateRange.end) {
+      alert('시작일은 종료일보다 늦을 수 없습니다.');
+      return;
+    }
+    setSearchParams({ ...dateRange });
+  };
 
   // 학생 목록 조회
   const { data: students = [] } = useQuery({
@@ -130,8 +145,13 @@ function LevelTests() {
             <input
               type="date"
               value={dateRange.end}
+              min={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
             />
+            <button className="btn-search" onClick={handleSearch}>
+              <i className="fas fa-search"></i>
+              검색
+            </button>
           </div>
           <div className="result-count">
             <i className="fas fa-clipboard-list"></i>
