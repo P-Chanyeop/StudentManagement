@@ -594,6 +594,40 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   gap: 4px;
+  position: relative;
+}
+
+.tab-navigation::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: calc(20% - 4px);
+  height: calc(100% - 16px);
+  background: var(--naver-green);
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+  z-index: 1;
+}
+
+.tab-navigation[data-active="overview"]::before {
+  transform: translateX(0);
+}
+
+.tab-navigation[data-active="enrollments"]::before {
+  transform: translateX(calc(100% + 4px));
+}
+
+.tab-navigation[data-active="attendance"]::before {
+  transform: translateX(calc(200% + 8px));
+}
+
+.tab-navigation[data-active="reservations"]::before {
+  transform: translateX(calc(300% + 12px));
+}
+
+.tab-navigation[data-active="messages"]::before {
+  transform: translateX(calc(400% + 16px));
 }
 
 .tab-button {
@@ -612,16 +646,14 @@
   justify-content: center;
   gap: 8px;
   position: relative;
-  overflow: hidden;
+  z-index: 2;
 }
 
 .tab-button:hover {
-  background: var(--gray-50);
   color: var(--gray-900);
 }
 
 .tab-button.active {
-  background: var(--naver-green);
   color: white;
 }
 
@@ -1404,10 +1436,14 @@
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .stat-card {
+  .mypage-stat-card {
     flex-direction: column;
     text-align: center;
     gap: 12px;
+  }
+  
+  .mypage-stat-card:hover {
+    transform: none;
   }
   
   .tab-navigation {
@@ -1421,7 +1457,7 @@
 }
 
 @media (max-width: 480px) {
-  .stats-grid {
+  .mypage-stats-grid {
     grid-template-columns: 1fr;
   }
   
@@ -1484,13 +1520,13 @@
   margin-bottom: 32px;
 }
 
-.stats-grid {
+.mypage-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
 }
 
-.stat-card {
+.mypage-stat-card {
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -1500,9 +1536,23 @@
   align-items: center;
   gap: 16px;
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.stat-icon {
+.mypage-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--naver-green), #22c55e);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.mypage-stat-icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -1515,19 +1565,34 @@
   box-shadow: 0 4px 8px rgba(3, 199, 90, 0.3);
 }
 
-.stat-content {
+.mypage-stat-content {
   flex: 1;
 }
 
-.stat-value {
+.mypage-stat-value {
   font-size: 24px;
   font-weight: 700;
   color: var(--gray-900);
   margin-bottom: 4px;
 }
 
-.stat-label {
+.mypage-stat-label {
   font-size: 14px;
   color: var(--gray-600);
   font-weight: 500;
+}
+
+.mypage-stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.mypage-stat-card:hover::before {
+  width: 100%;
+}
+
+.mypage-stat-card:hover .mypage-stat-icon {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(3, 199, 90, 0.4);
 }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { mypageAPI } from '../services/api';
 import '../styles/MyPage.css';
 
 function MyPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate();
 
   // 마이페이지 데이터 조회
   const { data: myPageData, isLoading } = useQuery({
@@ -92,48 +94,48 @@ function MyPage() {
         </div>
 
         <div className="stats-section">
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">
+          <div className="mypage-stats-grid">
+            <div className="mypage-stat-card">
+              <div className="mypage-stat-icon">
                 <i className="fas fa-graduation-cap"></i>
               </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats?.activeEnrollmentCount || 0}</div>
-                <div className="stat-label">활성 수강권</div>
+              <div className="mypage-stat-content">
+                <div className="mypage-stat-value">{stats?.activeEnrollmentCount || 0}</div>
+                <div className="mypage-stat-label">활성 수강권</div>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-icon">
+            <div className="mypage-stat-card">
+              <div className="mypage-stat-icon">
                 <i className="fas fa-calendar-check"></i>
               </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats?.attendanceRate || 0}%</div>
-                <div className="stat-label">출석률</div>
+              <div className="mypage-stat-content">
+                <div className="mypage-stat-value">{stats?.attendanceRate || 0}%</div>
+                <div className="mypage-stat-label">출석률</div>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-icon">
+            <div className="mypage-stat-card">
+              <div className="mypage-stat-icon">
                 <i className="fas fa-clock"></i>
               </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats?.upcomingReservationCount || 0}</div>
-                <div className="stat-label">예정된 수업</div>
+              <div className="mypage-stat-content">
+                <div className="mypage-stat-value">{stats?.upcomingReservationCount || 0}</div>
+                <div className="mypage-stat-label">예정된 수업</div>
               </div>
             </div>
-            <div className="stat-card">
-              <div className="stat-icon">
+            <div className="mypage-stat-card">
+              <div className="mypage-stat-icon">
                 <i className="fas fa-comments"></i>
               </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats?.consultationCount || 0}</div>
-                <div className="stat-label">상담 이력</div>
+              <div className="mypage-stat-content">
+                <div className="mypage-stat-value">{stats?.consultationCount || 0}</div>
+                <div className="mypage-stat-label">상담 이력</div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="tab-section">
-          <div className="tab-navigation">
+          <div className="tab-navigation" data-active={activeTab}>
             <button
               className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
@@ -437,11 +439,17 @@ function MyPage() {
 
                           {enrollment.remainingCount > 0 && (
                             <div className="enrollment-actions">
-                              <button className="action-btn primary">
+                              <button 
+                                className="action-btn primary"
+                                onClick={() => navigate('/parent-reservation')}
+                              >
                                 <i className="fas fa-calendar-plus"></i>
                                 수업 예약하기
                               </button>
-                              <button className="action-btn secondary">
+                              <button 
+                                className="action-btn secondary"
+                                onClick={() => navigate('/enrollments')}
+                              >
                                 <i className="fas fa-history"></i>
                                 수강 이력 보기
                               </button>
@@ -456,9 +464,13 @@ function MyPage() {
                 <div className="empty-state">
                   <i className="fas fa-receipt"></i>
                   <p>수강권이 없습니다</p>
-                  <button className="btn-primary" style={{marginTop: '16px'}}>
-                    <i className="fas fa-plus"></i>
-                    수강권 구매하기
+                  <button 
+                    className="btn-primary" 
+                    style={{marginTop: '16px'}}
+                    onClick={() => navigate('/parent-reservation')}
+                  >
+                    <i className="fas fa-comments"></i>
+                    수업 상담하기
                   </button>
                 </div>
               )}
