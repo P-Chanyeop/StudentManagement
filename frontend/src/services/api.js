@@ -88,6 +88,7 @@ export const courseAPI = {
 export const enrollmentAPI = {
   getMyEnrollments: () => api.get('/enrollments/my'),
   getAll: () => api.get('/enrollments'),
+  getEnrollments: () => api.get('/enrollments'),
   getByStudent: (studentId) => api.get(`/enrollments/student/${studentId}`),
   getActiveByStudent: (studentId) => api.get(`/enrollments/student/${studentId}/active`),
   getExpiring: (days = 7) => api.get(`/enrollments/expiring?days=${days}`),
@@ -95,6 +96,7 @@ export const enrollmentAPI = {
   create: (data) => api.post('/enrollments', data),
   extendPeriod: (id, newEndDate) => api.patch(`/enrollments/${id}/extend?newEndDate=${newEndDate}`),
   addCount: (id, additionalCount) => api.patch(`/enrollments/${id}/add-count?additionalCount=${additionalCount}`),
+  manualAdjustCount: (id, data) => api.patch(`/enrollments/${id}/manual-adjust`, data),
   setCustomDuration: (id, durationMinutes) => api.patch(`/enrollments/${id}/duration?durationMinutes=${durationMinutes}`),
   cancel: (id) => api.delete(`/enrollments/${id}`),
   deactivate: (id) => api.delete(`/enrollments/${id}`),
