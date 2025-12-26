@@ -190,7 +190,10 @@ function Reservations() {
 
           <div className="schedules-grid">
             {schedules.length === 0 ? (
-              <div className="empty-state">오늘 예정된 수업이 없습니다.</div>
+              <div className="empty-state">
+                <i className="fas fa-calendar-alt"></i>
+                <p>오늘 예정된 수업이 없습니다.</p>
+              </div>
             ) : (
               schedules.map((schedule) => {
                 const reservationCount = reservations.filter(
@@ -243,7 +246,10 @@ function Reservations() {
 
           <div className="reservations-list">
             {reservations.length === 0 ? (
-              <div className="empty-state">등록된 예약이 없습니다.</div>
+              <div className="empty-state">
+                <i className="fas fa-calendar-alt"></i>
+                <p>등록된 예약이 없습니다.</p>
+              </div>
             ) : (
               reservations.map((reservation) => (
                 <div key={reservation.id} className="reservation-card">

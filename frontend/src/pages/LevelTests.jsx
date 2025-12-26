@@ -142,7 +142,8 @@ function LevelTests() {
         <div className="calendar-view">
           {sortedDates.length === 0 ? (
             <div className="empty-state">
-              <p><i className="fas fa-calendar-alt"></i> 등록된 레벨 테스트 일정이 없습니다.</p>
+              <i className="fas fa-calendar-alt"></i>
+              <p>등록된 레벨 테스트 일정이 없습니다.</p>
               <p className="empty-subtitle">위의 버튼을 눌러 새로운 테스트를 예약하세요.</p>
             </div>
           ) : (

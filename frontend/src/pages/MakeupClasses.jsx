@@ -303,7 +303,10 @@ function MakeupClasses() {
               </table>
             </div>
           ) : (
-            <div className="empty-state">등록된 보강 수업이 없습니다.</div>
+            <div className="empty-state">
+              <i className="fas fa-calendar-alt"></i>
+              <p>등록된 보강 수업이 없습니다.</p>
+            </div>
           )}
         </div>
       </div>
