@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { enrollmentAPI, studentAPI, courseAPI } from '../services/api';
+import { enrollmentAPI, studentAPI, courseAPI, authAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import '../styles/Enrollments.css';
 
@@ -12,6 +12,18 @@ function Enrollments() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+
+  // 사용자 정보 조회
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await authAPI.getCurrentUser();
+      return response.data;
+    },
+  });
+
+  // 관리자 권한 확인
+  const isAdmin = currentUser?.role === 'ROLE_ADMIN';
 
   // 공휴일 데이터 캐시
   const [holidays, setHolidays] = useState([]);
@@ -318,9 +330,11 @@ function Enrollments() {
             </h1>
             <p className="page-subtitle">학생들의 수강권 등록 및 관리</p>
           </div>
-          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-            <i className="fas fa-plus"></i> 수강권 등록
-          </button>
+          {isAdmin && (
+            <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+              <i className="fas fa-plus"></i> 수강권 등록
+            </button>
+          )}
         </div>
       </div>
 
@@ -678,7 +692,7 @@ function Enrollments() {
             </div>
 
             <div className="modal-footer">
-              {selectedEnrollment.status === 'ACTIVE' && (
+              {isAdmin && selectedEnrollment.status === 'ACTIVE' && (
                 <>
                   {selectedEnrollment.type === 'PERIOD_BASED' && (
                     <button
