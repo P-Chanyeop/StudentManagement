@@ -43,4 +43,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
            "AND r.status != 'AUTO_DEDUCTED'")
     List<Reservation> findByScheduleDateAndStatusAndNotDeducted(@Param("date") LocalDate date,
                                                                 @Param("status") ReservationStatus status);
+
+    /**
+     * 특정 날짜 이후의 모든 예약 조회 (관리자용)
+     * @param date 기준 날짜
+     * @return 기준 날짜 이후의 모든 예약 목록
+     */
+    @Query("SELECT r FROM Reservation r WHERE r.schedule.scheduleDate > :date")
+    List<Reservation> findByScheduleDateAfter(@Param("date") LocalDate date);
 }

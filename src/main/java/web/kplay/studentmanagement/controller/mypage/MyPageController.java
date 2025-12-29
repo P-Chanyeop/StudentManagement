@@ -20,10 +20,10 @@ public class MyPageController {
 
     /**
      * 내 마이페이지 조회 (로그인한 사용자)
-     * STUDENT, PARENT 역할 모두 접근 가능
+     * ADMIN, TEACHER, PARENT 역할 모두 접근 가능
      */
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('STUDENT', 'PARENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<MyPageResponse> getMyPage(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long userId = userDetails.getId();

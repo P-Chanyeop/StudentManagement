@@ -62,4 +62,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     // 학생과 스케줄로 출석 데이터 조회
     @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId")
     java.util.Optional<Attendance> findByStudentIdAndScheduleId(@Param("studentId") Long studentId, @Param("scheduleId") Long scheduleId);
+
+    /**
+     * 전체 시스템의 특정 상태별 출석 수 조회 (관리자용)
+     * @param status 출석 상태 (PRESENT, LATE, ABSENT 등)
+     * @return 해당 상태의 총 출석 수
+     */
+    Long countByStatus(AttendanceStatus status);
 }

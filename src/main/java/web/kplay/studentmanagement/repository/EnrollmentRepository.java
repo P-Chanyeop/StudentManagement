@@ -50,4 +50,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     
     @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.course.id = :courseId AND e.isActive = true")
     Integer countActiveByCourseId(@Param("courseId") Long courseId);
+
+    /**
+     * 전체 시스템의 활성 수강권 수 조회 (관리자용)
+     * @return 전체 활성 수강권 수
+     */
+    Integer countByIsActiveTrue();
 }

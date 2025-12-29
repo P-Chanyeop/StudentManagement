@@ -176,7 +176,13 @@ function MyPage() {
 
         <div className="tab-content">
           {activeTab === 'overview' && (
-            <div className="overview-section">
+            <div className="mypage-overview-section">
+              <div className="section-header">
+                <h2 className="section-title">
+                  <i className="fas fa-chart-pie"></i>
+                  개요
+                </h2>
+              </div>
               <div className="content-grid">
                 {/* 활성 수강권 */}
                 <div className="content-card">
@@ -511,7 +517,7 @@ function MyPage() {
           )}
 
           {activeTab === 'reservations' && (
-            <div className="reservations-section">
+            <div className="mypage-reservations-section">
               <div className="section-header">
                 <h2 className="section-title">
                   <i className="fas fa-clock"></i>
