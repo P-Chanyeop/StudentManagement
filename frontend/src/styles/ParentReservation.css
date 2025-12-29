@@ -30,7 +30,6 @@
 }
 
 .reservation-form {
-  padding: 2rem;
 }
 
 .form-section {
@@ -371,6 +370,8 @@
   color: #ff6b6b;
 }
 
+
+
 .calendar-day.holiday {
   color: #ff6b6b;
   background: #fff5f5;
@@ -437,7 +438,6 @@
   }
   
   .reservation-form {
-    padding: 1.5rem;
   }
   
   .form-row {
@@ -469,7 +469,6 @@
   }
   
   .reservation-form {
-    padding: 1rem;
   }
   
   .form-section {

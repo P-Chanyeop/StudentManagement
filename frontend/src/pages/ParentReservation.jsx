@@ -119,7 +119,7 @@ function ParentReservation() {
 
     switch(consultationType) {
       case '재원생상담':
-        // 일요일, 공휴일 제외 모두 예약 가능
+        // 일요일, 공휴일 제외 모두 예약 가능 (토요일 포함)
         return dayOfWeek !== 0 && !isHoliday;
       case '레벨테스트':
         // 평일(월-금, 공휴일 제외)만 예약 가능
@@ -230,7 +230,7 @@ function ParentReservation() {
       days.push(
         <div
           key={day}
-          className={`calendar-day ${finalDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''} ${!isAvailable ? 'unavailable' : ''}`}
+          className={`calendar-day ${finalDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''} ${!isAvailable ? 'unavailable' : ''} ${isAvailable && !finalDisabled ? 'available' : ''}`}
           onClick={() => !finalDisabled && handleDateSelect(year, month, day)}
           title={isHolidayDate ? yearHolidays.find(h => holidayService.isHoliday(date, [h]))?.name : ''}
         >
