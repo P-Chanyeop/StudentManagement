@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -18,6 +19,17 @@ import Notices from './pages/Notices';
 import MyPage from './pages/MyPage';
 import { useQuery } from '@tanstack/react-query';
 import { authAPI } from './services/api';
+
+// 페이지 변경 시 스크롤을 맨 위로 이동시키는 컴포넌트
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 // 보호된 라우트 컴포넌트
 function ProtectedRoute({ children }) {
@@ -54,16 +66,18 @@ function RoleDashboard() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <RoleDashboard />
-          </ProtectedRoute>
-        }
-      />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <RoleDashboard />
+            </ProtectedRoute>
+          }
+        />
       <Route
         path="/students"
         element={
@@ -170,6 +184,7 @@ function App() {
       />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
+    </>
   );
 }
 

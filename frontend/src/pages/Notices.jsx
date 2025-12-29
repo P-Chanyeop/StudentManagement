@@ -144,6 +144,10 @@ function Notices() {
                   <span className="notice-date">{formatDate(notice.createdAt)}</span>
                   <span className="notice-views"><i className="fas fa-eye"></i> {notice.viewCount}</span>
                 </div>
+                
+                <div className="card-click-hint">
+                  <span>상세보기 ></span>
+                </div>
               </div>
               ))}
             </div>
@@ -177,6 +181,10 @@ function Notices() {
                     <span className="notice-author">{notice.authorName}</span>
                     <span className="notice-date">{formatDate(notice.createdAt)}</span>
                     <span className="notice-views">조회 {notice.viewCount}</span>
+                  </div>
+                  
+                  <div className="card-click-hint">
+                    <span>상세보기 ></span>
                   </div>
                 </div>
               ))}

@@ -428,6 +428,10 @@ function Enrollments() {
                     </span>
                   </div>
                 </div>
+                
+                <div className="card-click-hint">
+                  <span>상세보기 ></span>
+                </div>
               </div>
             </div>
           ))
