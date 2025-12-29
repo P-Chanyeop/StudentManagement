@@ -75,10 +75,7 @@ public class Reservation extends BaseEntity {
         this.cancelReason = reason;
         this.cancelledAt = LocalDateTime.now();
 
-        // 수강권 횟수 복구
-        if (enrollment != null) {
-            enrollment.restoreCount();
-        }
+        // 수강권 횟수 복구는 서비스 레이어에서 처리
     }
 
     // 관리자 권한으로 강제 취소
@@ -87,10 +84,7 @@ public class Reservation extends BaseEntity {
         this.cancelReason = reason;
         this.cancelledAt = LocalDateTime.now();
 
-        // 수강권 횟수 복구
-        if (enrollment != null) {
-            enrollment.restoreCount();
-        }
+        // 수강권 횟수 복구는 서비스 레이어에서 처리
     }
 
     // 수업 완료 처리

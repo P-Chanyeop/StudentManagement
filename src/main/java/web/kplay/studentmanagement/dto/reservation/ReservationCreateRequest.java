@@ -2,6 +2,7 @@ package web.kplay.studentmanagement.dto.reservation;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ReservationCreateRequest {
 
     // 기존 학생 ID (기존 학생용)

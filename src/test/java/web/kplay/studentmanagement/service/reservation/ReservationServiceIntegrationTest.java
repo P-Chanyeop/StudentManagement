@@ -67,7 +67,7 @@ class ReservationServiceIntegrationTest {
                 .parentPhone("010-8765-4321")
                 .parentName("학부모")
                 .school("테스트학교")
-                .grade(5)
+                .grade("5")
                 .isActive(true)
                 .build();
         student = studentRepository.save(student);
@@ -77,18 +77,21 @@ class ReservationServiceIntegrationTest {
                 .courseName("영어 초급")
                 .description("영어 기초 과정")
                 .maxStudents(10)
+                .durationMinutes(60)
+                .level("BEGINNER")
                 .isActive(true)
                 .build();
         course = courseRepository.save(course);
 
-        // 스케줄 생성
+        // 스케줄 생성 (미래 날짜로 설정하여 취소 가능하게)
         schedule = CourseSchedule.builder()
                 .course(course)
-                .dayOfWeek(DayOfWeek.MONDAY)
+                .dayOfWeek("MONDAY")
                 .startTime(LocalTime.of(14, 0))
                 .endTime(LocalTime.of(15, 0))
-                .scheduleDate(LocalDate.now().plusDays(1))
+                .scheduleDate(LocalDate.now().plusDays(3)) // 3일 후로 설정
                 .currentStudents(0)
+                .isCancelled(false)
                 .build();
         schedule = scheduleRepository.save(schedule);
 
@@ -222,21 +225,26 @@ class ReservationServiceIntegrationTest {
     @Test
     @DisplayName("여러 예약을 생성하고 취소해도 수강권 횟수가 정확히 관리된다")
     void multipleReservationsManagement_ShouldMaintainCorrectCount() {
-        // given - 3개의 예약 생성
+        // given - 초기 상태 확인
+        int initialRemainingCount = enrollment.getRemainingCount(); // 10
+        int initialUsedCount = enrollment.getUsedCount(); // 0
+        
+        // 예약 생성 요청
         ReservationCreateRequest request1 = ReservationCreateRequest.builder()
                 .studentId(student.getId())
                 .scheduleId(schedule.getId())
                 .enrollmentId(enrollment.getId())
                 .build();
 
-        // 추가 스케줄 생성
+        // 추가 스케줄 생성 (미래 날짜로 설정)
         CourseSchedule schedule2 = CourseSchedule.builder()
                 .course(course)
-                .dayOfWeek(DayOfWeek.TUESDAY)
+                .dayOfWeek("TUESDAY")
                 .startTime(LocalTime.of(14, 0))
                 .endTime(LocalTime.of(15, 0))
-                .scheduleDate(LocalDate.now().plusDays(2))
+                .scheduleDate(LocalDate.now().plusDays(4)) // 4일 후로 설정
                 .currentStudents(0)
+                .isCancelled(false)
                 .build();
         schedule2 = scheduleRepository.save(schedule2);
 
@@ -246,28 +254,33 @@ class ReservationServiceIntegrationTest {
                 .enrollmentId(enrollment.getId())
                 .build();
 
-        // when
+        // when - 예약 생성
         ReservationResponse res1 = reservationService.createReservation(request1);
         ReservationResponse res2 = reservationService.createReservation(request2);
 
-        // then - 2회 차감됨
+        // then - 2회 차감됨 (10 -> 8)
+        enrollmentRepository.flush(); // 강제로 DB에 반영
         Enrollment afterCreate = enrollmentRepository.findById(enrollment.getId()).orElseThrow();
-        assertThat(afterCreate.getRemainingCount()).isEqualTo(8);
+        assertThat(afterCreate.getRemainingCount()).isEqualTo(initialRemainingCount - 2);
+        assertThat(afterCreate.getUsedCount()).isEqualTo(initialUsedCount + 2);
 
         // when - 1개 취소
         reservationService.cancelReservation(res1.getId(), "취소");
 
-        // then - 1회 복원됨
+        // then - 1회 복원됨 (8 -> 9)
+        enrollmentRepository.flush(); // 강제로 DB에 반영
         Enrollment afterCancel = enrollmentRepository.findById(enrollment.getId()).orElseThrow();
-        assertThat(afterCancel.getRemainingCount()).isEqualTo(9);
+        assertThat(afterCancel.getRemainingCount()).isEqualTo(initialRemainingCount - 1);
+        assertThat(afterCancel.getUsedCount()).isEqualTo(initialUsedCount + 1);
 
         // when - 1개 삭제
         reservationService.deleteReservation(res2.getId());
 
-        // then - 다시 1회 복원됨
+        // then - 다시 1회 복원됨 (9 -> 10)
+        enrollmentRepository.flush(); // 강제로 DB에 반영
         Enrollment afterDelete = enrollmentRepository.findById(enrollment.getId()).orElseThrow();
-        assertThat(afterDelete.getRemainingCount()).isEqualTo(10);
-        assertThat(afterDelete.getUsedCount()).isEqualTo(0);
+        assertThat(afterDelete.getRemainingCount()).isEqualTo(initialRemainingCount);
+        assertThat(afterDelete.getUsedCount()).isEqualTo(initialUsedCount);
     }
 
     @Test

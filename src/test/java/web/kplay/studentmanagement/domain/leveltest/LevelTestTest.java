@@ -47,6 +47,7 @@ class LevelTestTest {
                 .testDate(LocalDate.now())
                 .testTime(LocalTime.of(14, 0))
                 .testStatus("SCHEDULED")
+                .messageNotificationSent(false)
                 .build();
     }
 
