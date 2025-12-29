@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { reservationAPI, scheduleAPI, enrollmentAPI } from '../services/api';
 import '../styles/Reservations.css';
 
 function Reservations() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -199,21 +201,21 @@ function Reservations() {
                 const reservationCount = reservations.filter(
                   (r) => r.schedule.id === schedule.id && r.status !== 'CANCELLED'
                 ).length;
-                const isAvailable = reservationCount < schedule.capacity;
+                const isAvailable = reservationCount < schedule.maxCapacity;
 
                 return (
                   <div key={schedule.id} className="schedule-card">
                     <div className="schedule-info">
-                      <h3>{schedule.course?.name || '수업명 미정'}</h3>
+                      <h3>{schedule.courseName || '수업명 미정'}</h3>
                       <p className="schedule-time">
                         {schedule.startTime} - {schedule.endTime}
                       </p>
                       <p className="schedule-teacher">
-                        강사: {schedule.teacher?.name || '미배정'}
+                        강사: {schedule.teacherName || '미배정'}
                       </p>
                       <div className="schedule-capacity">
                         <span className={`capacity-badge ${isAvailable ? 'available' : 'full'}`}>
-                          {reservationCount} / {schedule.capacity}
+                          {reservationCount} / {schedule.maxCapacity}
                         </span>
                         {isAvailable ? (
                           <span className="availability">예약 가능</span>
@@ -225,7 +227,7 @@ function Reservations() {
                     {isAvailable && (
                       <button
                         className="btn-primary"
-                        onClick={() => openCreateModal(schedule)}
+                        onClick={() => navigate('/parent-reservation')}
                       >
                         <i className="fas fa-plus"></i> 예약 등록
                       </button>

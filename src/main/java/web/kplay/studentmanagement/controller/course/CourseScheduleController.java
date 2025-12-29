@@ -37,7 +37,7 @@ public class CourseScheduleController {
     }
 
     @GetMapping("/date/{date}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<CourseScheduleResponse>> getSchedulesByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<CourseScheduleResponse> responses = scheduleService.getSchedulesByDate(date);
