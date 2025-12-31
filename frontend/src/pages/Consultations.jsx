@@ -633,7 +633,7 @@ function Consultations() {
                 <div className="form-group">
                   <label>다음 상담 예정일</label>
                   <input 
-                    type="date" 
+                    type="date" min={new Date().toISOString().split('T')[0]} 
                     value={newConsultation.nextConsultationDate}
                     onChange={(e) => setNewConsultation({...newConsultation, nextConsultationDate: e.target.value})}
                   />
@@ -821,7 +821,7 @@ function Consultations() {
                 <div className="form-group">
                   <label>다음 상담 예정일</label>
                   <input 
-                    type="date" 
+                    type="date" min={new Date().toISOString().split('T')[0]} 
                     value={newConsultation.nextConsultationDate}
                     onChange={(e) => setNewConsultation({...newConsultation, nextConsultationDate: e.target.value})}
                   />

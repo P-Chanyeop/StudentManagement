@@ -497,6 +497,7 @@ function Enrollments() {
                   onChange={(e) =>
                     setNewEnrollment({ ...newEnrollment, startDate: e.target.value })
                   }
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
               

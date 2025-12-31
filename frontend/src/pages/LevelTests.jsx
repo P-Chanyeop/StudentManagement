@@ -263,6 +263,7 @@ function LevelTests() {
                     type="date"
                     value={newTest.testDate}
                     onChange={(e) => setNewTest({ ...newTest, testDate: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
 

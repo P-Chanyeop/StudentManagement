@@ -184,9 +184,9 @@ function MakeupClasses() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      SCHEDULED: { text: '예정', className: 'status-scheduled' },
-      COMPLETED: { text: '완료', className: 'status-completed' },
-      CANCELLED: { text: '취소', className: 'status-cancelled' },
+      SCHEDULED: { text: '예정', className: 'makeup-status-scheduled' },
+      COMPLETED: { text: '완료', className: 'makeup-status-completed' },
+      CANCELLED: { text: '취소', className: 'makeup-status-cancelled' },
     };
     return badges[status] || { text: status, className: '' };
   };
@@ -222,7 +222,7 @@ function MakeupClasses() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
+            className="makeup-filter-select"
           >
             <option value="ALL">전체</option>
             <option value="SCHEDULED">예정</option>
@@ -261,7 +261,7 @@ function MakeupClasses() {
                     <td>{makeup.makeupTime}</td>
                     <td>{makeup.reason || '-'}</td>
                     <td>
-                      <span className={`status-badge ${getStatusBadge(makeup.status).className}`}>
+                      <span className={`makeup-status-badge ${getStatusBadge(makeup.status).className}`}>
                         {getStatusBadge(makeup.status).text}
                       </span>
                     </td>
@@ -318,111 +318,124 @@ function MakeupClasses() {
             resetForm();
           }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h2>{editingMakeup ? '보강 수업 수정' : '보강 수업 등록'}</h2>
-              <form onSubmit={handleSubmit}>
-                {!editingMakeup && (
-                  <>
-                    <div className="form-group">
-                      <label>학생 *</label>
-                      <select
-                        value={formData.studentId}
-                        onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                        required
-                      >
-                        <option value="">학생 선택</option>
-                        {students?.map((student) => (
-                          <option key={student.id} value={student.id}>
-                            {student.studentName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              <div className="modal-header">
+                <h2>{editingMakeup ? '보강 수업 수정' : '보강 수업 등록'}</h2>
+                <button className="modal-close" onClick={() => {
+                  setShowModal(false);
+                  setEditingMakeup(null);
+                  resetForm();
+                }}>
+                  ×
+                </button>
+              </div>
 
-                    <div className="form-group">
-                      <label>수업 *</label>
-                      <select
-                        value={formData.courseId}
-                        onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                        required
-                      >
-                        <option value="">수업 선택</option>
-                        {courses?.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.courseName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              <div className="modal-body">
+                <form onSubmit={handleSubmit}>
+                  {!editingMakeup && (
+                    <>
+                      <div className="form-group">
+                        <label>학생 *</label>
+                        <select
+                          value={formData.studentId}
+                          onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+                          required
+                        >
+                          <option value="">학생 선택</option>
+                          {students?.map((student) => (
+                            <option key={student.id} value={student.id}>
+                              {student.studentName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                    <div className="form-group">
-                      <label>원래 수업 날짜 *</label>
-                      <input
-                        type="date"
-                        value={formData.originalDate}
-                        onChange={(e) => setFormData({ ...formData, originalDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </>
-                )}
+                      <div className="form-group">
+                        <label>수업 *</label>
+                        <select
+                          value={formData.courseId}
+                          onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                          required
+                        >
+                          <option value="">수업 선택</option>
+                          {courses?.map((course) => (
+                            <option key={course.id} value={course.id}>
+                              {course.courseName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                <div className="form-group">
-                  <label>보강 날짜 *</label>
-                  <input
-                    type="date"
-                    value={formData.makeupDate}
-                    onChange={(e) => setFormData({ ...formData, makeupDate: e.target.value })}
-                    required
-                  />
-                </div>
+                      <div className="form-group">
+                        <label>원래 수업 날짜 *</label>
+                        <input
+                          type="date"
+                          value={formData.originalDate}
+                          onChange={(e) => setFormData({ ...formData, originalDate: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
 
-                <div className="form-group">
-                  <label>보강 시간 *</label>
-                  <input
-                    type="time"
-                    value={formData.makeupTime}
-                    onChange={(e) => setFormData({ ...formData, makeupTime: e.target.value })}
-                    required
-                  />
-                </div>
+                  <div className="form-group">
+                    <label>보강 날짜 *</label>
+                    <input
+                      type="date"
+                      value={formData.makeupDate}
+                      onChange={(e) => setFormData({ ...formData, makeupDate: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label>사유</label>
-                  <textarea
-                    value={formData.reason}
-                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                    placeholder="보강 사유를 입력하세요"
-                    rows="3"
-                  />
-                </div>
+                  <div className="form-group">
+                    <label>보강 시간 *</label>
+                    <input
+                      type="time"
+                      value={formData.makeupTime}
+                      onChange={(e) => setFormData({ ...formData, makeupTime: e.target.value })}
+                      required
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label>메모</label>
-                  <textarea
-                    value={formData.memo}
-                    onChange={(e) => setFormData({ ...formData, memo: e.target.value })}
-                    placeholder="추가 메모를 입력하세요"
-                    rows="3"
-                  />
-                </div>
+                  <div className="form-group">
+                    <label>사유</label>
+                    <textarea
+                      value={formData.reason}
+                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                      placeholder="보강 사유를 입력하세요"
+                      rows="3"
+                    />
+                  </div>
 
-                <div className="modal-actions">
-                  <button type="submit" className="btn-primary">
-                    {editingMakeup ? '수정' : '등록'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      setShowModal(false);
-                      setEditingMakeup(null);
-                      resetForm();
-                    }}
-                  >
-                    취소
-                  </button>
-                </div>
-              </form>
+                  <div className="form-group">
+                    <label>메모</label>
+                    <textarea
+                      value={formData.memo}
+                      onChange={(e) => setFormData({ ...formData, memo: e.target.value })}
+                      placeholder="추가 메모를 입력하세요"
+                      rows="3"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div className="modal-footer">
+                <button type="submit" className="btn-primary" onClick={handleSubmit}>
+                  {editingMakeup ? '수정' : '등록'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingMakeup(null);
+                    resetForm();
+                  }}
+                >
+                  취소
+                </button>
+              </div>
             </div>
           </div>
         )}
