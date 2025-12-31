@@ -15,15 +15,20 @@ function Enrollments() {
 
   // 사용자 정보 조회
   const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      const response = await authAPI.getCurrentUser();
+      const response = await authAPI.getProfile();
       return response.data;
     },
   });
 
-  // 관리자 권한 확인
-  const isAdmin = currentUser?.role === 'ROLE_ADMIN';
+  // 관리자 또는 선생님 권한 확인
+  const isAdminOrTeacher = currentUser?.role === 'ADMIN' || currentUser?.role === 'TEACHER';
+  
+  // 디버깅용 로그
+  console.log('현재 사용자:', currentUser);
+  console.log('사용자 역할:', currentUser?.role);
+  console.log('관리자 또는 선생님 권한:', isAdminOrTeacher);
 
   // 공휴일 데이터 캐시
   const [holidays, setHolidays] = useState([]);
@@ -330,7 +335,7 @@ function Enrollments() {
             </h1>
             <p className="page-subtitle">학생들의 수강권 등록 및 관리</p>
           </div>
-          {isAdmin && (
+          {isAdminOrTeacher && (
             <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
               <i className="fas fa-plus"></i> 수강권 등록
             </button>
@@ -696,7 +701,7 @@ function Enrollments() {
             </div>
 
             <div className="modal-footer">
-              {isAdmin && selectedEnrollment.status === 'ACTIVE' && (
+              {isAdminOrTeacher && selectedEnrollment.status === 'ACTIVE' && (
                 <>
                   {selectedEnrollment.type === 'PERIOD_BASED' && (
                     <button

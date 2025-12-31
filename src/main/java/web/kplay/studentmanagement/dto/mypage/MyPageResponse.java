@@ -66,5 +66,11 @@ public class MyPageResponse {
 
         // 예정된 예약 개수
         private Integer upcomingReservationCount;
+
+        // 상담 개수 (선생님용)
+        private Integer consultationCount;
+
+        // 출석률 (계산된 값)
+        private Double attendanceRate;
     }
 }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
+import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.reservation.ReservationStatus;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
@@ -40,6 +41,7 @@ public class MyPageService {
     private final LevelTestRepository levelTestRepository;
     private final MessageRepository messageRepository;
     private final ConsultationRepository consultationRepository;
+    private final CourseRepository courseRepository;
 
     /**
      * 학생 ID로 마이페이지 정보 조회
@@ -177,16 +179,31 @@ public class MyPageService {
         Long totalConsultations = consultationRepository.countByConsultantId(teacherId);
         log.info("선생님 ID {} 의 총 상담 개수: {}", teacherId, totalConsultations);
         
-        // TODO: 선생님 수업의 출석률 계산 로직 추가 필요
-        // 현재는 기본값으로 설정
+        // 선생님이 담당하는 수업들의 출석 통계
+        Long teacherClassAttendance = attendanceRepository.countByTeacherIdAndStatus(teacherId, AttendanceStatus.PRESENT);
+        Long teacherClassLate = attendanceRepository.countByTeacherIdAndStatus(teacherId, AttendanceStatus.LATE);
+        Long teacherClassAbsent = attendanceRepository.countByTeacherIdAndStatus(teacherId, AttendanceStatus.ABSENT);
+        
+        // 선생님 담당 수업의 활성 수강권 수
+        List<Course> teacherCourses = courseRepository.findByTeacherId(teacherId);
+        Integer teacherActiveEnrollments = teacherCourses.stream()
+                .mapToInt(course -> enrollmentRepository.countActiveByCourseId(course.getId()))
+                .sum();
+        
+        Double teacherAttendanceRate = calculateAttendanceRate(teacherClassAttendance, teacherClassLate, teacherClassAbsent);
+        
+        log.info("선생님 ID {} 담당 수업 출석 통계 - 출석: {}, 지각: {}, 결석: {}, 출석률: {}%", 
+                teacherId, teacherClassAttendance, teacherClassLate, teacherClassAbsent, teacherAttendanceRate);
         
         return MyPageResponse.MyPageStats.builder()
-                .totalAttendanceCount(0L) // TODO: 선생님 수업 총 출석 수
+                .totalAttendanceCount(teacherClassAttendance) // 선생님 담당 수업 총 출석 수
                 .monthlyAttendanceCount(0L) // TODO: 이번 달 선생님 수업 출석 수
-                .totalLateCount(0L) // TODO: 선생님 수업 지각 수
-                .totalAbsentCount(0L) // TODO: 선생님 수업 결석 수
-                .activeEnrollmentCount(0) // TODO: 선생님 수업의 활성 수강권 수
-                .upcomingReservationCount(totalConsultations.intValue()) // 상담 개수를 예정된 일정으로 표시
+                .totalLateCount(teacherClassLate) // 선생님 담당 수업 지각 수
+                .totalAbsentCount(teacherClassAbsent) // 선생님 담당 수업 결석 수
+                .activeEnrollmentCount(teacherActiveEnrollments) // 선생님 담당 수업의 활성 수강권 수
+                .upcomingReservationCount(0) // 선생님은 예약이 없음
+                .consultationCount(totalConsultations.intValue()) // 상담 개수
+                .attendanceRate(teacherAttendanceRate) // 선생님 담당 수업 출석률
                 .build();
     }
 
@@ -231,11 +248,28 @@ public class MyPageService {
                     .totalAbsentCount(totalAbsent)
                     .activeEnrollmentCount(activeEnrollments)
                     .upcomingReservationCount(upcomingReservations)
+                    .consultationCount(0) // 관리자는 상담 개수 0
+                    .attendanceRate(calculateAttendanceRate(totalAttendance, totalLate, totalAbsent))
                     .build();
         } catch (Exception e) {
             log.error("관리자 통계 조회 중 오류 발생", e);
             throw e;
         }
+    }
+
+    /**
+     * 출석률 계산
+     * @param present 출석 수
+     * @param late 지각 수  
+     * @param absent 결석 수
+     * @return 출석률 (%)
+     */
+    private Double calculateAttendanceRate(Long present, Long late, Long absent) {
+        Long total = present + late + absent;
+        if (total == 0) {
+            return 0.0;
+        }
+        return Math.round((present.doubleValue() / total.doubleValue()) * 100.0 * 10.0) / 10.0;
     }
 
     /**
@@ -339,6 +373,9 @@ public class MyPageService {
                              r.getStatus() == ReservationStatus.PENDING)
                 .count();
 
+        // 학생이 받은 상담 개수
+        Integer consultationCount = consultationRepository.findByStudentId(studentId).size();
+
         return MyPageResponse.MyPageStats.builder()
                 .totalAttendanceCount(totalAttendanceCount)
                 .monthlyAttendanceCount(monthlyAttendanceCount)
@@ -346,6 +383,8 @@ public class MyPageService {
                 .totalAbsentCount(totalAbsentCount)
                 .activeEnrollmentCount(activeEnrollmentCount)
                 .upcomingReservationCount(upcomingReservationCount)
+                .consultationCount(consultationCount) // 학생이 받은 상담 개수
+                .attendanceRate(calculateAttendanceRate(totalAttendanceCount, totalLateCount, totalAbsentCount))
                 .build();
     }
 

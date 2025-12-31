@@ -69,4 +69,13 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      * @return 해당 상태의 총 출석 수
      */
     Long countByStatus(AttendanceStatus status);
+
+    /**
+     * 특정 선생님이 담당하는 수업들의 출석 상태별 개수 조회 (선생님용)
+     * @param teacherId 선생님 ID
+     * @param status 출석 상태
+     * @return 해당 선생님 수업의 특정 상태 출석 수
+     */
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.course.teacher.id = :teacherId AND a.status = :status")
+    Long countByTeacherIdAndStatus(@Param("teacherId") Long teacherId, @Param("status") AttendanceStatus status);
 }
