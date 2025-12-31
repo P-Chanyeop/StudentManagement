@@ -26,8 +26,7 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
     List<Consultation> findByStudentIdOrderByDateDesc(@Param("studentId") Long studentId);
 
     // 마이페이지용 메서드
-    @Query("SELECT c FROM Consultation c WHERE c.student.id = :studentId ORDER BY c.consultationDate DESC LIMIT 5")
-    List<Consultation> findTop5ByStudentIdOrderByConsultationDateDesc(@Param("studentId") Long studentId);
+    List<Consultation> findTop5ByStudentIdOrderByConsultationDateDesc(Long studentId);
 
     /**
      * 특정 상담사(선생님)의 총 상담 개수 조회 (선생님 마이페이지용)
@@ -41,6 +40,5 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
      * @param consultantId 상담사(선생님) ID
      * @return 최근 5개의 상담 이력 (날짜 내림차순)
      */
-    @Query("SELECT c FROM Consultation c WHERE c.consultant.id = :consultantId ORDER BY c.consultationDate DESC LIMIT 5")
-    List<Consultation> findTop5ByConsultantIdOrderByConsultationDateDesc(@Param("consultantId") Long consultantId);
+    List<Consultation> findTop5ByConsultantIdOrderByConsultationDateDesc(Long consultantId);
 }

@@ -55,17 +55,24 @@ public class MyPageService {
      * User ID로 마이페이지 정보 조회 (로그인한 사용자)
      */
     public MyPageResponse getMyPageByUserId(Long userId) {
+        log.info("마이페이지 서비스 시작: userId={}", userId);
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
         
+        log.info("사용자 조회 완료: userId={}, role={}", userId, user.getRole());
+        
         if (user.getRole() == UserRole.PARENT) {
+            log.info("부모 계정 처리 시작");
             // 부모 계정: 자녀 정보 조회
             List<Student> children = studentRepository.findByParentUser(user);
             if (!children.isEmpty()) {
+                log.info("자녀 정보 찾음: 자녀 수={}", children.size());
                 return buildMyPageResponse(children.get(0)); // 첫 번째 자녀 정보
             }
             throw new ResourceNotFoundException("학생 정보를 찾을 수 없습니다");
         } else {
+            log.info("관리자/선생님 계정 처리 시작: role={}", user.getRole());
             // 관리자/선생님 계정: 사용자 정보 반환
             return buildUserMyPageResponse(user);
         }
@@ -77,6 +84,8 @@ public class MyPageService {
      * @return 사용자 역할에 따른 마이페이지 응답 데이터
      */
     private MyPageResponse buildUserMyPageResponse(User user) {
+        log.info("buildUserMyPageResponse 시작: userId={}, role={}", user.getId(), user.getRole());
+        
         // 사용자 기본 정보
         StudentResponse userInfo = StudentResponse.builder()
                 .id(user.getId())
@@ -87,9 +96,11 @@ public class MyPageService {
                 .build();
 
         if (user.getRole() == UserRole.TEACHER) {
+            log.info("선생님 마이페이지 데이터 생성");
             // 선생님인 경우: 본인 수업 관련 데이터
             return buildTeacherMyPageResponse(user, userInfo);
         } else {
+            log.info("관리자 마이페이지 데이터 생성");
             // 관리자인 경우: 전체 시스템 통계
             return buildAdminMyPageResponse(user, userInfo);
         }
@@ -111,6 +122,8 @@ public class MyPageService {
                 .stream()
                 .map(this::toConsultationResponse)
                 .collect(Collectors.toList());
+        
+        log.info("선생님 ID {} 의 상담 이력 개수: {}", teacher.getId(), teacherConsultations.size());
 
         return MyPageResponse.builder()
                 .studentInfo(userInfo)
@@ -131,19 +144,27 @@ public class MyPageService {
      * @return 관리자용 마이페이지 응답 데이터 (전체 시스템 통계 포함)
      */
     private MyPageResponse buildAdminMyPageResponse(User admin, StudentResponse userInfo) {
-        // 관리자는 전체 시스템 통계 표시
-        MyPageResponse.MyPageStats stats = buildAdminStats();
+        log.info("관리자 통계 데이터 조회 시작");
+        
+        try {
+            // 관리자는 전체 시스템 통계 표시
+            MyPageResponse.MyPageStats stats = buildAdminStats();
+            log.info("관리자 통계 데이터 조회 완료");
 
-        return MyPageResponse.builder()
-                .studentInfo(userInfo)
-                .activeEnrollments(List.of())
-                .recentAttendances(List.of())
-                .upcomingReservations(List.of())
-                .upcomingLevelTests(List.of())
-                .recentMessages(List.of())
-                .recentConsultations(List.of())
-                .stats(stats)
-                .build();
+            return MyPageResponse.builder()
+                    .studentInfo(userInfo)
+                    .activeEnrollments(List.of())
+                    .recentAttendances(List.of())
+                    .upcomingReservations(List.of())
+                    .upcomingLevelTests(List.of())
+                    .recentMessages(List.of())
+                    .recentConsultations(List.of())
+                    .stats(stats)
+                    .build();
+        } catch (Exception e) {
+            log.error("관리자 마이페이지 데이터 생성 중 오류 발생", e);
+            throw e;
+        }
     }
 
     /**
@@ -154,6 +175,7 @@ public class MyPageService {
     private MyPageResponse.MyPageStats buildTeacherStats(Long teacherId) {
         // 선생님이 진행한 총 상담 개수
         Long totalConsultations = consultationRepository.countByConsultantId(teacherId);
+        log.info("선생님 ID {} 의 총 상담 개수: {}", teacherId, totalConsultations);
         
         // TODO: 선생님 수업의 출석률 계산 로직 추가 필요
         // 현재는 기본값으로 설정
@@ -173,26 +195,47 @@ public class MyPageService {
      * @return 전체 시스템의 통계 정보 (총 출석, 지각, 결석, 활성 수강권, 예정된 예약 수)
      */
     private MyPageResponse.MyPageStats buildAdminStats() {
-        // 전체 시스템 통계
-        Long totalAttendance = attendanceRepository.countByStatus(AttendanceStatus.PRESENT);
-        Long totalLate = attendanceRepository.countByStatus(AttendanceStatus.LATE);
-        Long totalAbsent = attendanceRepository.countByStatus(AttendanceStatus.ABSENT);
-        Integer activeEnrollments = enrollmentRepository.countByIsActiveTrue();
-        Integer upcomingReservations = (int) reservationRepository
-                .findByScheduleDateAfter(LocalDate.now())
-                .stream()
-                .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED ||
-                             r.getStatus() == ReservationStatus.PENDING)
-                .count();
+        log.info("관리자 통계 각 항목 조회 시작");
+        
+        try {
+            // 전체 시스템 통계
+            log.info("총 출석 수 조회 중...");
+            Long totalAttendance = attendanceRepository.countByStatus(AttendanceStatus.PRESENT);
+            log.info("총 출석 수: {}", totalAttendance);
+            
+            log.info("총 지각 수 조회 중...");
+            Long totalLate = attendanceRepository.countByStatus(AttendanceStatus.LATE);
+            log.info("총 지각 수: {}", totalLate);
+            
+            log.info("총 결석 수 조회 중...");
+            Long totalAbsent = attendanceRepository.countByStatus(AttendanceStatus.ABSENT);
+            log.info("총 결석 수: {}", totalAbsent);
+            
+            log.info("활성 수강권 수 조회 중...");
+            Integer activeEnrollments = enrollmentRepository.countByIsActiveTrue();
+            log.info("활성 수강권 수: {}", activeEnrollments);
+            
+            log.info("예정된 예약 수 조회 중...");
+            Integer upcomingReservations = (int) reservationRepository
+                    .findByScheduleDateAfter(LocalDate.now())
+                    .stream()
+                    .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED ||
+                                 r.getStatus() == ReservationStatus.PENDING)
+                    .count();
+            log.info("예정된 예약 수: {}", upcomingReservations);
 
-        return MyPageResponse.MyPageStats.builder()
-                .totalAttendanceCount(totalAttendance)
-                .monthlyAttendanceCount(0L) // 이번 달 전체 출석은 복잡하므로 일단 0
-                .totalLateCount(totalLate)
-                .totalAbsentCount(totalAbsent)
-                .activeEnrollmentCount(activeEnrollments)
-                .upcomingReservationCount(upcomingReservations)
-                .build();
+            return MyPageResponse.MyPageStats.builder()
+                    .totalAttendanceCount(totalAttendance)
+                    .monthlyAttendanceCount(0L) // 이번 달 전체 출석은 복잡하므로 일단 0
+                    .totalLateCount(totalLate)
+                    .totalAbsentCount(totalAbsent)
+                    .activeEnrollmentCount(activeEnrollments)
+                    .upcomingReservationCount(upcomingReservations)
+                    .build();
+        } catch (Exception e) {
+            log.error("관리자 통계 조회 중 오류 발생", e);
+            throw e;
+        }
     }
 
     /**
