@@ -65,6 +65,7 @@ public class AttendanceService {
                 .student(student)
                 .schedule(schedule)
                 .status(AttendanceStatus.PRESENT)
+                .classCompleted(false)
                 .build();
 
         // 체크인 처리 (자동 지각 판단 포함)
@@ -276,6 +277,20 @@ public class AttendanceService {
 
     /**
      * 수업 완료 체크박스 토글
+     */
+    @Transactional
+    public void cancelAttendance(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+        
+        attendanceRepository.delete(attendance);
+        log.info("Attendance cancelled: student={}, course={}", 
+                attendance.getStudent().getStudentName(),
+                attendance.getSchedule().getCourse().getCourseName());
+    }
+
+    /**
+     * 수업 완료 상태 토글
      */
     @Transactional
     public AttendanceResponse toggleClassCompleted(Long attendanceId) {

@@ -412,3 +412,35 @@
 .empty-state p {
   font-size: 1.125rem;
 }
+/* 예정 시간 스타일 - 등원시간과 완전히 동일 */
+.expected-time {
+  /* 기본 테이블 셀과 동일한 스타일 적용 */
+}
+
+/* 출석 취소 버튼 - 독립적 스타일 */
+.attendance-cancel-btn {
+  padding: 0.5rem 1rem;
+  background: var(--error);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  vertical-align: middle;
+}
+
+.attendance-cancel-btn:hover:not(:disabled) {
+  background: var(--error-dark);
+}
+
+.attendance-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}

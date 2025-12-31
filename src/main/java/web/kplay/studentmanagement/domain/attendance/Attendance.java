@@ -49,6 +49,7 @@ public class Attendance extends BaseEntity {
     private String reason; // 결석/지각 사유
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean classCompleted = false; // 수업 완료 여부 (체크박스)
 
     // 출석 체크

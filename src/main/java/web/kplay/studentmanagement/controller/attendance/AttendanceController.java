@@ -147,6 +147,16 @@ public class AttendanceController {
     }
 
     /**
+     * 출석 취소 (출석 기록 삭제)
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Void> cancelAttendance(@PathVariable Long id) {
+        attendanceService.cancelAttendance(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * 수업 완료 체크박스 토글
      */
     @PatchMapping("/{id}/toggle-completed")

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { attendanceAPI, studentAPI } from '../services/api';
+import { attendanceAPI, studentAPI, scheduleAPI } from '../services/api';
 import '../styles/Attendance.css';
 
 function Attendance() {
@@ -31,26 +31,50 @@ function Attendance() {
     },
   });
 
+  // 해당 날짜의 스케줄 조회
+  const { data: todaySchedules } = useQuery({
+    queryKey: ['schedules', selectedDate],
+    queryFn: async () => {
+      const response = await scheduleAPI.getByDate(selectedDate);
+      return response.data;
+    },
+  });
+
   // 출석 체크인 mutation
   const checkInMutation = useMutation({
-    mutationFn: (studentId) => attendanceAPI.checkIn({ 
-      studentId, 
-      scheduleDate: selectedDate 
-    }),
+    mutationFn: ({ studentId, scheduleId }) => {
+      return attendanceAPI.checkIn({ 
+        studentId, 
+        scheduleId 
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['attendances', selectedDate]);
       alert('출석 체크가 완료되었습니다!');
     },
     onError: (error) => {
-      alert('출석 체크 중 오류가 발생했습니다.');
+      alert(`출석 체크 중 오류가 발생했습니다: ${error.message}`);
       console.error('출석 체크 오류:', error);
+    },
+  });
+
+  // 출석 취소 mutation
+  const cancelAttendanceMutation = useMutation({
+    mutationFn: (attendanceId) => attendanceAPI.cancelAttendance(attendanceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances', selectedDate]);
+      alert('출석이 취소되었습니다.');
+    },
+    onError: (error) => {
+      alert(`출석 취소 중 오류가 발생했습니다: ${error.message}`);
+      console.error('출석 취소 오류:', error);
     },
   });
 
   // 수업 완료 체크 mutation
   const updateClassComplete = useMutation({
-    mutationFn: ({ attendanceId, isComplete }) => 
-      attendanceAPI.updateClassComplete(attendanceId, isComplete),
+    mutationFn: (attendanceId) => 
+      attendanceAPI.updateClassComplete(attendanceId),
     onSuccess: () => {
       queryClient.invalidateQueries(['attendances', selectedDate]);
     },
@@ -80,10 +104,20 @@ function Attendance() {
       isCheckedIn: attendances?.some(att => att.student?.id === student.id && att.checkInTime)
     })) : [];
 
+  const handleCancelAttendance = (attendance) => {
+    if (window.confirm(`${attendance.studentName} 학생의 출석을 취소하시겠습니까?`)) {
+      cancelAttendanceMutation.mutate(attendance.id);
+    }
+  };
+
   // 학생 출석 체크인
-  const handleStudentCheckIn = (student) => {
-    if (student.isCheckedIn) return;
-    checkInMutation.mutate(student.id);
+  const handleStudentCheckIn = (attendance) => {
+    if (attendance.checkInTime) return; // 이미 체크인된 경우
+    
+    checkInMutation.mutate({
+      studentId: attendance.studentId,
+      scheduleId: attendance.scheduleId
+    });
   };
 
   // 출석 목록 정렬
@@ -124,9 +158,27 @@ function Attendance() {
 
   const formatTime = (timeString) => {
     if (!timeString) return '-';
-    return new Date(timeString).toLocaleTimeString('ko-KR', {
+    
+    let date;
+    
+    // LocalTime 형식 (HH:mm:ss.nnnnnnn) 처리
+    if (typeof timeString === 'string' && timeString.match(/^\d{1,2}:\d{2}:\d{2}/)) {
+      const timePart = timeString.substring(0, 8); // HH:mm:ss
+      date = new Date(`2000-01-01T${timePart}`);
+    } else {
+      // DateTime 형식 처리
+      try {
+        date = new Date(timeString);
+      } catch (error) {
+        console.error('Time format error:', timeString, error);
+        return '-';
+      }
+    }
+    
+    return date.toLocaleTimeString('ko-KR', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     });
   };
 
@@ -264,18 +316,23 @@ function Attendance() {
                     {formatTime(attendance.checkInTime)}
                   </td>
                   <td className="check-out-time">
-                    {formatTime(attendance.checkOutTime)}
+                    {attendance.checkOutTime ? (
+                      formatTime(attendance.checkOutTime)
+                    ) : attendance.checkInTime ? (
+                      <span className="expected-time">
+                        {formatTime(attendance.expectedLeaveTime)} (예정)
+                      </span>
+                    ) : (
+                      '-'
+                    )}
                   </td>
                   <td className="class-complete">
                     <label className="checkbox-container">
                       <input
                         type="checkbox"
                         checked={attendance.classCompleted || false}
-                        onChange={(e) => 
-                          updateClassComplete.mutate({
-                            attendanceId: attendance.id,
-                            isComplete: e.target.checked
-                          })
+                        onChange={() => 
+                          updateClassComplete.mutate(attendance.id)
                         }
                       />
                       <span className="checkmark"></span>
@@ -293,14 +350,22 @@ function Attendance() {
                   <td className="check-actions">
                     {!attendance.checkInTime ? (
                       <button
-                        onClick={() => handleStudentCheckIn({ id: attendance.studentId, name: attendance.studentName })}
+                        onClick={() => handleStudentCheckIn(attendance)}
                         className="checkin-btn"
                         disabled={checkInMutation.isPending}
                       >
                         출석 체크
                       </button>
                     ) : (
-                      <span className="checked-in-badge">출석 완료</span>
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => handleCancelAttendance(attendance)}
+                          className="attendance-cancel-btn"
+                          disabled={cancelAttendanceMutation.isPending}
+                        >
+                          출석 취소
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
