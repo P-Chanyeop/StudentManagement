@@ -54,13 +54,13 @@ public class AutoDeductionScheduler {
                     // 예약 상태를 AUTO_DEDUCTED로 변경
                     reservation.updateStatus(ReservationStatus.AUTO_DEDUCTED);
                     
-                    log.info("자동 차감 처리 완료 - 예약 ID: {}, 학생: {}, 수업시간: {}, 차감시간: {}", 
+                    log.info("Auto deduction completed - Reservation ID: {}, Student: {}, Class time: {}, Deducted time: {}", 
                         reservation.getId(), reservation.getStudent().getStudentName(), 
                         classStartTime, deductionTime);
                 }
                     
             } catch (Exception e) {
-                log.error("자동 차감 처리 실패 - 예약 ID: {}, 오류: {}", 
+                log.error("Auto deduction failed - Reservation ID: {}, Error: {}", 
                     reservation.getId(), e.getMessage());
             }
         }

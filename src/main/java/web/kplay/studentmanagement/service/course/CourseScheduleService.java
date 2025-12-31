@@ -41,7 +41,7 @@ public class CourseScheduleService {
                 .build();
 
         CourseSchedule savedSchedule = scheduleRepository.save(schedule);
-        log.info("수업 스케줄 생성: 수업={}, 날짜={}",
+        log.info("Course schedule created: course={}, date={}",
                 course.getCourseName(), request.getScheduleDate());
 
         return toResponse(savedSchedule);
@@ -91,7 +91,7 @@ public class CourseScheduleService {
         schedule.updateTime(request.getStartTime(), request.getEndTime());
         schedule.updateMemo(request.getMemo());
 
-        log.info("수업 스케줄 업데이트: ID={}", id);
+        log.info("Course schedule updated: ID={}", id);
         return toResponse(schedule);
     }
 
@@ -101,7 +101,7 @@ public class CourseScheduleService {
                 .orElseThrow(() -> new ResourceNotFoundException("스케줄을 찾을 수 없습니다"));
 
         schedule.cancel(reason);
-        log.info("수업 스케줄 취소: ID={}, 사유={}", id, reason);
+        log.info("Course schedule cancelled: ID={}, reason={}", id, reason);
     }
 
     @Transactional
@@ -110,7 +110,7 @@ public class CourseScheduleService {
                 .orElseThrow(() -> new ResourceNotFoundException("스케줄을 찾을 수 없습니다"));
 
         schedule.restore();
-        log.info("수업 스케줄 복구: ID={}", id);
+        log.info("Course schedule restored: ID={}", id);
     }
 
     private CourseScheduleResponse toResponse(CourseSchedule schedule) {

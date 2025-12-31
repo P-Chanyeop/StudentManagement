@@ -46,7 +46,7 @@ public class DataSeeder {
     @Profile("dev") // dev 프로파일에서만 실행
     public CommandLineRunner loadInitialData() {
         return args -> {
-            log.info("=== 초기 데이터 로딩 시작 ===");
+            log.info("=== Initial data loading started ===");
 
             // 관리자 계정 생성
             if (userRepository.findByUsername("admin").isEmpty()) {
@@ -60,7 +60,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(admin);
-                log.info("✓ 관리자 계정 생성 완료 (username: admin)");
+                log.info("✓ Admin account created (username: admin)");
             }
 
             // 선생님 계정 생성
@@ -75,7 +75,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(teacher1);
-                log.info("✓ 선생님 계정 생성 완료 (username: teacher1)");
+                log.info("✓ Teacher account created (username: teacher1)");
             }
 
             if (userRepository.findByUsername("teacher2").isEmpty()) {
@@ -89,7 +89,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(teacher2);
-                log.info("✓ 선생님 계정 생성 완료 (username: teacher2)");
+                log.info("✓ Teacher account created (username: teacher2)");
             }
 
             // 학부모 계정 생성
@@ -104,7 +104,7 @@ public class DataSeeder {
                         .isActive(true)
                         .build();
                 userRepository.save(parent1);
-                log.info("✓ 학부모 계정 생성 완료 (username: parent1)");
+                log.info("✓ Parent account created (username: parent1)");
             }
 
             // 테스트 학생 데이터 생성
@@ -235,7 +235,7 @@ public class DataSeeder {
                     studentRepository.save(student);
                 }
 
-                log.info("✓ 테스트 학생 10명 생성 완료");
+                log.info("✓ 10 test students created");
                 
                 // 기존 학생에 parentUser 연결
                 User parent1 = userRepository.findByUsername("parent1").orElse(null);
@@ -245,7 +245,7 @@ public class DataSeeder {
                         if (student.getParentUser() == null) {
                             student.setParentUser(parent1);
                             studentRepository.save(student);
-                            log.info("✓ 학생 {} 에게 학부모 계정 연결 완료", student.getStudentName());
+                            log.info("✓ Parent account linked to student {}", student.getStudentName());
                         }
                     }
                 }
@@ -302,7 +302,7 @@ public class DataSeeder {
                     enrollmentRepository.save(enrollment);
                 }
 
-                log.info("✓ 테스트 수업 및 스케줄 생성 완료 (오늘 14:00-16:00)");
+                log.info("✓ Test courses and schedules created (Today 14:00-16:00)");
             }
 
             // 테스트 상담 데이터 생성
@@ -396,7 +396,7 @@ public class DataSeeder {
                         consultationRepository.save(consultation5);
                     }
 
-                    log.info("✓ 테스트 상담 데이터 5건 생성 완료");
+                    log.info("✓ 5 test consultation records created");
                 }
             }
 
@@ -484,21 +484,21 @@ public class DataSeeder {
                             .build();
                     noticeRepository.save(notice5);
 
-                    log.info("✓ 테스트 공지사항 데이터 5건 생성 완료");
+                    log.info("✓ 5 test notice records created");
                 }
             }
 
-            log.info("=== 초기 데이터 로딩 완료 ===");
+            log.info("=== Initial data loading completed ===");
             log.info("");
-            log.info("📋 초기 계정 생성됨 (비밀번호는 CREDENTIALS.md 참조)");
-            log.info("  - admin (관리자)");
-            log.info("  - teacher1, teacher2 (선생님)");
-            log.info("  - parent1 (학부모)");
-            log.info("  - student1, student2, student3 (학생)");
-            log.info("📝 테스트 상담 데이터 5건 생성됨");
+            log.info("📋 Initial accounts created (see CREDENTIALS.md for passwords)");
+            log.info("  - admin (Administrator)");
+            log.info("  - teacher1, teacher2 (Teachers)");
+            log.info("  - parent1 (Parent)");
+            log.info("  - student1, student2, student3 (Students)");
+            log.info("📝 5 test consultation records created");
             log.info("");
             log.info("🌐 Swagger UI: http://localhost:8080/swagger-ui.html");
-            log.info("🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN 계정 필요)");
+            log.info("🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN account required)");
             log.info("");
         };
     }

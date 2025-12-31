@@ -53,7 +53,7 @@ public class EnrollmentService {
         } else {
             // 시작일 + 총 횟수로 공휴일 제외하여 종료일 계산
             endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
-            log.info("공휴일 제외 종료일 계산: 시작={}, 수업일수={}, 종료={}", 
+            log.info("End date calculated excluding holidays: start={}, class days={}, end={}", 
                     request.getStartDate(), request.getTotalCount(), endDate);
         }
 
@@ -75,7 +75,7 @@ public class EnrollmentService {
                 .build();
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
-        log.info("새 수강권 등록: 학생={}, 수업={}, 기간={} ~ {}, 횟수={}/{}",
+        log.info("New enrollment registered: student={}, course={}, period={} ~ {}, count={}/{}",
                 student.getStudentName(), course.getCourseName(),
                 request.getStartDate(), endDate,
                 request.getTotalCount(), request.getTotalCount());
@@ -159,7 +159,7 @@ public class EnrollmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
 
         enrollment.extendPeriod(newEndDate);
-        log.info("수강권 기간 연장: 수강권ID={}, 새종료일={}", id, newEndDate);
+        log.info("Enrollment period extended: enrollmentId={}, new end date={}", id, newEndDate);
         return toResponse(enrollment);
     }
 
@@ -176,7 +176,7 @@ public class EnrollmentService {
         LocalDate newEndDate = holidayService.addBusinessDays(currentEndDate, businessDays);
 
         enrollment.extendPeriod(newEndDate);
-        log.info("수강권 기간 연장 (공휴일 제외): 수강권ID={}, 추가일수={}, 새종료일={}",
+        log.info("Enrollment period extended (excluding holidays): enrollmentId={}, additional days={}, new end date={}",
                 id, businessDays, newEndDate);
 
         return toResponse(enrollment);

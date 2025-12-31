@@ -39,74 +39,59 @@ function Messages() {
     onSuccess: () => {
       queryClient.invalidateQueries(['messages']);
       setShowSendModal(false);
-      setNewMessage({
-        studentId: '',
-        recipientPhone: '',
-        recipientName: '',
-        messageType: 'GENERAL',
-        content: '',
-      });
+      resetForm();
       alert('문자가 발송되었습니다.');
     },
     onError: (error) => {
-      const errorMsg = error.response && error.response.data && error.response.data.message
-        ? error.response.data.message
-        : '오류가 발생했습니다.';
-      alert('발송 실패: ' + errorMsg);
+      alert(`발송 실패: ${error.response?.data?.message || error.message}`);
     },
   });
 
-  const handleSendMessage = () => {
-    if (!newMessage.recipientPhone || !newMessage.content) {
-      alert('수신자 전화번호와 내용을 입력해주세요.');
-      return;
-    }
-
-    sendMutation.mutate(newMessage);
+  const resetForm = () => {
+    setNewMessage({
+      studentId: '',
+      recipientPhone: '',
+      recipientName: '',
+      messageType: 'GENERAL',
+      content: '',
+    });
   };
 
-  const handleStudentSelect = (e) => {
-    const studentId = e.target.value;
+  const handleStudentSelect = (studentId) => {
     const student = students.find((s) => s.id === parseInt(studentId));
-
     if (student) {
       setNewMessage({
         ...newMessage,
         studentId,
-        recipientPhone: student.parentPhone || student.studentPhone,
-        recipientName: student.parentName || student.studentName,
-      });
-    } else {
-      setNewMessage({
-        ...newMessage,
-        studentId: '',
-        recipientPhone: '',
-        recipientName: '',
+        recipientPhone: student.phoneNumber || '',
+        recipientName: student.studentName,
       });
     }
   };
 
-  // 상태별 배지
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      PENDING: { text: '대기', color: '#FF9800' },
-      SENT: { text: '발송 완료', color: '#03C75A' },
-      FAILED: { text: '발송 실패', color: '#FF3B30' },
-    };
-    const statusInfo = statusMap[status] || { text: status, color: '#999' };
-    return <span className="status-badge" style={{ backgroundColor: statusInfo.color }}>{statusInfo.text}</span>;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    sendMutation.mutate(newMessage);
   };
 
-  // 메시지 타입별 아이콘
-  const getTypeIcon = (type) => {
-    const typeMap = {
-      GENERAL: '📧',
-      ATTENDANCE: '<i className="fas fa-check-circle"></i>',
-      PAYMENT: '<i className="fas fa-dollar-sign"></i>',
-      RESERVATION: '<i className="fas fa-calendar-alt"></i>',
-      EMERGENCY: '🚨',
+  const getStatusBadge = (status) => {
+    const badges = {
+      SENT: { text: '발송완료', className: 'status-success' },
+      PENDING: { text: '발송중', className: 'status-pending' },
+      FAILED: { text: '발송실패', className: 'status-error' },
     };
-    return typeMap[type] || '📧';
+    return badges[status] || { text: status, className: 'status-default' };
+  };
+
+  const getTypeBadge = (type) => {
+    const badges = {
+      GENERAL: { text: '일반', className: 'type-general' },
+      ATTENDANCE: { text: '출석', className: 'type-attendance' },
+      PAYMENT: { text: '결제', className: 'type-payment' },
+      RESERVATION: { text: '예약', className: 'type-reservation' },
+      EMERGENCY: { text: '긴급', className: 'type-emergency' },
+    };
+    return badges[type] || { text: type, className: 'type-default' };
   };
 
   if (isLoading) {
@@ -135,154 +120,209 @@ function Messages() {
       </div>
 
       <div className="page-content">
-
-        <div className="messages-stats">
+        {/* 통계 카드 */}
+        <div className="stats-grid">
           <div className="stat-card">
-            <span className="stat-label">전체 발송</span>
-            <span className="stat-value">{messages.length}건</span>
+            <div className="stat-icon">
+              <i className="fas fa-envelope"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{messages.length}</div>
+              <div className="stat-label">전체 발송</div>
+            </div>
           </div>
           <div className="stat-card success">
-            <span className="stat-label">발송 완료</span>
-            <span className="stat-value">
-              {messages.filter((m) => m.sendStatus === 'SENT').length}건
-            </span>
+            <div className="stat-icon">
+              <i className="fas fa-check-circle"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">
+                {messages.filter((m) => m.sendStatus === 'SENT').length}
+              </div>
+              <div className="stat-label">발송 완료</div>
+            </div>
           </div>
-          <div className="stat-card pending">
-            <span className="stat-label">대기</span>
-            <span className="stat-value">
-              {messages.filter((m) => m.sendStatus === 'PENDING').length}건
-            </span>
+          <div className="stat-card warning">
+            <div className="stat-icon">
+              <i className="fas fa-clock"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">
+                {messages.filter((m) => m.sendStatus === 'PENDING').length}
+              </div>
+              <div className="stat-label">발송 중</div>
+            </div>
           </div>
-          <div className="stat-card failed">
-            <span className="stat-label">실패</span>
-            <span className="stat-value">
-              {messages.filter((m) => m.sendStatus === 'FAILED').length}건
-            </span>
+          <div className="stat-card error">
+            <div className="stat-icon">
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">
+                {messages.filter((m) => m.sendStatus === 'FAILED').length}
+              </div>
+              <div className="stat-label">발송 실패</div>
+            </div>
           </div>
         </div>
 
+        {/* 문자 발송 내역 */}
         <div className="messages-list">
-          {messages.length === 0 ? (
-            <div className="empty-state">발송된 문자가 없습니다.</div>
+          <h3>발송 내역</h3>
+          {messages.length > 0 ? (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>발송일시</th>
+                    <th>수신자</th>
+                    <th>전화번호</th>
+                    <th>유형</th>
+                    <th>내용</th>
+                    <th>상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {messages.map((message) => (
+                    <tr key={message.id}>
+                      <td>{new Date(message.sentAt).toLocaleString('ko-KR')}</td>
+                      <td>{message.recipientName}</td>
+                      <td>{message.recipientPhone}</td>
+                      <td>
+                        <span className={`type-badge ${getTypeBadge(message.messageType).className}`}>
+                          {getTypeBadge(message.messageType).text}
+                        </span>
+                      </td>
+                      <td className="message-content">
+                        {message.content.length > 30 
+                          ? `${message.content.substring(0, 30)}...` 
+                          : message.content}
+                      </td>
+                      <td>
+                        <span className={`status-badge ${getStatusBadge(message.sendStatus).className}`}>
+                          {getStatusBadge(message.sendStatus).text}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
-          messages.map((message) => (
-            <div key={message.id} className="message-card">
-              <div className="message-header">
-                <div className="message-info">
-                  <span className="message-icon">{getTypeIcon(message.messageType)}</span>
-                  <div className="recipient-info">
-                    <strong>{message.recipientName || '수신자'}</strong>
-                    <span className="phone">{message.recipientPhone}</span>
-                  </div>
-                </div>
-                {getStatusBadge(message.sendStatus)}
-              </div>
-
-              <div className="message-content">
-                <p>{message.content}</p>
-              </div>
-
-              <div className="message-footer">
-                {message.sentAt && (
-                  <span className="sent-time">
-                    발송: {new Date(message.sentAt).toLocaleString('ko-KR')}
-                  </span>
-                )}
-                {message.errorMessage && (
-                  <span className="error-message">오류: {message.errorMessage}</span>
-                )}
-              </div>
-              </div>
-            ))
+            <div className="empty-state">
+              <i className="fas fa-envelope-open"></i>
+              <p>발송된 문자가 없습니다.</p>
+            </div>
           )}
         </div>
       </div>
 
       {/* 문자 발송 모달 */}
       {showSendModal && (
-        <div className="modal-overlay" onClick={() => setShowSendModal(false)}>
+        <div className="modal-overlay" onClick={() => {
+          setShowSendModal(false);
+          resetForm();
+        }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>문자 발송</h2>
-              <button className="modal-close" onClick={() => setShowSendModal(false)}>
+              <button className="modal-close" onClick={() => {
+                setShowSendModal(false);
+                resetForm();
+              }}>
                 ×
               </button>
             </div>
 
             <div className="modal-body">
-              <div className="form-group">
-                <label>학생 선택 (선택사항)</label>
-                <select value={newMessage.studentId} onChange={handleStudentSelect}>
-                  <option value="">직접 입력</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.studentName} ({student.parentPhone || student.studentPhone})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-row">
+              <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label>수신자명</label>
-                  <input
-                    type="text"
-                    value={newMessage.recipientName}
-                    onChange={(e) =>
-                      setNewMessage({ ...newMessage, recipientName: e.target.value })
-                    }
-                    placeholder="수신자 이름"
-                  />
+                  <label>학생 선택</label>
+                  <select
+                    value={newMessage.studentId}
+                    onChange={(e) => handleStudentSelect(e.target.value)}
+                  >
+                    <option value="">학생을 선택하세요</option>
+                    {students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.studentName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>수신자명 *</label>
+                    <input
+                      type="text"
+                      value={newMessage.recipientName}
+                      onChange={(e) => setNewMessage({ ...newMessage, recipientName: e.target.value })}
+                      placeholder="수신자 이름"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>전화번호 *</label>
+                    <input
+                      type="tel"
+                      value={newMessage.recipientPhone}
+                      onChange={(e) => setNewMessage({ ...newMessage, recipientPhone: e.target.value })}
+                      placeholder="010-1234-5678"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label>전화번호 *</label>
-                  <input
-                    type="tel"
-                    value={newMessage.recipientPhone}
-                    onChange={(e) =>
-                      setNewMessage({ ...newMessage, recipientPhone: e.target.value })
-                    }
-                    placeholder="010-1234-5678"
-                  />
+                  <label>메시지 유형</label>
+                  <select
+                    value={newMessage.messageType}
+                    onChange={(e) => setNewMessage({ ...newMessage, messageType: e.target.value })}
+                  >
+                    <option value="GENERAL">일반</option>
+                    <option value="ATTENDANCE">출석 관련</option>
+                    <option value="PAYMENT">결제 관련</option>
+                    <option value="RESERVATION">예약 관련</option>
+                    <option value="EMERGENCY">긴급</option>
+                  </select>
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label>메시지 유형</label>
-                <select
-                  value={newMessage.messageType}
-                  onChange={(e) =>
-                    setNewMessage({ ...newMessage, messageType: e.target.value })
-                  }
-                >
-                  <option value="GENERAL">일반</option>
-                  <option value="ATTENDANCE">출석 안내</option>
-                  <option value="PAYMENT">결제 안내</option>
-                  <option value="RESERVATION">예약 안내</option>
-                  <option value="EMERGENCY">긴급</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>메시지 내용 *</label>
-                <textarea
-                  value={newMessage.content}
-                  onChange={(e) => setNewMessage({ ...newMessage, content: e.target.value })}
-                  placeholder="메시지 내용을 입력하세요 (최대 2000자)"
-                  rows="8"
-                  maxLength="2000"
-                />
-                <span className="char-count">{newMessage.content.length} / 2000</span>
-              </div>
+                <div className="form-group">
+                  <label>메시지 내용 *</label>
+                  <textarea
+                    value={newMessage.content}
+                    onChange={(e) => setNewMessage({ ...newMessage, content: e.target.value })}
+                    placeholder="메시지 내용을 입력하세요"
+                    rows="4"
+                    maxLength="90"
+                    required
+                  />
+                  <div className="char-count">
+                    {newMessage.content.length}/90자
+                  </div>
+                </div>
+              </form>
             </div>
 
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowSendModal(false)}>
-                취소
+              <button 
+                type="submit" 
+                className="btn-primary"
+                onClick={handleSubmit}
+                disabled={sendMutation.isLoading}
+              >
+                {sendMutation.isLoading ? '발송 중...' : '발송'}
               </button>
-              <button className="btn-primary" onClick={handleSendMessage}>
-                발송
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowSendModal(false);
+                  resetForm();
+                }}
+              >
+                취소
               </button>
             </div>
           </div>

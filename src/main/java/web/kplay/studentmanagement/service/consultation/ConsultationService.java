@@ -54,7 +54,7 @@ public class ConsultationService {
                 .build();
 
         Consultation savedConsultation = consultationRepository.save(consultation);
-        log.info("상담 기록 저장: 학생={}, 상담자={}, 날짜={}",
+        log.info("Consultation record saved: student={}, consultant={}, date={}",
                 student.getStudentName(), consultant.getName(), request.getConsultationDate());
 
         return toResponse(savedConsultation);

@@ -81,9 +81,15 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/favicon.ico").permitAll()
+                        .requestMatchers("/assets/**", "/static/**", "/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
+                        .requestMatchers("/dashboard", "/students", "/courses", "/attendance", "/reservations", 
+                                        "/enrollments", "/consultations", "/leveltest", "/makeup-classes", 
+                                        "/notices", "/sms", "/payment", "/mypage", "/login").permitAll() // React 라우팅 경로
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll() // 개발 환경에서 H2 Console 접근 허용
+                        .requestMatchers("/error").permitAll() // 에러 페이지 허용
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/student/**").hasAnyRole("ADMIN", "TEACHER", "STUDENT")

@@ -45,7 +45,7 @@ public class CourseService {
                 .build();
 
         Course savedCourse = courseRepository.save(course);
-        log.info("새 수업 등록: {}", savedCourse.getCourseName());
+        log.info("New course registered: {}", savedCourse.getCourseName());
 
         return toResponse(savedCourse);
     }
@@ -102,7 +102,7 @@ public class CourseService {
             course.assignTeacher(teacher);
         }
 
-        log.info("수업 정보 업데이트: {}", course.getCourseName());
+        log.info("Course info updated: {}", course.getCourseName());
         return toResponse(course);
     }
 
@@ -111,7 +111,7 @@ public class CourseService {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
         course.deactivate();
-        log.info("수업 비활성화: {}", course.getCourseName());
+        log.info("Course deactivated: {}", course.getCourseName());
     }
 
     private CourseResponse toResponse(Course course) {

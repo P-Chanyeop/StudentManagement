@@ -47,7 +47,7 @@ public class AttendanceService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // 예상 하원 시간 자동 계산
+        // Expected leave time auto calculated
         // 1. 요청에 명시적으로 지정된 경우 사용
         // 2. 그렇지 않으면 등원 시간 + 코스 수업 시간(분)으로 자동 계산
         LocalTime expectedLeave;
@@ -57,7 +57,7 @@ public class AttendanceService {
             // 등원 시간 + 수업 시간으로 자동 계산
             Integer courseDuration = schedule.getCourse().getDurationMinutes();
             expectedLeave = now.toLocalTime().plusMinutes(courseDuration);
-            log.info("예상 하원 시간 자동 계산: 등원={}, 수업시간={}분, 예상하원={}",
+            log.info("Expected leave time auto calculated: arrival={}, class duration={}min, expected leave={}",
                     now.toLocalTime(), courseDuration, expectedLeave);
         }
 
@@ -71,7 +71,7 @@ public class AttendanceService {
         attendance.checkIn(now, expectedLeave);
 
         Attendance savedAttendance = attendanceRepository.save(attendance);
-        log.info("출석 체크인: 학생={}, 수업={}, 상태={}, 예상하원={}",
+        log.info("Attendance check-in: student={}, course={}, status={}, expected leave={}",
                 student.getStudentName(),
                 schedule.getCourse().getCourseName(),
                 savedAttendance.getStatus(),
@@ -97,7 +97,7 @@ public class AttendanceService {
         LocalDateTime now = LocalDateTime.now();
         attendance.checkOut(now);
 
-        log.info("하원 체크아웃: 학생={}, 시각={}",
+        log.info("Leave check-out: student={}, time={}",
                 attendance.getStudent().getStudentName(), now);
 
         return toResponse(attendance);
@@ -110,7 +110,7 @@ public class AttendanceService {
 
         AttendanceStatus previousStatus = attendance.getStatus();
         attendance.updateStatus(status, reason);
-        log.info("출석 상태 변경: 학생={}, 이전상태={}, 새상태={}",
+        log.info("Attendance status changed: student={}, previous status={}, new status={}",
                 attendance.getStudent().getStudentName(), previousStatus, status);
 
         // 결석 처리 시 수강권 횟수 자동 차감
@@ -133,7 +133,7 @@ public class AttendanceService {
                 .findActiveEnrollmentByStudentAndCourse(studentId, courseId);
 
         if (activeEnrollments.isEmpty()) {
-            log.warn("결석 처리: 활성 수강권이 없음 - 학생ID={}, 수업ID={}", studentId, courseId);
+            log.warn("Absence processing: No active enrollment - studentId={}, courseId={}", studentId, courseId);
             throw new BusinessException("활성화된 수강권이 없어 결석 처리할 수 없습니다.");
         }
 
@@ -141,7 +141,7 @@ public class AttendanceService {
         Enrollment enrollment = activeEnrollments.get(0);
         enrollment.useCount();
 
-        log.info("결석으로 수강권 횟수 차감: 수강권ID={}, 남은횟수={}/{}",
+        log.info("Enrollment count deducted for absence: enrollmentId={}, remaining={}/{}",
                 enrollment.getId(),
                 enrollment.getRemainingCount(),
                 enrollment.getTotalCount());
@@ -283,7 +283,7 @@ public class AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
         attendance.toggleClassCompleted();
-        log.info("수업 완료 상태 토글: 학생={}, 완료여부={}",
+        log.info("Class completion status toggled: student={}, completed={}",
                 attendance.getStudent().getStudentName(), attendance.getClassCompleted());
 
         return toResponse(attendance);
@@ -298,7 +298,7 @@ public class AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
         attendance.completeClass();
-        log.info("수업 완료 처리: 학생={}", attendance.getStudent().getStudentName());
+        log.info("Class completion processed: student={}", attendance.getStudent().getStudentName());
 
         return toResponse(attendance);
     }
@@ -312,7 +312,7 @@ public class AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
         attendance.uncompleteClass();
-        log.info("수업 완료 취소: 학생={}", attendance.getStudent().getStudentName());
+        log.info("Class completion cancelled: student={}", attendance.getStudent().getStudentName());
 
         return toResponse(attendance);
     }
@@ -326,7 +326,7 @@ public class AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
         attendance.updateStatus(attendance.getStatus(), reason);
-        log.info("사유 업데이트: 학생={}, 사유={}", attendance.getStudent().getStudentName(), reason);
+        log.info("Reason updated: student={}, reason={}", attendance.getStudent().getStudentName(), reason);
 
         return toResponse(attendance);
     }

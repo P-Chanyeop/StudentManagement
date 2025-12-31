@@ -46,7 +46,7 @@ public class StudentService {
                 .build();
 
         Student savedStudent = studentRepository.save(student);
-        log.info("새 학생 등록: {}", savedStudent.getStudentName());
+        log.info("New student registered: {}", savedStudent.getStudentName());
 
         return toResponse(savedStudent);
     }
@@ -124,7 +124,7 @@ public class StudentService {
         student.updateEnglishLevel(request.getEnglishLevel());
         student.updateMemo(request.getMemo());
 
-        log.info("학생 정보 수정: {}", student.getStudentName());
+        log.info("Student info updated: {}", student.getStudentName());
         return toResponse(student);
     }
 
@@ -134,7 +134,7 @@ public class StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
         student.deactivate();
         // student.getUser().deactivate(); // User 제거됨
-        log.info("학생 비활성화: {}", student.getStudentName());
+        log.info("Student deactivated: {}", student.getStudentName());
     }
 
     private StudentResponse toResponse(Student student) {

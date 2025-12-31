@@ -36,7 +36,7 @@ public class AutomatedMessageService {
 
     /**
      * 지각 자동 알림 발송
-     * 출석 체크인 시 지각(10분 이상) 판정된 경우 자동 호출
+     * Attendance check-in 시 지각(10분 이상) 판정된 경우 자동 호출
      */
     @Transactional
     public void sendLateNotification(Student student, LocalDateTime checkInTime, LocalDateTime scheduledTime) {

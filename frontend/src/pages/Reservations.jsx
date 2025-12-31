@@ -175,7 +175,6 @@ function Reservations() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
             />
           </div>
         </div>

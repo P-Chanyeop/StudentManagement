@@ -93,7 +93,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        log.info("새 사용자 등록 완료: {}", user.getUsername());
+        log.info("New user registered: {}", user.getUsername());
     }
 
     @Transactional
@@ -138,7 +138,7 @@ public class AuthService {
 
         user.updateRefreshToken(null);
         userRepository.save(user);
-        log.info("사용자 로그아웃: {}", username);
+        log.info("User logged out: {}", username);
     }
 
     /**

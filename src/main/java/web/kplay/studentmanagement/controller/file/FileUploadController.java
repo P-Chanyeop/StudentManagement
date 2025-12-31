@@ -35,7 +35,7 @@ public class FileUploadController {
     public ResponseEntity<Map<String, String>> uploadAudioFile(
             @RequestParam("file") MultipartFile file) {
 
-        log.info("녹음 파일 업로드 요청: {}", file.getOriginalFilename());
+        log.info("Recording file upload request: {}", file.getOriginalFilename());
 
         String filePath = fileStorageService.storeFile(file, "audio");
 
@@ -58,7 +58,7 @@ public class FileUploadController {
     public ResponseEntity<Map<String, Object>> uploadMultipleAudioFiles(
             @RequestParam("files") MultipartFile[] files) {
 
-        log.info("다중 녹음 파일 업로드 요청: {}개 파일", files.length);
+        log.info("Multiple recording files upload request: {} files", files.length);
 
         java.util.List<Map<String, String>> uploadedFiles = new java.util.ArrayList<>();
         
@@ -91,7 +91,7 @@ public class FileUploadController {
     public ResponseEntity<Map<String, String>> uploadDocumentFile(
             @RequestParam("file") MultipartFile file) {
 
-        log.info("첨부 파일 업로드 요청: {}", file.getOriginalFilename());
+        log.info("Attachment file upload request: {}", file.getOriginalFilename());
 
         String filePath = fileStorageService.storeFile(file, "document");
 
@@ -114,7 +114,7 @@ public class FileUploadController {
     public ResponseEntity<Map<String, Object>> uploadMultipleDocumentFiles(
             @RequestParam("files") MultipartFile[] files) {
 
-        log.info("다중 첨부 파일 업로드 요청: {}개 파일", files.length);
+        log.info("Multiple attachment files upload request: {} files", files.length);
 
         java.util.List<Map<String, String>> uploadedFiles = new java.util.ArrayList<>();
         
@@ -155,7 +155,7 @@ public class FileUploadController {
 
             // 보안 검증: ".." 경로 조작 문자 차단
             if (filePath.contains("..")) {
-                log.warn("Path Traversal 시도 감지: {}", filePath);
+                log.warn("Path Traversal attempt detected: {}", filePath);
                 throw new SecurityException("부적절한 파일 경로입니다.");
             }
 
@@ -167,7 +167,7 @@ public class FileUploadController {
 
             // 보안 검증: 요청된 파일이 허용된 디렉토리 내에 있는지 확인
             if (!file.startsWith(fileStorageLocation)) {
-                log.warn("디렉토리 외부 파일 접근 시도: {}", filePath);
+                log.warn("Attempt to access file outside directory: {}", filePath);
                 throw new SecurityException("파일 경로가 유효하지 않습니다.");
             }
 
@@ -181,7 +181,7 @@ public class FileUploadController {
             String fileName = file.getFileName().toString();
             String safeFileName = fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
 
-            log.info("파일 다운로드: {}", safeFileName);
+            log.info("File download: {}", safeFileName);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -189,10 +189,10 @@ public class FileUploadController {
                     .body(resource);
 
         } catch (SecurityException | IllegalArgumentException ex) {
-            log.error("보안 검증 실패: {}", ex.getMessage());
+            log.error("Security validation failed: {}", ex.getMessage());
             throw ex;
         } catch (MalformedURLException ex) {
-            log.error("파일 경로 오류: {}", filePath, ex);
+            log.error("File path error: {}", filePath, ex);
             throw new RuntimeException("파일을 읽을 수 없습니다: " + filePath, ex);
         }
     }
@@ -206,7 +206,7 @@ public class FileUploadController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<Map<String, String>> deleteFile(@RequestParam("filePath") String filePath) {
 
-        log.info("파일 삭제 요청: {}", filePath);
+        log.info("File deletion request: {}", filePath);
 
         fileStorageService.deleteFile(filePath);
 

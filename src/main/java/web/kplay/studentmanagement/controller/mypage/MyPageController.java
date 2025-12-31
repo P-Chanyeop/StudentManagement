@@ -28,7 +28,7 @@ public class MyPageController {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long userId = userDetails.getId();
 
-        log.info("마이페이지 조회 요청: userId={}", userId);
+        log.info("MyPage request: userId={}", userId);
         MyPageResponse response = myPageService.getMyPageByUserId(userId);
 
         return ResponseEntity.ok(response);
@@ -41,7 +41,7 @@ public class MyPageController {
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<MyPageResponse> getStudentMyPage(@PathVariable Long studentId) {
-        log.info("학생 마이페이지 조회 요청: studentId={}", studentId);
+        log.info("Student MyPage request: studentId={}", studentId);
         MyPageResponse response = myPageService.getMyPageByStudentId(studentId);
 
         return ResponseEntity.ok(response);
