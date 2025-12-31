@@ -11,7 +11,7 @@ function Courses() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [newCourse, setNewCourse] = useState({
-    name: '',
+    courseName: '',
     description: '',
     level: 'BEGINNER',
     capacity: 10,
@@ -34,7 +34,7 @@ function Courses() {
       queryClient.invalidateQueries(['courses']);
       setShowCreateModal(false);
       setNewCourse({
-        name: '',
+        courseName: '',
         description: '',
         level: 'BEGINNER',
         capacity: 10,
@@ -74,7 +74,7 @@ function Courses() {
   });
 
   const handleCreateCourse = () => {
-    if (!newCourse.name || !newCourse.description) {
+    if (!newCourse.courseName || !newCourse.description) {
       alert('코스명과 설명을 입력해주세요.');
       return;
     }
@@ -88,7 +88,7 @@ function Courses() {
   };
 
   const handleUpdateCourse = () => {
-    if (!selectedCourse.name || !selectedCourse.description) {
+    if (!selectedCourse.courseName || !selectedCourse.description) {
       alert('코스명과 설명을 입력해주세요.');
       return;
     }
@@ -96,7 +96,7 @@ function Courses() {
     updateMutation.mutate({
       id: selectedCourse.id,
       data: {
-        name: selectedCourse.name,
+        courseName: selectedCourse.courseName,
         description: selectedCourse.description,
         level: selectedCourse.level,
         capacity: selectedCourse.capacity,
@@ -105,8 +105,8 @@ function Courses() {
     });
   };
 
-  const handleDeleteCourse = (id, name) => {
-    if (window.confirm(`"${name}" 수업을 삭제하시겠습니까?`)) {
+  const handleDeleteCourse = (id, courseName) => {
+    if (window.confirm(`"${courseName}" 수업을 삭제하시겠습니까?`)) {
       deleteMutation.mutate(id);
     }
   };
@@ -120,7 +120,7 @@ function Courses() {
   const filteredCourses = courses.filter((course) => {
     return (
       searchQuery === '' ||
-      course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.level.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -205,7 +205,7 @@ function Courses() {
             filteredCourses.map((course) => (
               <div key={course.id} className="course-card">
                 <div className="course-header">
-                  <h3>{course.name}</h3>
+                  <h3>{course.courseName}</h3>
                   {getLevelBadge(course.level)}
                 </div>
 
@@ -230,7 +230,7 @@ function Courses() {
                   </button>
                   <button
                     className="btn-table-delete"
-                    onClick={() => handleDeleteCourse(course.id, course.name)}
+                    onClick={() => handleDeleteCourse(course.id, course.courseName)}
                   >
                     <i className="fas fa-trash"></i> 삭제
                   </button>
@@ -257,8 +257,8 @@ function Courses() {
                 <label>코스명 *</label>
                 <input
                   type="text"
-                  value={newCourse.name}
-                  onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
+                  value={newCourse.courseName}
+                  onChange={(e) => setNewCourse({ ...newCourse, courseName: e.target.value })}
                   placeholder="예: 기초 영어 회화"
                 />
               </div>
@@ -346,9 +346,9 @@ function Courses() {
                 <label>코스명 *</label>
                 <input
                   type="text"
-                  value={selectedCourse.name}
+                  value={selectedCourse.courseName}
                   onChange={(e) =>
-                    setSelectedCourse({ ...selectedCourse, name: e.target.value })
+                    setSelectedCourse({ ...selectedCourse, courseName: e.target.value })
                   }
                   placeholder="예: 기초 영어 회화"
                 />
