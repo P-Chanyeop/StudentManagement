@@ -73,9 +73,13 @@ function Dashboard() {
     return timeString.substring(0, 5); // HH:MM
   };
 
-  // 출석률 계산
+  // 출석률 계산 및 실제 출석한 학생 수 계산
+  const actualAttendedCount = todayAttendance.filter(attendance => 
+    attendance.checkInTime && attendance.status !== 'ABSENT'
+  ).length;
+  
   const attendanceRate = todaySchedules.length > 0
-    ? Math.round((todayAttendance.length / todaySchedules.length) * 100)
+    ? Math.round((actualAttendedCount / todaySchedules.length) * 100)
     : 0;
 
   return (
@@ -149,7 +153,7 @@ function Dashboard() {
             <div className="stat-content">
               <h3>오늘 출석</h3>
               <div className="stat-value">
-                {todayAttendance.length}
+                {actualAttendedCount}
                 <span className="stat-unit">명</span>
               </div>
             </div>
