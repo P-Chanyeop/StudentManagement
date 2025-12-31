@@ -78,4 +78,38 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      */
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.course.teacher.id = :teacherId AND a.status = :status")
     Long countByTeacherIdAndStatus(@Param("teacherId") Long teacherId, @Param("status") AttendanceStatus status);
+
+    /**
+     * 특정 날짜의 실제 출석 수 조회 (체크인한 학생만)
+     * @param date 조회할 날짜
+     * @return 해당 날짜에 체크인한 학생 수
+     */
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.checkInTime IS NOT NULL")
+    int countByScheduleDateAndCheckInTimeIsNotNull(@Param("date") LocalDate date);
+
+    /**
+     * 특정 날짜와 선생님의 실제 출석 수 조회 (체크인한 학생만)
+     * @param date 조회할 날짜
+     * @param teacherId 선생님 ID
+     * @return 해당 날짜에 해당 선생님 수업에서 체크인한 학생 수
+     */
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.schedule.course.teacher.id = :teacherId AND a.checkInTime IS NOT NULL")
+    int countByScheduleDateAndCourseTeacherIdAndCheckInTimeIsNotNull(@Param("date") LocalDate date, @Param("teacherId") Long teacherId);
+
+    /**
+     * 특정 날짜의 총 출석 예정 학생 수 조회 (예약된 모든 학생)
+     * @param date 조회할 날짜
+     * @return 해당 날짜에 예약된 총 학생 수
+     */
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date")
+    int countByScheduleDate(@Param("date") LocalDate date);
+
+    /**
+     * 특정 날짜와 선생님의 총 출석 예정 학생 수 조회
+     * @param date 조회할 날짜
+     * @param teacherId 선생님 ID
+     * @return 해당 날짜에 해당 선생님 수업에 예약된 총 학생 수
+     */
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.schedule.course.teacher.id = :teacherId")
+    int countByScheduleDateAndCourseTeacherId(@Param("date") LocalDate date, @Param("teacherId") Long teacherId);
 }

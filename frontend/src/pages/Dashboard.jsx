@@ -5,7 +5,8 @@ import {
   reservationAPI,
   enrollmentAPI,
   scheduleAPI,
-  authAPI
+  authAPI,
+  dashboardAPI
 } from '../services/api';
 import '../styles/Dashboard.css';
 
@@ -22,11 +23,11 @@ function Dashboard() {
     },
   });
 
-  // 전체 학생 수
-  const { data: students = [] } = useQuery({
-    queryKey: ['students'],
+  // 대시보드 통계 조회 (역할별 필터링 적용)
+  const { data: dashboardStats } = useQuery({
+    queryKey: ['dashboardStats'],
     queryFn: async () => {
-      const response = await studentAPI.getAll();
+      const response = await dashboardAPI.getStats();
       return response.data;
     },
   });
@@ -73,14 +74,12 @@ function Dashboard() {
     return timeString.substring(0, 5); // HH:MM
   };
 
-  // 출석률 계산 및 실제 출석한 학생 수 계산
-  const actualAttendedCount = todayAttendance.filter(attendance => 
-    attendance.checkInTime && attendance.status !== 'ABSENT'
-  ).length;
-  
-  const attendanceRate = todaySchedules.length > 0
-    ? Math.round((actualAttendedCount / todaySchedules.length) * 100)
-    : 0;
+  // 대시보드 통계에서 값 추출 (기본값 설정)
+  const totalStudents = dashboardStats?.totalStudents || 0;
+  const todaySchedulesCount = dashboardStats?.todaySchedules || 0;
+  const todayAttendanceCount = dashboardStats?.todayAttendance || 0;
+  const attendanceRate = dashboardStats?.attendanceRate || 0;
+  const expiringEnrollmentsCount = dashboardStats?.expiringEnrollments || 0;
 
   return (
     <div className="dashboard-wrapper">
@@ -109,12 +108,12 @@ function Dashboard() {
             <div className="stat-content">
               <h3>전체 학생</h3>
               <div className="stat-value">
-                {students.length}
+                {totalStudents}
                 <span className="stat-unit">명</span>
               </div>
             </div>
             <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> 등록된 전체 학생 수
+              <i className="fas fa-info-circle"></i> {profile?.role === 'TEACHER' ? '전체 학생 수' : '등록된 전체 학생 수'}
             </div>
           </div>
 
@@ -131,12 +130,12 @@ function Dashboard() {
             <div className="stat-content">
               <h3>오늘의 수업</h3>
               <div className="stat-value">
-                {todaySchedules.length}
+                {todaySchedulesCount}
                 <span className="stat-unit">개</span>
               </div>
             </div>
             <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> 오늘 예정된 수업
+              <i className="fas fa-info-circle"></i> {profile?.role === 'TEACHER' ? '오늘 담당 수업' : '오늘 예정된 수업'}
             </div>
           </div>
 
@@ -153,7 +152,7 @@ function Dashboard() {
             <div className="stat-content">
               <h3>오늘 출석</h3>
               <div className="stat-value">
-                {actualAttendedCount}
+                {todayAttendanceCount}
                 <span className="stat-unit">명</span>
               </div>
             </div>
@@ -175,12 +174,12 @@ function Dashboard() {
             <div className="stat-content">
               <h3>만료 임박 수강권</h3>
               <div className="stat-value">
-                {expiringEnrollments.length}
+                {expiringEnrollmentsCount}
                 <span className="stat-unit">개</span>
               </div>
             </div>
             <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> 7일 이내 만료 예정
+              <i className="fas fa-info-circle"></i> {profile?.role === 'TEACHER' ? '담당 수업 만료 임박' : '7일 이내 만료 예정'}
             </div>
           </div>
         </div>
@@ -194,7 +193,7 @@ function Dashboard() {
                 <i className="fas fa-calendar-day"></i>
                 오늘의 수업
               </h2>
-              <span className="card-badge">{todaySchedules.length}개</span>
+              <span className="card-badge">{todaySchedulesCount}개</span>
             </div>
             <div className="card-body">
               {todaySchedules.length === 0 ? (
@@ -239,10 +238,10 @@ function Dashboard() {
                 <i className="fas fa-exclamation-triangle"></i>
                 만료 임박 수강권
               </h2>
-              <span className="card-badge warning">{expiringEnrollments.length}개</span>
+              <span className="card-badge warning">{expiringEnrollmentsCount}개</span>
             </div>
             <div className="card-body">
-              {expiringEnrollments.length === 0 ? (
+              {expiringEnrollmentsCount === 0 ? (
                 <div className="empty-state">
                   <i className="fas fa-check-circle"></i>
                   <p>만료 임박 수강권이 없습니다</p>

@@ -216,6 +216,11 @@ export const mypageAPI = {
   getStudentMyPage: (studentId) => api.get(`/mypage/student/${studentId}`),
 };
 
+// 대시보드 API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+};
+
 // 공지사항 API
 export const noticeAPI = {
   getAll: (page = 0, size = 10) => api.get(`/notices?page=${page}&size=${size}`),

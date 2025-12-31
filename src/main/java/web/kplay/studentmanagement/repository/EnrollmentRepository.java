@@ -56,4 +56,33 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      * @return 전체 활성 수강권 수
      */
     Integer countByIsActiveTrue();
+
+    /**
+     * 만료 임박 수강권 수 조회
+     * @param startDate 시작 날짜
+     * @param endDate 종료 날짜
+     * @param isActive 활성 상태
+     * @return 해당 기간 내 만료 예정인 활성 수강권 수
+     */
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.endDate BETWEEN :startDate AND :endDate AND e.isActive = :isActive")
+    int countByEndDateBetweenAndIsActive(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("isActive") Boolean isActive);
+
+    /**
+     * 특정 선생님 담당 수업의 활성 학생 수 조회
+     * @param teacherId 선생님 ID
+     * @return 해당 선생님 수업에 등록된 활성 학생 수
+     */
+    @Query("SELECT COUNT(DISTINCT e.student.id) FROM Enrollment e WHERE e.course.teacher.id = :teacherId AND e.isActive = true")
+    int countActiveStudentsByTeacherId(@Param("teacherId") Long teacherId);
+
+    /**
+     * 특정 선생님 담당 수업의 만료 임박 수강권 수 조회
+     * @param startDate 시작 날짜
+     * @param endDate 종료 날짜
+     * @param isActive 활성 상태
+     * @param teacherId 선생님 ID
+     * @return 해당 선생님 수업의 만료 임박 수강권 수
+     */
+    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.endDate BETWEEN :startDate AND :endDate AND e.isActive = :isActive AND e.course.teacher.id = :teacherId")
+    int countByEndDateBetweenAndIsActiveAndCourseTeacherId(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("isActive") Boolean isActive, @Param("teacherId") Long teacherId);
 }

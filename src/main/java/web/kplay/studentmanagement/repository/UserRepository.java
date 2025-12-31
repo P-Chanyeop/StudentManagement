@@ -20,4 +20,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByIsActive(Boolean isActive);
 
     Optional<User> findByRefreshToken(String refreshToken);
+
+    /**
+     * 특정 역할과 활성 상태의 사용자 수 조회
+     * @param role 사용자 역할
+     * @param isActive 활성 상태
+     * @return 해당 조건의 사용자 수
+     */
+    int countByRoleAndIsActive(UserRole role, Boolean isActive);
 }
