@@ -76,22 +76,22 @@ function Messages() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      SENT: { text: '발송완료', className: 'status-success' },
-      PENDING: { text: '발송중', className: 'status-pending' },
-      FAILED: { text: '발송실패', className: 'status-error' },
+      SENT: { text: '발송완료', className: 'messages-status-success' },
+      PENDING: { text: '발송중', className: 'messages-status-pending' },
+      FAILED: { text: '발송실패', className: 'messages-status-error' },
     };
-    return badges[status] || { text: status, className: 'status-default' };
+    return badges[status] || { text: status, className: 'messages-status-default' };
   };
 
   const getTypeBadge = (type) => {
     const badges = {
-      GENERAL: { text: '일반', className: 'type-general' },
-      ATTENDANCE: { text: '출석', className: 'type-attendance' },
-      PAYMENT: { text: '결제', className: 'type-payment' },
-      RESERVATION: { text: '예약', className: 'type-reservation' },
-      EMERGENCY: { text: '긴급', className: 'type-emergency' },
+      GENERAL: { text: '일반', className: 'messages-type-general' },
+      ATTENDANCE: { text: '출석', className: 'messages-type-attendance' },
+      PAYMENT: { text: '결제', className: 'messages-type-payment' },
+      RESERVATION: { text: '예약', className: 'messages-type-reservation' },
+      EMERGENCY: { text: '긴급', className: 'messages-type-emergency' },
     };
-    return badges[type] || { text: type, className: 'type-default' };
+    return badges[type] || { text: type, className: 'messages-type-default' };
   };
 
   if (isLoading) {
@@ -121,54 +121,54 @@ function Messages() {
 
       <div className="page-content">
         {/* 통계 카드 */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">
+        <div className="messages-stats-grid">
+          <div className="messages-stat-card">
+            <div className="messages-stat-icon">
               <i className="fas fa-envelope"></i>
             </div>
-            <div className="stat-content">
-              <div className="stat-value">{messages.length}</div>
-              <div className="stat-label">전체 발송</div>
+            <div className="messages-stat-content">
+              <div className="messages-stat-value">{messages.length}</div>
+              <div className="messages-stat-label">전체 발송</div>
             </div>
           </div>
-          <div className="stat-card success">
-            <div className="stat-icon">
+          <div className="messages-stat-card success">
+            <div className="messages-stat-icon">
               <i className="fas fa-check-circle"></i>
             </div>
-            <div className="stat-content">
-              <div className="stat-value">
+            <div className="messages-stat-content">
+              <div className="messages-stat-value">
                 {messages.filter((m) => m.sendStatus === 'SENT').length}
               </div>
-              <div className="stat-label">발송 완료</div>
+              <div className="messages-stat-label">발송 완료</div>
             </div>
           </div>
-          <div className="stat-card warning">
-            <div className="stat-icon">
+          <div className="messages-stat-card warning">
+            <div className="messages-stat-icon">
               <i className="fas fa-clock"></i>
             </div>
-            <div className="stat-content">
-              <div className="stat-value">
+            <div className="messages-stat-content">
+              <div className="messages-stat-value">
                 {messages.filter((m) => m.sendStatus === 'PENDING').length}
               </div>
-              <div className="stat-label">발송 중</div>
+              <div className="messages-stat-label">발송 중</div>
             </div>
           </div>
-          <div className="stat-card error">
-            <div className="stat-icon">
+          <div className="messages-stat-card error">
+            <div className="messages-stat-icon">
               <i className="fas fa-exclamation-triangle"></i>
             </div>
-            <div className="stat-content">
-              <div className="stat-value">
+            <div className="messages-stat-content">
+              <div className="messages-stat-value">
                 {messages.filter((m) => m.sendStatus === 'FAILED').length}
               </div>
-              <div className="stat-label">발송 실패</div>
+              <div className="messages-stat-label">발송 실패</div>
             </div>
           </div>
         </div>
 
         {/* 문자 발송 내역 */}
-        <div className="messages-list">
-          <h3>발송 내역</h3>
+        <div className="messages-list-container">
+          <h3 className="messages-list-title">발송 내역</h3>
           {messages.length > 0 ? (
             <div className="table-wrapper">
               <table className="data-table">
@@ -189,17 +189,17 @@ function Messages() {
                       <td>{message.recipientName}</td>
                       <td>{message.recipientPhone}</td>
                       <td>
-                        <span className={`type-badge ${getTypeBadge(message.messageType).className}`}>
+                        <span className={`messages-type-badge ${getTypeBadge(message.messageType).className}`}>
                           {getTypeBadge(message.messageType).text}
                         </span>
                       </td>
-                      <td className="message-content">
+                      <td className="messages-content-cell">
                         {message.content.length > 30 
                           ? `${message.content.substring(0, 30)}...` 
                           : message.content}
                       </td>
                       <td>
-                        <span className={`status-badge ${getStatusBadge(message.sendStatus).className}`}>
+                        <span className={`messages-status-badge ${getStatusBadge(message.sendStatus).className}`}>
                           {getStatusBadge(message.sendStatus).text}
                         </span>
                       </td>
@@ -251,7 +251,7 @@ function Messages() {
                   </select>
                 </div>
 
-                <div className="form-row">
+                <div className="messages-form-row">
                   <div className="form-group">
                     <label>수신자명 *</label>
                     <input
@@ -298,7 +298,7 @@ function Messages() {
                     maxLength="90"
                     required
                   />
-                  <div className="char-count">
+                  <div className="messages-char-count">
                     {newMessage.content.length}/90자
                   </div>
                 </div>

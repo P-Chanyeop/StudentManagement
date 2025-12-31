@@ -1,14 +1,14 @@
-/* Messages Page - Clean Design */
+/* Messages Page - Independent CSS */
 
-/* 통계 카드 그리드 */
-.stats-grid {
+/* 통계 카드 그리드 - 독립적 */
+.messages-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 32px;
 }
 
-.stat-card {
+.messages-stat-card {
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -19,24 +19,24 @@
   transition: all 0.3s;
 }
 
-.stat-card:hover {
+.messages-stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card.success {
+.messages-stat-card.success {
   border-left: 4px solid var(--success);
 }
 
-.stat-card.warning {
+.messages-stat-card.warning {
   border-left: 4px solid var(--warning);
 }
 
-.stat-card.error {
+.messages-stat-card.error {
   border-left: 4px solid var(--error);
 }
 
-.stat-icon {
+.messages-stat-icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -48,26 +48,26 @@
   font-size: 20px;
 }
 
-.stat-card.success .stat-icon {
+.messages-stat-card.success .messages-stat-icon {
   background: var(--success-light);
   color: var(--success);
 }
 
-.stat-card.warning .stat-icon {
+.messages-stat-card.warning .messages-stat-icon {
   background: var(--warning-light);
   color: var(--warning);
 }
 
-.stat-card.error .stat-icon {
+.messages-stat-card.error .messages-stat-icon {
   background: var(--error-light);
   color: var(--error);
 }
 
-.stat-content {
+.messages-stat-content {
   flex: 1;
 }
 
-.stat-value {
+.messages-stat-value {
   font-size: 24px;
   font-weight: 700;
   color: var(--gray-900);
@@ -75,21 +75,21 @@
   margin-bottom: 4px;
 }
 
-.stat-label {
+.messages-stat-label {
   font-size: 14px;
   color: var(--gray-600);
   font-weight: 500;
 }
 
-/* 메시지 리스트 */
-.messages-list {
+/* 메시지 리스트 - 독립적 */
+.messages-list-container {
   background: white;
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--gray-200);
 }
 
-.messages-list h3 {
+.messages-list-title {
   font-size: 18px;
   font-weight: 600;
   color: var(--gray-900);
@@ -98,14 +98,14 @@
   border-bottom: 2px solid var(--naver-green);
 }
 
-/* 메시지 내용 셀 */
-.message-content {
+/* 메시지 내용 셀 - 독립적 */
+.messages-content-cell {
   max-width: 200px;
   word-break: break-word;
 }
 
-/* 상태 배지 */
-.status-badge {
+/* 상태 배지 - 독립적 */
+.messages-status-badge {
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 12px;
@@ -114,28 +114,28 @@
   display: inline-block;
 }
 
-.status-success {
+.messages-status-success {
   background: var(--success-light);
   color: var(--success-dark);
 }
 
-.status-pending {
+.messages-status-pending {
   background: var(--warning-light);
   color: var(--warning-dark);
 }
 
-.status-error {
+.messages-status-error {
   background: var(--error-light);
   color: var(--error-dark);
 }
 
-.status-default {
+.messages-status-default {
   background: var(--gray-100);
   color: var(--gray-600);
 }
 
-/* 타입 배지 */
-.type-badge {
+/* 타입 배지 - 독립적 */
+.messages-type-badge {
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 11px;
@@ -144,84 +144,84 @@
   display: inline-block;
 }
 
-.type-general {
+.messages-type-general {
   background: var(--info-light);
   color: var(--info-dark);
 }
 
-.type-attendance {
+.messages-type-attendance {
   background: var(--success-light);
   color: var(--success-dark);
 }
 
-.type-payment {
+.messages-type-payment {
   background: var(--warning-light);
   color: var(--warning-dark);
 }
 
-.type-reservation {
+.messages-type-reservation {
   background: var(--primary-light);
   color: var(--primary-dark);
 }
 
-.type-emergency {
+.messages-type-emergency {
   background: var(--error-light);
   color: var(--error-dark);
 }
 
-.type-default {
+.messages-type-default {
   background: var(--gray-100);
   color: var(--gray-600);
 }
 
-/* 폼 행 */
-.form-row {
+/* 폼 행 - 독립적 */
+.messages-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
 }
 
-/* 글자 수 카운터 */
-.char-count {
+/* 글자 수 카운터 - 독립적 */
+.messages-char-count {
   text-align: right;
   font-size: 12px;
   color: var(--gray-500);
   margin-top: 4px;
 }
 
-/* 반응형 */
+/* 반응형 - 독립적 */
 @media (max-width: 768px) {
-  .stats-grid {
+  .messages-stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
   
-  .stat-card {
+  .messages-stat-card {
     padding: 16px;
   }
   
-  .stat-icon {
+  .messages-stat-icon {
     width: 40px;
     height: 40px;
     font-size: 16px;
   }
   
-  .stat-value {
+  .messages-stat-value {
     font-size: 20px;
   }
   
-  .form-row {
+  .messages-form-row {
     grid-template-columns: 1fr;
   }
   
-  .messages-list {
+  .messages-list-container {
     padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .stats-grid {
+  .messages-stats-grid {
     grid-template-columns: 1fr;
   }
 }
