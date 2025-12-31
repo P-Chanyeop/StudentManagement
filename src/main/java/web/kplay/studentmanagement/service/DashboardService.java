@@ -10,6 +10,7 @@ import web.kplay.studentmanagement.dto.DashboardStatsResponse;
 import web.kplay.studentmanagement.repository.AttendanceRepository;
 import web.kplay.studentmanagement.repository.CourseScheduleRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
+import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 public class DashboardService {
 
     private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
     private final CourseScheduleRepository scheduleRepository;
     private final AttendanceRepository attendanceRepository;
     private final EnrollmentRepository enrollmentRepository;
@@ -62,8 +64,8 @@ public class DashboardService {
      * @return DashboardStatsResponse 전체 통계
      */
     private DashboardStatsResponse getAdminStats(LocalDate today) {
-        // 전체 학생 수 (PARENT 역할 사용자)
-        int totalStudents = userRepository.countByRoleAndIsActive(UserRole.PARENT, true);
+        // 전체 학생 수 (활성 학생)
+        int totalStudents = (int) studentRepository.count();
         
         // 오늘 스케줄 수
         int todaySchedules = scheduleRepository.countByScheduleDate(today);
@@ -81,6 +83,7 @@ public class DashboardService {
         // 디버깅용 로그
         log.info("=== Admin Dashboard Stats Debug ===");
         log.info("Today: {}", today);
+        log.info("Total Students (from Student table): {}", totalStudents);
         log.info("Today Schedules: {}", todaySchedules);
         log.info("Total Expected Students: {}", totalExpectedStudents);
         log.info("Today Attendance: {}", todayAttendance);
