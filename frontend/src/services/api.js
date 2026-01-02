@@ -115,6 +115,7 @@ export const attendanceAPI = {
   getBySchedule: (scheduleId) => api.get(`/attendances/schedule/${scheduleId}`),
   getByStudentAndRange: (studentId, startDate, endDate) =>
     api.get(`/attendances/student/${studentId}/range?startDate=${startDate}&endDate=${endDate}`),
+  getMyChildAttendances: (date) => api.get(`/attendances/my-child/${date}`),
   updateClassComplete: (attendanceId) => 
     api.patch(`/attendances/${attendanceId}/toggle-completed`),
   cancelAttendance: (attendanceId) => 

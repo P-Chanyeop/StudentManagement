@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 import web.kplay.studentmanagement.dto.attendance.AttendanceCheckInRequest;
@@ -197,5 +198,18 @@ public class AttendanceController {
         String reason = request.get("reason");
         AttendanceResponse response = attendanceService.updateReason(id, reason);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 학부모용 자녀 출석 조회
+     */
+    @GetMapping("/my-child/{date}")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<AttendanceResponse>> getMyChildAttendances(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication) {
+        String username = authentication.getName();
+        List<AttendanceResponse> responses = attendanceService.getMyChildAttendances(username, date);
+        return ResponseEntity.ok(responses);
     }
 }

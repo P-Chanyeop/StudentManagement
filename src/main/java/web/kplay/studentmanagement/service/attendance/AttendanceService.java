@@ -17,6 +17,8 @@ import web.kplay.studentmanagement.repository.AttendanceRepository;
 import web.kplay.studentmanagement.repository.CourseScheduleRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
+import web.kplay.studentmanagement.repository.UserRepository;
+import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +37,7 @@ public class AttendanceService {
     private final StudentRepository studentRepository;
     private final CourseScheduleRepository scheduleRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
 
     @Transactional
@@ -346,6 +349,33 @@ public class AttendanceService {
         return toResponse(attendance);
     }
 
+    /**
+     * 학부모용 자녀 출석 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getMyChildAttendances(String username, LocalDate date) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 학부모의 자녀 목록 조회 (부모 전화번호로 매칭)
+        List<Student> myStudents = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        
+        if (myStudents.isEmpty()) {
+            return List.of();
+        }
+        
+        // 자녀들의 출석 기록 조회
+        List<Long> studentIds = myStudents.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+        
+        List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDate(studentIds, date);
+        
+        return attendances.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private AttendanceResponse toResponse(Attendance attendance) {
         return AttendanceResponse.builder()
                 .id(attendance.getId())
@@ -362,6 +392,8 @@ public class AttendanceService {
                 .memo(attendance.getMemo())
                 .reason(attendance.getReason())
                 .classCompleted(attendance.getClassCompleted())
+                .teacherName(attendance.getSchedule().getCourse().getTeacher() != null ? 
+                    attendance.getSchedule().getCourse().getTeacher().getName() : null)
                 .build();
     }
 }

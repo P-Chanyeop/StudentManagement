@@ -112,4 +112,15 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      */
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.schedule.course.teacher.id = :teacherId")
     int countByScheduleDateAndCourseTeacherId(@Param("date") LocalDate date, @Param("teacherId") Long teacherId);
+
+    /**
+     * 여러 학생의 특정 날짜 출석 기록 조회 (학부모용)
+     * @param studentIds 학생 ID 목록
+     * @param date 조회할 날짜
+     * @return List<Attendance> 해당 학생들의 출석 기록
+     */
+    @Query("SELECT a FROM Attendance a JOIN FETCH a.schedule s JOIN FETCH s.course c LEFT JOIN FETCH c.teacher t JOIN FETCH a.student st " +
+           "WHERE a.student.id IN :studentIds AND s.scheduleDate = :date " +
+           "ORDER BY s.startTime ASC")
+    List<Attendance> findByStudentIdInAndScheduleScheduleDate(@Param("studentIds") List<Long> studentIds, @Param("date") LocalDate date);
 }

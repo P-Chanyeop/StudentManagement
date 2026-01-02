@@ -71,6 +71,7 @@ function Sidebar() {
     const studentParentMenus = [
       { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
       { path: '/students', icon: <i className="fas fa-user"></i>, label: '자녀 관리' },
+      { path: '/class-info', icon: <i className="fas fa-calendar-check"></i>, label: '수업 정보' },
       { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '상담 예약' },
       { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 내역' },
       { path: '/makeup-classes', icon: <i className="fas fa-redo"></i>, label: '보강 수업' },

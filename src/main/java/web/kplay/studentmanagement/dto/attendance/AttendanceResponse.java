@@ -28,4 +28,5 @@ public class AttendanceResponse {
     private String memo;
     private String reason;
     private Boolean classCompleted; // 수업 완료 여부
+    private String teacherName; // 담당 강사명
 }
