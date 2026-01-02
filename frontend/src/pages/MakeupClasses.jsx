@@ -237,15 +237,14 @@ function MakeupClasses() {
 
         <div className="makeup-list">
           {makeupClasses && makeupClasses.length > 0 ? (
-            <div className="table-wrapper">
-              <table className="data-table">
+            <div className="makeup-table-wrapper">
+              <table className="makeup-data-table">
               <thead>
                 <tr>
-                  <th>학생명</th>
-                  <th>수업명</th>
+                  <th>학생 정보</th>
+                  <th>수업 정보</th>
                   <th>원래 날짜</th>
-                  <th>보강 날짜</th>
-                  <th>보강 시간</th>
+                  <th>보강 일정</th>
                   <th>사유</th>
                   <th>상태</th>
                   <th>관리</th>
@@ -254,46 +253,70 @@ function MakeupClasses() {
               <tbody>
                 {makeupClasses.map((makeup) => (
                   <tr key={makeup.id}>
-                    <td>{makeup.studentName}</td>
-                    <td>{makeup.courseName}</td>
-                    <td>{formatDate(makeup.originalDate)}</td>
-                    <td>{formatDate(makeup.makeupDate)}</td>
-                    <td>{makeup.makeupTime}</td>
-                    <td>{makeup.reason || '-'}</td>
                     <td>
-                      <span className={`makeup-status-badge ${getStatusBadge(makeup.status).className}`}>
+                      <div className="makeup-student-info">
+                        <div className="makeup-student-details">
+                          <div className="makeup-student-name">{makeup.studentName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="makeup-course-info">
+                        <div className="makeup-course-name">{makeup.courseName}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="makeup-date">
+                        {formatDate(makeup.originalDate)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="makeup-datetime">
+                        <div className="makeup-date">
+                          {formatDate(makeup.makeupDate)}
+                        </div>
+                        <div className="makeup-time">
+                          {makeup.makeupTime}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="makeup-memo">{makeup.reason || '-'}</div>
+                    </td>
+                    <td>
+                      <span className={`makeup-status-badge makeup-status-${getStatusBadge(makeup.status).className}`}>
+                        {makeup.status === 'SCHEDULED' && <i className="fas fa-clock"></i>}
+                        {makeup.status === 'COMPLETED' && <i className="fas fa-check"></i>}
+                        {makeup.status === 'CANCELLED' && <i className="fas fa-times"></i>}
                         {getStatusBadge(makeup.status).text}
                       </span>
                     </td>
                     <td>
-                      <div className="action-buttons">
+                      <div className="makeup-action-buttons">
                         {makeup.status === 'SCHEDULED' && (
                           <>
                             <button
-                              className="btn-primary"
+                              className="makeup-btn-complete"
                               onClick={() => handleComplete(makeup.id)}
                             >
-                              <i className="fas fa-check"></i> 완료
+                              <i className="fas fa-check"></i>
+                              완료
                             </button>
                             <button
-                              className="btn-secondary"
-                              onClick={() => handleCancel(makeup.id)}
-                            >
-                              <i className="fas fa-times"></i> 취소
-                            </button>
-                            <button
-                              className="btn-table-edit"
+                              className="makeup-btn-edit"
                               onClick={() => handleEdit(makeup)}
                             >
-                              <i className="fas fa-edit"></i> 수정
+                              <i className="fas fa-edit"></i>
+                              수정
                             </button>
                           </>
                         )}
                         <button
-                          className="btn-table-delete"
+                          className="makeup-btn-delete"
                           onClick={() => handleDelete(makeup.id)}
                         >
-                          <i className="fas fa-trash"></i> 삭제
+                          <i className="fas fa-trash"></i>
+                          삭제
                         </button>
                       </div>
                     </td>
