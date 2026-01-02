@@ -476,3 +476,77 @@
     padding-bottom: 1.5rem;
   }
 }
+/* 예약 결과 컴포넌트 스타일 */
+.reservation-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.result-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.reservation-result.success .result-icon {
+  background-color: #28a745;
+}
+
+.reservation-result.error .result-icon {
+  background-color: #dc3545;
+}
+
+.reservation-result h2 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.reservation-result p {
+  margin-bottom: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.result-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-retry, .btn-home {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-retry {
+  background-color: #03c75a;
+  color: white;
+}
+
+.btn-retry:hover {
+  background-color: #02b351;
+}
+
+.btn-home {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-home:hover {
+  background-color: #5a6268;
+}

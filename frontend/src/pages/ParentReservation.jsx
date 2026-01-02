@@ -5,6 +5,7 @@ import { holidayService } from '../services/holidayService';
 import '../styles/ParentReservation.css';
 
 function ParentReservation() {
+  const [reservationStatus, setReservationStatus] = useState(null); // 'success', 'error', null
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -49,7 +50,7 @@ function ParentReservation() {
   // 선택된 날짜의 예약 현황 조회
   const fetchReservedTimes = async (date) => {
     try {
-      const response = await reservationAPI.getReservedTimes(date);
+      const response = await reservationAPI.getReservedTimes(date, formData.consultationType);
       console.log('예약된 시간들:', response.data);
       setReservedTimes(response.data);
     } catch (error) {
@@ -117,6 +118,13 @@ function ParentReservation() {
     const year = currentMonth.getFullYear();
     loadHolidaysForYear(year);
   }, [currentMonth.getFullYear()]);
+
+  // 선택된 날짜나 예약 유형이 변경될 때 예약된 시간 조회
+  useEffect(() => {
+    if (selectedDateForTime && formData.consultationType) {
+      fetchReservedTimes(selectedDateForTime);
+    }
+  }, [selectedDateForTime, formData.consultationType]);
 
   // 상담 유형에 따른 예약 가능 날짜 체크
   const isDateAvailable = (date, consultationType) => {
@@ -282,32 +290,40 @@ function ParentReservation() {
   const createReservation = useMutation({
     mutationFn: (data) => reservationAPI.create(data),
     onSuccess: () => {
-      alert('예약 요청이 완료되었습니다! 확인 후 연락드리겠습니다.');
-      setFormData({
-        parentName: '',
-        parentPhone: '',
-        students: [
-          {
-            studentName: '',
-            studentPhone: '',
-            school: ''
-          }
-        ],
-        preferredDate: '',
-        preferredTime: '',
-        consultationType: '',
-        requirements: ''
-      });
-      setErrors({});
+      setReservationStatus('success');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onError: (error) => {
-      alert('예약 요청 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setReservationStatus('error');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       console.error('예약 오류:', error);
     },
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // 상담 유형이 변경되면 캘린더 초기화
+    if (name === 'consultationType') {
+      setSelectedDateForTime(null);
+      setShowTimeSelector(false);
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        preferredDate: '',
+        preferredTime: ''
+      }));
+      
+      // 에러 메시지 제거
+      if (errors[name]) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      }
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -321,6 +337,73 @@ function ParentReservation() {
       }));
     }
   };
+
+  const handleRetryReservation = () => {
+    setReservationStatus(null);
+    setFormData({
+      parentName: '',
+      parentPhone: '',
+      students: [
+        {
+          studentName: '',
+          studentPhone: '',
+          school: ''
+        }
+      ],
+      preferredDate: '',
+      preferredTime: '',
+      consultationType: '',
+      requirements: ''
+    });
+    setErrors({});
+    setSelectedDateForTime(null);
+    setShowTimeSelector(false);
+  };
+
+  const handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  // 성공/실패 컴포넌트 렌더링
+  if (reservationStatus === 'success') {
+    return (
+      <div className="parent-reservation">
+        <div className="reservation-result success">
+          <div className="result-icon">✓</div>
+          <h2>예약 요청이 완료되었습니다!</h2>
+          <p>확인 후 연락드리겠습니다.</p>
+          <div className="result-buttons">
+            <button onClick={handleRetryReservation} className="btn-retry">
+              다시 예약
+            </button>
+            <button onClick={handleGoHome} className="btn-home">
+              홈으로
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (reservationStatus === 'error') {
+    return (
+      <div className="parent-reservation">
+        <div className="reservation-result error">
+          <div className="result-icon">✗</div>
+          <h2>예약 요청 중 오류가 발생했습니다</h2>
+          <p>다시 시도해주세요.</p>
+          <div className="result-buttons">
+            <button onClick={handleRetryReservation} className="btn-retry">
+              다시 예약
+            </button>
+            <button onClick={handleGoHome} className="btn-home">
+              홈으로
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const validateForm = () => {
     const newErrors = {};

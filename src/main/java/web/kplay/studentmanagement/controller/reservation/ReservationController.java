@@ -52,16 +52,20 @@ public class ReservationController {
     }
 
     /**
-     * 특정 날짜의 예약된 시간 목록 조회
+     * 특정 날짜와 상담 유형의 예약된 시간 목록 조회
      * 
      * @param date 조회할 날짜
+     * @param consultationType 상담 유형 (선택사항)
      * @return ResponseEntity<List<String>> 예약된 시간 목록 (HH:MM 형식)
      */
     @GetMapping("/reserved-times/{date}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<String>> getReservedTimesByDate(
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<String> reservedTimes = reservationService.getReservedTimesByDate(date);
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String consultationType) {
+        List<String> reservedTimes = consultationType != null ? 
+            reservationService.getReservedTimesByDateAndType(date, consultationType) :
+            reservationService.getReservedTimesByDate(date);
         return ResponseEntity.ok(reservedTimes);
     }
 

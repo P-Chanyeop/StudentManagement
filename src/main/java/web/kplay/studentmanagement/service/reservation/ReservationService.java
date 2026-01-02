@@ -59,9 +59,15 @@ public class ReservationService {
             enrollment.useCount();
         }
 
-        // 수업 정원 체크
-        if (schedule.getCurrentStudents() >= schedule.getCourse().getMaxStudents()) {
-            throw new BusinessException("수업 정원이 가득 찼습니다");
+        // 같은 유형의 예약 중복 체크
+        List<Reservation> existingReservations = reservationRepository.findByScheduleDateAndConsultationType(
+            schedule.getScheduleDate(), request.getConsultationType());
+        if (!existingReservations.isEmpty()) {
+            boolean timeConflict = existingReservations.stream()
+                .anyMatch(r -> r.getSchedule().getStartTime().equals(schedule.getStartTime()));
+            if (timeConflict) {
+                throw new BusinessException("해당 시간에 이미 " + request.getConsultationType() + " 예약이 있습니다");
+            }
         }
 
         Reservation reservation = Reservation.builder()
@@ -258,13 +264,27 @@ public class ReservationService {
     }
 
     /**
-     * 특정 날짜의 예약된 시간 목록 조회
-     * 
-     * @param date 조회할 날짜
-     * @return List<String> 예약된 시간 목록 (HH:MM 형식)
+     * 특정 날짜의 모든 예약된 시간 목록 조회
      */
     public List<String> getReservedTimesByDate(LocalDate date) {
         List<Reservation> reservations = reservationRepository.findByScheduleScheduleDate(date);
+        
+        return reservations.stream()
+                .map(reservation -> reservation.getSchedule().getStartTime().toString().substring(0, 5))
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 날짜와 상담 유형의 예약된 시간 목록 조회
+     */
+    public List<String> getReservedTimesByDateAndType(LocalDate date, String consultationType) {
+        log.info("예약된 시간 조회 - 날짜: {}, 유형: {}", date, consultationType);
+        List<Reservation> reservations = reservationRepository.findByScheduleDateAndConsultationType(date, consultationType);
+        log.info("조회된 예약 수: {}", reservations.size());
+        
+        reservations.forEach(r -> log.info("예약 정보 - 시간: {}, 유형: {}", 
+            r.getSchedule().getStartTime(), r.getConsultationType()));
         
         return reservations.stream()
                 .map(reservation -> reservation.getSchedule().getStartTime().toString().substring(0, 5))

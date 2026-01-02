@@ -59,4 +59,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      */
     @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule WHERE r.schedule.scheduleDate = :date")
     List<Reservation> findByScheduleScheduleDate(@Param("date") LocalDate date);
+
+    /**
+     * 특정 날짜와 상담 유형의 예약 목록 조회
+     * @param date 조회할 날짜
+     * @param consultationType 상담 유형
+     * @return List<Reservation> 해당 날짜와 유형의 예약 목록
+     */
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule WHERE r.schedule.scheduleDate = :date AND r.consultationType = :consultationType")
+    List<Reservation> findByScheduleDateAndConsultationType(@Param("date") LocalDate date, @Param("consultationType") String consultationType);
 }
