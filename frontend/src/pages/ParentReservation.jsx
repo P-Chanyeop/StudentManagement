@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { reservationAPI, scheduleAPI, authAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, authAPI, studentAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import '../styles/ParentReservation.css';
 
@@ -14,19 +14,20 @@ function ParentReservation() {
       return response.data;
     },
   });
+
+  // 학부모 자녀 목록 조회
+  const { data: myStudents = [] } = useQuery({
+    queryKey: ['myStudents'],
+    queryFn: async () => {
+      const response = await studentAPI.getMyStudents();
+      return response.data;
+    },
+    enabled: !!profile && profile.role === 'PARENT',
+  });
+
   const [formData, setFormData] = useState({
-    // 학부모 정보
-    parentName: '',
-    parentPhone: '',
-    
-    // 학생 정보 (여러 명 가능)
-    students: [
-      {
-        studentName: '',
-        studentPhone: '',
-        school: ''
-      }
-    ],
+    // 선택된 학생 ID
+    selectedStudentId: '',
     
     // 예약 정보
     preferredDate: '',
@@ -57,34 +58,6 @@ function ParentReservation() {
       console.error('예약 현황 조회 실패:', error);
       setReservedTimes([]);
     }
-  };
-
-  // 학생 추가
-  const addStudent = () => {
-    setFormData(prev => ({
-      ...prev,
-      students: [...prev.students, { studentName: '', studentPhone: '', school: '' }]
-    }));
-  };
-
-  // 학생 제거
-  const removeStudent = (index) => {
-    if (formData.students.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        students: prev.students.filter((_, i) => i !== index)
-      }));
-    }
-  };
-
-  // 학생 정보 변경
-  const handleStudentChange = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      students: prev.students.map((student, i) => 
-        i === index ? { ...student, [field]: value } : student
-      )
-    }));
   };
 
   const loadHolidaysForYear = async (year) => {
@@ -408,26 +381,9 @@ function ParentReservation() {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.parentName.trim()) {
-      newErrors.parentName = '학부모 이름을 입력해주세요.';
+    if (!formData.selectedStudentId) {
+      newErrors.selectedStudentId = '상담 대상 자녀를 선택해주세요.';
     }
-    
-    if (!formData.parentPhone.trim()) {
-      newErrors.parentPhone = '학부모 전화번호를 입력해주세요.';
-    } else if (!/^010-\d{4}-\d{4}$/.test(formData.parentPhone)) {
-      newErrors.parentPhone = '전화번호 형식이 올바르지 않습니다. (010-0000-0000)';
-    }
-    
-    // 학생 정보 검증
-    formData.students.forEach((student, index) => {
-      if (!student.studentName.trim()) {
-        newErrors[`studentName_${index}`] = '학생 이름을 입력해주세요.';
-      }
-      if (!student.school.trim()) {
-        newErrors[`school_${index}`] = '학교를 입력해주세요.';
-      }
-    });
-
     
     if (!formData.preferredDate) {
       newErrors.preferredDate = '희망 날짜를 선택해주세요.';
@@ -494,22 +450,28 @@ function ParentReservation() {
         alert('선택한 시간에 예약 가능한 수업이 없습니다.');
         return;
       }
-      
-      if (!profile?.studentId) {
-        alert('학생 정보를 찾을 수 없습니다. 관리자에게 문의하세요.');
+
+      // 선택된 자녀 정보 가져오기
+      const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
+      if (!selectedStudent) {
+        alert('선택된 자녀 정보를 찾을 수 없습니다.');
         return;
       }
 
       // 예약 요청 데이터 구성
       const reservationData = {
-        studentId: profile.studentId,
+        studentId: selectedStudent.id,
         scheduleId: availableSchedule.id,
         consultationType: formData.consultationType,
         memo: formData.requirements,
         reservationSource: 'WEB',
-        parentName: formData.parentName,
-        parentPhone: formData.parentPhone,
-        students: formData.students
+        parentName: profile.name,
+        parentPhone: profile.phoneNumber,
+        students: [{
+          studentName: selectedStudent.studentName,
+          studentPhone: selectedStudent.studentPhone,
+          school: selectedStudent.school
+        }]
       };
       
       createReservation.mutate(reservationData);
@@ -719,101 +681,59 @@ function ParentReservation() {
             </div>
           </div>
 
-          {/* 학부모 정보 */}
+          {/* 자녀 선택 */}
           <div className="form-section">
-            <h2>학부모 정보</h2>
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="parentName">학부모 이름 *</label>
-                <input
-                  type="text"
-                  id="parentName"
-                  name="parentName"
-                  value={formData.parentName}
-                  onChange={handleInputChange}
-                  placeholder="이름을 입력해주세요"
-                  className={errors.parentName ? 'error' : ''}
-                />
-                {errors.parentName && <span className="error-message">{errors.parentName}</span>}
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="parentPhone">학부모 전화번호 *</label>
-                <input
-                  type="tel"
-                  id="parentPhone"
-                  name="parentPhone"
-                  value={formData.parentPhone}
-                  onChange={handleInputChange}
-                  placeholder="010-0000-0000"
-                  className={errors.parentPhone ? 'error' : ''}
-                />
-                {errors.parentPhone && <span className="error-message">{errors.parentPhone}</span>}
-              </div>
-            </div>
-          </div>
-
-          {/* 학생 정보 */}
-          <div className="form-section">
-            <div className="section-header">
-              <h2>학생 정보</h2>
-              <button type="button" onClick={addStudent} className="btn-add-student">
-                <i className="fas fa-plus"></i> 학생 추가
-              </button>
+            <h2>상담 대상 자녀 선택</h2>
+            <div className="form-group">
+              <label htmlFor="selectedStudentId">자녀 선택 *</label>
+              <select
+                id="selectedStudentId"
+                name="selectedStudentId"
+                value={formData.selectedStudentId}
+                onChange={handleInputChange}
+                className={errors.selectedStudentId ? 'error' : ''}
+              >
+                <option value="">자녀를 선택해주세요</option>
+                {myStudents.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.studentName} ({student.school || '학교 미등록'} {student.grade}학년)
+                  </option>
+                ))}
+              </select>
+              {errors.selectedStudentId && <span className="error-message">{errors.selectedStudentId}</span>}
             </div>
             
-            {formData.students.map((student, index) => (
-              <div key={index} className="student-form-group">
-                <div className="student-header">
-                  <h3>학생 {index + 1}</h3>
-                  {formData.students.length > 1 && (
-                    <button 
-                      type="button" 
-                      onClick={() => removeStudent(index)}
-                      className="btn-remove-student"
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>학생 이름 *</label>
-                    <input
-                      type="text"
-                      value={student.studentName}
-                      onChange={(e) => handleStudentChange(index, 'studentName', e.target.value)}
-                      placeholder="학생 이름을 입력해주세요"
-                      className={errors[`studentName_${index}`] ? 'error' : ''}
-                    />
-                    {errors[`studentName_${index}`] && <span className="error-message">{errors[`studentName_${index}`]}</span>}
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>학교 *</label>
-                    <input
-                      type="text"
-                      value={student.school}
-                      onChange={(e) => handleStudentChange(index, 'school', e.target.value)}
-                      placeholder="예: 정목초, 정목중, 정목고"
-                      className={errors[`school_${index}`] ? 'error' : ''}
-                    />
-                    {errors[`school_${index}`] && <span className="error-message">{errors[`school_${index}`]}</span>}
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>학생 전화번호</label>
-                    <input
-                      type="tel"
-                      value={student.studentPhone}
-                      onChange={(e) => handleStudentChange(index, 'studentPhone', e.target.value)}
-                      placeholder="010-0000-0000 (선택사항)"
-                    />
-                  </div>
-                </div>
+            {/* 선택된 자녀 정보 표시 */}
+            {formData.selectedStudentId && (
+              <div className="selected-student-info">
+                {(() => {
+                  const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
+                  return selectedStudent ? (
+                    <div className="student-details">
+                      <h3>선택된 자녀 정보</h3>
+                      <div className="info-grid">
+                        <div className="info-item">
+                          <span className="label">이름:</span>
+                          <span className="value">{selectedStudent.studentName}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="label">학교:</span>
+                          <span className="value">{selectedStudent.school || '미등록'}</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="label">학년:</span>
+                          <span className="value">{selectedStudent.grade}학년</span>
+                        </div>
+                        <div className="info-item">
+                          <span className="label">영어 레벨:</span>
+                          <span className="value">{selectedStudent.englishLevel}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
               </div>
-            ))}
+            )}
           </div>
 
           {/* 요청사항 */}
