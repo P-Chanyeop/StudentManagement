@@ -47,4 +47,14 @@ public interface MakeupClassRepository extends JpaRepository<MakeupClass, Long> 
 
     // 상태별 보강 수업 개수 조회
     Long countByStatus(MakeupStatus status);
+
+    /**
+     * 여러 학생의 보강 수업 목록 조회 (학부모용)
+     * @param studentIds 학생 ID 목록
+     * @return List<MakeupClass> 해당 학생들의 보강 수업 목록 (최신순)
+     */
+    @Query("SELECT m FROM MakeupClass m JOIN FETCH m.student s JOIN FETCH m.course c " +
+           "WHERE m.student.id IN :studentIds " +
+           "ORDER BY m.makeupDate DESC, m.makeupTime DESC")
+    List<MakeupClass> findByStudentIdInOrderByMakeupDateDesc(@Param("studentIds") List<Long> studentIds);
 }

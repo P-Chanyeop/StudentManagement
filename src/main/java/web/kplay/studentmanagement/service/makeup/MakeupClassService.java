@@ -15,6 +15,8 @@ import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.CourseRepository;
 import web.kplay.studentmanagement.repository.MakeupClassRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
+import web.kplay.studentmanagement.repository.UserRepository;
+import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +30,7 @@ public class MakeupClassService {
     private final MakeupClassRepository makeupClassRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public MakeupClassResponse createMakeupClass(MakeupClassCreateRequest request) {
@@ -171,6 +174,33 @@ public class MakeupClassService {
     @Transactional(readOnly = true)
     public long countByStatus(MakeupStatus status) {
         return makeupClassRepository.countByStatus(status);
+    }
+
+    /**
+     * 학부모용 자녀 보강 수업 조회
+     */
+    @Transactional(readOnly = true)
+    public List<MakeupClassResponse> getMyChildMakeupClasses(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 학부모의 자녀 목록 조회 (부모 전화번호로 매칭)
+        List<Student> myStudents = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        
+        if (myStudents.isEmpty()) {
+            return List.of();
+        }
+        
+        // 자녀들의 보강 수업 목록 조회
+        List<Long> studentIds = myStudents.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+        
+        List<MakeupClass> makeupClasses = makeupClassRepository.findByStudentIdInOrderByMakeupDateDesc(studentIds);
+        
+        return makeupClasses.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     private MakeupClassResponse toResponse(MakeupClass makeupClass) {

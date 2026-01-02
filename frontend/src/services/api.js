@@ -251,6 +251,7 @@ export const makeupClassAPI = {
   getByStatus: (status) => api.get(`/makeup-classes/status/${status}`),
   getUpcomingByStudent: (studentId) => api.get(`/makeup-classes/upcoming/student/${studentId}`),
   getAllUpcoming: () => api.get('/makeup-classes/upcoming'),
+  getMyChildMakeupClasses: () => api.get('/makeup-classes/my-child'),
   create: (data) => api.post('/makeup-classes', data),
   update: (id, data) => api.put(`/makeup-classes/${id}`, data),
   delete: (id) => api.delete(`/makeup-classes/${id}`),

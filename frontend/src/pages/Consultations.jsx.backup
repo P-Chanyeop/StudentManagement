@@ -47,6 +47,11 @@ function Consultations() {
   };
 
   // 사용자 프로필 조회
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const response = await authAPI.getProfile();
+      return response.data;
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],

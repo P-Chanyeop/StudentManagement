@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { makeupClassAPI, studentAPI, courseAPI } from '../services/api';
+import { makeupClassAPI, studentAPI, courseAPI, authAPI } from '../services/api';
 import '../styles/MakeupClasses.css';
 
 function MakeupClasses() {
@@ -19,27 +19,52 @@ function MakeupClasses() {
     memo: '',
   });
 
-  // 보강 수업 목록 조회
-  const { data: makeupClasses, isLoading } = useQuery({
-    queryKey: ['makeupClasses', filterStatus],
+  // 사용자 프로필 조회
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      if (filterStatus === 'ALL') {
-        const response = await makeupClassAPI.getAll();
-        return response.data;
-      } else {
-        const response = await makeupClassAPI.getByStatus(filterStatus);
-        return response.data;
-      }
+      const response = await authAPI.getProfile();
+      return response.data;
     },
   });
 
-  // 학생 목록 조회
-  const { data: students } = useQuery({
-    queryKey: ['students'],
+  const isParent = profile?.role === 'PARENT';
+
+  // 보강 수업 목록 조회 (역할별 분기)
+  const { data: makeupClasses, isLoading } = useQuery({
+    queryKey: ['makeupClasses', filterStatus, profile?.role],
     queryFn: async () => {
-      const response = await studentAPI.getAll();
-      return response.data;
+      if (isParent) {
+        // 학부모는 본인 자녀 보강 수업만 조회
+        const response = await makeupClassAPI.getMyChildMakeupClasses();
+        return response.data;
+      } else {
+        // 관리자/선생님은 전체 조회
+        if (filterStatus === 'ALL') {
+          const response = await makeupClassAPI.getAll();
+          return response.data;
+        } else {
+          const response = await makeupClassAPI.getByStatus(filterStatus);
+          return response.data;
+        }
+      }
     },
+    enabled: !!profile,
+  });
+
+  // 학생 목록 조회 (역할별 분기)
+  const { data: students } = useQuery({
+    queryKey: ['students', profile?.role],
+    queryFn: async () => {
+      if (isParent) {
+        const response = await studentAPI.getMyStudents();
+        return response.data;
+      } else {
+        const response = await studentAPI.getAll();
+        return response.data;
+      }
+    },
+    enabled: !!profile,
   });
 
   // 수업 목록 조회
@@ -206,34 +231,39 @@ function MakeupClasses() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-redo-alt"></i>
-              보강 수업 관리
+              {isParent ? '보강 수업 현황' : '보강 수업 관리'}
             </h1>
-            <p className="page-subtitle">결석한 학생들의 보강 수업을 관리합니다</p>
+            <p className="page-subtitle">
+              {isParent ? '자녀의 보강 수업 현황을 확인합니다' : '결석한 학생들의 보강 수업을 관리합니다'}
+            </p>
           </div>
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
-            <i className="fas fa-plus"></i> 보강 수업 등록
-          </button>
+          {!isParent && (
+            <button className="btn-primary" onClick={() => setShowModal(true)}>
+              <i className="fas fa-plus"></i> 보강 수업 등록
+            </button>
+          )}
         </div>
       </div>
 
       <div className="page-content">
-
-        <div className="search-section">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="makeup-filter-select"
-          >
-            <option value="ALL">전체</option>
-            <option value="SCHEDULED">예정</option>
-            <option value="COMPLETED">완료</option>
-            <option value="CANCELLED">취소</option>
-          </select>
-          <div className="result-count">
-            <i className="fas fa-redo-alt"></i>
-            총 <strong>{makeupClasses?.length || 0}</strong>건
+        {!isParent && (
+          <div className="search-section">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="makeup-filter-select"
+            >
+              <option value="ALL">전체</option>
+              <option value="SCHEDULED">예정</option>
+              <option value="COMPLETED">완료</option>
+              <option value="CANCELLED">취소</option>
+            </select>
+            <div className="result-count">
+              <i className="fas fa-redo-alt"></i>
+              총 <strong>{makeupClasses?.length || 0}</strong>건
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="makeup-list">
           {makeupClasses && makeupClasses.length > 0 ? (
@@ -247,7 +277,7 @@ function MakeupClasses() {
                   <th>보강 일정</th>
                   <th>사유</th>
                   <th>상태</th>
-                  <th>관리</th>
+                  {!isParent && <th>관리</th>}
                 </tr>
               </thead>
               <tbody>
@@ -291,35 +321,37 @@ function MakeupClasses() {
                         {getStatusBadge(makeup.status).text}
                       </span>
                     </td>
-                    <td>
-                      <div className="makeup-action-buttons">
-                        {makeup.status === 'SCHEDULED' && (
-                          <>
-                            <button
-                              className="makeup-btn-complete"
-                              onClick={() => handleComplete(makeup.id)}
-                            >
-                              <i className="fas fa-check"></i>
-                              완료
-                            </button>
-                            <button
-                              className="makeup-btn-edit"
-                              onClick={() => handleEdit(makeup)}
-                            >
-                              <i className="fas fa-edit"></i>
-                              수정
-                            </button>
-                          </>
-                        )}
-                        <button
-                          className="makeup-btn-delete"
-                          onClick={() => handleDelete(makeup.id)}
-                        >
-                          <i className="fas fa-trash"></i>
-                          삭제
-                        </button>
-                      </div>
-                    </td>
+                    {!isParent && (
+                      <td>
+                        <div className="makeup-action-buttons">
+                          {makeup.status === 'SCHEDULED' && (
+                            <>
+                              <button
+                                className="makeup-btn-complete"
+                                onClick={() => handleComplete(makeup.id)}
+                              >
+                                <i className="fas fa-check"></i>
+                                완료
+                              </button>
+                              <button
+                                className="makeup-btn-edit"
+                                onClick={() => handleEdit(makeup)}
+                              >
+                                <i className="fas fa-edit"></i>
+                                수정
+                              </button>
+                            </>
+                          )}
+                          <button
+                            className="makeup-btn-delete"
+                            onClick={() => handleDelete(makeup.id)}
+                          >
+                            <i className="fas fa-trash"></i>
+                            삭제
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
