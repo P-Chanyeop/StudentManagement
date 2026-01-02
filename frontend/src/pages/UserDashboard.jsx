@@ -1,8 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { authAPI, enrollmentAPI } from '../services/api';
 import '../styles/Dashboard.css';
 
 function UserDashboard() {
+  // 수강권 상세 모달 상태
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -14,17 +19,16 @@ function UserDashboard() {
 
   // 사용자 수강권 조회
   const { data: myEnrollments = [], isLoading } = useQuery({
-    queryKey: ['myEnrollments'],
+    queryKey: ['myEnrollments', profile?.studentId],
     queryFn: async () => {
-      const response = await enrollmentAPI.getMyEnrollments();
-      return response.data;
+      if (profile?.studentId) {
+        const response = await enrollmentAPI.getByStudent(profile.studentId);
+        return response.data;
+      }
+      return [];
     },
-    enabled: profile && profile.role === 'PARENT',
+    enabled: !!profile?.studentId,
   });
-
-  if (isLoading) {
-    return <div className="dashboard-wrapper"><div className="loading">로딩 중...</div></div>;
-  }
 
   const activeEnrollments = myEnrollments.filter(e => e.isActive);
   const expiringEnrollments = activeEnrollments.filter(e => {
@@ -34,10 +38,32 @@ function UserDashboard() {
     return diffDays <= 7 && diffDays > 0;
   });
 
+  if (isLoading) {
+    return <div className="dashboard-wrapper"><div className="loading">로딩 중...</div></div>;
+  }
+
+  // 디버깅용 로그
+  console.log('Profile:', profile);
+  console.log('Student ID:', profile?.studentId);
+  console.log('My Enrollments:', myEnrollments);
+  console.log('Active Enrollments:', activeEnrollments);
+
   const calculateAttendanceRate = (enrollment) => {
     const usedCount = enrollment.usedCount || 0;
     const totalCount = enrollment.totalCount || 1;
     return Math.round((usedCount / totalCount) * 100);
+  };
+
+  // 수강권 클릭 핸들러
+  const handleEnrollmentClick = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setShowEnrollmentModal(true);
+  };
+
+  // 모달 닫기
+  const closeModal = () => {
+    setShowEnrollmentModal(false);
+    setSelectedEnrollment(null);
   };
 
   return (
@@ -147,11 +173,13 @@ function UserDashboard() {
 
         {/* 대시보드 그리드 */}
         <div className="dashboard-grid">
-          {/* 수강 중인 수업 */}
+          {/* 자녀 수업 현황 */}
+
+          {/* 자녀 수업 현황 */}
           <div className="dashboard-card">
             <div className="card-header">
               <h2 className="card-title">
-                <i className="fas fa-book-open"></i>
+                <i className="fas fa-graduation-cap"></i>
                 자녀 수업 현황
               </h2>
               <span className="card-badge">{activeEnrollments.length}개</span>
@@ -159,12 +187,12 @@ function UserDashboard() {
             <div className="card-body">
               {activeEnrollments.length === 0 ? (
                 <div className="empty-state">
-                  <i className="fas fa-inbox"></i>
-                  <p>등록된 수강권이 없습니다</p>
+                  <i className="fas fa-book-open"></i>
+                  <p>등록된 수업이 없습니다</p>
                 </div>
               ) : (
                 <div className="list">
-                  {activeEnrollments.map((enrollment) => {
+                  {activeEnrollments.slice(0, 5).map((enrollment) => {
                     const attendanceRate = calculateAttendanceRate(enrollment);
                     return (
                       <div key={enrollment.id} className="list-item">
@@ -175,43 +203,52 @@ function UserDashboard() {
                           <div className="item-title">{enrollment.course?.courseName || enrollment.courseName}</div>
                           <div className="item-subtitle">
                             {enrollment.student?.studentName || enrollment.studentName} · 
-                            잔여: {enrollment.remainingCount}회 · 출석률: {attendanceRate}%
+                            진도율: {attendanceRate}% · 잔여: {enrollment.remainingCount}회
                           </div>
                         </div>
-                        <div className={`item-badge ${enrollment.remainingCount <= 3 ? 'badge-warning' : 'badge-success'}`}>
-                          {enrollment.isActive ? '수강중' : '종료'}
+                        <div className="item-badge badge-info">
+                          {attendanceRate}%
                         </div>
                       </div>
                     );
                   })}
+                  {activeEnrollments.length > 5 && (
+                    <div className="show-more">
+                      +{activeEnrollments.length - 5}개 더 보기
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          {/* 만료 임박 수강권 */}
+          {/* 수강권 정보 */}
           <div className="dashboard-card">
             <div className="card-header">
               <h2 className="card-title">
-                <i className="fas fa-exclamation-triangle"></i>
-                만료 임박 수강권
+                <i className="fas fa-ticket-alt"></i>
+                수강권 정보
               </h2>
-              <span className="card-badge warning">{expiringEnrollments.length}개</span>
+              <span className="card-badge">{myEnrollments.length}개</span>
             </div>
             <div className="card-body">
-              {expiringEnrollments.length === 0 ? (
+              {myEnrollments.length === 0 ? (
                 <div className="empty-state">
                   <i className="fas fa-check-circle"></i>
-                  <p>만료 임박 수강권이 없습니다</p>
+                  <p>등록된 수강권이 없습니다</p>
                 </div>
               ) : (
                 <div className="list">
-                  {expiringEnrollments.map((enrollment) => {
+                  {myEnrollments.slice(0, 5).map((enrollment) => {
                     const endDate = new Date(enrollment.endDate);
                     const today = new Date();
                     const diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
                     return (
-                      <div key={enrollment.id} className="list-item">
+                      <div 
+                        key={enrollment.id} 
+                        className="list-item clickable"
+                        onClick={() => handleEnrollmentClick(enrollment)}
+                      >
                         <div className={`item-icon ${diffDays <= 3 ? 'urgent' : 'warning'}`}>
                           <i className="fas fa-ticket-alt"></i>
                         </div>
@@ -234,6 +271,79 @@ function UserDashboard() {
           </div>
         </div>
       </div>
+
+      {/* 수강권 상세 모달 */}
+      {showEnrollmentModal && selectedEnrollment && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-ticket-alt"></i>
+                수강권 상세 정보
+              </h2>
+              <button className="modal-close" onClick={closeModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="enrollment-details">
+                <div className="detail-section">
+                  <h3>기본 정보</h3>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">학생명</span>
+                      <span className="detail-value">{selectedEnrollment.studentName}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">수업명</span>
+                      <span className="detail-value">{selectedEnrollment.courseName}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">수강 기간</span>
+                      <span className="detail-value">
+                        {selectedEnrollment.startDate} ~ {selectedEnrollment.endDate}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="detail-section">
+                  <h3>수강 현황</h3>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">총 횟수</span>
+                      <span className="detail-value">{selectedEnrollment.totalCount}회</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">사용 횟수</span>
+                      <span className="detail-value">{selectedEnrollment.usedCount}회</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">남은 횟수</span>
+                      <span className="detail-value highlight">{selectedEnrollment.remainingCount}회</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h3>상태</h3>
+                  <div className="status-info">
+                    <span className={`status-badge ${selectedEnrollment.isActive ? 'active' : 'inactive'}`}>
+                      {selectedEnrollment.isActive ? '활성' : '비활성'}
+                    </span>
+                    {selectedEnrollment.memo && (
+                      <div className="memo">
+                        <span className="detail-label">메모</span>
+                        <p>{selectedEnrollment.memo}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

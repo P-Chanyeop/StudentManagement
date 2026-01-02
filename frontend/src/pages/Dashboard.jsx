@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
   studentAPI,
   attendanceAPI,
@@ -11,6 +12,10 @@ import {
 import '../styles/Dashboard.css';
 
 function Dashboard() {
+  // 수강권 상세 모달 상태
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+
   // 오늘 날짜
   const today = new Date().toISOString().split('T')[0];
 
@@ -23,13 +28,16 @@ function Dashboard() {
     },
   });
 
-  // 대시보드 통계 조회 (역할별 필터링 적용)
+  const isParent = profile?.role === 'PARENT';
+
+  // 대시보드 통계 조회 (관리자/선생님만)
   const { data: dashboardStats } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: async () => {
       const response = await dashboardAPI.getStats();
       return response.data;
     },
+    enabled: !isParent, // 학부모가 아닐 때만 조회
   });
 
   // 오늘 출석 현황
@@ -50,23 +58,64 @@ function Dashboard() {
     },
   });
 
-  // 만료 임박 수강권 (7일 이내)
-  const { data: expiringEnrollments = [] } = useQuery({
-    queryKey: ['expiringEnrollments'],
+  // 만료 임박 수강권 (관리자/선생님) 또는 내 자녀 수강권 (학부모)
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ['enrollments', isParent],
     queryFn: async () => {
-      const response = await enrollmentAPI.getExpiring(7);
-      return response.data;
+      if (isParent && profile?.studentId) {
+        // 학부모: 본인 자녀의 모든 수강권
+        const response = await enrollmentAPI.getByStudent(profile.studentId);
+        return response.data;
+      } else if (!isParent) {
+        // 관리자/선생님: 만료 임박 수강권
+        const response = await enrollmentAPI.getExpiring(7);
+        return response.data;
+      }
+      return [];
     },
+    enabled: !!profile,
   });
 
-  // 오늘의 수업 목록
+  // 오늘의 수업 목록 (관리자/선생님: 전체, 학부모: 본인 자녀만)
   const { data: todaySchedules = [] } = useQuery({
-    queryKey: ['todaySchedules', today],
+    queryKey: ['todaySchedules', today, isParent],
     queryFn: async () => {
-      const response = await scheduleAPI.getByDate(today);
-      return response.data;
+      if (isParent && profile?.studentId) {
+        // 학부모: 본인 자녀가 예약한 오늘 수업만
+        const response = await reservationAPI.getByStudent(profile.studentId);
+        const todayReservations = response.data.filter(reservation => 
+          reservation.scheduleDate === today
+        );
+        return todayReservations.map(reservation => ({
+          id: reservation.scheduleId,
+          courseName: reservation.courseName,
+          startTime: reservation.startTime,
+          endTime: reservation.endTime,
+          currentStudents: 1,
+          maxStudents: 1,
+          isReservation: true
+        }));
+      } else if (!isParent) {
+        // 관리자/선생님: 모든 오늘 수업
+        const response = await scheduleAPI.getByDate(today);
+        return response.data;
+      }
+      return [];
     },
+    enabled: !!profile,
   });
+
+  // 수강권 클릭 핸들러
+  const handleEnrollmentClick = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setShowEnrollmentModal(true);
+  };
+
+  // 모달 닫기
+  const closeModal = () => {
+    setShowEnrollmentModal(false);
+    setSelectedEnrollment(null);
+  };
 
   // 시간 포맷팅
   const formatTime = (timeString) => {
@@ -79,7 +128,7 @@ function Dashboard() {
   const todaySchedulesCount = dashboardStats?.todaySchedules || 0;
   const todayAttendanceCount = dashboardStats?.todayAttendance || 0;
   const attendanceRate = dashboardStats?.attendanceRate || 0;
-  const expiringEnrollmentsCount = dashboardStats?.expiringEnrollments || 0;
+  const expiringEnrollmentsCount = isParent ? enrollments.length : (dashboardStats?.expiringEnrollments || 0);
 
   return (
     <div className="dashboard-wrapper">
@@ -93,8 +142,9 @@ function Dashboard() {
 
       {/* 메인 컨텐츠 */}
       <div className="dashboard-container">
-        {/* 통계 카드 */}
-        <div className="stats-grid">
+        {/* 통계 카드 - 관리자/선생님만 */}
+        {!isParent && (
+          <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-card-header">
               <div className="stat-icon">
@@ -161,28 +211,34 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="stat-card">
+          <div 
+            className={`stat-card ${isParent ? 'clickable' : ''}`}
+            onClick={isParent && expiringEnrollmentsCount > 0 ? () => handleEnrollmentClick(enrollments[0]) : undefined}
+          >
             <div className="stat-card-header">
               <div className="stat-icon">
-                <i className="fas fa-exclamation-triangle"></i>
+                <i className={`fas ${isParent ? 'fa-ticket-alt' : 'fa-exclamation-triangle'}`}></i>
               </div>
-              <div className="stat-trend warning">
-                <i className="fas fa-clock"></i>
-                임박
+              <div className={`stat-trend ${isParent ? '' : 'warning'}`}>
+                <i className={`fas ${isParent ? 'fa-info' : 'fa-clock'}`}></i>
+                {isParent ? '정보' : '임박'}
               </div>
             </div>
             <div className="stat-content">
-              <h3>만료 임박 수강권</h3>
+              <h3>수강권 정보</h3>
               <div className="stat-value">
                 {expiringEnrollmentsCount}
                 <span className="stat-unit">개</span>
               </div>
             </div>
             <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> {profile?.role === 'TEACHER' ? '담당 수업 만료 임박' : '7일 이내 만료 예정'}
+              <i className="fas fa-info-circle"></i> 
+              {isParent ? '클릭하여 상세 정보 확인' : 
+               profile?.role === 'TEACHER' ? '담당 수업 만료 임박' : '7일 이내 만료 예정'}
             </div>
           </div>
         </div>
+        )}
 
         {/* 대시보드 그리드 */}
         <div className="dashboard-grid">
@@ -231,29 +287,35 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* 만료 임박 수강권 */}
+          {/* 수강권 정보 */}
           <div className="dashboard-card">
             <div className="card-header">
               <h2 className="card-title">
-                <i className="fas fa-exclamation-triangle"></i>
-                만료 임박 수강권
+                <i className="fas fa-ticket-alt"></i>
+                수강권 정보
               </h2>
-              <span className="card-badge warning">{expiringEnrollmentsCount}개</span>
+              <span className={`card-badge ${isParent ? '' : 'warning'}`}>
+                {enrollments.length}개
+              </span>
             </div>
             <div className="card-body">
-              {expiringEnrollmentsCount === 0 ? (
+              {enrollments.length === 0 ? (
                 <div className="empty-state">
                   <i className="fas fa-check-circle"></i>
-                  <p>만료 임박 수강권이 없습니다</p>
+                  <p>등록된 수강권이 없습니다</p>
                 </div>
               ) : (
                 <div className="list">
-                  {expiringEnrollments.slice(0, 5).map((enrollment) => {
+                  {enrollments.slice(0, 5).map((enrollment) => {
                     const daysLeft = Math.ceil(
                       (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
                     );
                     return (
-                      <div key={enrollment.id} className="list-item">
+                      <div 
+                        key={enrollment.id} 
+                        className={`list-item ${isParent ? 'clickable' : ''}`}
+                        onClick={isParent ? () => handleEnrollmentClick(enrollment) : undefined}
+                      >
                         <div className={`item-icon ${daysLeft <= 3 ? 'urgent' : 'warning'}`}>
                           <i className="fas fa-ticket-alt"></i>
                         </div>
@@ -266,12 +328,17 @@ function Dashboard() {
                         <div className={`item-badge ${daysLeft <= 3 ? 'badge-error' : 'badge-warning'}`}>
                           {daysLeft}일 남음
                         </div>
+                        {isParent && (
+                          <div className="item-action">
+                            <i className="fas fa-chevron-right"></i>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
-                  {expiringEnrollments.length > 5 && (
+                  {enrollments.length > 5 && (
                     <div className="show-more">
-                      +{expiringEnrollments.length - 5}개 더 보기
+                      +{enrollments.length - 5}개 더 보기
                     </div>
                   )}
                 </div>
@@ -372,6 +439,79 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* 수강권 상세 모달 */}
+      {showEnrollmentModal && selectedEnrollment && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-ticket-alt"></i>
+                수강권 상세 정보
+              </h2>
+              <button className="modal-close" onClick={closeModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="enrollment-details">
+                <div className="detail-section">
+                  <h3>기본 정보</h3>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">학생명</span>
+                      <span className="detail-value">{selectedEnrollment.studentName}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">수업명</span>
+                      <span className="detail-value">{selectedEnrollment.courseName}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">수강 기간</span>
+                      <span className="detail-value">
+                        {selectedEnrollment.startDate} ~ {selectedEnrollment.endDate}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="detail-section">
+                  <h3>수강 현황</h3>
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">총 횟수</span>
+                      <span className="detail-value">{selectedEnrollment.totalCount}회</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">사용 횟수</span>
+                      <span className="detail-value">{selectedEnrollment.usedCount}회</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">남은 횟수</span>
+                      <span className="detail-value highlight">{selectedEnrollment.remainingCount}회</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h3>상태</h3>
+                  <div className="status-info">
+                    <span className={`status-badge ${selectedEnrollment.isActive ? 'active' : 'inactive'}`}>
+                      {selectedEnrollment.isActive ? '활성' : '비활성'}
+                    </span>
+                    {selectedEnrollment.memo && (
+                      <div className="memo">
+                        <span className="detail-label">메모</span>
+                        <p>{selectedEnrollment.memo}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
