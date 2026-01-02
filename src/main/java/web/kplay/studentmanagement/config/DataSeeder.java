@@ -488,6 +488,9 @@ public class DataSeeder {
                 }
             }
 
+            // 레벨테스트 및 일반 수업 Course 및 스케줄 생성
+            createCoursesAndSchedules();
+
             log.info("=== Initial data loading completed ===");
             log.info("");
             log.info("📋 Initial accounts created (see CREDENTIALS.md for passwords)");
@@ -501,5 +504,103 @@ public class DataSeeder {
             log.info("🗄️  H2 Console: http://localhost:8080/h2-console (ADMIN account required)");
             log.info("");
         };
+    }
+
+    /**
+     * 수업 및 스케줄 생성
+     * - 레벨테스트 Course 및 스케줄
+     * - 일반 영어 수업 Course 및 스케줄
+     */
+    private void createCoursesAndSchedules() {
+        // 레벨테스트 Course 생성
+        if (courseRepository.findByCourseName("레벨테스트").isEmpty()) {
+            log.info("Creating level test course and schedules...");
+            
+            Course levelTestCourse = Course.builder()
+                    .courseName("레벨테스트")
+                    .description("영어 레벨 측정을 위한 테스트")
+                    .maxStudents(1) // 1:1 테스트
+                    .durationMinutes(60) // 60분
+                    .level("ALL")
+                    .isActive(true)
+                    .color("#FF6B6B")
+                    .build();
+
+            courseRepository.save(levelTestCourse);
+            log.info("✓ Level test course created: {}", levelTestCourse.getCourseName());
+            
+            createSchedulesForCourse(levelTestCourse, "레벨테스트 예약 가능");
+        }
+
+        // 일반 영어 수업 Course 생성
+        if (courseRepository.findByCourseName("영어 수업").isEmpty()) {
+            log.info("Creating English class course and schedules...");
+            
+            Course englishCourse = Course.builder()
+                    .courseName("영어 수업")
+                    .description("일반 영어 수업")
+                    .maxStudents(6) // 최대 6명
+                    .durationMinutes(60) // 60분
+                    .level("ALL")
+                    .isActive(true)
+                    .color("#4ECDC4")
+                    .build();
+
+            courseRepository.save(englishCourse);
+            log.info("✓ English class course created: {}", englishCourse.getCourseName());
+            
+            createSchedulesForCourse(englishCourse, "영어 수업 예약 가능");
+        }
+    }
+
+    /**
+     * 특정 Course에 대한 시간대별 스케줄 생성
+     * 
+     * @param course 스케줄을 생성할 Course
+     * @param memo 스케줄 메모
+     */
+    private void createSchedulesForCourse(Course course, String memo) {
+        // 향후 30일간 시간대별 스케줄 생성
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = startDate.plusDays(30);
+
+        // 운영 시간: 09:00 ~ 18:00 (1시간 간격)
+        LocalTime[] timeSlots = {
+                LocalTime.of(9, 0),
+                LocalTime.of(10, 0),
+                LocalTime.of(11, 0),
+                LocalTime.of(14, 0),
+                LocalTime.of(15, 0),
+                LocalTime.of(16, 0),
+                LocalTime.of(17, 0)
+        };
+
+        int scheduleCount = 0;
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            // 일요일과 공휴일만 제외 (토요일은 모든 수업 가능)
+            if (date.getDayOfWeek().getValue() == 7 || holidayService.isHoliday(date)) {
+                continue;
+            }
+
+            for (LocalTime startTime : timeSlots) {
+                LocalTime endTime = startTime.plusMinutes(course.getDurationMinutes());
+
+                CourseSchedule schedule = CourseSchedule.builder()
+                        .course(course)
+                        .scheduleDate(date)
+                        .startTime(startTime)
+                        .endTime(endTime)
+                        .dayOfWeek(date.getDayOfWeek().name())
+                        .currentStudents(0)
+                        .isCancelled(false)
+                        .memo(memo)
+                        .build();
+
+                scheduleRepository.save(schedule);
+                scheduleCount++;
+            }
+        }
+
+        log.info("✓ {} schedules created for course: {}", scheduleCount, course.getCourseName());
     }
 }

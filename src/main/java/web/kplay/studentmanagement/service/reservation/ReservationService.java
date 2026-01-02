@@ -40,6 +40,11 @@ public class ReservationService {
         CourseSchedule schedule = scheduleRepository.findById(request.getScheduleId())
                 .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
 
+        // 재원생 상담 예약 시 날짜/시간 검증
+        if ("재원생상담".equals(request.getConsultationType())) {
+            validateReservationDateTime(schedule.getScheduleDate());
+        }
+
         Enrollment enrollment = null;
         if (request.getEnrollmentId() != null) {
             enrollment = enrollmentRepository.findById(request.getEnrollmentId())
@@ -218,5 +223,52 @@ public class ReservationService {
                 .reservationSource(reservation.getReservationSource())
                 .canCancel(reservation.canCancel())
                 .build();
+    }
+
+    /**
+     * 재원생 상담 예약 날짜/시간 검증
+     * 
+     * @param reservationDate 예약하려는 날짜
+     * @throws BusinessException 예약 불가능한 날짜/시간인 경우
+     */
+    private void validateReservationDateTime(LocalDate reservationDate) {
+        LocalDate today = LocalDate.now();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        int currentHour = now.getHour();
+        
+        // 당일 예약 불가
+        if (reservationDate.equals(today)) {
+            throw new BusinessException("재원생 상담은 당일 예약이 불가능합니다.");
+        }
+        
+        // 오늘 18시가 지났다면 내일도 예약 불가
+        if (currentHour >= 18) {
+            LocalDate tomorrow = today.plusDays(1);
+            if (reservationDate.equals(tomorrow)) {
+                throw new BusinessException("오후 6시 이후에는 다음날 예약이 불가능합니다. 다다음날부터 예약 가능합니다.");
+            }
+        }
+        
+        // 과거 날짜 예약 불가
+        if (reservationDate.isBefore(today)) {
+            throw new BusinessException("과거 날짜로는 예약할 수 없습니다.");
+        }
+        
+        log.info("Reservation date validation passed for date: {}, current time: {}", reservationDate, now);
+    }
+
+    /**
+     * 특정 날짜의 예약된 시간 목록 조회
+     * 
+     * @param date 조회할 날짜
+     * @return List<String> 예약된 시간 목록 (HH:MM 형식)
+     */
+    public List<String> getReservedTimesByDate(LocalDate date) {
+        List<Reservation> reservations = reservationRepository.findByScheduleScheduleDate(date);
+        
+        return reservations.stream()
+                .map(reservation -> reservation.getSchedule().getStartTime().toString().substring(0, 5))
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

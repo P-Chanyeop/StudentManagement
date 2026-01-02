@@ -129,6 +129,7 @@ export const reservationAPI = {
   getById: (id) => api.get(`/reservations/${id}`),
   getByStudent: (studentId) => api.get(`/reservations/student/${studentId}`),
   getByDate: (date) => api.get(`/reservations/date/${date}`),
+  getReservedTimes: (date) => api.get(`/reservations/reserved-times/${date}`),
   getBySchedule: (scheduleId) => api.get(`/reservations/schedule/${scheduleId}`),
   confirm: (id) => api.post(`/reservations/${id}/confirm`),
   cancel: (id, reason) => api.post(`/reservations/${id}/cancel`, { reason }),

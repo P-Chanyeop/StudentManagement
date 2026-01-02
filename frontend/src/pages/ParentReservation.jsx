@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { reservationAPI } from '../services/api';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { reservationAPI, scheduleAPI, authAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import '../styles/ParentReservation.css';
 
 function ParentReservation() {
+  // 사용자 프로필 조회
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const response = await authAPI.getProfile();
+      return response.data;
+    },
+  });
   const [formData, setFormData] = useState({
     // 학부모 정보
     parentName: '',
@@ -41,9 +49,9 @@ function ParentReservation() {
   // 선택된 날짜의 예약 현황 조회
   const fetchReservedTimes = async (date) => {
     try {
-      const response = await reservationAPI.getByDate(date);
-      const reserved = response.data.map(reservation => reservation.preferredTime || reservation.startTime);
-      setReservedTimes(reserved);
+      const response = await reservationAPI.getReservedTimes(date);
+      console.log('예약된 시간들:', response.data);
+      setReservedTimes(response.data);
     } catch (error) {
       console.error('예약 현황 조회 실패:', error);
       setReservedTimes([]);
@@ -150,8 +158,28 @@ function ParentReservation() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // 과거 날짜는 비활성화
-    if (date < today) return true;
+    // 재원생 상담의 경우 특별한 날짜 제한 적용
+    if (formData.consultationType === '재원생상담') {
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      // 오늘은 항상 예약 불가
+      if (date.toDateString() === today.toDateString()) {
+        return true;
+      }
+      
+      // 오늘 18시가 지났다면 내일도 예약 불가
+      if (currentHour >= 18) {
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        if (date.toDateString() === tomorrow.toDateString()) {
+          return true;
+        }
+      }
+    } else {
+      // 다른 상담 유형의 경우 과거 날짜만 비활성화
+      if (date < today) return true;
+    }
     
     // 공휴일은 항상 비활성화
     const yearHolidays = holidays[year] || [];
@@ -334,14 +362,78 @@ function ParentReservation() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
-    createReservation.mutate(formData);
+    try {
+      // 선택된 날짜/시간에 해당하는 스케줄 찾기
+      const scheduleResponse = await scheduleAPI.getByDate(formData.preferredDate);
+      
+      // 디버깅용 로그
+      console.log('=== 예약 디버깅 ===');
+      console.log('선택한 날짜:', formData.preferredDate);
+      console.log('선택한 시간:', formData.preferredTime);
+      console.log('선택한 상담 유형:', formData.consultationType);
+      console.log('조회된 스케줄 수:', scheduleResponse.data.length);
+      
+      // 시간 형식 맞춰서 비교 (HH:MM vs HH:MM:SS)
+      const selectedTime = formData.preferredTime + ":00"; // "14:00" -> "14:00:00"
+      console.log('변환된 시간:', selectedTime);
+      
+      // 매칭되는 스케줄 찾기
+      scheduleResponse.data.forEach((schedule, index) => {
+        console.log(`스케줄 ${index + 1}:`, {
+          id: schedule.id,
+          courseName: schedule.courseName,
+          startTime: schedule.startTime,
+          timeMatch: schedule.startTime === selectedTime,
+          courseMatch: schedule.courseName === formData.consultationType
+        });
+      });
+      
+      // 예약 유형에 따른 수업 매핑
+      const targetCourseName = formData.consultationType === '재원생상담' ? '영어 수업' : '레벨테스트';
+      console.log('예약할 수업:', targetCourseName);
+      
+      const availableSchedule = scheduleResponse.data.find(schedule => 
+        schedule.startTime === selectedTime && 
+        schedule.courseName === targetCourseName
+      );
+      
+      console.log('매칭된 스케줄:', availableSchedule);
+      console.log('==================');
+      
+      if (!availableSchedule) {
+        alert('선택한 시간에 예약 가능한 수업이 없습니다.');
+        return;
+      }
+      
+      if (!profile?.studentId) {
+        alert('학생 정보를 찾을 수 없습니다. 관리자에게 문의하세요.');
+        return;
+      }
+
+      // 예약 요청 데이터 구성
+      const reservationData = {
+        studentId: profile.studentId,
+        scheduleId: availableSchedule.id,
+        consultationType: formData.consultationType,
+        memo: formData.requirements,
+        reservationSource: 'WEB',
+        parentName: formData.parentName,
+        parentPhone: formData.parentPhone,
+        students: formData.students
+      };
+      
+      createReservation.mutate(reservationData);
+    } catch (error) {
+      console.error('스케줄 조회 실패:', error);
+      alert('예약 처리 중 오류가 발생했습니다.');
+    }
   };
 
   // 상담 유형별 안내 문구

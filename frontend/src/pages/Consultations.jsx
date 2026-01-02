@@ -32,6 +32,20 @@ function Consultations() {
     nextConsultationDate: '',
   });
 
+  // 상담 예약 가능한 최소 날짜 계산
+  const getMinConsultationDate = () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // 오늘 18시가 지났다면 다다음날부터, 아니면 내일부터
+    const daysToAdd = currentHour >= 18 ? 2 : 1;
+    
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + daysToAdd);
+    
+    return minDate.toISOString().split('T')[0];
+  };
+
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
