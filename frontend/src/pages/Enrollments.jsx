@@ -274,9 +274,15 @@ function Enrollments() {
 
   // 필터링 로직
   const filteredEnrollments = enrollments.filter((enrollment) => {
+    const today = new Date();
+    const endDate = new Date(enrollment.endDate);
+    const isExpired = endDate < today;
+    
     const matchesStatus = statusFilter === 'ALL' || 
-      (statusFilter === 'ACTIVE' && enrollment.isActive) ||
-      (statusFilter === 'EXPIRED' && !enrollment.isActive);
+      (statusFilter === 'ACTIVE' && enrollment.isActive && !isExpired) ||
+      (statusFilter === 'EXPIRED' && (!enrollment.isActive || isExpired)) ||
+      (statusFilter === 'CANCELLED' && enrollment.isCancelled);
+      
     const matchesSearch =
       searchQuery === '' ||
       enrollment.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -355,7 +361,18 @@ function Enrollments() {
                 >
                   {status === 'ALL' ? '전체' : status === 'ACTIVE' ? '활성' : status === 'EXPIRED' ? '만료' : '취소'}
                   <span className="count">
-                    ({status === 'ALL' ? enrollments.length : enrollments.filter(e => e.status === status).length})
+                    ({status === 'ALL' ? enrollments.length : 
+                      status === 'ACTIVE' ? enrollments.filter(e => {
+                        const today = new Date();
+                        const endDate = new Date(e.endDate);
+                        return e.isActive && endDate >= today;
+                      }).length :
+                      status === 'EXPIRED' ? enrollments.filter(e => {
+                        const today = new Date();
+                        const endDate = new Date(e.endDate);
+                        return !e.isActive || endDate < today;
+                      }).length :
+                      enrollments.filter(e => e.isCancelled).length})
                   </span>
                 </button>
               ))}
@@ -466,7 +483,7 @@ function Enrollments() {
                   <option value="">학생을 선택하세요</option>
                   {students.map((student) => (
                     <option key={student.id} value={student.id}>
-                      {student.name} ({student.phone})
+                      {student.studentName} ({student.studentPhone})
                     </option>
                   ))}
                 </select>
@@ -483,7 +500,7 @@ function Enrollments() {
                   <option value="">코스를 선택하세요</option>
                   {courses.map((course) => (
                     <option key={course.id} value={course.id}>
-                      {course.name} - {course.level}
+                      {course.courseName} - {course.level}
                     </option>
                   ))}
                 </select>
