@@ -35,6 +35,8 @@ function Students() {
     },
   });
 
+  const isParent = profile?.role === 'PARENT';
+
   // 학생 목록 조회
   const { data: students = [], isLoading } = useQuery({
     queryKey: ['students', profile?.role],
@@ -188,9 +190,9 @@ function Students() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-user-graduate"></i>
-              학생 관리
+              {isParent ? '자녀 관리' : '학생 관리'}
             </h1>
-            <p className="page-subtitle">학생 정보를 등록하고 관리합니다</p>
+            <p className="page-subtitle">{isParent ? '자녀 정보를 확인하고 관리합니다' : '학생 정보를 등록하고 관리합니다'}</p>
           </div>
           {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
             <button className="btn-primary btn-with-icon" onClick={() => setShowCreateModal(true)}>
@@ -260,7 +262,7 @@ function Students() {
                           <i className="fas fa-eye"></i>
                           상세
                         </button>
-                        {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+                        {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER' || profile?.role === 'PARENT') && (
                           <button className="btn-table-edit" onClick={() => openEditModal(student)}>
                             <i className="fas fa-edit"></i>
                             수정
@@ -701,7 +703,7 @@ function Students() {
               <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
                 닫기
               </button>
-              {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
+              {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER' || profile?.role === 'PARENT') && (
                 <button
                   className="btn-primary"
                   onClick={() => {

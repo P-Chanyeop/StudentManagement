@@ -89,6 +89,12 @@
   border: 1px solid var(--gray-200);
 }
 
+/* 학부모용 전체 너비 */
+.reservations-section.full-width {
+  flex: 1;
+  max-width: none;
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.reservation.ReservationCreateRequest;
 import web.kplay.studentmanagement.dto.reservation.ReservationResponse;
@@ -40,6 +40,14 @@ public class ReservationController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<ReservationResponse>> getReservationsByStudent(@PathVariable Long studentId) {
         List<ReservationResponse> responses = reservationService.getReservationsByStudent(studentId);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/my-reservations")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<ReservationResponse>> getMyReservations(Authentication authentication) {
+        String username = authentication.getName();
+        List<ReservationResponse> responses = reservationService.getMyReservations(username);
         return ResponseEntity.ok(responses);
     }
 

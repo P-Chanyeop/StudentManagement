@@ -2,7 +2,8 @@ package web.kplay.studentmanagement.service.student;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.student.Student;
@@ -98,7 +99,50 @@ public class StudentService {
     }
 
     @Transactional
+    public StudentResponse updateStudent(Long id, StudentCreateRequest request, Authentication authentication) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
+
+        // 학부모 권한 검증
+        if (authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_PARENT"))) {
+            User user = userRepository.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+            
+            // 학부모는 본인 자녀만 수정 가능
+            if (!student.getParentPhone().equals(user.getPhoneNumber())) {
+                throw new RuntimeException("본인 자녀의 정보만 수정할 수 있습니다.");
+            }
+        }
+
+        // 학생 정보 업데이트
+        student.updateInfo(
+                request.getStudentName(),
+                request.getStudentPhone(),
+                request.getBirthDate(),
+                request.getGender(),
+                request.getAddress(),
+                request.getSchool(),
+                request.getGrade()
+        );
+
+        // 학부모 정보 업데이트
+        student.updateParentInfo(
+                request.getParentName(),
+                request.getParentPhone(),
+                request.getParentEmail()
+        );
+
+        // 영어 레벨 및 메모 업데이트
+        student.updateEnglishLevel(request.getEnglishLevel());
+        student.updateMemo(request.getMemo());
+
+        log.info("Student info updated: {}", student.getStudentName());
+        return toResponse(student);
+    }
+
+    @Transactional
     public StudentResponse updateStudent(Long id, StudentCreateRequest request) {
+        // 기존 메서드 유지 (하위 호환성)
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 

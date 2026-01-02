@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { reservationAPI, scheduleAPI, enrollmentAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI } from '../services/api';
 import '../styles/Reservations.css';
 
 function Reservations() {
@@ -17,22 +17,45 @@ function Reservations() {
     enrollmentId: '',
   });
 
-  // 날짜별 예약 조회
-  const { data: reservations = [], isLoading: reservationsLoading } = useQuery({
-    queryKey: ['reservations', selectedDate],
+  // 사용자 프로필 조회
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
     queryFn: async () => {
-      const response = await reservationAPI.getByDate(selectedDate);
+      const response = await authAPI.getProfile();
       return response.data;
     },
   });
 
-  // 날짜별 스케줄 조회
+  const isParent = profile?.role === 'PARENT';
+
+  // 날짜별 예약 조회 (역할별 분기)
+  const { data: reservations = [], isLoading: reservationsLoading } = useQuery({
+    queryKey: ['reservations', selectedDate, profile?.role],
+    queryFn: async () => {
+      if (isParent) {
+        // 학부모는 본인 자녀 예약만 조회
+        const response = await reservationAPI.getMyReservations();
+        return response.data.filter(r => 
+          new Date(r.schedule.scheduleDate).toISOString().split('T')[0] === selectedDate
+        );
+      } else {
+        // 관리자/선생님은 전체 예약 조회
+        const response = await reservationAPI.getByDate(selectedDate);
+        return response.data;
+      }
+    },
+    enabled: !!profile,
+  });
+
+  // 날짜별 스케줄 조회 (관리자/선생님만)
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
     queryKey: ['schedules', selectedDate],
     queryFn: async () => {
+      if (isParent) return []; // 학부모는 스케줄 조회 불필요
       const response = await scheduleAPI.getByDate(selectedDate);
       return response.data;
     },
+    enabled: !!profile && !isParent,
   });
 
   // 학생별 활성 수강권 조회
@@ -166,9 +189,11 @@ function Reservations() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-calendar-alt"></i>
-              예약 관리
+              {isParent ? '예약 내역' : '예약 관리'}
             </h1>
-            <p className="page-subtitle">수업 예약 현황을 관리합니다</p>
+            <p className="page-subtitle">
+              {isParent ? '내 자녀의 예약 현황을 확인합니다' : '수업 예약 현황을 관리합니다'}
+            </p>
           </div>
           <div className="date-selector">
             <input
@@ -181,162 +206,194 @@ function Reservations() {
       </div>
 
       <div className="page-content">
-
         <div className="reservations-content">
-          {/* 왼쪽: 스케줄 목록 */}
-          <div className="schedules-section">
-          <div className="section-header">
-            <h2>수업 스케줄</h2>
-            <span className="count-badge">{schedules.length}개</span>
-          </div>
-
-          <div className="schedules-grid">
-            {schedules.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-calendar-alt"></i>
-                <p>오늘 예정된 수업이 없습니다.</p>
-              </div>
-            ) : (
-              schedules.map((schedule) => {
-                const reservationCount = reservations.filter(
-                  (r) => r.schedule.id === schedule.id && r.status !== 'CANCELLED'
-                ).length;
-                const isAvailable = reservationCount < schedule.maxCapacity;
-
-                return (
-                  <div key={schedule.id} className="schedule-card">
-                    <div className="schedule-info">
-                      <h3>{schedule.courseName || '수업명 미정'}</h3>
-                      <p className="schedule-time">
-                        {schedule.startTime} - {schedule.endTime}
-                      </p>
-                      <p className="schedule-teacher">
-                        강사: {schedule.teacherName || '미배정'}
-                      </p>
-                      <div className="schedule-capacity">
-                        <span className={`capacity-badge ${isAvailable ? 'available' : 'full'}`}>
-                          {reservationCount} / {schedule.maxCapacity}
-                        </span>
-                        {isAvailable ? (
-                          <span className="availability">예약 가능</span>
-                        ) : (
-                          <span className="availability full">정원 마감</span>
-                        )}
-                      </div>
-                    </div>
-                    {isAvailable && (
-                      <button
-                        className="btn-primary"
-                        onClick={() => navigate('/parent-reservation')}
-                      >
-                        <i className="fas fa-plus"></i> 예약 등록
-                      </button>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* 오른쪽: 예약 목록 */}
-        <div className="reservations-section">
-          <div className="section-header">
-            <h2>예약 현황</h2>
-            <span className="count-badge">{reservations.length}건</span>
-          </div>
-
-          <div className="reservations-list">
-            {reservations.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-calendar-alt"></i>
-                <p>등록된 예약이 없습니다.</p>
-              </div>
-            ) : (
-              reservations.map((reservation) => (
-                <div key={reservation.id} className="reservation-card">
-                  <div className="reservation-header">
-                    <div className="student-info">
-                      <h3>{reservation.student.name}</h3>
-                      <span className="student-contact">{reservation.student.phone}</span>
-                    </div>
-                    {getStatusBadge(reservation.status)}
-                  </div>
-
-                  <div className="reservation-details">
-                    <div className="detail-row">
-                      <span className="label">수업:</span>
-                      <span className="value">{reservation.schedule.course.name}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="label">시간:</span>
-                      <span className="value">
-                        {reservation.schedule.startTime} - {reservation.schedule.endTime}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="label">강사:</span>
-                      <span className="value">{reservation.schedule.teacher.name}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="label">수강권:</span>
-                      <span className="value">
-                        {reservation.enrollment.course.name}
-                        {reservation.enrollment.type === 'COUNT_BASED' && (
-                          <span className="remaining-count">
-                            ({reservation.enrollment.remainingCount}회 남음)
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    {reservation.notes && (
-                      <div className="detail-row">
-                        <span className="label">메모:</span>
-                        <span className="value">{reservation.notes}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="reservation-actions">
-                    {reservation.status === 'PENDING' && (
-                      <button
-                        className="btn-primary"
-                        onClick={() => handleConfirm(reservation.id)}
-                      >
-                        <i className="fas fa-check"></i> 확정
-                      </button>
-                    )}
-                    {reservation.status === 'CONFIRMED' && (
-                      <>
-                        {canCancelReservation(reservation) ? (
-                          <button
-                            className="btn-table-delete"
-                            onClick={() => handleCancel(reservation.id)}
-                          >
-                            <i className="fas fa-times"></i> 취소
-                          </button>
-                        ) : (
-                          <>
-                            <span className="cancel-deadline-notice">
-                              취소 마감 (전날 18:00)
-                            </span>
-                            <button
-                              className="btn-secondary"
-                              onClick={() => handleForceCancel(reservation.id)}
-                            >
-                              <i className="fas fa-ban"></i> 관리자 취소
-                            </button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
+          {/* 관리자/선생님용: 스케줄 + 예약 관리 */}
+          {!isParent && (
+            <>
+              {/* 왼쪽: 스케줄 목록 */}
+              <div className="schedules-section">
+                <div className="section-header">
+                  <h2>수업 스케줄</h2>
+                  <span className="count-badge">{schedules.length}개</span>
                 </div>
-              ))
-            )}
+
+                <div className="schedules-grid">
+                  {schedules.length === 0 ? (
+                    <div className="empty-state">
+                      <i className="fas fa-calendar-alt"></i>
+                      <p>오늘 예정된 수업이 없습니다.</p>
+                    </div>
+                  ) : (
+                    schedules.map((schedule) => {
+                      const reservationCount = reservations.filter(
+                        (r) => r.schedule.id === schedule.id && r.status !== 'CANCELLED'
+                      ).length;
+                      const isAvailable = reservationCount < schedule.maxCapacity;
+
+                      return (
+                        <div key={schedule.id} className="schedule-card">
+                          <div className="schedule-info">
+                            <h3>{schedule.courseName || '수업명 미정'}</h3>
+                            <p className="schedule-time">
+                              {schedule.startTime} - {schedule.endTime}
+                            </p>
+                            <p className="schedule-teacher">
+                              강사: {schedule.teacherName || '미배정'}
+                            </p>
+                            <div className="schedule-capacity">
+                              <span className={`capacity-badge ${isAvailable ? 'available' : 'full'}`}>
+                                {reservationCount} / {schedule.maxCapacity}
+                              </span>
+                              {isAvailable ? (
+                                <span className="availability">예약 가능</span>
+                              ) : (
+                                <span className="availability full">정원 마감</span>
+                              )}
+                            </div>
+                          </div>
+                          {isAvailable && (
+                            <button
+                              className="btn-primary"
+                              onClick={() => openCreateModal(schedule)}
+                            >
+                              <i className="fas fa-plus"></i> 예약 등록
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* 예약 목록 (공통) */}
+          <div className={`reservations-section ${isParent ? 'full-width' : ''}`}>
+            <div className="section-header">
+              <h2>{isParent ? '내 자녀 예약 현황' : '예약 현황'}</h2>
+              <span className="count-badge">{reservations.length}건</span>
+            </div>
+
+            <div className="reservations-list">
+              {reservations.length === 0 ? (
+                <div className="empty-state">
+                  <i className="fas fa-calendar-alt"></i>
+                  <p>{isParent ? '예약 내역이 없습니다.' : '등록된 예약이 없습니다.'}</p>
+                </div>
+              ) : (
+                reservations.map((reservation) => (
+                  <div key={reservation.id} className="reservation-card">
+                    <div className="reservation-header">
+                      <div className="student-info">
+                        <h3>{reservation.student.name}</h3>
+                        <span className="student-contact">{reservation.student.phone}</span>
+                      </div>
+                      {getStatusBadge(reservation.status)}
+                    </div>
+
+                    <div className="reservation-details">
+                      <div className="detail-row">
+                        <span className="label">수업:</span>
+                        <span className="value">{reservation.schedule.course.name}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="label">날짜:</span>
+                        <span className="value">{reservation.schedule.scheduleDate}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="label">시간:</span>
+                        <span className="value">
+                          {reservation.schedule.startTime} - {reservation.schedule.endTime}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="label">강사:</span>
+                        <span className="value">{reservation.schedule.teacher.name}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="label">수강권:</span>
+                        <span className="value">
+                          {reservation.enrollment.course.name}
+                          {reservation.enrollment.type === 'COUNT_BASED' && (
+                            <span className="remaining-count">
+                              ({reservation.enrollment.remainingCount}회 남음)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      {reservation.notes && (
+                        <div className="detail-row">
+                          <span className="label">메모:</span>
+                          <span className="value">{reservation.notes}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="reservation-actions">
+                      {/* 관리자/선생님 전용 액션 */}
+                      {!isParent && (
+                        <>
+                          {reservation.status === 'PENDING' && (
+                            <button
+                              className="btn-primary"
+                              onClick={() => handleConfirm(reservation.id)}
+                            >
+                              <i className="fas fa-check"></i> 확정
+                            </button>
+                          )}
+                          {reservation.status === 'CONFIRMED' && (
+                            <>
+                              {canCancelReservation(reservation) ? (
+                                <button
+                                  className="btn-table-delete"
+                                  onClick={() => handleCancel(reservation.id)}
+                                >
+                                  <i className="fas fa-times"></i> 취소
+                                </button>
+                              ) : (
+                                <>
+                                  <span className="cancel-deadline-notice">
+                                    취소 마감 (전날 18:00)
+                                  </span>
+                                  <button
+                                    className="btn-secondary"
+                                    onClick={() => handleForceCancel(reservation.id)}
+                                  >
+                                    <i className="fas fa-ban"></i> 관리자 취소
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
+
+                      {/* 학부모 전용 액션 */}
+                      {isParent && (
+                        <>
+                          {reservation.status === 'CONFIRMED' && canCancelReservation(reservation) && (
+                            <button
+                              className="btn-table-delete"
+                              onClick={() => handleCancel(reservation.id)}
+                            >
+                              <i className="fas fa-times"></i> 예약 취소
+                            </button>
+                          )}
+                          {reservation.status === 'CONFIRMED' && !canCancelReservation(reservation) && (
+                            <span className="cancel-deadline-notice">
+                              취소 불가 (전날 18:00 마감)
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* 예약 생성 모달 */}

@@ -64,11 +64,12 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<StudentResponse> updateStudent(
             @PathVariable Long id,
-            @Valid @RequestBody StudentCreateRequest request) {
-        StudentResponse response = studentService.updateStudent(id, request);
+            @Valid @RequestBody StudentCreateRequest request,
+            Authentication authentication) {
+        StudentResponse response = studentService.updateStudent(id, request, authentication);
         return ResponseEntity.ok(response);
     }
 

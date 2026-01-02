@@ -17,6 +17,8 @@ import web.kplay.studentmanagement.repository.CourseScheduleRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.ReservationRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
+import web.kplay.studentmanagement.repository.UserRepository;
+import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,6 +33,7 @@ public class ReservationService {
     private final StudentRepository studentRepository;
     private final CourseScheduleRepository scheduleRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public ReservationResponse createReservation(ReservationCreateRequest request) {
@@ -289,6 +292,33 @@ public class ReservationService {
         return reservations.stream()
                 .map(reservation -> reservation.getSchedule().getStartTime().toString().substring(0, 5))
                 .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 학부모의 자녀 예약 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<ReservationResponse> getMyReservations(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 학부모의 자녀 목록 조회 (부모 전화번호로 매칭)
+        List<Student> myStudents = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        
+        if (myStudents.isEmpty()) {
+            return List.of();
+        }
+        
+        // 자녀들의 예약 목록 조회
+        List<Long> studentIds = myStudents.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+        
+        List<Reservation> reservations = reservationRepository.findByStudentIdInOrderByScheduleScheduleDateDescScheduleStartTimeDesc(studentIds);
+        
+        return reservations.stream()
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 }

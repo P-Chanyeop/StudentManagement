@@ -129,6 +129,7 @@ export const reservationAPI = {
   getById: (id) => api.get(`/reservations/${id}`),
   getByStudent: (studentId) => api.get(`/reservations/student/${studentId}`),
   getByDate: (date) => api.get(`/reservations/date/${date}`),
+  getMyReservations: () => api.get('/reservations/my-reservations'),
   getReservedTimes: (date, consultationType) => {
     const params = consultationType ? { consultationType } : {};
     return api.get(`/reservations/reserved-times/${date}`, { params });
