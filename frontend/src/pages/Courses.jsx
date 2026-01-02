@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { courseAPI, scheduleAPI } from '../services/api';
+import { courseAPI, scheduleAPI, reservationAPI } from '../services/api';
 import '../styles/Courses.css';
 
 function Courses() {
@@ -738,6 +738,35 @@ function SchedulesTab() {
     }
   });
 
+  // 재원생상담 예약 조회
+  const { data: classReservations = [] } = useQuery({
+    queryKey: ['classReservations', selectedDate],
+    queryFn: async () => {
+      const response = await reservationAPI.getByDate(selectedDate);
+      // 재원생상담 유형만 필터링
+      return response.data.filter(reservation => reservation.consultationType === '재원생상담');
+    },
+  });
+
+  // 스케줄과 예약 데이터 합치기
+  const combinedSchedules = [
+    ...schedules,
+    ...classReservations.map(reservation => ({
+      id: `reservation-${reservation.id}`,
+      courseName: '영어 수업 (예약)',
+      scheduleDate: reservation.scheduleDate,
+      startTime: reservation.startTime,
+      endTime: reservation.endTime,
+      currentStudents: 1,
+      maxStudents: 1,
+      memo: reservation.memo || '상담 예약에서 등록',
+      isCancelled: false,
+      isReservation: true,
+      reservationId: reservation.id,
+      studentName: reservation.studentName
+    }))
+  ];
+
   // 스케줄 생성
   const createScheduleMutation = useMutation({
     mutationFn: (data) => scheduleAPI.create(data),
@@ -866,14 +895,14 @@ function SchedulesTab() {
       <div className="content-section">
         <div className="schedule-list">
           <h3>{selectedDate} 스케줄 목록</h3>
-          {schedules.length === 0 ? (
+          {combinedSchedules.length === 0 ? (
             <div className="empty-state">
               <i className="fas fa-calendar-times"></i>
               <p>해당 날짜에 등록된 스케줄이 없습니다</p>
             </div>
           ) : (
             <div className="schedule-items">
-              {schedules.map((schedule) => (
+              {combinedSchedules.map((schedule) => (
                 <div key={schedule.id} className={`schedule-item ${schedule.isCancelled ? 'cancelled' : ''}`}>
                   <div className="schedule-info">
                     <div className="schedule-course">

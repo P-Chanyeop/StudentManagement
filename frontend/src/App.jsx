@@ -11,7 +11,6 @@ import Reservations from './pages/Reservations';
 import ParentReservation from './pages/ParentReservation';
 import Enrollments from './pages/Enrollments';
 import EnrollmentAdjustment from './pages/EnrollmentAdjustment';
-import LevelTests from './pages/LevelTests';
 import Consultations from './pages/Consultations';
 import Messages from './pages/Messages';
 import MakeupClasses from './pages/MakeupClasses';
@@ -131,14 +130,6 @@ function App() {
         element={
           <ProtectedRoute>
             <EnrollmentAdjustment />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/leveltests"
-        element={
-          <ProtectedRoute>
-            <LevelTests />
           </ProtectedRoute>
         }
       />

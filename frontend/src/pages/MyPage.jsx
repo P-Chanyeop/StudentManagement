@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { mypageAPI } from '../services/api';
+import { mypageAPI, reservationAPI } from '../services/api';
 import '../styles/MyPage.css';
 
 function MyPage() {
@@ -16,6 +16,19 @@ function MyPage() {
       const response = await mypageAPI.getMyPage();
       return response.data;
     },
+  });
+
+  // 내 예약 내역 조회
+  const { data: myReservations = [] } = useQuery({
+    queryKey: ['myReservations'],
+    queryFn: async () => {
+      if (myPageData?.student?.id) {
+        const response = await reservationAPI.getByStudent(myPageData.student.id);
+        return response.data;
+      }
+      return [];
+    },
+    enabled: !!myPageData?.student?.id,
   });
 
   if (isLoading) {

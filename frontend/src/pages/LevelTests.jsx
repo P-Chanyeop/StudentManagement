@@ -1,11 +1,22 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { levelTestAPI, studentAPI } from '../services/api';
+import { levelTestAPI, studentAPI, reservationAPI, authAPI } from '../services/api';
 import '../styles/LevelTests.css';
 
 function LevelTests() {
   const queryClient = useQueryClient();
+  
+  // 사용자 정보 조회
+  const { data: currentUser } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const response = await authAPI.getProfile();
+      return response.data;
+    },
+  });
+
+  const isParent = currentUser?.role === 'PARENT';
   const [dateRange, setDateRange] = useState({
     start: new Date().toISOString().split('T')[0],
     end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -31,6 +42,61 @@ function LevelTests() {
       return response.data;
     },
   });
+
+  // 레벨테스트 예약 조회 (학부모는 본인 예약만, 관리자/선생님은 모든 예약)
+  const { data: levelTestReservations = [] } = useQuery({
+    queryKey: ['levelTestReservations', searchParams.start, searchParams.end, currentUser?.id],
+    queryFn: async () => {
+      if (isParent && currentUser?.studentId) {
+        // 학부모는 본인 학생의 예약만 조회
+        const response = await reservationAPI.getByStudent(currentUser.studentId);
+        return response.data.filter(reservation => 
+          reservation.consultationType === '레벨테스트'
+        );
+      } else if (!isParent) {
+        // 관리자/선생님은 날짜 범위 내 모든 레벨테스트 예약 조회
+        const startDate = new Date(searchParams.start);
+        const endDate = new Date(searchParams.end);
+        const allReservations = [];
+        
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          const dateStr = d.toISOString().split('T')[0];
+          try {
+            const response = await reservationAPI.getByDate(dateStr);
+            const levelTestReservations = response.data.filter(reservation => 
+              reservation.consultationType === '레벨테스트'
+            );
+            allReservations.push(...levelTestReservations);
+          } catch (error) {
+            console.log(`No reservations for ${dateStr}`);
+          }
+        }
+        
+        return allReservations;
+      }
+      return [];
+    },
+    enabled: !!currentUser,
+  });
+
+  // 레벨테스트와 예약 데이터 합치기
+  const combinedTests = [
+    ...levelTests,
+    ...levelTestReservations.map(reservation => ({
+      id: `reservation-${reservation.id}`,
+      studentName: reservation.studentName,
+      testDate: reservation.scheduleDate,
+      testTime: reservation.startTime,
+      memo: reservation.memo || '상담 예약에서 등록',
+      status: 'SCHEDULED',
+      isReservation: true,
+      reservationId: reservation.id
+    }))
+  ];
+
+  // 디버깅용 로그
+  console.log('Level test reservations:', levelTestReservations);
+  console.log('Combined tests:', combinedTests);
 
   // 검색 버튼 클릭 핸들러
   const handleSearch = () => {
@@ -95,7 +161,7 @@ function LevelTests() {
   };
 
   // 테스트 날짜별로 그룹화
-  const groupedTests = levelTests.reduce((acc, test) => {
+  const groupedTests = combinedTests.reduce((acc, test) => {
     const date = test.testDate;
     if (!acc[date]) {
       acc[date] = [];
@@ -122,42 +188,52 @@ function LevelTests() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-clipboard-list"></i>
-              레벨 테스트 일정 관리
+              {isParent ? '레벨 테스트 예약 내역' : '레벨 테스트 일정 관리'}
             </h1>
-            <p className="page-subtitle">학생들의 레벨 테스트 일정을 관리합니다</p>
+            <p className="page-subtitle">
+              {isParent ? '내 레벨 테스트 예약 내역을 확인합니다' : '학생들의 레벨 테스트 일정을 관리합니다'}
+            </p>
           </div>
-          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-            <i className="fas fa-plus"></i> 레벨 테스트 예약
-          </button>
         </div>
       </div>
 
       <div className="page-content">
-        <div className="search-section">
-          <div className="date-range">
-            <label>시작일:</label>
-            <input
-              type="date"
-              value={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-            />
-            <label>종료일:</label>
-            <input
-              type="date"
-              value={dateRange.end}
-              min={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-            />
-            <button className="btn-search" onClick={handleSearch}>
-              <i className="fas fa-search"></i>
-              검색
-            </button>
+        {!isParent && (
+          <div className="search-section">
+            <div className="date-range">
+              <label>시작일:</label>
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              />
+              <label>종료일:</label>
+              <input
+                type="date"
+                value={dateRange.end}
+                min={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              />
+              <button className="btn-search" onClick={handleSearch}>
+                <i className="fas fa-search"></i>
+                검색
+              </button>
+            </div>
+            <div className="result-count">
+              <i className="fas fa-clipboard-list"></i>
+              총 <strong>{combinedTests.length}</strong>건
+            </div>
           </div>
-          <div className="result-count">
-            <i className="fas fa-clipboard-list"></i>
-            총 <strong>{levelTests.length}</strong>건
+        )}
+
+        {isParent && (
+          <div className="parent-info">
+            <div className="result-count">
+              <i className="fas fa-clipboard-list"></i>
+              내 예약 <strong>{combinedTests.length}</strong>건
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="calendar-view">
           {sortedDates.length === 0 ? (

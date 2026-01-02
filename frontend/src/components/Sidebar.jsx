@@ -63,7 +63,6 @@ function Sidebar() {
       { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
       { path: '/enrollment-adjustment', icon: <i className="fas fa-edit"></i>, label: '횟수 조정' },
       { path: '/makeup-classes', icon: <i className="fas fa-redo"></i>, label: '보강 수업' },
-      { path: '/leveltests', icon: <i className="fas fa-clipboard-list"></i>, label: '레벨 테스트' },
       { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
       { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
@@ -76,7 +75,6 @@ function Sidebar() {
       { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 관리' },
       { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권' },
       { path: '/makeup-classes', icon: <i className="fas fa-redo"></i>, label: '보강 수업' },
-      { path: '/leveltests', icon: <i className="fas fa-clipboard-list"></i>, label: '레벨 테스트' },
       { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
