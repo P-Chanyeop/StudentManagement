@@ -588,3 +588,15 @@
 .btn-home:hover {
   background-color: #5a6268;
 }
+/* 폼 행 스타일 */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

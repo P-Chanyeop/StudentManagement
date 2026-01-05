@@ -26,8 +26,13 @@ function ParentReservation() {
   });
 
   const [formData, setFormData] = useState({
-    // 선택된 학생 ID
+    // 선택된 학생 ID (학부모용)
     selectedStudentId: '',
+    
+    // 수기 입력 정보 (관리자/선생님용)
+    parentName: '',
+    studentName: '',
+    phoneNumber: '',
     
     // 예약 정보
     preferredDate: '',
@@ -381,8 +386,24 @@ function ParentReservation() {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.selectedStudentId) {
-      newErrors.selectedStudentId = '상담 대상 자녀를 선택해주세요.';
+    // 역할별 유효성 검사
+    if (profile?.role === 'PARENT') {
+      if (!formData.selectedStudentId) {
+        newErrors.selectedStudentId = '상담 대상 자녀를 선택해주세요.';
+      }
+    } else {
+      // 관리자/선생님용 유효성 검사
+      if (!formData.parentName.trim()) {
+        newErrors.parentName = '학부모 이름을 입력해주세요.';
+      }
+      if (!formData.studentName.trim()) {
+        newErrors.studentName = '학생 이름을 입력해주세요.';
+      }
+      if (!formData.phoneNumber.trim()) {
+        newErrors.phoneNumber = '연락처를 입력해주세요.';
+      } else if (!/^010-\d{4}-\d{4}$/.test(formData.phoneNumber)) {
+        newErrors.phoneNumber = '올바른 연락처 형식을 입력해주세요. (010-0000-0000)';
+      }
     }
     
     if (!formData.preferredDate) {
@@ -451,27 +472,39 @@ function ParentReservation() {
         return;
       }
 
-      // 선택된 자녀 정보 가져오기
-      const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
-      if (!selectedStudent) {
-        alert('선택된 자녀 정보를 찾을 수 없습니다.');
-        return;
+      // 역할별 학생 정보 처리
+      let studentInfo;
+      if (profile?.role === 'PARENT') {
+        // 학부모용 - 선택된 자녀 정보 가져오기
+        const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
+        if (!selectedStudent) {
+          alert('선택된 자녀 정보를 찾을 수 없습니다.');
+          return;
+        }
+        studentInfo = {
+          studentName: selectedStudent.studentName,
+          parentName: selectedStudent.parentName || profile.name,
+          phoneNumber: selectedStudent.phoneNumber || profile.phoneNumber
+        };
+      } else {
+        // 관리자/선생님용 - 수기 입력 정보 사용
+        studentInfo = {
+          studentName: formData.studentName,
+          parentName: formData.parentName,
+          phoneNumber: formData.phoneNumber
+        };
       }
 
       // 예약 요청 데이터 구성
       const reservationData = {
-        studentId: selectedStudent.id,
+        studentId: profile?.role === 'PARENT' ? selectedStudent.id : null, // 학부모가 아닌 경우 null
+        studentName: studentInfo.studentName,
+        parentName: studentInfo.parentName,
+        phoneNumber: studentInfo.phoneNumber,
         scheduleId: availableSchedule.id,
         consultationType: formData.consultationType,
         memo: formData.requirements,
-        reservationSource: 'WEB',
-        parentName: profile.name,
-        parentPhone: profile.phoneNumber,
-        students: [{
-          studentName: selectedStudent.studentName,
-          studentPhone: selectedStudent.studentPhone,
-          school: selectedStudent.school
-        }]
+        reservationSource: 'WEB'
       };
       
       createReservation.mutate(reservationData);
@@ -683,36 +716,39 @@ function ParentReservation() {
 
           {/* 자녀 선택 */}
           <div className="form-section">
-            <h2>상담 대상 자녀 선택</h2>
-            <div className="form-group">
-              <label htmlFor="selectedStudentId">자녀 선택 *</label>
-              <select
-                id="selectedStudentId"
-                name="selectedStudentId"
-                value={formData.selectedStudentId}
-                onChange={handleInputChange}
-                className={errors.selectedStudentId ? 'error' : ''}
-              >
-                <option value="">자녀를 선택해주세요</option>
-                {myStudents.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.studentName} ({student.school || '학교 미등록'} {student.grade}학년)
-                  </option>
-                ))}
-              </select>
-              {errors.selectedStudentId && <span className="error-message">{errors.selectedStudentId}</span>}
-            </div>
-            
-            {/* 선택된 자녀 정보 표시 */}
-            {formData.selectedStudentId && (
-              <div className="selected-student-info">
-                {(() => {
-                  const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
-                  return selectedStudent ? (
-                    <div className="student-details">
-                      <h3>선택된 자녀 정보</h3>
-                      <div className="info-grid">
-                        <div className="info-item">
+            {profile?.role === 'PARENT' ? (
+              // 학부모용 - 자녀 선택
+              <>
+                <h2>상담 대상 자녀 선택</h2>
+                <div className="form-group">
+                  <label htmlFor="selectedStudentId">자녀 선택 *</label>
+                  <select
+                    id="selectedStudentId"
+                    name="selectedStudentId"
+                    value={formData.selectedStudentId}
+                    onChange={handleInputChange}
+                    className={errors.selectedStudentId ? 'error' : ''}
+                  >
+                    <option value="">자녀를 선택해주세요</option>
+                    {myStudents.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.studentName} ({student.school || '학교 미등록'} {student.grade}학년)
+                      </option>
+                    ))}
+                  </select>
+                  {errors.selectedStudentId && <span className="error-message">{errors.selectedStudentId}</span>}
+                </div>
+                
+                {/* 선택된 자녀 정보 표시 */}
+                {formData.selectedStudentId && (
+                  <div className="selected-student-info">
+                    {(() => {
+                      const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
+                      return selectedStudent ? (
+                        <div className="student-details">
+                          <h3>선택된 자녀 정보</h3>
+                          <div className="info-grid">
+                            <div className="info-item">
                           <span className="label">이름:</span>
                           <span className="value">{selectedStudent.studentName}</span>
                         </div>
@@ -733,6 +769,56 @@ function ParentReservation() {
                   ) : null;
                 })()}
               </div>
+            )}
+              </>
+            ) : (
+              // 관리자/선생님용 - 수기 입력
+              <>
+                <h2>상담 정보 입력</h2>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="parentName">학부모 이름 *</label>
+                    <input
+                      type="text"
+                      id="parentName"
+                      name="parentName"
+                      value={formData.parentName}
+                      onChange={handleInputChange}
+                      placeholder="학부모 이름을 입력하세요"
+                      className={errors.parentName ? 'error' : ''}
+                    />
+                    {errors.parentName && <span className="error-message">{errors.parentName}</span>}
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="studentName">학생 이름 *</label>
+                    <input
+                      type="text"
+                      id="studentName"
+                      name="studentName"
+                      value={formData.studentName}
+                      onChange={handleInputChange}
+                      placeholder="학생 이름을 입력하세요"
+                      className={errors.studentName ? 'error' : ''}
+                    />
+                    {errors.studentName && <span className="error-message">{errors.studentName}</span>}
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="phoneNumber">연락처 *</label>
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="010-0000-0000"
+                    className={errors.phoneNumber ? 'error' : ''}
+                  />
+                  {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
+                </div>
+              </>
             )}
           </div>
 
