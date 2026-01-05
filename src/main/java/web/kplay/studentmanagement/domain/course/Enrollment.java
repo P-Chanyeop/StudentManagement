@@ -97,6 +97,15 @@ public class Enrollment extends BaseEntity {
         this.isActive = true;
     }
 
+    // 수강권 만료 처리
+    public void expire() {
+        this.isActive = false;
+        // 종료일을 현재 날짜로 설정
+        this.endDate = LocalDate.now();
+        // 잔여 횟수를 0으로 설정
+        this.remainingCount = 0;
+    }
+
     // 메모 업데이트
     public void updateMemo(String memo) {
         this.memo = memo;

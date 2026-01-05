@@ -366,4 +366,42 @@ public class EnrollmentService {
     public List<EnrollmentAdjustment> getAdjustmentHistory(Long enrollmentId) {
         return enrollmentAdjustmentRepository.findByEnrollmentIdOrderByCreatedAtDesc(enrollmentId);
     }
+
+    /**
+     * 수강권 활성화 (관리자 전용)
+     */
+    @Transactional
+    public void activateEnrollment(Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("수강권을 찾을 수 없습니다."));
+        
+        enrollment.activate();
+        enrollmentRepository.save(enrollment);
+        log.info("수강권 활성화 - ID: {}", enrollmentId);
+    }
+
+    /**
+     * 수강권 만료 처리 (관리자 전용)
+     */
+    @Transactional
+    public void expireEnrollment(Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("수강권을 찾을 수 없습니다."));
+        
+        enrollment.expire();
+        enrollmentRepository.save(enrollment);
+        log.info("수강권 만료 처리 - ID: {}", enrollmentId);
+    }
+
+    /**
+     * 수강권 강제 삭제 (관리자 전용)
+     */
+    @Transactional
+    public void forceDeleteEnrollment(Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new IllegalArgumentException("수강권을 찾을 수 없습니다."));
+        
+        enrollmentRepository.delete(enrollment);
+        log.info("수강권 강제 삭제 - ID: {}", enrollmentId);
+    }
 }

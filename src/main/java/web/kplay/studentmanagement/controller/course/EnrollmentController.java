@@ -171,4 +171,25 @@ public class EnrollmentController {
         enrollmentService.deactivateEnrollment(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> activateEnrollment(@PathVariable Long id) {
+        enrollmentService.activateEnrollment(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/expire")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> expireEnrollment(@PathVariable Long id) {
+        enrollmentService.expireEnrollment(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/force")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> forceDeleteEnrollment(@PathVariable Long id) {
+        enrollmentService.forceDeleteEnrollment(id);
+        return ResponseEntity.noContent().build();
+    }
 }
