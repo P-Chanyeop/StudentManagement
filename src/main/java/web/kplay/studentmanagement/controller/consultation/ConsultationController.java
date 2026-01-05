@@ -35,7 +35,7 @@ public class ConsultationController {
      * @return 생성된 상담 기록 정보
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<ConsultationResponse> createConsultation(@Valid @RequestBody ConsultationRequest request) {
         ConsultationResponse response = consultationService.createConsultation(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
