@@ -100,6 +100,11 @@ export const enrollmentAPI = {
   setCustomDuration: (id, durationMinutes) => api.patch(`/enrollments/${id}/duration?durationMinutes=${durationMinutes}`),
   cancel: (id) => api.delete(`/enrollments/${id}`),
   deactivate: (id) => api.delete(`/enrollments/${id}`),
+  // 관리자 전용 기능들
+  activate: (id) => api.patch(`/enrollments/${id}/activate`),
+  expire: (id) => api.patch(`/enrollments/${id}/expire`),
+  delete: (id) => api.delete(`/enrollments/${id}/force`),
+  update: (id, data) => api.put(`/enrollments/${id}`, data),
 };
 
 // 출석 API

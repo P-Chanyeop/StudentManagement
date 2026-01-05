@@ -219,6 +219,42 @@ function Enrollments() {
     },
   });
 
+  // 수강권 활성화 mutation
+  const activateMutation = useMutation({
+    mutationFn: (id) => enrollmentAPI.activate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      alert('수강권이 활성화되었습니다.');
+    },
+    onError: (error) => {
+      alert(`활성화 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  // 수강권 만료 처리 mutation
+  const expireMutation = useMutation({
+    mutationFn: (id) => enrollmentAPI.expire(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      alert('수강권이 만료 처리되었습니다.');
+    },
+    onError: (error) => {
+      alert(`만료 처리 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  // 수강권 삭제 mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => enrollmentAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      alert('수강권이 삭제되었습니다.');
+    },
+    onError: (error) => {
+      alert(`삭제 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
   const handleCreateEnrollment = () => {
     if (!newEnrollment.studentId || !newEnrollment.courseId) {
       alert('학생과 코스를 선택해주세요.');
@@ -259,6 +295,25 @@ function Enrollments() {
     const duration = prompt('개별 수업 시간을 입력하세요 (분):', currentDuration || '60');
     if (duration && !isNaN(duration) && parseInt(duration) > 0) {
       setDurationMutation.mutate({ id, durationMinutes: parseInt(duration) });
+    }
+  };
+
+  // 관리자 전용 핸들러들
+  const handleActivateEnrollment = (id) => {
+    if (window.confirm('수강권을 활성화하시겠습니까?')) {
+      activateMutation.mutate(id);
+    }
+  };
+
+  const handleExpireEnrollment = (id) => {
+    if (window.confirm('수강권을 만료 처리하시겠습니까?')) {
+      expireMutation.mutate(id);
+    }
+  };
+
+  const handleDeleteEnrollment = (id) => {
+    if (window.confirm('수강권을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      deleteMutation.mutate(id);
     }
   };
 
@@ -746,6 +801,34 @@ function Enrollments() {
                   </button>
                 </>
               )}
+              
+              {/* 관리자 전용 기능 */}
+              {currentUser?.role === 'ADMIN' && (
+                <>
+                  {selectedEnrollment.isActive ? (
+                    <button
+                      className="btn-expire"
+                      onClick={() => handleExpireEnrollment(selectedEnrollment.id)}
+                    >
+                      만료 처리
+                    </button>
+                  ) : (
+                    <button
+                      className="btn-activate"
+                      onClick={() => handleActivateEnrollment(selectedEnrollment.id)}
+                    >
+                      활성화
+                    </button>
+                  )}
+                  <button
+                    className="btn-delete"
+                    onClick={() => handleDeleteEnrollment(selectedEnrollment.id)}
+                  >
+                    삭제
+                  </button>
+                </>
+              )}
+              
               <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
                 닫기
               </button>
