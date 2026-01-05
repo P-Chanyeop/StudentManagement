@@ -1,14 +1,30 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { noticeAPI } from '../services/api';
+import { noticeAPI, authAPI } from '../services/api';
 import '../styles/Notices.css';
 
 function Notices() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedNotice, setSelectedNotice] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newNotice, setNewNotice] = useState({
+    title: '',
+    content: '',
+    isPinned: false
+  });
   const pageSize = 10;
+  const queryClient = useQueryClient();
+
+  // 사용자 프로필 조회
+  const { data: profile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const response = await authAPI.getProfile();
+      return response.data;
+    },
+  });
 
   // 상단 고정 공지 조회
   const { data: pinnedNotices } = useQuery({
@@ -54,6 +70,29 @@ function Notices() {
     }
   };
 
+  // 공지사항 생성
+  const createNotice = useMutation({
+    mutationFn: (data) => noticeAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notices']);
+      setShowCreateModal(false);
+      setNewNotice({ title: '', content: '', isPinned: false });
+      alert('공지사항이 등록되었습니다.');
+    },
+    onError: (error) => {
+      alert(`공지사항 등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  const handleCreateNotice = (e) => {
+    e.preventDefault();
+    if (!newNotice.title.trim() || !newNotice.content.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+    createNotice.mutate(newNotice);
+  };
+
   const formatDate = (datetime) => {
     if (!datetime) return '';
     const date = new Date(datetime);
@@ -89,6 +128,16 @@ function Notices() {
             </h1>
             <p className="page-subtitle">학원의 중요한 소식을 확인하세요</p>
           </div>
+          {profile?.role === 'ADMIN' && (
+            <div className="page-actions">
+              <button 
+                className="btn-primary"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <i className="fas fa-plus"></i> 공지사항 작성
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -256,6 +305,74 @@ function Notices() {
                 닫기
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 공지사항 작성 모달 */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>공지사항 작성</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowCreateModal(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleCreateNotice}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label htmlFor="title">제목 *</label>
+                  <input
+                    type="text"
+                    id="title"
+                    value={newNotice.title}
+                    onChange={(e) => setNewNotice({...newNotice, title: e.target.value})}
+                    placeholder="공지사항 제목을 입력하세요"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="content">내용 *</label>
+                  <textarea
+                    id="content"
+                    value={newNotice.content}
+                    onChange={(e) => setNewNotice({...newNotice, content: e.target.value})}
+                    placeholder="공지사항 내용을 입력하세요"
+                    rows="8"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={newNotice.isPinned}
+                      onChange={(e) => setNewNotice({...newNotice, isPinned: e.target.checked})}
+                    />
+                    <span className="checkmark"></span>
+                    상단 고정
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="submit" className="btn-primary" disabled={createNotice.isLoading}>
+                  {createNotice.isLoading ? '등록 중...' : '등록'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  취소
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
