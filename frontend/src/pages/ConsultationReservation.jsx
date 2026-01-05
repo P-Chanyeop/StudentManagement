@@ -38,7 +38,7 @@ function ConsultationReservation() {
     // 상담 정보
     consultationDate: '',
     consultationTime: '',
-    consultationType: 'GENERAL',
+    consultationType: '학생상담',
     content: '',
     memo: ''
   });
@@ -55,7 +55,7 @@ function ConsultationReservation() {
         selectedStudentId: '',
         consultationDate: '',
         consultationTime: '',
-        consultationType: 'GENERAL',
+        consultationType: '재원생상담',
         content: '',
         memo: ''
       });
@@ -126,7 +126,7 @@ function ConsultationReservation() {
       const consultationData = {
         studentId: selectedStudent.id,
         consultationDate: formData.consultationDate,
-        title: `${formData.consultationType} 상담`,
+        title: formData.consultationType,
         content: formData.content,
         consultationType: formData.consultationType,
         recordingFileUrl: null
@@ -140,10 +140,8 @@ function ConsultationReservation() {
   };
 
   const consultationTypes = [
-    { value: 'GENERAL', label: '일반 상담' },
-    { value: 'ACADEMIC', label: '학습 상담' },
-    { value: 'BEHAVIORAL', label: '생활 상담' },
-    { value: 'CAREER', label: '진로 상담' }
+    { value: '학생상담', label: '학생상담' },
+    { value: '학부모상담', label: '학부모상담' }
   ];
 
   return (
