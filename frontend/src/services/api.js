@@ -116,6 +116,9 @@ export const attendanceAPI = {
   getByStudentAndRange: (studentId, startDate, endDate) =>
     api.get(`/attendances/student/${studentId}/range?startDate=${startDate}&endDate=${endDate}`),
   getMyChildAttendances: (date) => api.get(`/attendances/my-child/${date}`),
+  getMyChildMonthlyAttendances: (year, month) => api.get(`/attendances/my-child/monthly?year=${year}&month=${month}`),
+  getMyChildSchedules: (date) => api.get(`/attendances/my-child/schedules/${date}`),
+  getMyChildMonthlySchedules: (year, month) => api.get(`/attendances/my-child/schedules/monthly?year=${year}&month=${month}`),
   updateClassComplete: (attendanceId) => 
     api.patch(`/attendances/${attendanceId}/toggle-completed`),
   cancelAttendance: (attendanceId) => 
@@ -152,6 +155,11 @@ export const scheduleAPI = {
   update: (id, data) => api.put(`/schedules/${id}`, data),
   cancel: (id, reason) => api.post(`/schedules/${id}/cancel`, { reason }),
   restore: (id) => api.post(`/schedules/${id}/restore`),
+  // 역할별 스케줄 조회
+  getMySchedules: (date) => api.get(`/schedules/my/${date}`),
+  getAllSchedules: (date) => api.get(`/schedules/all/${date}`),
+  getMyMonthlySchedules: (year, month) => api.get(`/schedules/my/monthly?year=${year}&month=${month}`),
+  getAllMonthlySchedules: (year, month) => api.get(`/schedules/all/monthly?year=${year}&month=${month}`),
 };
 
 // 레벨테스트 API

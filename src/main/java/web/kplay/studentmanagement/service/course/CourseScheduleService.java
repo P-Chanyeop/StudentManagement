@@ -2,15 +2,18 @@ package web.kplay.studentmanagement.service.course;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
+import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.dto.course.CourseScheduleCreateRequest;
 import web.kplay.studentmanagement.dto.course.CourseScheduleResponse;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.CourseRepository;
 import web.kplay.studentmanagement.repository.CourseScheduleRepository;
+import web.kplay.studentmanagement.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,6 +26,7 @@ public class CourseScheduleService {
 
     private final CourseScheduleRepository scheduleRepository;
     private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public CourseScheduleResponse createSchedule(CourseScheduleCreateRequest request) {
@@ -132,5 +136,55 @@ public class CourseScheduleService {
                 .cancelReason(schedule.getCancelReason())
                 .memo(schedule.getMemo())
                 .build();
+    }
+
+    // 선생님 본인 스케줄 조회
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getMySchedules(LocalDate date, Authentication authentication) {
+        String username = authentication.getName();
+        User teacher = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
+
+        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDateAndCourse_Teacher(date, teacher);
+        return schedules.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // 관리자 전체 스케줄 조회
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getAllSchedules(LocalDate date) {
+        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDate(date);
+        return schedules.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // 선생님 본인 월별 스케줄 조회
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getMyMonthlySchedules(int year, int month, Authentication authentication) {
+        String username = authentication.getName();
+        User teacher = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDateBetweenAndCourse_Teacher(startDate, endDate, teacher);
+        return schedules.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // 관리자 전체 월별 스케줄 조회
+    @Transactional(readOnly = true)
+    public List<CourseScheduleResponse> getAllMonthlySchedules(int year, int month) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDateBetween(startDate, endDate);
+        return schedules.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 }

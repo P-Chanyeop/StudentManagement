@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.course.CourseScheduleCreateRequest;
 import web.kplay.studentmanagement.dto.course.CourseScheduleResponse;
@@ -92,5 +93,45 @@ public class CourseScheduleController {
     public ResponseEntity<Map<String, String>> restoreSchedule(@PathVariable Long id) {
         scheduleService.restoreSchedule(id);
         return ResponseEntity.ok(Map.of("message", "스케줄이 복구되었습니다"));
+    }
+
+    // 선생님 본인 스케줄 조회
+    @GetMapping("/my/{date}")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<CourseScheduleResponse>> getMySchedules(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication) {
+        List<CourseScheduleResponse> responses = scheduleService.getMySchedules(date, authentication);
+        return ResponseEntity.ok(responses);
+    }
+
+    // 관리자 전체 스케줄 조회
+    @GetMapping("/all/{date}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CourseScheduleResponse>> getAllSchedules(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<CourseScheduleResponse> responses = scheduleService.getAllSchedules(date);
+        return ResponseEntity.ok(responses);
+    }
+
+    // 선생님 본인 월별 스케줄 조회
+    @GetMapping("/my/monthly")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<CourseScheduleResponse>> getMyMonthlySchedules(
+            @RequestParam int year,
+            @RequestParam int month,
+            Authentication authentication) {
+        List<CourseScheduleResponse> responses = scheduleService.getMyMonthlySchedules(year, month, authentication);
+        return ResponseEntity.ok(responses);
+    }
+
+    // 관리자 전체 월별 스케줄 조회
+    @GetMapping("/all/monthly")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CourseScheduleResponse>> getAllMonthlySchedules(
+            @RequestParam int year,
+            @RequestParam int month) {
+        List<CourseScheduleResponse> responses = scheduleService.getAllMonthlySchedules(year, month);
+        return ResponseEntity.ok(responses);
     }
 }

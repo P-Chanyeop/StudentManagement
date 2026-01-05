@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
+import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,4 +42,9 @@ public interface CourseScheduleRepository extends JpaRepository<CourseSchedule, 
      */
     @Query("SELECT COUNT(cs) FROM CourseSchedule cs WHERE cs.scheduleDate = :date AND cs.course.teacher.id = :teacherId")
     int countByScheduleDateAndCourseTeacherId(@Param("date") LocalDate date, @Param("teacherId") Long teacherId);
+
+    // 선생님별 스케줄 조회
+    List<CourseSchedule> findByScheduleDateAndCourse_Teacher(LocalDate date, User teacher);
+    
+    List<CourseSchedule> findByScheduleDateBetweenAndCourse_Teacher(LocalDate startDate, LocalDate endDate, User teacher);
 }

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import web.kplay.studentmanagement.domain.attendance.Attendance;
+import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
 import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.reservation.Reservation;
@@ -13,6 +15,7 @@ import web.kplay.studentmanagement.dto.reservation.ReservationCreateRequest;
 import web.kplay.studentmanagement.dto.reservation.ReservationResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
+import web.kplay.studentmanagement.repository.AttendanceRepository;
 import web.kplay.studentmanagement.repository.CourseScheduleRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.ReservationRepository;
@@ -34,6 +37,7 @@ public class ReservationService {
     private final CourseScheduleRepository scheduleRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
+    private final AttendanceRepository attendanceRepository;
 
     @Transactional
     public ReservationResponse createReservation(ReservationCreateRequest request) {
@@ -84,6 +88,9 @@ public class ReservationService {
                 .build();
 
         Reservation savedReservation = reservationRepository.save(reservation);
+
+        // 예약 생성 시 출석 레코드도 자동 생성
+        createAttendanceRecord(savedReservation);
 
         // 스케줄에 학생 수 증가
         schedule.addStudent();
@@ -320,5 +327,24 @@ public class ReservationService {
         return reservations.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 예약에 대한 출석 레코드 생성
+     */
+    private void createAttendanceRecord(Reservation reservation) {
+        try {
+            Attendance attendance = Attendance.builder()
+                    .student(reservation.getStudent())
+                    .schedule(reservation.getSchedule())
+                    .status(AttendanceStatus.ABSENT) // 초기 상태는 결석
+                    .build();
+            
+            attendanceRepository.save(attendance);
+            log.info("Attendance record created for reservation: student={}, schedule={}", 
+                    reservation.getStudent().getStudentName(), reservation.getSchedule().getId());
+        } catch (Exception e) {
+            log.warn("Failed to create attendance record for reservation: {}", e.getMessage());
+        }
     }
 }

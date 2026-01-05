@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import web.kplay.studentmanagement.domain.attendance.Attendance;
+import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
 import web.kplay.studentmanagement.domain.course.Enrollment;
@@ -39,6 +41,7 @@ public class DataSeeder {
     private final EnrollmentRepository enrollmentRepository;
     private final ConsultationRepository consultationRepository;
     private final NoticeRepository noticeRepository;
+    private final AttendanceRepository attendanceRepository;
     private final PasswordEncoder passwordEncoder;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
@@ -400,6 +403,9 @@ public class DataSeeder {
                 }
             }
 
+            // 6. 테스트용 출석 데이터 생성 (비활성화)
+            // createAttendanceRecords();
+
             // 테스트 공지사항 데이터 생성
             if (noticeRepository.count() == 0) {
                 User admin = userRepository.findByUsername("admin").orElse(null);
@@ -604,5 +610,44 @@ public class DataSeeder {
         }
 
         log.info("✓ {} schedules created for course: {}", scheduleCount, course.getCourseName());
+    }
+
+    /**
+     * 테스트용 출석 데이터 생성
+     */
+    private void createAttendanceRecords() {
+        // 학부모 계정과 연결된 학생 찾기
+        User parent1 = userRepository.findByUsername("parent1").orElse(null);
+        if (parent1 == null) return;
+
+        List<Student> parentStudents = studentRepository.findByParentPhoneAndIsActive(parent1.getPhoneNumber(), true);
+        if (parentStudents.isEmpty()) return;
+
+        // 오늘과 어제 날짜의 스케줄 찾기
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        
+        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDateBetween(yesterday, today);
+        
+        for (Student student : parentStudents) {
+            for (CourseSchedule schedule : schedules) {
+                // 출석 레코드가 없으면 생성 (간단한 체크)
+                try {
+                    Attendance attendance = Attendance.builder()
+                            .student(student)
+                            .schedule(schedule)
+                            .status(AttendanceStatus.PRESENT)
+                            .build();
+                    
+                    attendanceRepository.save(attendance);
+                    log.info("✓ Test attendance created: student={}, date={}", 
+                            student.getStudentName(), schedule.getScheduleDate());
+                } catch (Exception e) {
+                    // 이미 존재하면 무시
+                    log.debug("Attendance already exists for student={}, schedule={}", 
+                            student.getStudentName(), schedule.getId());
+                }
+            }
+        }
     }
 }

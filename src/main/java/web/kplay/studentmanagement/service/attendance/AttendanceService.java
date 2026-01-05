@@ -376,6 +376,37 @@ public class AttendanceService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 학부모 자녀 월별 출석 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getMyChildMonthlyAttendances(String username, int year, int month) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 학부모의 자녀 목록 조회 (부모 전화번호로 매칭)
+        List<Student> myStudents = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        
+        if (myStudents.isEmpty()) {
+            return List.of();
+        }
+        
+        // 월의 시작일과 마지막일 계산
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        
+        // 자녀들의 출석 기록 조회
+        List<Long> studentIds = myStudents.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+        
+        List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDateBetween(studentIds, startDate, endDate);
+        
+        return attendances.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private AttendanceResponse toResponse(Attendance attendance) {
         return AttendanceResponse.builder()
                 .id(attendance.getId())
@@ -395,5 +426,64 @@ public class AttendanceService {
                 .teacherName(attendance.getSchedule().getCourse().getTeacher() != null ? 
                     attendance.getSchedule().getCourse().getTeacher().getName() : null)
                 .build();
+    }
+
+    /**
+     * 학부모 자녀 수업 정보 조회 (스케줄 기반)
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getMyChildSchedules(String username, LocalDate date) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 학부모의 자녀 목록 조회
+        List<Student> myStudents = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        
+        if (myStudents.isEmpty()) {
+            return List.of();
+        }
+        
+        // 자녀들의 수업 스케줄 조회 (출석 여부 상관없이)
+        List<Long> studentIds = myStudents.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+        
+        // 해당 날짜의 스케줄에서 자녀가 등록된 수업 조회
+        List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDate(studentIds, date);
+        
+        return attendances.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 학부모 자녀 월별 수업 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public List<AttendanceResponse> getMyChildMonthlySchedules(String username, int year, int month) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 학부모의 자녀 목록 조회
+        List<Student> myStudents = studentRepository.findByParentPhoneAndIsActive(user.getPhoneNumber(), true);
+        
+        if (myStudents.isEmpty()) {
+            return List.of();
+        }
+        
+        // 월의 시작일과 마지막일 계산
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        
+        // 자녀들의 수업 스케줄 조회
+        List<Long> studentIds = myStudents.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+        
+        List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDateBetween(studentIds, startDate, endDate);
+        
+        return attendances.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 }

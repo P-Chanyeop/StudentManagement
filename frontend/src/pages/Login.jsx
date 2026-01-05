@@ -102,7 +102,7 @@ function Login() {
           <p className="demo-account">
             <strong>데모 계정</strong><br />
             관리자: admin / admin123<br />
-            선생님: teacher / teacher123
+            선생님: teacher1 / teacher123
           </p>
         </div>
       </div>

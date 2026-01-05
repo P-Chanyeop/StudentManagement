@@ -212,4 +212,39 @@ public class AttendanceController {
         List<AttendanceResponse> responses = attendanceService.getMyChildAttendances(username, date);
         return ResponseEntity.ok(responses);
     }
+
+    // 학부모 자녀 월별 출석 조회
+    @GetMapping("/my-child/monthly")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<AttendanceResponse>> getMyChildMonthlyAttendances(
+            @RequestParam int year,
+            @RequestParam int month,
+            Authentication authentication) {
+        String username = authentication.getName();
+        List<AttendanceResponse> responses = attendanceService.getMyChildMonthlyAttendances(username, year, month);
+        return ResponseEntity.ok(responses);
+    }
+
+    // 학부모 자녀 수업 정보 조회 (스케줄 기반)
+    @GetMapping("/my-child/schedules/{date}")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<AttendanceResponse>> getMyChildSchedules(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Authentication authentication) {
+        String username = authentication.getName();
+        List<AttendanceResponse> responses = attendanceService.getMyChildSchedules(username, date);
+        return ResponseEntity.ok(responses);
+    }
+
+    // 학부모 자녀 월별 수업 정보 조회
+    @GetMapping("/my-child/schedules/monthly")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<AttendanceResponse>> getMyChildMonthlySchedules(
+            @RequestParam int year,
+            @RequestParam int month,
+            Authentication authentication) {
+        String username = authentication.getName();
+        List<AttendanceResponse> responses = attendanceService.getMyChildMonthlySchedules(username, year, month);
+        return ResponseEntity.ok(responses);
+    }
 }

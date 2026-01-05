@@ -123,4 +123,12 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
            "WHERE a.student.id IN :studentIds AND s.scheduleDate = :date " +
            "ORDER BY s.startTime ASC")
     List<Attendance> findByStudentIdInAndScheduleScheduleDate(@Param("studentIds") List<Long> studentIds, @Param("date") LocalDate date);
+
+    // 월별 출석 조회
+    @Query("SELECT a FROM Attendance a JOIN FETCH a.schedule s JOIN FETCH s.course c LEFT JOIN FETCH c.teacher t JOIN FETCH a.student st " +
+           "WHERE a.student.id IN :studentIds AND s.scheduleDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY s.scheduleDate ASC, s.startTime ASC")
+    List<Attendance> findByStudentIdInAndScheduleScheduleDateBetween(@Param("studentIds") List<Long> studentIds, 
+                                                                     @Param("startDate") LocalDate startDate, 
+                                                                     @Param("endDate") LocalDate endDate);
 }

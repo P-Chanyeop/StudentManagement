@@ -49,6 +49,12 @@
   --info: #1E40AF;
   --info-light: #DBEAFE;
   --info-dark: #1E3A8A;
+  
+  /* 상태 배경 컬러 */
+  --warning-color: var(--warning);
+  --warning-bg: var(--warning-light);
+  --error-color: var(--error);
+  --error-bg: var(--error-light);
 }
 
 * {

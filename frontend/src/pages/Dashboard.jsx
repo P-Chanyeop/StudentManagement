@@ -58,7 +58,7 @@ function Dashboard() {
     },
   });
 
-  // 만료 임박 수강권 (관리자/선생님) 또는 내 자녀 수강권 (학부모)
+  // 수강권 정보 (역할별 분기)
   const { data: enrollments = [] } = useQuery({
     queryKey: ['enrollments', isParent],
     queryFn: async () => {
@@ -67,8 +67,8 @@ function Dashboard() {
         const response = await enrollmentAPI.getByStudent(profile.studentId);
         return response.data;
       } else if (!isParent) {
-        // 관리자/선생님: 만료 임박 수강권
-        const response = await enrollmentAPI.getExpiring(7);
+        // 관리자/선생님: 전체 수강권 통계용 데이터
+        const response = await enrollmentAPI.getAll();
         return response.data;
       }
       return [];
@@ -128,7 +128,38 @@ function Dashboard() {
   const todaySchedulesCount = dashboardStats?.todaySchedules || 0;
   const todayAttendanceCount = dashboardStats?.todayAttendance || 0;
   const attendanceRate = dashboardStats?.attendanceRate || 0;
-  const expiringEnrollmentsCount = isParent ? enrollments.length : (dashboardStats?.expiringEnrollments || 0);
+  
+  // 수강권 통계 계산
+  const getEnrollmentStats = () => {
+    if (isParent) {
+      return {
+        count: enrollments.length,
+        label: '내 자녀 수강권'
+      };
+    } else {
+      // 관리자/선생님: 전체 수강권 통계
+      const activeEnrollments = enrollments.filter(e => e.isActive);
+      const expiringEnrollments = enrollments.filter(e => {
+        if (!e.isActive || !e.endDate) return false;
+        const daysLeft = Math.ceil((new Date(e.endDate) - new Date()) / (1000 * 60 * 60 * 24));
+        return daysLeft <= 7 && daysLeft >= 0;
+      });
+      const lowCountEnrollments = enrollments.filter(e => 
+        e.isActive && e.type === 'COUNT_BASED' && e.remainingCount <= 5
+      );
+      
+      return {
+        total: enrollments.length,
+        active: activeEnrollments.length,
+        expiring: expiringEnrollments.length,
+        lowCount: lowCountEnrollments.length,
+        count: activeEnrollments.length,
+        label: '활성 수강권'
+      };
+    }
+  };
+  
+  const enrollmentStats = getEnrollmentStats();
 
   return (
     <div className="dashboard-wrapper">
@@ -213,28 +244,28 @@ function Dashboard() {
 
           <div 
             className={`stat-card ${isParent ? 'clickable' : ''}`}
-            onClick={isParent && expiringEnrollmentsCount > 0 ? () => handleEnrollmentClick(enrollments[0]) : undefined}
+            onClick={isParent && enrollmentStats.count > 0 ? () => handleEnrollmentClick(enrollments[0]) : undefined}
           >
             <div className="stat-card-header">
               <div className="stat-icon">
-                <i className={`fas ${isParent ? 'fa-ticket-alt' : 'fa-exclamation-triangle'}`}></i>
+                <i className={`fas ${isParent ? 'fa-ticket-alt' : 'fa-credit-card'}`}></i>
               </div>
-              <div className={`stat-trend ${isParent ? '' : 'warning'}`}>
-                <i className={`fas ${isParent ? 'fa-info' : 'fa-clock'}`}></i>
-                {isParent ? '정보' : '임박'}
+              <div className={`stat-trend ${isParent ? '' : 'info'}`}>
+                <i className={`fas ${isParent ? 'fa-info' : 'fa-chart-line'}`}></i>
+                {isParent ? '정보' : '통계'}
               </div>
             </div>
             <div className="stat-content">
-              <h3>수강권 정보</h3>
+              <h3>{enrollmentStats.label}</h3>
               <div className="stat-value">
-                {expiringEnrollmentsCount}
+                {enrollmentStats.count}
                 <span className="stat-unit">개</span>
               </div>
             </div>
             <div className="stat-footer">
               <i className="fas fa-info-circle"></i> 
               {isParent ? '클릭하여 상세 정보 확인' : 
-               profile?.role === 'TEACHER' ? '담당 수업 만료 임박' : '7일 이내 만료 예정'}
+               `전체 ${enrollmentStats.total}개 · 만료임박 ${enrollmentStats.expiring}개`}
             </div>
           </div>
         </div>
@@ -292,21 +323,42 @@ function Dashboard() {
             <div className="card-header">
               <h2 className="card-title">
                 <i className="fas fa-ticket-alt"></i>
-                수강권 정보
+                {isParent ? '내 자녀 수강권' : '수강권 현황'}
               </h2>
-              <span className={`card-badge ${isParent ? '' : 'warning'}`}>
-                {enrollments.length}개
+              <span className={`card-badge ${isParent ? '' : 'info'}`}>
+                {isParent ? enrollments.length : enrollmentStats.active}개
               </span>
             </div>
             <div className="card-body">
               {enrollments.length === 0 ? (
                 <div className="empty-state">
                   <i className="fas fa-check-circle"></i>
-                  <p>등록된 수강권이 없습니다</p>
+                  <p>{isParent ? '등록된 수강권이 없습니다' : '활성 수강권이 없습니다'}</p>
                 </div>
               ) : (
-                <div className="list">
-                  {enrollments.slice(0, 5).map((enrollment) => {
+                <>
+                  {!isParent && (
+                    <div className="stats-summary">
+                      <div className="summary-item">
+                        <span className="summary-label">전체</span>
+                        <span className="summary-value">{enrollmentStats.total}개</span>
+                      </div>
+                      <div className="summary-item">
+                        <span className="summary-label">활성</span>
+                        <span className="summary-value">{enrollmentStats.active}개</span>
+                      </div>
+                      <div className="summary-item warning">
+                        <span className="summary-label">만료임박</span>
+                        <span className="summary-value">{enrollmentStats.expiring}개</span>
+                      </div>
+                      <div className="summary-item urgent">
+                        <span className="summary-label">횟수부족</span>
+                        <span className="summary-value">{enrollmentStats.lowCount}개</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="list">
+                    {(isParent ? enrollments : enrollments.filter(e => e.isActive)).slice(0, 5).map((enrollment) => {
                     const daysLeft = Math.ceil(
                       (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
                     );
@@ -336,12 +388,13 @@ function Dashboard() {
                       </div>
                     );
                   })}
-                  {enrollments.length > 5 && (
+                  {(isParent ? enrollments.length : enrollmentStats.active) > 5 && (
                     <div className="show-more">
-                      +{enrollments.length - 5}개 더 보기
+                      +{(isParent ? enrollments.length : enrollmentStats.active) - 5}개 더 보기
                     </div>
                   )}
                 </div>
+                </>
               )}
             </div>
           </div>

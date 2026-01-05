@@ -146,7 +146,7 @@ function Notices() {
                 </div>
                 
                 <div className="card-click-hint">
-                  <span>상세보기 ></span>
+                  <span>상세보기 &gt;</span>
                 </div>
               </div>
               ))}
@@ -184,7 +184,7 @@ function Notices() {
                   </div>
                   
                   <div className="card-click-hint">
-                    <span>상세보기 ></span>
+                    <span>상세보기 &gt;</span>
                   </div>
                 </div>
               ))}

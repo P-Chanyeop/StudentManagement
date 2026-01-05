@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import web.kplay.studentmanagement.dto.reservation.ReservationResponse;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -29,4 +31,5 @@ public class CourseScheduleResponse {
     private Boolean isCancelled;
     private String cancelReason;
     private String memo;
+    private List<ReservationResponse> reservations;
 }
