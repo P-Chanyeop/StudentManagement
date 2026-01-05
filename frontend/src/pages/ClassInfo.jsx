@@ -194,14 +194,14 @@ function ClassInfo() {
   // 페이지 제목 (역할별)
   const getPageTitle = () => {
     if (isParent) return '자녀 수업 정보';
-    if (isTeacher) return '내 수업 스케줄';
-    return '전체 수업 관리';
+    if (isTeacher) return '클래스 관리';
+    return '클래스 관리';
   };
 
   const getPageSubtitle = () => {
     if (isParent) return '자녀의 수업 출석 현황을 확인합니다';
-    if (isTeacher) return '담당 수업 스케줄과 예약 현황을 확인합니다';
-    return '전체 수업 스케줄과 예약 현황을 관리합니다';
+    if (isTeacher) return '담당 클래스 스케줄과 수업 현황을 관리합니다';
+    return '전체 클래스 스케줄과 수업 현황을 관리합니다';
   };
 
   // 데이터 렌더링 (역할별)

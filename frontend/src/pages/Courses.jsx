@@ -10,7 +10,6 @@ function Courses() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [activeTab, setActiveTab] = useState('courses'); // 'courses' or 'schedules'
   const [newCourse, setNewCourse] = useState({
     courseName: '',
     description: '',
@@ -169,49 +168,17 @@ function Courses() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-chalkboard-teacher"></i>
-              수업 관리
+              반 관리
             </h1>
-            <p className="page-subtitle">학원의 수업 과정을 관리합니다</p>
+            <p className="page-subtitle">학원의 반을 관리합니다</p>
           </div>
         </div>
       </div>
 
       {/* 메인 탭 네비게이션 */}
-      <div className="courses-tab-section">
-        <div className="courses-tab-navigation" data-active={activeTab}>
-          <button 
-            className={`courses-tab-button ${activeTab === 'courses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('courses')}
-          >
-            <i className="fas fa-book"></i>
-            <span>수업 관리</span>
-          </button>
-          <button 
-            className={`courses-tab-button ${activeTab === 'schedules' ? 'active' : ''}`}
-            onClick={() => setActiveTab('schedules')}
-          >
-            <i className="fas fa-calendar-alt"></i>
-            <span>스케줄 관리</span>
-          </button>
-        </div>
-      </div>
-
       {/* 탭 컨텐츠 */}
       <div className="courses-tab-content">
-        {activeTab === 'courses' ? (
-          <CoursesTab 
-            courses={courses}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            setShowCreateModal={setShowCreateModal}
-            openEditModal={openEditModal}
-            handleDeleteCourse={handleDeleteCourse}
-            isLoading={isLoading}
-            filteredCourses={filteredCourses}
-          />
-        ) : (
-          <SchedulesTab />
-        )}
+        <CoursesTab />
       </div>
 
       {/* 코스 생성 모달 */}
@@ -613,330 +580,47 @@ function ScheduleTab({ course }) {
   );
 }
 
+// 반 관리 탭 컴포넌트
+function CoursesTab() {
+  return (
+    <div className="tab-content-wrapper">
+      <div className="class-schedule-container">
+        <h3>반별 시간표</h3>
+        <div className="schedule-grid">
+          <div className="time-header">시간</div>
+          <div className="class-header">A반</div>
+          <div className="class-header">B반</div>
+          <div className="class-header">C반</div>
+          
+          {Array.from({length: 10}, (_, i) => {
+            const hour = 9 + i;
+            const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+            
+            return (
+              <>
+                <div key={`time-${hour}`} className="time-slot">{timeSlot}</div>
+                <div key={`a-${hour}`} className="class-slot">
+                  <div className="class-info">
+                    <span className="student-count">5명</span>
+                    <span className="class-status active">진행중</span>
+                  </div>
+                </div>
+                <div key={`b-${hour}`} className="class-slot">
+                  <div className="class-info">
+                    <span className="student-count">3명</span>
+                    <span className="class-status waiting">대기</span>
+                  </div>
+                </div>
+                <div key={`c-${hour}`} className="class-slot empty">
+                  <span className="empty-text">수업 없음</span>
+                </div>
+              </>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default Courses;
-
-// 수업 관리 탭 컴포넌트
-function CoursesTab({ courses, searchQuery, setSearchQuery, setShowCreateModal, openEditModal, handleDeleteCourse, isLoading, filteredCourses }) {
-  const getLevelBadge = (level) => {
-    const levelMap = {
-      BEGINNER: { text: '초급', class: 'beginner' },
-      INTERMEDIATE: { text: '중급', class: 'intermediate' },
-      ADVANCED: { text: '고급', class: 'advanced' },
-      EXPERT: { text: '전문가', class: 'expert' }
-    };
-    const levelInfo = levelMap[level] || { text: level, class: 'default' };
-    return <span className={`level-badge ${levelInfo.class}`}>{levelInfo.text}</span>;
-  };
-
-  return (
-    <div className="tab-content-wrapper">
-      <div className="tab-header">
-        <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-          <i className="fas fa-plus"></i> 수업 생성
-        </button>
-      </div>
-
-      <div className="search-section">
-        <div className="search-input-wrapper">
-          <i className="fas fa-search search-icon"></i>
-          <input
-            type="text"
-            placeholder="수업명, 설명, 레벨로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-        </div>
-        <div className="result-count">
-          <i className="fas fa-chalkboard-teacher"></i>
-          총 <strong>{filteredCourses.length}</strong>개
-        </div>
-      </div>
-
-      <div className="content-section">
-        {filteredCourses.length === 0 ? (
-          <div className="empty-state">
-            {searchQuery ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.'}
-          </div>
-        ) : (
-          <div className="courses-grid">
-            {filteredCourses.map((course) => (
-              <div key={course.id} className="course-card">
-                <div className="course-header">
-                  <h3>{course.courseName}</h3>
-                  {getLevelBadge(course.level)}
-                </div>
-
-                <p className="course-description">{course.description}</p>
-
-                <div className="course-details">
-                  <div className="detail-item">
-                    <span className="icon"><i className="fas fa-users"></i></span>
-                    <span className="label">현재 수강생:</span>
-                    <span className="value">{course.currentEnrollments || 0}명</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="icon"><i className="fas fa-clock"></i></span>
-                    <span className="label">수업시간:</span>
-                    <span className="value">{course.durationMinutes}분</span>
-                  </div>
-                </div>
-
-                <div className="course-actions">
-                  <button className="btn-table-edit" onClick={() => openEditModal(course)}>
-                    <i className="fas fa-edit"></i> 수정
-                  </button>
-                  <button
-                    className="btn-table-delete"
-                    onClick={() => handleDeleteCourse(course.id, course.courseName)}
-                  >
-                    <i className="fas fa-trash"></i> 삭제
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 스케줄 관리 탭 컴포넌트
-function SchedulesTab() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedCourse, setSelectedCourse] = useState('');
-  const [showCreateSchedule, setShowCreateSchedule] = useState(false);
-  const [newSchedule, setNewSchedule] = useState({
-    courseId: '',
-    scheduleDate: '',
-    startTime: '',
-    endTime: '',
-    memo: ''
-  });
-
-  // 수업 목록 조회
-  const { data: courses = [] } = useQuery({
-    queryKey: ['courses'],
-    queryFn: async () => {
-      const response = await courseAPI.getAll();
-      return response.data;
-    }
-  });
-
-  // 스케줄 목록 조회
-  const { data: schedules = [], refetch } = useQuery({
-    queryKey: ['schedules', selectedDate, selectedCourse],
-    queryFn: async () => {
-      if (selectedCourse) {
-        const response = await scheduleAPI.getByCourse(selectedCourse);
-        return response.data.filter(s => s.scheduleDate === selectedDate);
-      } else {
-        const response = await scheduleAPI.getByDate(selectedDate);
-        return response.data;
-      }
-    }
-  });
-
-  // 재원생상담 예약 조회
-  const { data: classReservations = [] } = useQuery({
-    queryKey: ['classReservations', selectedDate],
-    queryFn: async () => {
-      const response = await reservationAPI.getByDate(selectedDate);
-      // 재원생상담 유형만 필터링
-      return response.data.filter(reservation => reservation.consultationType === '재원생상담');
-    },
-  });
-
-  // 스케줄과 예약 데이터 합치기
-  const combinedSchedules = [
-    ...schedules,
-    ...classReservations.map(reservation => ({
-      id: `reservation-${reservation.id}`,
-      courseName: '영어 수업 (예약)',
-      scheduleDate: reservation.scheduleDate,
-      startTime: reservation.startTime,
-      endTime: reservation.endTime,
-      currentStudents: 1,
-      maxStudents: 1,
-      memo: reservation.memo || '상담 예약에서 등록',
-      isCancelled: false,
-      isReservation: true,
-      reservationId: reservation.id,
-      studentName: reservation.studentName
-    }))
-  ];
-
-  // 스케줄 생성
-  const createScheduleMutation = useMutation({
-    mutationFn: (data) => scheduleAPI.create(data),
-    onSuccess: () => {
-      refetch();
-      setShowCreateSchedule(false);
-      setNewSchedule({
-        courseId: '',
-        scheduleDate: '',
-        startTime: '',
-        endTime: '',
-        memo: ''
-      });
-      alert('스케줄이 생성되었습니다.');
-    }
-  });
-
-  const handleCreateSchedule = (e) => {
-    e.preventDefault();
-    if (!newSchedule.courseId || !newSchedule.scheduleDate || !newSchedule.startTime || !newSchedule.endTime) {
-      alert('필수 항목을 모두 입력해주세요.');
-      return;
-    }
-    createScheduleMutation.mutate(newSchedule);
-  };
-
-  return (
-    <div className="tab-content-wrapper">
-      <div className="tab-header">
-        <button className="btn-primary" onClick={() => setShowCreateSchedule(true)}>
-          <i className="fas fa-plus"></i> 스케줄 생성
-        </button>
-      </div>
-
-      <div className="filter-section">
-        <div className="filter-card">
-          <div className="filter-group">
-            <label><i className="fas fa-calendar"></i> 날짜</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="filter-input"
-            />
-          </div>
-          <div className="filter-group">
-            <label><i className="fas fa-book"></i> 수업</label>
-            <select
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value)}
-              className="filter-select"
-            >
-              <option value="">전체 수업</option>
-              {courses.map(course => (
-                <option key={course.id} value={course.id}>{course.courseName}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {showCreateSchedule && (
-        <div className="content-section">
-          <div className="schedule-create-form">
-            <h3>새 스케줄 생성</h3>
-            <form onSubmit={handleCreateSchedule}>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>수업 *</label>
-                  <select
-                    value={newSchedule.courseId}
-                    onChange={(e) => setNewSchedule({...newSchedule, courseId: e.target.value})}
-                    required
-                  >
-                    <option value="">수업을 선택하세요</option>
-                    {courses.map(course => (
-                      <option key={course.id} value={course.id}>{course.courseName}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>날짜 *</label>
-                  <input
-                    type="date"
-                    value={newSchedule.scheduleDate}
-                    onChange={(e) => setNewSchedule({...newSchedule, scheduleDate: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>시작 시간 *</label>
-                  <input
-                    type="time"
-                    value={newSchedule.startTime}
-                    onChange={(e) => setNewSchedule({...newSchedule, startTime: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>종료 시간 *</label>
-                  <input
-                    type="time"
-                    value={newSchedule.endTime}
-                    onChange={(e) => setNewSchedule({...newSchedule, endTime: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>메모</label>
-                <textarea
-                  value={newSchedule.memo}
-                  onChange={(e) => setNewSchedule({...newSchedule, memo: e.target.value})}
-                  placeholder="수업 관련 메모를 입력하세요"
-                />
-              </div>
-              <div className="form-actions">
-                <button type="submit" className="btn-primary">생성</button>
-                <button type="button" className="btn-secondary" onClick={() => setShowCreateSchedule(false)}>취소</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="content-section">
-        <div className="schedule-list">
-          <h3>{selectedDate} 스케줄 목록</h3>
-          {combinedSchedules.length === 0 ? (
-            <div className="empty-state">
-              <i className="fas fa-calendar-times"></i>
-              <p>해당 날짜에 등록된 스케줄이 없습니다</p>
-            </div>
-          ) : (
-            <div className="schedule-items">
-              {combinedSchedules.map((schedule) => (
-                <div key={schedule.id} className={`schedule-item ${schedule.isCancelled ? 'cancelled' : ''}`}>
-                  <div className="schedule-info">
-                    <div className="schedule-course">
-                      <i className="fas fa-book"></i>
-                      {schedule.courseName}
-                    </div>
-                    <div className="schedule-time">
-                      <i className="fas fa-clock"></i>
-                      {schedule.startTime} - {schedule.endTime}
-                    </div>
-                    <div className="schedule-students">
-                      <i className="fas fa-users"></i>
-                      {schedule.currentStudents}명 등록
-                    </div>
-                    {schedule.memo && (
-                      <div className="schedule-memo">
-                        <i className="fas fa-sticky-note"></i>
-                        {schedule.memo}
-                      </div>
-                    )}
-                  </div>
-                  <div className="schedule-actions">
-                    {!schedule.isCancelled && (
-                      <button className="btn-table-delete">
-                        <i className="fas fa-times"></i> 취소
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}

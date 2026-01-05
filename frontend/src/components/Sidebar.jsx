@@ -56,7 +56,8 @@ function Sidebar() {
     const adminTeacherMenus = [
       { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
       { path: '/students', icon: <i className="fas fa-users"></i>, label: '학생 관리' },
-      { path: '/courses', icon: <i className="fas fa-chalkboard-teacher"></i>, label: '수업 관리' },
+      { path: '/courses', icon: <i className="fas fa-chalkboard-teacher"></i>, label: '반 관리' },
+      { path: '/class-info', icon: <i className="fas fa-calendar-check"></i>, label: '클래스 관리' },
       { path: '/attendance', icon: <i className="fas fa-check-circle"></i>, label: '출석 체크' },
       { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 관리' },
       { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '상담 예약' },

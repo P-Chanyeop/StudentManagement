@@ -420,41 +420,19 @@
   border-radius: 12px;
   padding: 4px;
   display: flex;
-  gap: 4px;
+  justify-content: center;
+  max-width: 200px;
+  margin: 0 auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.courses-tab-navigation::before {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: calc(50% - 6px);
-  height: calc(100% - 8px);
-  background: var(--naver-green);
-  border-radius: 8px;
-  transition: transform 0.3s ease;
-  z-index: 1;
-}
-
-.courses-tab-navigation[data-active="courses"]::before {
-  transform: translateX(0);
-}
-
-.courses-tab-navigation[data-active="schedules"]::before {
-  transform: translateX(calc(100% + 4px));
 }
 
 .courses-tab-button {
-  flex: 1;
   padding: 12px 20px;
   border: none;
-  background: transparent;
-  color: #6c757d;
+  background: #03c75a;
+  color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -462,8 +440,7 @@
   font-size: 14px;
   font-weight: 500;
   border-radius: 8px;
-  position: relative;
-  z-index: 2;
+  min-width: 120px;
 }
 
 .courses-tab-button.active {
@@ -727,4 +704,91 @@
   .schedule-actions {
     align-self: flex-end;
   }
+}
+
+/* 반별 시간표 스타일 */
+.class-schedule-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.class-schedule-container h3 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 100px repeat(3, 1fr);
+  gap: 1px;
+  background: #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.time-header, .class-header {
+  background: #03c75a;
+  color: white;
+  padding: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.time-slot {
+  background: #f8f9fa;
+  padding: 12px;
+  text-align: center;
+  font-weight: 500;
+  color: #495057;
+}
+
+.class-slot {
+  background: white;
+  padding: 12px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.class-slot.empty {
+  background: #f8f9fa;
+}
+
+.class-info {
+  text-align: center;
+}
+
+.student-count {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.class-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.class-status.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.class-status.waiting {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.empty-text {
+  color: #6c757d;
+  font-size: 14px;
 }
