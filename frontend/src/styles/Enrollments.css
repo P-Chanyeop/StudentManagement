@@ -639,3 +639,20 @@
 .btn-delete:hover {
   background: #c82333;
 }
+
+.btn-extend {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.btn-extend:hover {
+  background: #138496;
+}

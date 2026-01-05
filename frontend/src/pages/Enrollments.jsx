@@ -813,12 +813,20 @@ function Enrollments() {
                       만료 처리
                     </button>
                   ) : (
-                    <button
-                      className="btn-activate"
-                      onClick={() => handleActivateEnrollment(selectedEnrollment.id)}
-                    >
-                      활성화
-                    </button>
+                    <>
+                      <button
+                        className="btn-activate"
+                        onClick={() => handleActivateEnrollment(selectedEnrollment.id)}
+                      >
+                        활성화
+                      </button>
+                      <button
+                        className="btn-extend"
+                        onClick={() => handleExtendEnrollment(selectedEnrollment.id)}
+                      >
+                        기간 연장
+                      </button>
+                    </>
                   )}
                   <button
                     className="btn-delete"
