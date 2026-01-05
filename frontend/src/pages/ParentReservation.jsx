@@ -389,7 +389,7 @@ function ParentReservation() {
     // 역할별 유효성 검사
     if (profile?.role === 'PARENT') {
       if (!formData.selectedStudentId) {
-        newErrors.selectedStudentId = '상담 대상 자녀를 선택해주세요.';
+        newErrors.selectedStudentId = '수업 대상 자녀를 선택해주세요.';
       }
     } else {
       // 관리자/선생님용 유효성 검사
@@ -415,7 +415,7 @@ function ParentReservation() {
     }
     
     if (!formData.consultationType) {
-      newErrors.consultationType = '상담 유형을 선택해주세요.';
+      newErrors.consultationType = '수업 유형을 선택해주세요.';
     }
     
     setErrors(newErrors);
@@ -609,9 +609,9 @@ function ParentReservation() {
           <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-calendar-plus"></i>
-              상담 예약
+              수업 예약
             </h1>
-            <p className="page-subtitle">원하시는 상담을 예약해주세요</p>
+            <p className="page-subtitle">원하시는 수업을 예약해주세요</p>
           </div>
         </div>
       </div>
@@ -623,7 +623,7 @@ function ParentReservation() {
             <h2>예약 정보</h2>
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="consultationType">상담 유형 *</label>
+                <label htmlFor="consultationType">수업 유형 *</label>
                 <select
                   id="consultationType"
                   name="consultationType"
@@ -631,7 +631,7 @@ function ParentReservation() {
                   onChange={handleInputChange}
                   className={errors.consultationType ? 'error' : ''}
                 >
-                  <option value="">상담 유형을 선택해주세요</option>
+                  <option value="">수업 유형을 선택해주세요</option>
                   {consultationTypes.map(consultation => (
                     <option key={consultation.value} value={consultation.value}>{consultation.label}</option>
                   ))}
@@ -719,7 +719,7 @@ function ParentReservation() {
             {profile?.role === 'PARENT' ? (
               // 학부모용 - 자녀 선택
               <>
-                <h2>상담 대상 자녀 선택</h2>
+                <h2>수업 대상 자녀 선택</h2>
                 <div className="form-group">
                   <label htmlFor="selectedStudentId">자녀 선택 *</label>
                   <select
@@ -774,7 +774,7 @@ function ParentReservation() {
             ) : (
               // 관리자/선생님용 - 수기 입력
               <>
-                <h2>상담 정보 입력</h2>
+                <h2>수업 정보 입력</h2>
                 <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="parentName">학부모 이름 *</label>
