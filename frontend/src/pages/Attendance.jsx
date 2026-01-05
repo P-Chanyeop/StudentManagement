@@ -9,7 +9,7 @@ function Attendance() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState('schedule'); // 기본값을 수업 시간순으로 변경
   const [searchName, setSearchName] = useState('');
   const [tableSearchName, setTableSearchName] = useState('');
 
@@ -122,7 +122,17 @@ function Attendance() {
 
   // 출석 목록 정렬
   const sortedAttendances = attendances ? [...attendances].sort((a, b) => {
-    if (sortBy === 'arrival') {
+    if (sortBy === 'schedule') {
+      // 수업 시간순 정렬 (같은 시간이면 이름순)
+      const timeA = a.schedule?.startTime || '';
+      const timeB = b.schedule?.startTime || '';
+      
+      if (timeA !== timeB) {
+        return timeA.localeCompare(timeB);
+      }
+      // 같은 수업 시간이면 이름 가나다순
+      return a.studentName.localeCompare(b.studentName);
+    } else if (sortBy === 'arrival') {
       // 출석한 학생 먼저 (등원 시간순), 그 다음 미출석 학생 (이름순)
       if (a.checkInTime && b.checkInTime) {
         return new Date(a.checkInTime) - new Date(b.checkInTime);
@@ -217,6 +227,7 @@ function Attendance() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
+              <option value="schedule">수업 시간순</option>
               <option value="name">이름순</option>
               <option value="arrival">등원순</option>
               <option value="departure">하원순</option>

@@ -585,3 +585,8 @@
     justify-content: center;
   }
 }
+/* 영어 레벨 숫자 표시 */
+.level-text {
+  font-weight: 500;
+  color: #333;
+}

@@ -22,7 +22,7 @@ function Students() {
     parentName: '',
     parentPhone: '',
     parentEmail: '',
-    englishLevel: 'BEGINNER',
+    englishLevel: '1.0',
     memo: '',
   });
 
@@ -70,7 +70,7 @@ function Students() {
         parentName: '',
         parentPhone: '',
         parentEmail: '',
-        englishLevel: 'BEGINNER',
+        englishLevel: '1.0',
         memo: '',
       });
       alert('학생이 등록되었습니다.');
@@ -158,14 +158,8 @@ function Students() {
 
   // 레벨별 배지
   const getLevelBadge = (level) => {
-    const levelMap = {
-      BEGINNER: { text: '초급', color: '#03C75A' },
-      INTERMEDIATE: { text: '중급', color: '#0066FF' },
-      ADVANCED: { text: '고급', color: '#FF9800' },
-      EXPERT: { text: '전문가', color: '#9C27B0' },
-    };
-    const { text, color } = levelMap[level] || { text: level, color: '#999' };
-    return <span className="level-badge" style={{ backgroundColor: color }}>{text}</span>;
+    // 숫자 레벨을 그대로 표시 (색상 없음)
+    return <span className="level-text">{level || '0.0'}</span>;
   };
 
   // 검색 필터
@@ -380,15 +374,15 @@ function Students() {
 
                 <div className="form-group">
                   <label>영어 레벨</label>
-                  <select
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="10"
                     value={newStudent.englishLevel}
                     onChange={(e) => setNewStudent({ ...newStudent, englishLevel: e.target.value })}
-                  >
-                    <option value="BEGINNER">초급</option>
-                    <option value="INTERMEDIATE">중급</option>
-                    <option value="ADVANCED">고급</option>
-                    <option value="EXPERT">전문가</option>
-                  </select>
+                    placeholder="1.0"
+                  />
                 </div>
               </div>
 
@@ -546,17 +540,17 @@ function Students() {
 
                 <div className="form-group">
                   <label>영어 레벨</label>
-                  <select
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="10"
                     value={selectedStudent.englishLevel}
                     onChange={(e) =>
                       setSelectedStudent({ ...selectedStudent, englishLevel: e.target.value })
                     }
-                  >
-                    <option value="BEGINNER">초급</option>
-                    <option value="INTERMEDIATE">중급</option>
-                    <option value="ADVANCED">고급</option>
-                    <option value="EXPERT">전문가</option>
-                  </select>
+                    placeholder="1.0"
+                  />
                 </div>
               </div>
 

@@ -137,7 +137,7 @@ public class DataSeeder {
                         .parentName("박학부모")
                         .school("서울초등학교")
                         .grade("6")
-                        .englishLevel("BEGINNER")
+                        .englishLevel("2.3")
                         .address("서울시 강남구 테헤란로 123")
                         .memo("영어 초급반")
                         .isActive(true)
@@ -166,7 +166,7 @@ public class DataSeeder {
                         .parentName("김학부모")
                         .school("서울초등학교")
                         .grade("5")
-                        .englishLevel("INTERMEDIATE")
+                        .englishLevel("4.7")
                         .address("서울시 강남구 역삼동 456")
                         .memo("수학 중급반")
                         .isActive(true)
@@ -195,7 +195,7 @@ public class DataSeeder {
                         .parentName("이학부모")
                         .school("한강초등학교")
                         .grade("4")
-                        .englishLevel("ADVANCED")
+                        .englishLevel("7.2")
                         .address("서울시 서초구 반포동 789")
                         .memo("영어 중급반, 수학 초급반")
                         .isActive(true)
@@ -205,7 +205,7 @@ public class DataSeeder {
                 // 추가 학생 4-10
                 String[] names = {"박서준", "최유나", "정민호", "강하늘", "윤서아", "임재현", "송지우"};
                 String[] genders = {"MALE", "FEMALE", "MALE", "FEMALE", "FEMALE", "MALE", "MALE"};
-                String[] levels = {"BEGINNER", "INTERMEDIATE", "BEGINNER", "ADVANCED", "INTERMEDIATE", "BEGINNER", "INTERMEDIATE"};
+                String[] levels = {"1.5", "3.8", "2.1", "6.4", "4.9", "1.8", "5.3"};
                 String[] schools = {"서울초등학교", "한강초등학교", "강남초등학교"};
                 
                 for (int i = 0; i < names.length; i++) {
