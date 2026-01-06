@@ -37,26 +37,16 @@ public class Consultation extends BaseEntity {
     @Column(nullable = false, length = 2000)
     private String content;
 
-    @Column(length = 50)
-    private String consultationType; // 학습상담, 진로상담, 학부모상담 등
-
     @Column(length = 500)
     private String recordingFileUrl; // 녹음 파일 링크
 
     @Column(length = 500)
     private String attachmentFileUrl; // 첨부 파일 링크
 
-    @Column(length = 1000)
-    private String actionItems; // 후속 조치 사항
-
-    @Column
-    private LocalDate nextConsultationDate; // 다음 상담 예정일
-
     // 상담 내용 업데이트
-    public void updateContent(String title, String content, String consultationType) {
+    public void updateContent(String title, String content) {
         this.title = title;
         this.content = content;
-        this.consultationType = consultationType;
     }
 
     // 녹음 파일 추가
@@ -67,15 +57,5 @@ public class Consultation extends BaseEntity {
     // 첨부 파일 추가
     public void addAttachmentFile(String fileUrl) {
         this.attachmentFileUrl = fileUrl;
-    }
-
-    // 후속 조치 사항 업데이트
-    public void updateActionItems(String actionItems) {
-        this.actionItems = actionItems;
-    }
-
-    // 다음 상담 일정 설정
-    public void scheduleNextConsultation(LocalDate nextDate) {
-        this.nextConsultationDate = nextDate;
     }
 }

@@ -25,13 +25,7 @@ public class ConsultationRequest {
     @NotBlank(message = "내용은 필수입니다")
     private String content;
 
-    private String consultationType;
-
     private String recordingFileUrl;
 
     private String attachmentFileUrl;
-
-    private String actionItems;
-
-    private LocalDate nextConsultationDate;
 }

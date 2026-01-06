@@ -494,11 +494,8 @@ public class MyPageService {
                 .consultationDate(consultation.getConsultationDate())
                 .title(consultation.getTitle())
                 .content(consultation.getContent())
-                .consultationType(consultation.getConsultationType())
                 .recordingFileUrl(consultation.getRecordingFileUrl())
                 .attachmentFileUrl(consultation.getAttachmentFileUrl())
-                .actionItems(consultation.getActionItems())
-                .nextConsultationDate(consultation.getNextConsultationDate())
                 .build();
     }
 }

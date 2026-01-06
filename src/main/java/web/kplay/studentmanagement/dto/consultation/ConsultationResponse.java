@@ -20,9 +20,6 @@ public class ConsultationResponse {
     private LocalDate consultationDate;
     private String title;
     private String content;
-    private String consultationType;
     private String recordingFileUrl;
     private String attachmentFileUrl;
-    private String actionItems;
-    private LocalDate nextConsultationDate;
 }

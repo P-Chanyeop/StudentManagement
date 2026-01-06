@@ -16,7 +16,6 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 
     List<Consultation> findByConsultantId(Long consultantId);
 
-    List<Consultation> findByConsultationType(String consultationType);
 
     @Query("SELECT c FROM Consultation c WHERE c.consultationDate BETWEEN :startDate AND :endDate")
     List<Consultation> findByDateRange(@Param("startDate") LocalDate startDate,

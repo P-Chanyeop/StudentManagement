@@ -18,6 +18,10 @@ function Consultations() {
   const [existingDocumentFiles, setExistingDocumentFiles] = useState([]);
   const [selectedStudentsForConsultation, setSelectedStudentsForConsultation] = useState([]);
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  
+  // 학생 선택 드롭다운 상태
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportDateRange, setExportDateRange] = useState({
     startDate: '',
@@ -27,9 +31,6 @@ function Consultations() {
     studentId: '',
     title: '',
     content: '',
-    consultationType: '재원생상담',
-    actionItems: '',
-    nextConsultationDate: '',
   });
 
   // 상담 예약 가능한 최소 날짜 계산
@@ -123,6 +124,31 @@ function Consultations() {
       alert('상담 기록 삭제에 실패했습니다.');
     }
   });
+
+  // 학생 선택 드롭다운 핸들러
+  const handleStudentSelect = (student) => {
+    setNewConsultation(prev => ({
+      ...prev,
+      studentId: student.id.toString()
+    }));
+    setShowStudentDropdown(false);
+    setStudentSearchQuery('');
+  };
+
+  // 선택된 학생 정보 가져오기
+  const getSelectedStudent = () => {
+    return students.find(student => student.id.toString() === newConsultation.studentId);
+  };
+
+  // 필터링된 학생 목록 (드롭다운용)
+  const getFilteredStudentsForDropdown = () => {
+    if (!studentSearchQuery) return students;
+    
+    return students.filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      student.parentName?.toLowerCase().includes(studentSearchQuery.toLowerCase())
+    );
+  };
 
   const resetForm = () => {
     setNewConsultation({
@@ -559,73 +585,68 @@ function Consultations() {
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="form-group">
-                  <label>학생 선택 *</label>
-                  <div className="student-checkbox-container">
-                    <div className="student-search-wrapper">
-                      <div className="search-input-wrapper">
-                        <i className="fas fa-search search-icon"></i>
-                        <input 
-                          type="text"
-                          className="search-input"
-                          placeholder="학생 이름 또는 학부모 이름으로 검색..."
-                          value={studentSearchTerm}
-                          onChange={(e) => setStudentSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="select-all-wrapper">
-                      <label className="checkbox-label">
-                        <input 
-                          type="checkbox"
-                          checked={selectedStudentsForConsultation.length === filteredStudents.length && filteredStudents.length > 0}
-                          onChange={handleSelectAll}
-                        />
-                        <span className="checkmark"></span>
-                        전체 선택 ({filteredStudents.length}명)
-                      </label>
-                    </div>
-                    <div className="student-list">
-                      {filteredStudents.map(student => (
-                        <label key={student.id} className="checkbox-label">
-                          <input 
-                            type="checkbox"
-                            checked={selectedStudentsForConsultation.includes(student.id)}
-                            onChange={() => handleStudentToggle(student.id)}
-                          />
-                          <span className="checkmark"></span>
-                          {student.studentName} ({student.parentName})
-                        </label>
-                      ))}
-                      {filteredStudents.length === 0 && (
-                        <div className="no-students">
-                          검색 결과가 없습니다.
+                  <label>학생을 선택해 주세요 *</label>
+                  <div className="student-select-wrapper">
+                    <div 
+                      className="student-select-input"
+                      onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                    >
+                      {getSelectedStudent() ? (
+                        <div className="selected-student-info">
+                          <span className="student-name">{getSelectedStudent().studentName}</span>
+                          <span className="parent-info">
+                            {getSelectedStudent().parentName} · {getSelectedStudent().parentPhone || getSelectedStudent().phoneNumber}
+                          </span>
                         </div>
+                      ) : (
+                        <span className="placeholder">학생을 선택해 주세요</span>
                       )}
+                      <i className={`fas fa-chevron-${showStudentDropdown ? 'up' : 'down'}`}></i>
                     </div>
+                    
+                    {showStudentDropdown && (
+                      <div className="student-dropdown">
+                        <div className="student-search">
+                          <input
+                            type="text"
+                            placeholder="학생 이름 또는 학부모 이름으로 검색..."
+                            value={studentSearchQuery}
+                            onChange={(e) => setStudentSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        <div className="student-list">
+                          {getFilteredStudentsForDropdown().map(student => (
+                            <div
+                              key={student.id}
+                              className="student-option"
+                              onClick={() => handleStudentSelect(student)}
+                            >
+                              <div className="student-info">
+                                <span className="student-name">{student.studentName}</span>
+                                <span className="parent-info">
+                                  {student.parentName} · {student.parentPhone || student.phoneNumber}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {getFilteredStudentsForDropdown().length === 0 && (
+                            <div className="no-students">검색 결과가 없습니다.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>제목 *</label>
-                    <input 
-                      type="text" 
-                      value={newConsultation.title}
-                      onChange={(e) => setNewConsultation({...newConsultation, title: e.target.value})}
-                      required 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>상담 유형</label>
-                    <select 
-                      value={newConsultation.consultationType}
-                      onChange={(e) => setNewConsultation({...newConsultation, consultationType: e.target.value})}
-                    >
-                      <option value="재원생상담">재원생 예약 시스템</option>
-                      <option value="레벨테스트">(평일) 레벨테스트 & 1회 체험 수업 예약</option>
-                      <option value="입학상담">(토요일) 레벨테스트 및 상담 예약</option>
-                    </select>
-                  </div>
+                <div className="form-group">
+                  <label>제목 *</label>
+                  <input 
+                    type="text" 
+                    value={newConsultation.title}
+                    onChange={(e) => setNewConsultation({...newConsultation, title: e.target.value})}
+                    required 
+                  />
                 </div>
 
                 <div className="form-group">
@@ -639,24 +660,6 @@ function Consultations() {
                 </div>
 
                 <div className="form-group">
-                  <label>후속 조치 사항</label>
-                  <textarea 
-                    value={newConsultation.actionItems}
-                    onChange={(e) => setNewConsultation({...newConsultation, actionItems: e.target.value})}
-                    rows="3"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>다음 상담 예정일</label>
-                  <input 
-                    type="date" min={new Date().toISOString().split('T')[0]} 
-                    value={newConsultation.nextConsultationDate}
-                    onChange={(e) => setNewConsultation({...newConsultation, nextConsultationDate: e.target.value})}
-                  />
-                </div>
-
-                <div className="form-row">
                   <div className="form-group">
                     <label>녹음 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">

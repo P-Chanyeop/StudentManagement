@@ -46,11 +46,8 @@ public class ConsultationService {
                 .consultationDate(request.getConsultationDate())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .consultationType(request.getConsultationType())
                 .recordingFileUrl(request.getRecordingFileUrl())
                 .attachmentFileUrl(request.getAttachmentFileUrl())
-                .actionItems(request.getActionItems())
-                .nextConsultationDate(request.getNextConsultationDate())
                 .build();
 
         Consultation savedConsultation = consultationRepository.save(consultation);
@@ -101,7 +98,7 @@ public class ConsultationService {
         Consultation consultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("상담 기록을 찾을 수 없습니다."));
         
-        consultation.updateContent(request.getTitle(), request.getContent(), request.getConsultationType());
+        consultation.updateContent(request.getTitle(), request.getContent());
         
         if (request.getRecordingFileUrl() != null) {
             consultation.addRecordingFile(request.getRecordingFileUrl());
@@ -109,14 +106,6 @@ public class ConsultationService {
         
         if (request.getAttachmentFileUrl() != null) {
             consultation.addAttachmentFile(request.getAttachmentFileUrl());
-        }
-        
-        if (request.getActionItems() != null) {
-            consultation.updateActionItems(request.getActionItems());
-        }
-        
-        if (request.getNextConsultationDate() != null) {
-            consultation.scheduleNextConsultation(request.getNextConsultationDate());
         }
         
         return toResponse(consultation);
@@ -145,11 +134,8 @@ public class ConsultationService {
                 .consultationDate(consultation.getConsultationDate())
                 .title(consultation.getTitle())
                 .content(consultation.getContent())
-                .consultationType(consultation.getConsultationType())
                 .recordingFileUrl(consultation.getRecordingFileUrl())
                 .attachmentFileUrl(consultation.getAttachmentFileUrl())
-                .actionItems(consultation.getActionItems())
-                .nextConsultationDate(consultation.getNextConsultationDate())
                 .build();
     }
 }

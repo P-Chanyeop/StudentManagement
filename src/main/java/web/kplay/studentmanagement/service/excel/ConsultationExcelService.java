@@ -63,7 +63,7 @@ public class ConsultationExcelService {
 
             // 헤더 생성
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"번호", "학생명", "상담일시", "상담 내용", "상담자", "비고"};
+            String[] headers = {"번호", "학생명", "상담일시", "상담 내용", "상담자"};
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -100,11 +100,6 @@ public class ConsultationExcelService {
                 Cell cell4 = row.createCell(4);
                 cell4.setCellValue(consultation.getConsultant() != null ? consultation.getConsultant().getName() : "");
                 cell4.setCellStyle(dataStyle);
-
-                // 비고 (후속 조치 사항)
-                Cell cell5 = row.createCell(5);
-                cell5.setCellValue(consultation.getActionItems() != null ? consultation.getActionItems() : "");
-                cell5.setCellStyle(dataStyle);
             }
 
             // 열 너비 자동 조정

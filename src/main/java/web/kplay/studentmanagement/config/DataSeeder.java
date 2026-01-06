@@ -323,10 +323,7 @@ public class DataSeeder {
                             .content("홍길동 학생의 현재 영어 실력을 평가하고 향후 학습 계획을 논의했습니다. " +
                                     "기초 문법이 부족하여 기본기 강화가 필요합니다. " +
                                     "매일 단어 암기와 간단한 문장 만들기 연습을 권장합니다.")
-                            .consultationType("학습상담")
                             .consultationDate(LocalDate.now().minusDays(7))
-                            .actionItems("1. 기초 문법 교재 제공\n2. 매일 단어 10개씩 암기\n3. 주 2회 추가 과제 제공")
-                            .nextConsultationDate(LocalDate.now().plusDays(7))
                             .build();
                     consultationRepository.save(consultation1);
 
@@ -338,9 +335,7 @@ public class DataSeeder {
                             .content("홍길동 학생의 1주차 학습 진도를 점검했습니다. " +
                                     "단어 암기는 잘 하고 있으나 문법 적용에 어려움을 보입니다. " +
                                     "좀 더 체계적인 문법 학습이 필요합니다.")
-                            .consultationType("학부모상담")
                             .consultationDate(LocalDate.now().minusDays(3))
-                            .actionItems("1. 문법 기초 강화 수업 추가\n2. 가정에서 영어 일기 쓰기 지도")
                             .recordingFileUrl("/uploads/audio/consultation_001.mp3")
                             .build();
                     consultationRepository.save(consultation2);
@@ -354,10 +349,7 @@ public class DataSeeder {
                                 .content("김민수 학생이 중급 과정으로 진입하면서 학습 방향을 조정했습니다. " +
                                         "읽기 실력은 우수하나 말하기에 자신감이 부족합니다. " +
                                         "회화 연습을 늘리고 발표 기회를 제공하기로 했습니다.")
-                                .consultationType("학습상담")
                                 .consultationDate(LocalDate.now().minusDays(5))
-                                .actionItems("1. 주 1회 영어 발표 시간 마련\n2. 원어민 회화 수업 추가 검토\n3. 자신감 향상을 위한 격려")
-                                .nextConsultationDate(LocalDate.now().plusDays(14))
                                 .attachmentFileUrl("/uploads/documents/speaking_practice_plan.pdf")
                                 .build();
                         consultationRepository.save(consultation3);
@@ -372,10 +364,7 @@ public class DataSeeder {
                                 .content("이지은 학생의 뛰어난 영어 실력을 바탕으로 특목고 진학과 " +
                                         "영어 인증시험 준비에 대해 상담했습니다. " +
                                         "TOEFL Junior 시험 준비를 시작하기로 결정했습니다.")
-                                .consultationType("진로상담")
                                 .consultationDate(LocalDate.now().minusDays(1))
-                                .actionItems("1. TOEFL Junior 교재 준비\n2. 모의고사 일정 수립\n3. 고급 독해 자료 제공")
-                                .nextConsultationDate(LocalDate.now().plusDays(10))
                                 .recordingFileUrl("/uploads/audio/consultation_002.mp3")
                                 .attachmentFileUrl("/uploads/documents/toefl_study_plan.pdf")
                                 .build();
@@ -391,10 +380,7 @@ public class DataSeeder {
                                 .content("최근 김민수 학생의 수업 참여도가 떨어지는 것에 대해 상담했습니다. " +
                                         "개인적인 고민이 있어 집중력이 저하된 것으로 파악됩니다. " +
                                         "학부모와의 추가 상담이 필요합니다.")
-                                .consultationType("생활상담")
                                 .consultationDate(LocalDate.now())
-                                .actionItems("1. 학부모 면담 일정 조율\n2. 개별 학습 지도 강화\n3. 심리적 지원 방안 모색")
-                                .nextConsultationDate(LocalDate.now().plusDays(3))
                                 .build();
                         consultationRepository.save(consultation5);
                     }
