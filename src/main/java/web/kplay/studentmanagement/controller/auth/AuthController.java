@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.auth.JwtResponse;
 import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
+import web.kplay.studentmanagement.dto.auth.RegisterRequest;
 import web.kplay.studentmanagement.dto.auth.SignupRequest;
 import web.kplay.studentmanagement.dto.user.UserProfileResponse;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
@@ -33,6 +34,14 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<Map<String, String>> signup(@Valid @RequestBody SignupRequest signupRequest) {
         authService.signup(signupRequest);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "회원가입이 완료되었습니다");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        authService.register(registerRequest);
         Map<String, String> response = new HashMap<>();
         response.put("message", "회원가입이 완료되었습니다");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

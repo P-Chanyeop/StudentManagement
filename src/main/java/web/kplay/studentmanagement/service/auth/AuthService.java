@@ -16,6 +16,7 @@ import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.auth.JwtResponse;
 import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
+import web.kplay.studentmanagement.dto.auth.RegisterRequest;
 import web.kplay.studentmanagement.dto.auth.SignupRequest;
 import web.kplay.studentmanagement.dto.user.UserProfileResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
@@ -207,5 +208,52 @@ public class AuthService {
                 .totalCount(enrollment.getTotalCount())
                 .isExpiring(isExpiring)
                 .build();
+    }
+
+    /**
+     * 학부모 회원가입 (학생 정보 포함)
+     */
+    @Transactional
+    public void register(RegisterRequest request) {
+        // 중복 사용자명 체크
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+        }
+
+        // 학부모 계정 생성
+        User parentUser = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .phoneNumber(request.getPhoneNumber())
+                .role(UserRole.PARENT)
+                .isActive(true)
+                .build();
+
+        User savedParent = userRepository.save(parentUser);
+
+        // 학생 정보가 있으면 학생도 생성
+        if (request.getStudent() != null) {
+            RegisterRequest.StudentInfo studentInfo = request.getStudent();
+            
+            Student student = Student.builder()
+                    .parentUser(savedParent)
+                    .studentName(studentInfo.getStudentName())
+                    .studentPhone(studentInfo.getStudentPhone())
+                    .birthDate(LocalDate.parse(studentInfo.getBirthDate()))
+                    .gender(studentInfo.getGender())
+                    .school(studentInfo.getSchool())
+                    .grade(studentInfo.getGrade())
+                    .englishLevel(studentInfo.getEnglishLevel())
+                    .parentName(request.getName())
+                    .parentPhone(request.getPhoneNumber())
+                    .address(request.getAddress())
+                    .isActive(true)
+                    .build();
+
+            studentRepository.save(student);
+        }
+
+        log.info("학부모 회원가입 완료 - 사용자명: {}, 이름: {}", request.getUsername(), request.getName());
     }
 }

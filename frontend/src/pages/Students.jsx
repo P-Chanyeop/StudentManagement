@@ -403,8 +403,19 @@ function Students() {
                     <input
                       type="tel"
                       value={newStudent.parentPhone}
-                      onChange={(e) => setNewStudent({ ...newStudent, parentPhone: e.target.value })}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        let formatted = value;
+                        if (value.length >= 3) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3);
+                        }
+                        if (value.length >= 7) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                        }
+                        setNewStudent({ ...newStudent, parentPhone: formatted });
+                      }}
                       placeholder="010-1234-5678"
+                      maxLength="13"
                     />
                   </div>
                 </div>
@@ -572,9 +583,19 @@ function Students() {
                     <input
                       type="tel"
                       value={selectedStudent.parentPhone}
-                      onChange={(e) =>
-                        setSelectedStudent({ ...selectedStudent, parentPhone: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        let formatted = value;
+                        if (value.length >= 3) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3);
+                        }
+                        if (value.length >= 7) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                        }
+                        setSelectedStudent({ ...selectedStudent, parentPhone: formatted });
+                      }}
+                      placeholder="010-1234-5678"
+                      maxLength="13"
                     />
                   </div>
                 </div>

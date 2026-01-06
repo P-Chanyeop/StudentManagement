@@ -812,8 +812,19 @@ function ParentReservation() {
                     id="phoneNumber"
                     name="phoneNumber"
                     value={formData.phoneNumber}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      let formatted = value;
+                      if (value.length >= 3) {
+                        formatted = value.slice(0, 3) + '-' + value.slice(3);
+                      }
+                      if (value.length >= 7) {
+                        formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                      }
+                      setFormData(prev => ({...prev, phoneNumber: formatted}));
+                    }}
                     placeholder="010-0000-0000"
+                    maxLength="13"
                     className={errors.phoneNumber ? 'error' : ''}
                   />
                   {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import '../styles/Login.css';
 
@@ -97,6 +97,12 @@ function Login() {
             {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
+
+        <div className="login-links">
+          <Link to="/register" className="register-link">
+            회원가입
+          </Link>
+        </div>
 
         <div className="login-footer">
           <p className="demo-account">
