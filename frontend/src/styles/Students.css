@@ -590,3 +590,31 @@
   font-weight: 500;
   color: #333;
 }
+/* 생년월일 선택 스타일 */
+.birth-date-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.birth-date-inputs select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  height: 36px;
+  min-height: 36px;
+}
+
+.birth-date-inputs select:hover {
+  border-color: #03c75a;
+}
+
+.birth-date-inputs select:focus {
+  outline: none;
+  border-color: #03c75a;
+}

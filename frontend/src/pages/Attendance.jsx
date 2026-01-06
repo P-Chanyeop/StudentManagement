@@ -12,6 +12,16 @@ function Attendance() {
   const [sortBy, setSortBy] = useState('schedule'); // 기본값을 수업 시간순으로 변경
   const [searchName, setSearchName] = useState('');
   const [tableSearchName, setTableSearchName] = useState('');
+  
+  // 날짜 선택을 위한 분리된 상태
+  const [dateComponents, setDateComponents] = useState(() => {
+    const today = new Date();
+    return {
+      year: today.getFullYear().toString(),
+      month: (today.getMonth() + 1).toString(),
+      day: today.getDate().toString()
+    };
+  });
 
   // 오늘 날짜의 전체 출석 현황 조회
   const { data: attendances, isLoading } = useQuery({
@@ -39,6 +49,21 @@ function Attendance() {
       return response.data;
     },
   });
+
+  // 날짜 컴포넌트 변경 핸들러
+  const handleDateComponentChange = (component, value) => {
+    const newDateComponents = {
+      ...dateComponents,
+      [component]: value
+    };
+    setDateComponents(newDateComponents);
+    
+    // 모든 컴포넌트가 선택되면 selectedDate 업데이트
+    if (newDateComponents.year && newDateComponents.month && newDateComponents.day) {
+      const formattedDate = `${newDateComponents.year}-${newDateComponents.month.padStart(2, '0')}-${newDateComponents.day.padStart(2, '0')}`;
+      setSelectedDate(formattedDate);
+    }
+  };
 
   // 출석 체크인 mutation
   const checkInMutation = useMutation({
@@ -213,13 +238,41 @@ function Attendance() {
       <div className="page-content">
         <div className="attendance-controls">
           <div className="date-selector">
-            <label htmlFor="date">날짜 선택:</label>
-            <input
-              type="date"
-              id="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
+            <label>날짜 선택:</label>
+            <div className="date-inputs">
+              <select
+                value={dateComponents.year}
+                onChange={(e) => handleDateComponentChange('year', e.target.value)}
+              >
+                <option value="">년도</option>
+                {Array.from({length: 3}, (_, i) => {
+                  const year = new Date().getFullYear() - 1 + i;
+                  return <option key={year} value={year}>{year}년</option>;
+                })}
+              </select>
+              
+              <select
+                value={dateComponents.month}
+                onChange={(e) => handleDateComponentChange('month', e.target.value)}
+              >
+                <option value="">월</option>
+                {Array.from({length: 12}, (_, i) => {
+                  const month = i + 1;
+                  return <option key={month} value={month}>{month}월</option>;
+                })}
+              </select>
+              
+              <select
+                value={dateComponents.day}
+                onChange={(e) => handleDateComponentChange('day', e.target.value)}
+              >
+                <option value="">일</option>
+                {Array.from({length: 31}, (_, i) => {
+                  const day = i + 1;
+                  return <option key={day} value={day}>{day}일</option>;
+                })}
+              </select>
+            </div>
           </div>
 
           <div className="sort-selector">

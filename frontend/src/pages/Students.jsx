@@ -26,6 +26,18 @@ function Students() {
     memo: '',
   });
 
+  // 생년월일 선택을 위한 분리된 상태
+  const [birthDateComponents, setBirthDateComponents] = useState({
+    year: '',
+    month: '',
+    day: ''
+  });
+  const [editBirthDateComponents, setEditBirthDateComponents] = useState({
+    year: '',
+    month: '',
+    day: ''
+  });
+
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -52,6 +64,40 @@ function Students() {
     },
     enabled: !!profile,
   });
+
+  // 생년월일 컴포넌트 변경 핸들러 (신규 학생)
+  const handleBirthDateComponentChange = (component, value) => {
+    const newComponents = {
+      ...birthDateComponents,
+      [component]: value
+    };
+    setBirthDateComponents(newComponents);
+    
+    if (newComponents.year && newComponents.month && newComponents.day) {
+      const formattedDate = `${newComponents.year}-${newComponents.month.padStart(2, '0')}-${newComponents.day.padStart(2, '0')}`;
+      setNewStudent(prev => ({
+        ...prev,
+        birthDate: formattedDate
+      }));
+    }
+  };
+
+  // 생년월일 컴포넌트 변경 핸들러 (수정)
+  const handleEditBirthDateComponentChange = (component, value) => {
+    const newComponents = {
+      ...editBirthDateComponents,
+      [component]: value
+    };
+    setEditBirthDateComponents(newComponents);
+    
+    if (newComponents.year && newComponents.month && newComponents.day) {
+      const formattedDate = `${newComponents.year}-${newComponents.month.padStart(2, '0')}-${newComponents.day.padStart(2, '0')}`;
+      setSelectedStudent(prev => ({
+        ...prev,
+        birthDate: formattedDate
+      }));
+    }
+  };
 
   // 학생 생성 mutation
   const createMutation = useMutation({
@@ -142,6 +188,19 @@ function Students() {
 
   const openEditModal = (student) => {
     setSelectedStudent({ ...student });
+    
+    // 생년월일 컴포넌트 초기화
+    if (student.birthDate) {
+      const [year, month, day] = student.birthDate.split('-');
+      setEditBirthDateComponents({
+        year: year || '',
+        month: month ? parseInt(month).toString() : '',
+        day: day ? parseInt(day).toString() : ''
+      });
+    } else {
+      setEditBirthDateComponents({ year: '', month: '', day: '' });
+    }
+    
     setShowEditModal(true);
   };
 
@@ -319,11 +378,40 @@ function Students() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>생년월일</label>
-                    <input
-                      type="date"
-                      value={newStudent.birthDate}
-                      onChange={(e) => setNewStudent({ ...newStudent, birthDate: e.target.value })}
-                    />
+                    <div className="birth-date-inputs">
+                      <select
+                        value={birthDateComponents.year}
+                        onChange={(e) => handleBirthDateComponentChange('year', e.target.value)}
+                      >
+                        <option value="">년도</option>
+                        {Array.from({length: 20}, (_, i) => {
+                          const year = new Date().getFullYear() - 5 - i;
+                          return <option key={year} value={year}>{year}년</option>;
+                        })}
+                      </select>
+                      
+                      <select
+                        value={birthDateComponents.month}
+                        onChange={(e) => handleBirthDateComponentChange('month', e.target.value)}
+                      >
+                        <option value="">월</option>
+                        {Array.from({length: 12}, (_, i) => {
+                          const month = i + 1;
+                          return <option key={month} value={month}>{month}월</option>;
+                        })}
+                      </select>
+                      
+                      <select
+                        value={birthDateComponents.day}
+                        onChange={(e) => handleBirthDateComponentChange('day', e.target.value)}
+                      >
+                        <option value="">일</option>
+                        {Array.from({length: 31}, (_, i) => {
+                          const day = i + 1;
+                          return <option key={day} value={day}>{day}일</option>;
+                        })}
+                      </select>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>성별</label>
@@ -494,13 +582,40 @@ function Students() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>생년월일</label>
-                    <input
-                      type="date"
-                      value={selectedStudent.birthDate || ''}
-                      onChange={(e) =>
-                        setSelectedStudent({ ...selectedStudent, birthDate: e.target.value })
-                      }
-                    />
+                    <div className="birth-date-inputs">
+                      <select
+                        value={editBirthDateComponents.year}
+                        onChange={(e) => handleEditBirthDateComponentChange('year', e.target.value)}
+                      >
+                        <option value="">년도</option>
+                        {Array.from({length: 20}, (_, i) => {
+                          const year = new Date().getFullYear() - 5 - i;
+                          return <option key={year} value={year}>{year}년</option>;
+                        })}
+                      </select>
+                      
+                      <select
+                        value={editBirthDateComponents.month}
+                        onChange={(e) => handleEditBirthDateComponentChange('month', e.target.value)}
+                      >
+                        <option value="">월</option>
+                        {Array.from({length: 12}, (_, i) => {
+                          const month = i + 1;
+                          return <option key={month} value={month}>{month}월</option>;
+                        })}
+                      </select>
+                      
+                      <select
+                        value={editBirthDateComponents.day}
+                        onChange={(e) => handleEditBirthDateComponentChange('day', e.target.value)}
+                      >
+                        <option value="">일</option>
+                        {Array.from({length: 31}, (_, i) => {
+                          const day = i + 1;
+                          return <option key={day} value={day}>{day}일</option>;
+                        })}
+                      </select>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>성별</label>
