@@ -611,7 +611,7 @@ function ParentReservation() {
               <i className="fas fa-calendar-plus"></i>
               수업 예약
             </h1>
-            <p className="page-subtitle">원하시는 수업을 예약해주세요</p>
+            <p className="page-subtitle">상담을 예약해주세요</p>
           </div>
         </div>
       </div>

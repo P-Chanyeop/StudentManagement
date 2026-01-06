@@ -268,7 +268,17 @@ function Register() {
                   id="password"
                   name="password"
                   value={formData.password}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData(prev => ({...prev, password: value}));
+                    
+                    // 실시간 비밀번호 검증
+                    if (value && !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(value)) {
+                      setErrors(prev => ({...prev, password: '비밀번호는 영어와 숫자를 포함하여 8글자 이상이어야 합니다.'}));
+                    } else {
+                      setErrors(prev => ({...prev, password: ''}));
+                    }
+                  }}
                   placeholder="영어+숫자 8글자 이상"
                   className={errors.password ? 'error' : ''}
                 />

@@ -151,7 +151,7 @@ public class AttendanceService {
                 enrollment.getTotalCount());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
         // 해당 날짜의 모든 스케줄 조회
         List<CourseSchedule> schedules = scheduleRepository.findByScheduleDate(date);
@@ -171,24 +171,39 @@ public class AttendanceService {
                     .findByStudentIdAndScheduleId(student.getId(), schedule.getId());
                 
                 if (existingAttendance.isPresent()) {
-                    responses.add(toResponse(existingAttendance.get()));
+                    Attendance attendance = existingAttendance.get();
+                    // 자동 결석 처리 (20분 경과 시)
+                    attendance.markAsAbsentIfLate();
+                    attendanceRepository.save(attendance);
+                    
+                    // 결석자는 출석현황에서 제외
+                    if (!attendance.isAbsent()) {
+                        responses.add(toResponse(attendance));
+                    }
                 } else {
-                    // 출석 데이터가 없으면 미출석으로 생성해서 반환
-                    AttendanceResponse response = AttendanceResponse.builder()
-                        .id(null)
-                        .studentId(student.getId())
-                        .studentName(student.getStudentName())
-                        .scheduleId(schedule.getId())
-                        .courseName(schedule.getCourse().getCourseName())
-                        .startTime(schedule.getStartTime().toString())
-                        .endTime(schedule.getEndTime().toString())
-                        .status(AttendanceStatus.ABSENT)
-                        .checkInTime(null)
-                        .checkOutTime(null)
-                        .classCompleted(false)
-                        .memo("")
-                        .build();
-                    responses.add(response);
+                    // 출석 데이터가 없으면 자동 결석 처리 확인
+                    LocalTime scheduleStartTime = schedule.getStartTime();
+                    LocalTime cutoffTime = scheduleStartTime.plusMinutes(20);
+                    LocalTime currentTime = LocalDateTime.now().toLocalTime();
+                    
+                    // 20분 경과 시 결석자는 제외, 아직 시간이 안 된 경우만 미출석으로 표시
+                    if (currentTime.isBefore(cutoffTime)) {
+                        AttendanceResponse response = AttendanceResponse.builder()
+                            .id(null)
+                            .studentId(student.getId())
+                            .studentName(student.getStudentName())
+                            .scheduleId(schedule.getId())
+                            .courseName(schedule.getCourse().getCourseName())
+                            .startTime(schedule.getStartTime().toString())
+                            .endTime(schedule.getEndTime().toString())
+                            .status(AttendanceStatus.ABSENT)
+                            .checkInTime(null)
+                            .checkOutTime(null)
+                            .classCompleted(false)
+                            .memo("")
+                            .build();
+                        responses.add(response);
+                    }
                 }
             }
         }

@@ -220,6 +220,9 @@ public class AuthService {
             throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
         }
 
+        // 비밀번호 검증 강화
+        validatePassword(request.getPassword());
+
         // 학부모 계정 생성
         User parentUser = User.builder()
                 .username(request.getUsername())
@@ -263,5 +266,33 @@ public class AuthService {
     @Transactional(readOnly = true)
     public boolean isUsernameAvailable(String username) {
         return !userRepository.existsByUsername(username);
+    }
+
+    /**
+     * 비밀번호 유효성 검증
+     */
+    private void validatePassword(String password) {
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("비밀번호는 필수입니다.");
+        }
+        
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("비밀번호는 8글자 이상이어야 합니다.");
+        }
+        
+        // 영어 포함 여부 확인
+        if (!password.matches(".*[A-Za-z].*")) {
+            throw new IllegalArgumentException("비밀번호에 영어가 포함되어야 합니다.");
+        }
+        
+        // 숫자 포함 여부 확인
+        if (!password.matches(".*\\d.*")) {
+            throw new IllegalArgumentException("비밀번호에 숫자가 포함되어야 합니다.");
+        }
+        
+        // 전체 패턴 검증
+        if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$")) {
+            throw new IllegalArgumentException("비밀번호는 영어와 숫자를 포함하여 8글자 이상이어야 합니다.");
+        }
     }
 }

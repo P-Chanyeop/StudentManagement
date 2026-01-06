@@ -153,7 +153,7 @@ function ConsultationReservation() {
               <i className="fas fa-comments"></i>
               상담 예약
             </h1>
-            <p className="page-subtitle">학생 상담을 예약해주세요</p>
+            <p className="page-subtitle">상담을 예약해주세요</p>
           </div>
         </div>
       </div>
