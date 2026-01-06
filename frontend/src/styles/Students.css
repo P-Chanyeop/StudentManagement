@@ -16,7 +16,7 @@
 .page-header-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
