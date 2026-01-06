@@ -314,7 +314,10 @@ function Notices() {
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>공지사항 작성</h2>
+              <h2 className="modal-title">
+                <i className="fas fa-edit"></i>
+                공지사항 작성
+              </h2>
               <button
                 className="modal-close"
                 onClick={() => setShowCreateModal(false)}
@@ -355,8 +358,7 @@ function Notices() {
                       checked={newNotice.isPinned}
                       onChange={(e) => setNewNotice({...newNotice, isPinned: e.target.checked})}
                     />
-                    <span className="checkmark"></span>
-                    상단 고정
+                    중요 공지 설정
                   </label>
                 </div>
               </div>

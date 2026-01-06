@@ -368,58 +368,80 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
   background: white;
-  border-radius: 16px;
-  max-width: 800px;
-  width: 100%;
-  max-height: 90vh;
+  border-radius: 20px;
+  max-width: 1000px;
+  width: 95%;
+  max-height: 85vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {
-  padding: 24px 32px;
-  border-bottom: 1px solid var(--gray-200);
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--gray-50);
+  background: linear-gradient(135deg, #03c75a 0%, #02b350 100%);
+  color: white;
 }
 
 .modal-title {
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: var(--gray-900);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-title i {
+  font-size: 22px;
+  opacity: 0.9;
 }
 
 .modal-close {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
-  background: none;
-  font-size: 24px;
-  color: var(--gray-400);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  font-size: 18px;
+  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: var(--gray-200);
-  color: var(--gray-700);
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 .modal-meta {
@@ -436,7 +458,7 @@
 }
 
 .modal-body {
-  padding: 32px;
+  padding: 48px 40px;
 }
 
 .notice-content {
@@ -553,48 +575,87 @@
 
 /* 공지사항 작성 폼 */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: block;
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
   margin-bottom: 8px;
+  font-size: 14px;
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 20px 24px;
   border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: border-color 0.2s ease;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #fafbfc;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: #03c75a;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(3, 199, 90, 0.1);
+  transform: translateY(-1px);
 }
 
 .form-group textarea {
   resize: vertical;
-  min-height: 120px;
+  min-height: 180px;
+  font-family: inherit;
+  line-height: 1.6;
 }
 
 /* 체크박스 스타일 */
 .checkbox-label {
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  background: #ffffff;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: normal !important;
+  transition: all 0.3s ease;
+  font-weight: 500 !important;
+  color: #495057;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.checkbox-label:hover {
+  background: #f8f9fa;
+  border-color: #03c75a;
+  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.1);
+  transform: translateY(-1px);
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: auto;
-  margin-right: 8px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #03c75a;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+  background-color: #03c75a;
+}
+
+/* 체크박스가 체크되었을 때 라벨 스타일 */
+.checkbox-label:has(input[type="checkbox"]:checked) {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6ffed 100%);
+  border-color: #03c75a;
+  color: #03c75a;
+  font-weight: 600 !important;
 }
 
 /* 모달 푸터 */
