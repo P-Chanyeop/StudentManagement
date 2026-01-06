@@ -14,6 +14,10 @@ function Messages() {
     messageType: 'GENERAL',
     content: '',
   });
+  
+  // 학생 선택 드롭다운 상태
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   // 전체 문자 내역 조회
   const { data: messages = [], isLoading } = useQuery({
@@ -32,6 +36,33 @@ function Messages() {
       return response.data;
     },
   });
+
+  // 학생 선택 핸들러
+  const handleStudentSelect = (student) => {
+    setNewMessage(prev => ({
+      ...prev,
+      studentId: student.id.toString(),
+      recipientPhone: student.parentPhone || student.studentPhone,
+      recipientName: student.parentName || student.studentName
+    }));
+    setShowStudentDropdown(false);
+    setStudentSearchQuery('');
+  };
+
+  // 선택된 학생 정보 가져오기
+  const getSelectedStudent = () => {
+    return students.find(student => student.id.toString() === newMessage.studentId);
+  };
+
+  // 필터링된 학생 목록
+  const getFilteredStudents = () => {
+    if (!studentSearchQuery) return students;
+    
+    return students.filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      student.parentName?.toLowerCase().includes(studentSearchQuery.toLowerCase())
+    );
+  };
 
   // 문자 발송 mutation
   const sendMutation = useMutation({
@@ -55,18 +86,6 @@ function Messages() {
       messageType: 'GENERAL',
       content: '',
     });
-  };
-
-  const handleStudentSelect = (studentId) => {
-    const student = students.find((s) => s.id === parseInt(studentId));
-    if (student) {
-      setNewMessage({
-        ...newMessage,
-        studentId,
-        recipientPhone: student.parentPhone || '',
-        recipientName: student.parentName || '',
-      });
-    }
   };
 
   const handleSubmit = (e) => {
@@ -237,18 +256,58 @@ function Messages() {
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label>학생 선택</label>
-                  <select
-                    value={newMessage.studentId}
-                    onChange={(e) => handleStudentSelect(e.target.value)}
-                  >
-                    <option value="">학생을 선택하세요</option>
-                    {students.map((student) => (
-                      <option key={student.id} value={student.id}>
-                        {student.studentName} (학부모: {student.parentName || '정보없음'} / {student.parentPhone || '번호없음'})
-                      </option>
-                    ))}
-                  </select>
+                  <label>학생을 선택해 주세요</label>
+                  <div className="student-select-wrapper">
+                    <div 
+                      className="student-select-input"
+                      onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                    >
+                      {getSelectedStudent() ? (
+                        <div className="selected-student-info">
+                          <span className="student-name">{getSelectedStudent().studentName}</span>
+                          <span className="parent-info">
+                            {getSelectedStudent().parentName} · {getSelectedStudent().parentPhone || getSelectedStudent().studentPhone}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="placeholder">학생을 선택해 주세요</span>
+                      )}
+                      <i className={`fas fa-chevron-${showStudentDropdown ? 'up' : 'down'}`}></i>
+                    </div>
+                    
+                    {showStudentDropdown && (
+                      <div className="student-dropdown">
+                        <div className="student-search">
+                          <input
+                            type="text"
+                            placeholder="학생 이름으로 검색..."
+                            value={studentSearchQuery}
+                            onChange={(e) => setStudentSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        <div className="student-list">
+                          {getFilteredStudents().map(student => (
+                            <div
+                              key={student.id}
+                              className="student-option"
+                              onClick={() => handleStudentSelect(student)}
+                            >
+                              <div className="student-info">
+                                <span className="student-name">{student.studentName}</span>
+                                <span className="parent-info">
+                                  {student.parentName} · {student.parentPhone || student.studentPhone}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {getFilteredStudents().length === 0 && (
+                            <div className="no-students">검색 결과가 없습니다.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="messages-form-row">

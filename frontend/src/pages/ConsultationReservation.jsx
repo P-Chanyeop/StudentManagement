@@ -51,6 +51,10 @@ function ConsultationReservation() {
     month: '',
     day: ''
   });
+  
+  // 학생 선택 드롭다운 상태
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   // 상담 생성
   const createConsultation = useMutation({
@@ -113,6 +117,55 @@ function ConsultationReservation() {
         }));
       }
     }
+  };
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showStudentDropdown && !event.target.closest('.student-select-wrapper')) {
+        setShowStudentDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStudentDropdown]);
+
+  // 학생 선택 핸들러
+  const handleStudentSelect = (student) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedStudentId: student.id.toString()
+    }));
+    setShowStudentDropdown(false);
+    setStudentSearchQuery('');
+    
+    // 에러 메시지 제거
+    if (errors.selectedStudentId) {
+      setErrors(prev => ({
+        ...prev,
+        selectedStudentId: ''
+      }));
+    }
+  };
+
+  // 선택된 학생 정보 가져오기
+  const getSelectedStudent = () => {
+    const students = profile?.role === 'PARENT' ? myStudents : allStudents;
+    return students.find(student => student.id.toString() === formData.selectedStudentId);
+  };
+
+  // 필터링된 학생 목록
+  const getFilteredStudents = () => {
+    const students = profile?.role === 'PARENT' ? myStudents : allStudents;
+    if (!studentSearchQuery) return students;
+    
+    return students.filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      student.parentName.toLowerCase().includes(studentSearchQuery.toLowerCase())
+    );
   };
 
   const validateForm = () => {
@@ -218,21 +271,58 @@ function ConsultationReservation() {
           <div className="form-section">
             <h2>상담 대상 학생 선택</h2>
             <div className="form-group">
-              <label htmlFor="selectedStudentId">학생 선택 *</label>
-              <select
-                id="selectedStudentId"
-                name="selectedStudentId"
-                value={formData.selectedStudentId}
-                onChange={handleInputChange}
-                className={errors.selectedStudentId ? 'error' : ''}
-              >
-                <option value="">학생을 선택해주세요</option>
-                {(profile?.role === 'PARENT' ? myStudents : allStudents).map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.studentName} ({student.school || '학교 미등록'} {student.grade}학년)
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="selectedStudentId">학생을 선택해 주세요 *</label>
+              <div className="student-select-wrapper">
+                <div 
+                  className={`student-select-input ${errors.selectedStudentId ? 'error' : ''}`}
+                  onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                >
+                  {getSelectedStudent() ? (
+                    <div className="selected-student-info">
+                      <span className="student-name">{getSelectedStudent().studentName}</span>
+                      <span className="parent-info">
+                        {getSelectedStudent().parentName} · {getSelectedStudent().parentPhone || getSelectedStudent().phoneNumber}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="placeholder">학생을 선택해 주세요</span>
+                  )}
+                  <i className={`fas fa-chevron-${showStudentDropdown ? 'up' : 'down'}`}></i>
+                </div>
+                
+                {showStudentDropdown && (
+                  <div className="student-dropdown">
+                    <div className="student-search">
+                      <input
+                        type="text"
+                        placeholder="학생 이름 또는 학부모 이름으로 검색..."
+                        value={studentSearchQuery}
+                        onChange={(e) => setStudentSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="student-list">
+                      {getFilteredStudents().map(student => (
+                        <div
+                          key={student.id}
+                          className="student-option"
+                          onClick={() => handleStudentSelect(student)}
+                        >
+                          <div className="student-info">
+                            <span className="student-name">{student.studentName}</span>
+                            <span className="parent-info">
+                              {student.parentName} · {student.parentPhone || student.phoneNumber}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {getFilteredStudents().length === 0 && (
+                        <div className="no-students">검색 결과가 없습니다.</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               {errors.selectedStudentId && <span className="error-message">{errors.selectedStudentId}</span>}
             </div>
           </div>

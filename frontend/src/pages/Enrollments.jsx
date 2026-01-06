@@ -12,6 +12,10 @@ function Enrollments() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  
+  // 학생 선택 드롭다운 상태
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   // 사용자 정보 조회
   const { data: currentUser } = useQuery({
@@ -157,6 +161,45 @@ function Enrollments() {
       return response.data;
     },
   });
+
+  // 학생 선택 핸들러
+  const handleStudentSelect = (student) => {
+    setNewEnrollment(prev => ({
+      ...prev,
+      studentId: student.id.toString()
+    }));
+    setShowStudentDropdown(false);
+    setStudentSearchQuery('');
+  };
+
+  // 선택된 학생 정보 가져오기
+  const getSelectedStudent = () => {
+    return students.find(student => student.id.toString() === newEnrollment.studentId);
+  };
+
+  // 필터링된 학생 목록
+  const getFilteredStudents = () => {
+    if (!studentSearchQuery) return students;
+    
+    return students.filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      student.parentName?.toLowerCase().includes(studentSearchQuery.toLowerCase())
+    );
+  };
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showStudentDropdown && !event.target.closest('.student-select-wrapper')) {
+        setShowStudentDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStudentDropdown]);
 
   // 수강권 생성 mutation
   const createMutation = useMutation({
@@ -528,20 +571,58 @@ function Enrollments() {
 
             <div className="modal-body">
               <div className="form-group">
-                <label>학생 선택 *</label>
-                <select
-                  value={newEnrollment.studentId}
-                  onChange={(e) =>
-                    setNewEnrollment({ ...newEnrollment, studentId: e.target.value })
-                  }
-                >
-                  <option value="">학생을 선택하세요</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.studentName} ({student.studentPhone})
-                    </option>
-                  ))}
-                </select>
+                <label>학생을 선택해 주세요 *</label>
+                <div className="student-select-wrapper">
+                  <div 
+                    className="student-select-input"
+                    onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                  >
+                    {getSelectedStudent() ? (
+                      <div className="selected-student-info">
+                        <span className="student-name">{getSelectedStudent().studentName}</span>
+                        <span className="parent-info">
+                          {getSelectedStudent().parentName} · {getSelectedStudent().studentPhone}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="placeholder">학생을 선택해 주세요</span>
+                    )}
+                    <i className={`fas fa-chevron-${showStudentDropdown ? 'up' : 'down'}`}></i>
+                  </div>
+                  
+                  {showStudentDropdown && (
+                    <div className="student-dropdown">
+                      <div className="student-search">
+                        <input
+                          type="text"
+                          placeholder="학생 이름으로 검색..."
+                          value={studentSearchQuery}
+                          onChange={(e) => setStudentSearchQuery(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="student-list">
+                        {getFilteredStudents().map(student => (
+                          <div
+                            key={student.id}
+                            className="student-option"
+                            onClick={() => handleStudentSelect(student)}
+                          >
+                            <div className="student-info">
+                              <span className="student-name">{student.studentName}</span>
+                              <span className="parent-info">
+                                {student.parentName} · {student.studentPhone}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {getFilteredStudents().length === 0 && (
+                          <div className="no-students">검색 결과가 없습니다.</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">

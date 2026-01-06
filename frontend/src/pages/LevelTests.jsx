@@ -28,6 +28,10 @@ function LevelTests() {
     testTime: '10:00',
     memo: '',
   });
+  
+  // 학생 선택 드롭다운 상태
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   const [searchParams, setSearchParams] = useState({
     start: new Date().toISOString().split('T')[0],
@@ -116,6 +120,31 @@ function LevelTests() {
       return response.data;
     },
   });
+
+  // 학생 선택 핸들러
+  const handleStudentSelect = (student) => {
+    setNewTest(prev => ({
+      ...prev,
+      studentId: student.id.toString()
+    }));
+    setShowStudentDropdown(false);
+    setStudentSearchQuery('');
+  };
+
+  // 선택된 학생 정보 가져오기
+  const getSelectedStudent = () => {
+    return students.find(student => student.id.toString() === newTest.studentId);
+  };
+
+  // 필터링된 학생 목록
+  const getFilteredStudents = () => {
+    if (!studentSearchQuery) return students;
+    
+    return students.filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      student.parentName?.toLowerCase().includes(studentSearchQuery.toLowerCase())
+    );
+  };
 
   // 레벨 테스트 생성 mutation
   const createMutation = useMutation({
@@ -318,18 +347,58 @@ function LevelTests() {
 
             <div className="modal-body">
               <div className="form-group">
-                <label>학생 선택 *</label>
-                <select
-                  value={newTest.studentId}
-                  onChange={(e) => setNewTest({ ...newTest, studentId: e.target.value })}
-                >
-                  <option value="">학생을 선택하세요</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.studentName} ({student.studentPhone})
-                    </option>
-                  ))}
-                </select>
+                <label>학생을 선택해 주세요 *</label>
+                <div className="student-select-wrapper">
+                  <div 
+                    className="student-select-input"
+                    onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                  >
+                    {getSelectedStudent() ? (
+                      <div className="selected-student-info">
+                        <span className="student-name">{getSelectedStudent().studentName}</span>
+                        <span className="parent-info">
+                          {getSelectedStudent().parentName} · {getSelectedStudent().studentPhone}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="placeholder">학생을 선택해 주세요</span>
+                    )}
+                    <i className={`fas fa-chevron-${showStudentDropdown ? 'up' : 'down'}`}></i>
+                  </div>
+                  
+                  {showStudentDropdown && (
+                    <div className="student-dropdown">
+                      <div className="student-search">
+                        <input
+                          type="text"
+                          placeholder="학생 이름으로 검색..."
+                          value={studentSearchQuery}
+                          onChange={(e) => setStudentSearchQuery(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="student-list">
+                        {getFilteredStudents().map(student => (
+                          <div
+                            key={student.id}
+                            className="student-option"
+                            onClick={() => handleStudentSelect(student)}
+                          >
+                            <div className="student-info">
+                              <span className="student-name">{student.studentName}</span>
+                              <span className="parent-info">
+                                {student.parentName} · {student.studentPhone}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {getFilteredStudents().length === 0 && (
+                          <div className="no-students">검색 결과가 없습니다.</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-row">

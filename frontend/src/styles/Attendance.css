@@ -471,3 +471,29 @@
   outline: none;
   border-color: #03c75a;
 }
+/* 정렬 가능한 테이블 헤더 스타일 */
+.attendance-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.attendance-table th.sortable:hover {
+  background-color: #f8f9fa;
+}
+
+.attendance-table th.sortable.active {
+  background-color: #e8f8f0;
+  color: #03c75a;
+}
+
+.attendance-table th.sortable i {
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.attendance-table th.sortable.active i {
+  opacity: 1;
+}
