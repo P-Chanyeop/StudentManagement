@@ -44,6 +44,13 @@ function ConsultationReservation() {
   });
 
   const [errors, setErrors] = useState({});
+  
+  // 날짜 선택을 위한 분리된 상태
+  const [dateComponents, setDateComponents] = useState({
+    year: '',
+    month: '',
+    day: ''
+  });
 
   // 상담 생성
   const createConsultation = useMutation({
@@ -79,6 +86,32 @@ function ConsultationReservation() {
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  // 날짜 컴포넌트 변경 핸들러
+  const handleDateComponentChange = (component, value) => {
+    const newDateComponents = {
+      ...dateComponents,
+      [component]: value
+    };
+    setDateComponents(newDateComponents);
+    
+    // 모든 컴포넌트가 선택되면 consultationDate 업데이트
+    if (newDateComponents.year && newDateComponents.month && newDateComponents.day) {
+      const formattedDate = `${newDateComponents.year}-${newDateComponents.month.padStart(2, '0')}-${newDateComponents.day.padStart(2, '0')}`;
+      setFormData(prev => ({
+        ...prev,
+        consultationDate: formattedDate
+      }));
+      
+      // 에러 제거
+      if (errors.consultationDate) {
+        setErrors(prev => ({
+          ...prev,
+          consultationDate: ''
+        }));
+      }
     }
   };
 
@@ -145,10 +178,10 @@ function ConsultationReservation() {
   ];
 
   return (
-    <div className="consultation-reservation-container">
+    <div className="page-wrapper">
       <div className="page-header">
-        <div className="header-content">
-          <div className="header-text">
+        <div className="page-header-content">
+          <div className="page-title-section">
             <h1 className="page-title">
               <i className="fas fa-comments"></i>
               상담 예약
@@ -158,8 +191,9 @@ function ConsultationReservation() {
         </div>
       </div>
 
-      <div className="reservation-content">
-        <form onSubmit={handleSubmit} className="reservation-form">
+      <div className="page-content">
+        <div className="reservation-content">
+          <form onSubmit={handleSubmit} className="reservation-form">
           {/* 상담 유형 선택 */}
           <div className="form-section">
             <h2>상담 유형</h2>
@@ -208,29 +242,71 @@ function ConsultationReservation() {
             <h2>상담 일정</h2>
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="consultationDate">상담 날짜 *</label>
-                <input
-                  type="date"
-                  id="consultationDate"
-                  name="consultationDate"
-                  value={formData.consultationDate}
-                  onChange={handleInputChange}
-                  min={new Date().toISOString().split('T')[0]}
-                  className={errors.consultationDate ? 'error' : ''}
-                />
+                <label>상담 날짜 *</label>
+                <div className="date-inputs">
+                  <select
+                    value={dateComponents.year}
+                    onChange={(e) => handleDateComponentChange('year', e.target.value)}
+                    className={errors.consultationDate ? 'error' : ''}
+                  >
+                    <option value="">년도</option>
+                    {Array.from({length: 3}, (_, i) => {
+                      const year = new Date().getFullYear() + i;
+                      return <option key={year} value={year}>{year}년</option>;
+                    })}
+                  </select>
+                  
+                  <select
+                    value={dateComponents.month}
+                    onChange={(e) => handleDateComponentChange('month', e.target.value)}
+                    className={errors.consultationDate ? 'error' : ''}
+                  >
+                    <option value="">월</option>
+                    {Array.from({length: 12}, (_, i) => {
+                      const month = i + 1;
+                      return <option key={month} value={month}>{month}월</option>;
+                    })}
+                  </select>
+                  
+                  <select
+                    value={dateComponents.day}
+                    onChange={(e) => handleDateComponentChange('day', e.target.value)}
+                    className={errors.consultationDate ? 'error' : ''}
+                  >
+                    <option value="">일</option>
+                    {Array.from({length: 31}, (_, i) => {
+                      const day = i + 1;
+                      return <option key={day} value={day}>{day}일</option>;
+                    })}
+                  </select>
+                </div>
                 {errors.consultationDate && <span className="error-message">{errors.consultationDate}</span>}
               </div>
-              
+            </div>
+            
+            <div className="form-row">
               <div className="form-group">
                 <label htmlFor="consultationTime">상담 시간 *</label>
-                <input
-                  type="time"
-                  id="consultationTime"
-                  name="consultationTime"
-                  value={formData.consultationTime}
-                  onChange={handleInputChange}
-                  className={errors.consultationTime ? 'error' : ''}
-                />
+                <div className="time-input-wrapper">
+                  <select
+                    id="consultationTime"
+                    name="consultationTime"
+                    value={formData.consultationTime}
+                    onChange={handleInputChange}
+                    className={errors.consultationTime ? 'error' : ''}
+                  >
+                    <option value="">시간을 선택하세요</option>
+                    {Array.from({length: 12}, (_, i) => {
+                      const times = [];
+                      const hour = (i + 9).toString().padStart(2, '0');
+                      times.push(`${hour}:00`);
+                      times.push(`${hour}:30`);
+                      return times;
+                    }).flat().map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                </div>
                 {errors.consultationTime && <span className="error-message">{errors.consultationTime}</span>}
               </div>
             </div>
@@ -277,6 +353,7 @@ function ConsultationReservation() {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
