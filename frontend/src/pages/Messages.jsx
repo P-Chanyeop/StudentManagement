@@ -63,8 +63,8 @@ function Messages() {
       setNewMessage({
         ...newMessage,
         studentId,
-        recipientPhone: student.phoneNumber || '',
-        recipientName: student.studentName,
+        recipientPhone: student.parentPhone || '',
+        recipientName: student.parentName || '',
       });
     }
   };
@@ -245,7 +245,7 @@ function Messages() {
                     <option value="">학생을 선택하세요</option>
                     {students.map((student) => (
                       <option key={student.id} value={student.id}>
-                        {student.studentName}
+                        {student.studentName} (학부모: {student.parentName || '정보없음'} / {student.parentPhone || '번호없음'})
                       </option>
                     ))}
                   </select>
@@ -253,23 +253,25 @@ function Messages() {
 
                 <div className="messages-form-row">
                   <div className="form-group">
-                    <label>수신자명 *</label>
+                    <label>수신자명 (학부모) *</label>
                     <input
                       type="text"
                       value={newMessage.recipientName}
                       onChange={(e) => setNewMessage({ ...newMessage, recipientName: e.target.value })}
-                      placeholder="수신자 이름"
+                      placeholder="학생을 선택하면 자동으로 입력됩니다"
                       required
+                      readOnly={newMessage.studentId !== ''}
                     />
                   </div>
                   <div className="form-group">
-                    <label>전화번호 *</label>
+                    <label>전화번호 (학부모) *</label>
                     <input
                       type="tel"
                       value={newMessage.recipientPhone}
                       onChange={(e) => setNewMessage({ ...newMessage, recipientPhone: e.target.value })}
-                      placeholder="010-1234-5678"
+                      placeholder="학생을 선택하면 자동으로 입력됩니다"
                       required
+                      readOnly={newMessage.studentId !== ''}
                     />
                   </div>
                 </div>
