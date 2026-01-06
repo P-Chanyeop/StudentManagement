@@ -15,16 +15,37 @@ function Register() {
     parentPhone: '',
     address: '',
     
-    // 학생 정보
-    studentName: '',
-    studentPhone: '',
-    birthDate: '',
-    gender: 'MALE',
-    school: '',
-    grade: '1'
+    // 학생 정보 (배열로 변경)
+    students: [{
+      studentName: '',
+      studentPhone: '',
+      birthDate: '',
+      gender: 'MALE',
+      school: '',
+      grade: '1'
+    }]
   });
 
   const [errors, setErrors] = useState({});
+  const [isUsernameChecked, setIsUsernameChecked] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
+
+  // 아이디 중복 검사
+  const checkUsername = useMutation({
+    mutationFn: (username) => authAPI.checkUsername(username),
+    onSuccess: (response) => {
+      setIsUsernameAvailable(response.data.available);
+      setIsUsernameChecked(true);
+      if (response.data.available) {
+        alert('사용 가능한 아이디입니다.');
+      } else {
+        alert('이미 사용 중인 아이디입니다.');
+      }
+    },
+    onError: () => {
+      alert('아이디 중복 검사 중 오류가 발생했습니다.');
+    }
+  });
 
   // 회원가입 mutation
   const registerMutation = useMutation({
@@ -45,6 +66,12 @@ function Register() {
       [name]: value
     }));
     
+    // 아이디가 변경되면 중복 검사 초기화
+    if (name === 'username') {
+      setIsUsernameChecked(false);
+      setIsUsernameAvailable(false);
+    }
+    
     // 에러 제거
     if (errors[name]) {
       setErrors(prev => ({
@@ -54,8 +81,61 @@ function Register() {
     }
   };
 
+  // 학생 정보 변경 핸들러
+  const handleStudentChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      students: prev.students.map((student, i) => 
+        i === index ? { ...student, [field]: value } : student
+      )
+    }));
+  };
+
+  // 학생 추가
+  const addStudent = () => {
+    setFormData(prev => ({
+      ...prev,
+      students: [...prev.students, {
+        studentName: '',
+        studentPhone: '',
+        birthDate: '',
+        gender: 'MALE',
+        school: '',
+        grade: '1'
+      }]
+    }));
+  };
+
+  // 학생 제거
+  const removeStudent = (index) => {
+    if (formData.students.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        students: prev.students.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // 아이디 중복 검사
+  const handleCheckUsername = () => {
+    if (!formData.username.trim()) {
+      alert('아이디를 입력해주세요.');
+      return;
+    }
+    if (formData.username.length < 4) {
+      alert('아이디는 4글자 이상이어야 합니다.');
+      return;
+    }
+    checkUsername.mutate(formData.username);
+  };
+
   const validateForm = () => {
     const newErrors = {};
+    
+    // 아이디 중복 검사 확인
+    if (!isUsernameChecked || !isUsernameAvailable) {
+      newErrors.username = '아이디 중복 검사를 완료해주세요.';
+    }
     
     // 학부모 정보 검증
     if (!formData.username.trim()) {
@@ -89,17 +169,17 @@ function Register() {
     }
     
     // 학생 정보 검증
-    if (!formData.studentName.trim()) {
-      newErrors.studentName = '학생 이름을 입력해주세요.';
-    }
-    
-    if (!formData.birthDate) {
-      newErrors.birthDate = '생년월일을 선택해주세요.';
-    }
-    
-    if (!formData.school.trim()) {
-      newErrors.school = '학교를 입력해주세요.';
-    }
+    formData.students.forEach((student, index) => {
+      if (!student.studentName.trim()) {
+        newErrors[`student_${index}_name`] = '학생 이름을 입력해주세요.';
+      }
+      if (!student.birthDate) {
+        newErrors[`student_${index}_birthDate`] = '생년월일을 선택해주세요.';
+      }
+      if (!student.school.trim()) {
+        newErrors[`student_${index}_school`] = '학교를 입력해주세요.';
+      }
+    });
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -153,15 +233,30 @@ function Register() {
             
             <div className="form-group">
               <label htmlFor="username">아이디 *</label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                placeholder="4글자 이상 입력하세요"
-                className={errors.username ? 'error' : ''}
-              />
+              <div className="username-check-container">
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  placeholder="4글자 이상 입력하세요"
+                  className={errors.username ? 'error' : ''}
+                />
+                <button
+                  type="button"
+                  className="btn-check"
+                  onClick={handleCheckUsername}
+                  disabled={checkUsername.isLoading}
+                >
+                  {checkUsername.isLoading ? '확인중...' : '중복확인'}
+                </button>
+              </div>
+              {isUsernameChecked && (
+                <span className={`check-message ${isUsernameAvailable ? 'success' : 'error'}`}>
+                  {isUsernameAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.'}
+                </span>
+              )}
               {errors.username && <span className="error-message">{errors.username}</span>}
             </div>
 
@@ -263,155 +358,160 @@ function Register() {
 
           {/* 학생 정보 */}
           <div className="form-section">
-            <h2>학생 정보</h2>
+            <div className="students-header">
+              <h2>학생 정보</h2>
+              <button type="button" className="btn-add-student" onClick={addStudent}>
+                <i className="fas fa-plus"></i> 학생 추가
+              </button>
+            </div>
             
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="studentName">학생 이름 *</label>
-                <input
-                  type="text"
-                  id="studentName"
-                  name="studentName"
-                  value={formData.studentName}
-                  onChange={handleInputChange}
-                  placeholder="학생 이름을 입력하세요"
-                  className={errors.studentName ? 'error' : ''}
-                />
-                {errors.studentName && <span className="error-message">{errors.studentName}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentPhone">학생 연락처</label>
-                <input
-                  type="tel"
-                  id="studentPhone"
-                  name="studentPhone"
-                  value={formData.studentPhone}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '');
-                    let formatted = value;
-                    if (value.length >= 3) {
-                      formatted = value.slice(0, 3) + '-' + value.slice(3);
-                    }
-                    if (value.length >= 7) {
-                      formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
-                    }
-                    setFormData(prev => ({...prev, studentPhone: formatted}));
-                  }}
-                  placeholder="010-0000-0000"
-                  maxLength="13"
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="birthDate">생년월일 *</label>
-                <div className="birth-date-inputs">
-                  <select
-                    name="birthYear"
-                    value={formData.birthDate.split('-')[0] || ''}
-                    onChange={(e) => {
-                      const year = e.target.value;
-                      const month = formData.birthDate.split('-')[1] || '01';
-                      const day = formData.birthDate.split('-')[2] || '01';
-                      setFormData(prev => ({...prev, birthDate: `${year}-${month}-${day}`}));
-                    }}
-                    className={errors.birthDate ? 'error' : ''}
-                  >
-                    <option value="">년도</option>
-                    {Array.from({length: 20}, (_, i) => {
-                      const year = new Date().getFullYear() - 5 - i;
-                      return <option key={year} value={year}>{year}년</option>;
-                    })}
-                  </select>
-                  
-                  <select
-                    name="birthMonth"
-                    value={formData.birthDate.split('-')[1] || ''}
-                    onChange={(e) => {
-                      const year = formData.birthDate.split('-')[0] || '';
-                      const month = e.target.value.padStart(2, '0');
-                      const day = formData.birthDate.split('-')[2] || '01';
-                      setFormData(prev => ({...prev, birthDate: `${year}-${month}-${day}`}));
-                    }}
-                    className={errors.birthDate ? 'error' : ''}
-                  >
-                    <option value="">월</option>
-                    {Array.from({length: 12}, (_, i) => {
-                      const month = (i + 1).toString().padStart(2, '0');
-                      return <option key={month} value={month}>{i + 1}월</option>;
-                    })}
-                  </select>
-                  
-                  <select
-                    name="birthDay"
-                    value={formData.birthDate.split('-')[2] || ''}
-                    onChange={(e) => {
-                      const year = formData.birthDate.split('-')[0] || '';
-                      const month = formData.birthDate.split('-')[1] || '01';
-                      const day = e.target.value.padStart(2, '0');
-                      setFormData(prev => ({...prev, birthDate: `${year}-${month}-${day}`}));
-                    }}
-                    className={errors.birthDate ? 'error' : ''}
-                  >
-                    <option value="">일</option>
-                    {Array.from({length: 31}, (_, i) => {
-                      const day = (i + 1).toString().padStart(2, '0');
-                      return <option key={day} value={day}>{i + 1}일</option>;
-                    })}
-                  </select>
+            {formData.students.map((student, index) => (
+              <div key={index} className="student-form">
+                <div className="student-header">
+                  <h3>학생 {index + 1}</h3>
+                  {formData.students.length > 1 && (
+                    <button 
+                      type="button" 
+                      className="btn-remove-student"
+                      onClick={() => removeStudent(index)}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
                 </div>
-                {errors.birthDate && <span className="error-message">{errors.birthDate}</span>}
-              </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>학생 이름 *</label>
+                    <input
+                      type="text"
+                      value={student.studentName}
+                      onChange={(e) => handleStudentChange(index, 'studentName', e.target.value)}
+                      placeholder="학생 이름을 입력하세요"
+                      className={errors[`student_${index}_name`] ? 'error' : ''}
+                    />
+                    {errors[`student_${index}_name`] && <span className="error-message">{errors[`student_${index}_name`]}</span>}
+                  </div>
 
-              <div className="form-group">
-                <label htmlFor="gender">성별 *</label>
-                <select
-                  id="gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  className={errors.gender ? 'error' : ''}
-                >
-                  <option value="MALE">남성</option>
-                  <option value="FEMALE">여성</option>
-                </select>
-                {errors.gender && <span className="error-message">{errors.gender}</span>}
-              </div>
-            </div>
+                  <div className="form-group">
+                    <label>학생 연락처</label>
+                    <input
+                      type="tel"
+                      value={student.studentPhone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        let formatted = value;
+                        if (value.length >= 3) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3);
+                        }
+                        if (value.length >= 7) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                        }
+                        handleStudentChange(index, 'studentPhone', formatted);
+                      }}
+                      placeholder="010-0000-0000"
+                      maxLength="13"
+                    />
+                  </div>
+                </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="school">학교 *</label>
-                <input
-                  type="text"
-                  id="school"
-                  name="school"
-                  value={formData.school}
-                  onChange={handleInputChange}
-                  placeholder="학교명을 입력하세요"
-                  className={errors.school ? 'error' : ''}
-                />
-                {errors.school && <span className="error-message">{errors.school}</span>}
-              </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>생년월일 *</label>
+                    <div className="birth-date-inputs">
+                      <select
+                        value={student.birthDate.split('-')[0] || ''}
+                        onChange={(e) => {
+                          const year = e.target.value;
+                          const month = student.birthDate.split('-')[1] || '01';
+                          const day = student.birthDate.split('-')[2] || '01';
+                          handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
+                        }}
+                        className={errors[`student_${index}_birthDate`] ? 'error' : ''}
+                      >
+                        <option value="">년도</option>
+                        {Array.from({length: 20}, (_, i) => {
+                          const year = new Date().getFullYear() - 5 - i;
+                          return <option key={year} value={year}>{year}년</option>;
+                        })}
+                      </select>
+                      
+                      <select
+                        value={student.birthDate.split('-')[1] || ''}
+                        onChange={(e) => {
+                          const year = student.birthDate.split('-')[0] || '';
+                          const month = e.target.value.padStart(2, '0');
+                          const day = student.birthDate.split('-')[2] || '01';
+                          handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
+                        }}
+                        className={errors[`student_${index}_birthDate`] ? 'error' : ''}
+                      >
+                        <option value="">월</option>
+                        {Array.from({length: 12}, (_, i) => {
+                          const month = (i + 1).toString().padStart(2, '0');
+                          return <option key={month} value={month}>{i + 1}월</option>;
+                        })}
+                      </select>
+                      
+                      <select
+                        value={student.birthDate.split('-')[2] || ''}
+                        onChange={(e) => {
+                          const year = student.birthDate.split('-')[0] || '';
+                          const month = student.birthDate.split('-')[1] || '01';
+                          const day = e.target.value.padStart(2, '0');
+                          handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
+                        }}
+                        className={errors[`student_${index}_birthDate`] ? 'error' : ''}
+                      >
+                        <option value="">일</option>
+                        {Array.from({length: 31}, (_, i) => {
+                          const day = (i + 1).toString().padStart(2, '0');
+                          return <option key={day} value={day}>{i + 1}일</option>;
+                        })}
+                      </select>
+                    </div>
+                    {errors[`student_${index}_birthDate`] && <span className="error-message">{errors[`student_${index}_birthDate`]}</span>}
+                  </div>
 
-              <div className="form-group">
-                <label htmlFor="grade">학년 *</label>
-                <select
-                  id="grade"
-                  name="grade"
-                  value={formData.grade}
-                  onChange={handleInputChange}
-                  className={errors.grade ? 'error' : ''}
-                >
-                  {[1,2,3,4,5,6].map(grade => (
-                    <option key={grade} value={grade}>{grade}학년</option>
-                  ))}
-                </select>
-                {errors.grade && <span className="error-message">{errors.grade}</span>}
+                  <div className="form-group">
+                    <label>성별 *</label>
+                    <select
+                      value={student.gender}
+                      onChange={(e) => handleStudentChange(index, 'gender', e.target.value)}
+                    >
+                      <option value="MALE">남성</option>
+                      <option value="FEMALE">여성</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>학교 *</label>
+                    <input
+                      type="text"
+                      value={student.school}
+                      onChange={(e) => handleStudentChange(index, 'school', e.target.value)}
+                      placeholder="학교명을 입력하세요"
+                      className={errors[`student_${index}_school`] ? 'error' : ''}
+                    />
+                    {errors[`student_${index}_school`] && <span className="error-message">{errors[`student_${index}_school`]}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label>학년 *</label>
+                    <select
+                      value={student.grade}
+                      onChange={(e) => handleStudentChange(index, 'grade', e.target.value)}
+                    >
+                      {[1,2,3,4,5,6].map(grade => (
+                        <option key={grade} value={grade}>{grade}학년</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
 
           {/* 제출 버튼 */}

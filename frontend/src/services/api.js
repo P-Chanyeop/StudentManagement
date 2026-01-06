@@ -60,6 +60,7 @@ export const authAPI = {
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
   getProfile: () => api.get('/auth/profile'),
+  checkUsername: (username) => api.get(`/auth/check-username?username=${username}`),
 };
 
 // 학생 API

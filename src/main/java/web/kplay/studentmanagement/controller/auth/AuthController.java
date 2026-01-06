@@ -75,4 +75,13 @@ public class AuthController {
         UserProfileResponse profile = authService.getUserProfile(userDetails.getId());
         return ResponseEntity.ok(profile);
     }
+
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Object>> checkUsername(@RequestParam String username) {
+        boolean available = authService.isUsernameAvailable(username);
+        Map<String, Object> response = new HashMap<>();
+        response.put("available", available);
+        response.put("message", available ? "사용 가능한 아이디입니다" : "이미 사용 중인 아이디입니다");
+        return ResponseEntity.ok(response);
+    }
 }

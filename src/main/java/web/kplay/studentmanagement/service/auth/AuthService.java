@@ -256,4 +256,12 @@ public class AuthService {
 
         log.info("학부모 회원가입 완료 - 사용자명: {}, 이름: {}", request.getUsername(), request.getName());
     }
+
+    /**
+     * 아이디 중복 확인
+     */
+    @Transactional(readOnly = true)
+    public boolean isUsernameAvailable(String username) {
+        return !userRepository.existsByUsername(username);
+    }
 }
