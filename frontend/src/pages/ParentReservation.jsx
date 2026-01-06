@@ -25,14 +25,19 @@ function ParentReservation() {
     enabled: !!profile && profile.role === 'PARENT',
   });
 
+  // 전체 학생 목록 조회 (관리자/선생님용)
+  const { data: allStudents = [] } = useQuery({
+    queryKey: ['allStudents'],
+    queryFn: async () => {
+      const response = await studentAPI.getActive();
+      return response.data;
+    },
+    enabled: !!profile && (profile.role === 'ADMIN' || profile.role === 'TEACHER'),
+  });
+
   const [formData, setFormData] = useState({
-    // 선택된 학생 ID (학부모용)
+    // 선택된 학생 ID
     selectedStudentId: '',
-    
-    // 수기 입력 정보 (관리자/선생님용)
-    parentName: '',
-    studentName: '',
-    phoneNumber: '',
     
     // 예약 정보
     preferredDate: '',
@@ -47,6 +52,8 @@ function ParentReservation() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [holidays, setHolidays] = useState({});
   const [loadedYears, setLoadedYears] = useState(new Set());
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   // 특정 년도의 공휴일 로드
   const [selectedDateForTime, setSelectedDateForTime] = useState(null);
@@ -103,6 +110,20 @@ function ParentReservation() {
       fetchReservedTimes(selectedDateForTime);
     }
   }, [selectedDateForTime, formData.consultationType]);
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showStudentDropdown && !event.target.closest('.student-select-wrapper')) {
+        setShowStudentDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStudentDropdown]);
 
   // 상담 유형에 따른 예약 가능 날짜 체크
   const isDateAvailable = (date, consultationType) => {
@@ -316,6 +337,41 @@ function ParentReservation() {
     }
   };
 
+  // 학생 선택 핸들러
+  const handleStudentSelect = (student) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedStudentId: student.id.toString()
+    }));
+    setShowStudentDropdown(false);
+    setStudentSearchQuery('');
+    
+    // 에러 메시지 제거
+    if (errors.selectedStudentId) {
+      setErrors(prev => ({
+        ...prev,
+        selectedStudentId: ''
+      }));
+    }
+  };
+
+  // 선택된 학생 정보 가져오기
+  const getSelectedStudent = () => {
+    const students = profile?.role === 'PARENT' ? myStudents : allStudents;
+    return students.find(student => student.id.toString() === formData.selectedStudentId);
+  };
+
+  // 필터링된 학생 목록
+  const getFilteredStudents = () => {
+    const students = profile?.role === 'PARENT' ? myStudents : allStudents;
+    if (!studentSearchQuery) return students;
+    
+    return students.filter(student => 
+      student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      student.parentName.toLowerCase().includes(studentSearchQuery.toLowerCase())
+    );
+  };
+
   const handleRetryReservation = () => {
     setReservationStatus(null);
     setFormData({
@@ -393,16 +449,8 @@ function ParentReservation() {
       }
     } else {
       // 관리자/선생님용 유효성 검사
-      if (!formData.parentName.trim()) {
-        newErrors.parentName = '학부모 이름을 입력해주세요.';
-      }
-      if (!formData.studentName.trim()) {
-        newErrors.studentName = '학생 이름을 입력해주세요.';
-      }
-      if (!formData.phoneNumber.trim()) {
-        newErrors.phoneNumber = '연락처를 입력해주세요.';
-      } else if (!/^010-\d{4}-\d{4}$/.test(formData.phoneNumber)) {
-        newErrors.phoneNumber = '올바른 연락처 형식을 입력해주세요. (010-0000-0000)';
+      if (!formData.selectedStudentId) {
+        newErrors.selectedStudentId = '학생을 선택해주세요.';
       }
     }
     
@@ -472,32 +520,22 @@ function ParentReservation() {
         return;
       }
 
-      // 역할별 학생 정보 처리
-      let studentInfo;
-      if (profile?.role === 'PARENT') {
-        // 학부모용 - 선택된 자녀 정보 가져오기
-        const selectedStudent = myStudents.find(s => s.id.toString() === formData.selectedStudentId);
-        if (!selectedStudent) {
-          alert('선택된 자녀 정보를 찾을 수 없습니다.');
-          return;
-        }
-        studentInfo = {
-          studentName: selectedStudent.studentName,
-          parentName: selectedStudent.parentName || profile.name,
-          phoneNumber: selectedStudent.phoneNumber || profile.phoneNumber
-        };
-      } else {
-        // 관리자/선생님용 - 수기 입력 정보 사용
-        studentInfo = {
-          studentName: formData.studentName,
-          parentName: formData.parentName,
-          phoneNumber: formData.phoneNumber
-        };
+      // 선택된 학생 정보 처리
+      const selectedStudent = getSelectedStudent();
+      if (!selectedStudent) {
+        alert('선택된 학생 정보를 찾을 수 없습니다.');
+        return;
       }
+
+      const studentInfo = {
+        studentName: selectedStudent.studentName,
+        parentName: selectedStudent.parentName,
+        phoneNumber: selectedStudent.parentPhone || selectedStudent.phoneNumber
+      };
 
       // 예약 요청 데이터 구성
       const reservationData = {
-        studentId: profile?.role === 'PARENT' ? selectedStudent.id : null, // 학부모가 아닌 경우 null
+        studentId: selectedStudent.id,
         studentName: studentInfo.studentName,
         parentName: studentInfo.parentName,
         phoneNumber: studentInfo.phoneNumber,
@@ -772,62 +810,63 @@ function ParentReservation() {
             )}
               </>
             ) : (
-              // 관리자/선생님용 - 수기 입력
+              // 관리자/선생님용 - 학생 선택
               <>
-                <h2>수업 정보 입력</h2>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="parentName">학부모 이름 *</label>
-                    <input
-                      type="text"
-                      id="parentName"
-                      name="parentName"
-                      value={formData.parentName}
-                      onChange={handleInputChange}
-                      placeholder="학부모 이름을 입력하세요"
-                      className={errors.parentName ? 'error' : ''}
-                    />
-                    {errors.parentName && <span className="error-message">{errors.parentName}</span>}
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="studentName">학생 이름 *</label>
-                    <input
-                      type="text"
-                      id="studentName"
-                      name="studentName"
-                      value={formData.studentName}
-                      onChange={handleInputChange}
-                      placeholder="학생 이름을 입력하세요"
-                      className={errors.studentName ? 'error' : ''}
-                    />
-                    {errors.studentName && <span className="error-message">{errors.studentName}</span>}
-                  </div>
-                </div>
-                
+                <h2>학생 선택</h2>
                 <div className="form-group">
-                  <label htmlFor="phoneNumber">연락처 *</label>
-                  <input
-                    type="tel"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, '');
-                      let formatted = value;
-                      if (value.length >= 3) {
-                        formatted = value.slice(0, 3) + '-' + value.slice(3);
-                      }
-                      if (value.length >= 7) {
-                        formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
-                      }
-                      setFormData(prev => ({...prev, phoneNumber: formatted}));
-                    }}
-                    placeholder="010-0000-0000"
-                    maxLength="13"
-                    className={errors.phoneNumber ? 'error' : ''}
-                  />
-                  {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
+                  <label htmlFor="studentSelect">학생을 선택해 주세요 *</label>
+                  <div className="student-select-wrapper">
+                    <div 
+                      className={`student-select-input ${errors.selectedStudentId ? 'error' : ''}`}
+                      onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                    >
+                      {getSelectedStudent() ? (
+                        <div className="selected-student-info">
+                          <span className="student-name">{getSelectedStudent().studentName}</span>
+                          <span className="parent-info">
+                            {getSelectedStudent().parentName} · {getSelectedStudent().parentPhone || getSelectedStudent().phoneNumber}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="placeholder">학생을 선택해 주세요</span>
+                      )}
+                      <i className={`fas fa-chevron-${showStudentDropdown ? 'up' : 'down'}`}></i>
+                    </div>
+                    
+                    {showStudentDropdown && (
+                      <div className="student-dropdown">
+                        <div className="student-search">
+                          <input
+                            type="text"
+                            placeholder="학생 이름 또는 학부모 이름으로 검색..."
+                            value={studentSearchQuery}
+                            onChange={(e) => setStudentSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        <div className="student-list">
+                          {getFilteredStudents().map(student => (
+                            <div
+                              key={student.id}
+                              className="student-option"
+                              onClick={() => handleStudentSelect(student)}
+                            >
+                              <div className="student-info">
+                                <span className="student-name">{student.studentName}</span>
+                                <span className="parent-info">
+                                  {student.parentName} · {student.parentPhone || student.phoneNumber}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {getFilteredStudents().length === 0 && (
+                            <div className="no-students">검색 결과가 없습니다.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {errors.selectedStudentId && <span className="error-message">{errors.selectedStudentId}</span>}
                 </div>
               </>
             )}
