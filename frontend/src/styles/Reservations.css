@@ -47,7 +47,285 @@
   margin: 0;
 }
 
-/* 날짜 선택기 */
+/* 페이지 컨텐츠 */
+.page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.reservations-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.reservations-content.full-width {
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 스케줄 섹션 */
+.schedules-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--gray-100);
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header h2::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: var(--naver-green);
+  border-radius: 2px;
+}
+
+.count-badge {
+  background: linear-gradient(135deg, var(--naver-green), var(--naver-green-dark));
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(3, 199, 90, 0.3);
+}
+
+/* 스케줄 그리드 */
+.schedules-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.schedule-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--naver-green), var(--naver-green-dark));
+}
+
+.schedule-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--naver-green-light);
+}
+
+.schedule-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.schedule-time {
+  font-size: 14px;
+  color: var(--naver-green);
+  font-weight: 500;
+  margin: 8px 0;
+}
+
+.schedule-teacher {
+  font-size: 14px;
+  color: var(--gray-600);
+  margin: 8px 0;
+}
+
+.schedule-capacity {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.capacity-badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.capacity-badge.available {
+  background: var(--naver-green-light);
+  color: var(--naver-green);
+}
+
+.capacity-badge.full {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.availability {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.availability.full {
+  color: var(--error);
+}
+
+/* 예약 섹션 */
+.reservations-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reservations-section.full-width {
+  grid-column: 1 / -1;
+}
+
+/* 예약 리스트 */
+.reservations-list {
+  display: grid;
+  gap: 16px;
+}
+
+.reservation-card {
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.reservation-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--naver-green-light);
+}
+
+.reservation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.student-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.student-contact {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 예약 상세 정보 */
+.reservation-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-row .label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-row .value {
+  font-size: 14px;
+  color: var(--gray-900);
+  font-weight: 500;
+}
+
+.remaining-count {
+  font-size: 12px;
+  color: var(--naver-green);
+  font-weight: 600;
+}
+
+/* 예약 액션 */
+.reservation-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cancel-deadline-notice {
+  font-size: 11px;
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+/* 빈 상태 */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--gray-500);
+}
+
+.empty-state i {
+  font-size: 48px;
+  color: var(--gray-300);
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
 .date-selector input {
   padding: 12px 16px;
   border: 2px solid var(--gray-200);

@@ -9,6 +9,7 @@ function Reservations() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [newReservation, setNewReservation] = useState({
@@ -28,6 +29,30 @@ function Reservations() {
 
   const isParent = profile?.role === 'PARENT';
 
+  // 월별 예약 조회 (캘린더용) - 간소화
+  const { data: monthlyReservations = [] } = useQuery({
+    queryKey: ['monthlyReservations', currentMonth.getFullYear(), currentMonth.getMonth(), profile?.role],
+    queryFn: async () => {
+      if (!profile) return [];
+      
+      if (isParent) {
+        const response = await reservationAPI.getMyReservations();
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+        
+        return response.data.filter(r => {
+          const reservationDate = r.scheduleDate || r.schedule?.scheduleDate;
+          return reservationDate >= startDate && reservationDate <= endDate;
+        });
+      } else {
+        // 관리자/선생님: 선택된 날짜의 예약만 조회 (월별 조회는 생략)
+        return [];
+      }
+    },
+    enabled: !!profile,
+  });
   // 날짜별 예약 조회 (역할별 분기)
   const { data: reservations = [], isLoading: reservationsLoading } = useQuery({
     queryKey: ['reservations', selectedDate, profile?.role],
@@ -35,12 +60,15 @@ function Reservations() {
       if (isParent) {
         // 학부모는 본인 자녀 예약만 조회
         const response = await reservationAPI.getMyReservations();
-        return response.data.filter(r => 
-          new Date(r.schedule.scheduleDate).toISOString().split('T')[0] === selectedDate
-        );
+        return response.data.filter(r => {
+          const reservationDate = r.scheduleDate || r.schedule?.scheduleDate;
+          return reservationDate === selectedDate;
+        });
       } else {
         // 관리자/선생님은 전체 예약 조회
+        console.log('관리자 예약 조회 - 날짜:', selectedDate);
         const response = await reservationAPI.getByDate(selectedDate);
+        console.log('관리자 예약 조회 결과:', response.data);
         return response.data;
       }
     },
@@ -151,9 +179,101 @@ function Reservations() {
     setShowCreateModal(true);
   };
 
+  // 캘린더 렌더링
+  const renderCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    
+    const days = [];
+    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+    
+    // 요일 헤더
+    weekDays.forEach(day => {
+      days.push(
+        <div key={`header-${day}`} className="calendar-header-day">
+          {day}
+        </div>
+      );
+    });
+    
+    // 빈 칸 (이전 달)
+    for (let i = 0; i < firstDay; i++) {
+      const prevMonth = month === 0 ? 11 : month - 1;
+      const prevYear = month === 0 ? year - 1 : year;
+      const prevDaysInMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+      const prevDay = prevDaysInMonth - firstDay + i + 1;
+      const prevDate = new Date(prevYear, prevMonth, prevDay);
+      const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(prevDay).padStart(2, '0')}`;
+      
+      const hasReservations = monthlyReservations.some(reservation => 
+        (reservation.scheduleDate || reservation.schedule?.scheduleDate) === dateStr
+      );
+      
+      days.push(
+        <div
+          key={`prev-${i}`}
+          className={`calendar-day other-month ${dateStr === selectedDate ? 'selected' : ''} ${hasReservations ? 'has-reservations' : ''}`}
+          onClick={() => setSelectedDate(dateStr)}
+        >
+          <span className="day-number">{prevDay}</span>
+          {hasReservations && <div className="reservation-indicator"></div>}
+        </div>
+      );
+    }
+    
+    // 현재 달의 날짜들
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      const hasReservations = monthlyReservations.some(reservation => 
+        (reservation.scheduleDate || reservation.schedule?.scheduleDate) === dateStr
+      );
+      
+      days.push(
+        <div
+          key={day}
+          className={`calendar-day ${dateStr === selectedDate ? 'selected' : ''} ${hasReservations ? 'has-reservations' : ''}`}
+          onClick={() => setSelectedDate(dateStr)}
+        >
+          <span className="day-number">{day}</span>
+          {hasReservations && <div className="reservation-indicator"></div>}
+        </div>
+      );
+    }
+    
+    // 다음 달 날짜들 (6주 완성을 위해)
+    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+    const remainingCells = totalCells - (firstDay + daysInMonth);
+    
+    for (let day = 1; day <= remainingCells; day++) {
+      const nextMonth = month === 11 ? 0 : month + 1;
+      const nextYear = month === 11 ? year + 1 : year;
+      const dateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      const hasReservations = monthlyReservations.some(reservation => 
+        (reservation.scheduleDate || reservation.schedule?.scheduleDate) === dateStr
+      );
+      
+      days.push(
+        <div
+          key={`next-${day}`}
+          className={`calendar-day other-month ${dateStr === selectedDate ? 'selected' : ''} ${hasReservations ? 'has-reservations' : ''}`}
+          onClick={() => setSelectedDate(dateStr)}
+        >
+          <span className="day-number">{day}</span>
+          {hasReservations && <div className="reservation-indicator"></div>}
+        </div>
+      );
+    }
+
+    return days;
+  };
+
   // 취소 가능 여부 확인 (수업 전날 오후 6시까지)
   const canCancelReservation = (reservation) => {
-    const scheduleDate = new Date(reservation.schedule.scheduleDate);
+    const scheduleDate = new Date(reservation.schedule?.scheduleDate || reservation.scheduleDate);
     const cancelDeadline = new Date(scheduleDate);
     cancelDeadline.setDate(cancelDeadline.getDate() - 1);
     cancelDeadline.setHours(18, 0, 0, 0);
@@ -206,6 +326,42 @@ function Reservations() {
       </div>
 
       <div className="page-content">
+        <div className="reservations-layout">
+          {/* 캘린더 섹션 */}
+          <div className="calendar-section">
+            <div className="calendar-header">
+              <button 
+                className="nav-button"
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+              >
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              <h3>{currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월</h3>
+              <button 
+                className="nav-button"
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+              >
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            
+            <div className="calendar-grid">
+              {renderCalendar()}
+            </div>
+          </div>
+
+          {/* 선택된 날짜 정보 섹션 */}
+          <div className="selected-info-section">
+            <div className="selected-date-header">
+              <h2>{new Date(selectedDate).toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+              })} 예약 현황</h2>
+              <span className="count-badge">{reservations.length}건</span>
+            </div>
+
         <div className="reservations-content">
           {/* 관리자/선생님용: 스케줄 + 예약 관리 */}
           {!isParent && (
@@ -226,7 +382,7 @@ function Reservations() {
                   ) : (
                     schedules.map((schedule) => {
                       const reservationCount = reservations.filter(
-                        (r) => r.schedule.id === schedule.id && r.status !== 'CANCELLED'
+                        (r) => r.schedule?.id === schedule.id && r.status !== 'CANCELLED'
                       ).length;
                       const isAvailable = reservationCount < schedule.maxCapacity;
 
@@ -286,8 +442,8 @@ function Reservations() {
                   <div key={reservation.id} className="reservation-card">
                     <div className="reservation-header">
                       <div className="student-info">
-                        <h3>{reservation.student.name}</h3>
-                        <span className="student-contact">{reservation.student.phone}</span>
+                        <h3>{reservation.student?.name || reservation.studentName}</h3>
+                        <span className="student-contact">{reservation.student?.phone}</span>
                       </div>
                       {getStatusBadge(reservation.status)}
                     </div>
@@ -295,27 +451,27 @@ function Reservations() {
                     <div className="reservation-details">
                       <div className="detail-row">
                         <span className="label">수업:</span>
-                        <span className="value">{reservation.schedule.course.name}</span>
+                        <span className="value">{reservation.schedule?.course?.name || reservation.courseName}</span>
                       </div>
                       <div className="detail-row">
                         <span className="label">날짜:</span>
-                        <span className="value">{reservation.schedule.scheduleDate}</span>
+                        <span className="value">{reservation.schedule?.scheduleDate || reservation.scheduleDate}</span>
                       </div>
                       <div className="detail-row">
                         <span className="label">시간:</span>
                         <span className="value">
-                          {reservation.schedule.startTime} - {reservation.schedule.endTime}
+                          {reservation.schedule?.startTime || reservation.startTime} - {reservation.schedule?.endTime || reservation.endTime}
                         </span>
                       </div>
                       <div className="detail-row">
                         <span className="label">강사:</span>
-                        <span className="value">{reservation.schedule.teacher.name}</span>
+                        <span className="value">{reservation.schedule?.teacher?.name || '미배정'}</span>
                       </div>
                       <div className="detail-row">
                         <span className="label">수강권:</span>
                         <span className="value">
-                          {reservation.enrollment.course.name}
-                          {reservation.enrollment.type === 'COUNT_BASED' && (
+                          {reservation.enrollment?.course?.name || '수강권 정보 없음'}
+                          {reservation.enrollment?.type === 'COUNT_BASED' && (
                             <span className="remaining-count">
                               ({reservation.enrollment.remainingCount}회 남음)
                             </span>
@@ -473,6 +629,8 @@ function Reservations() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
