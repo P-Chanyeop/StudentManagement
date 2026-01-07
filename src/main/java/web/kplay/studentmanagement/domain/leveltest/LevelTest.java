@@ -60,6 +60,7 @@ public class LevelTest extends BaseEntity {
     private String memo;
 
     @Column
+    @Builder.Default
     private Boolean messageNotificationSent = false; // 문자 안내 발송 여부
 
     // 테스트 완료 처리 (null인 경우 기존 값 유지)

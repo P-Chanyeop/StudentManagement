@@ -36,9 +36,11 @@ public class CourseSchedule extends BaseEntity {
     private String dayOfWeek; // 요일
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer currentStudents = 0; // 현재 등록된 학생 수
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isCancelled = false; // 수업 취소 여부
 
     @Column(length = 200)

@@ -25,6 +25,7 @@ public class Holiday extends BaseEntity {
     private String name; // 공휴일 명칭 (예: 설날, 추석, 어린이날 등)
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isRecurring = false; // 매년 반복 여부
 
     @Column(length = 500)

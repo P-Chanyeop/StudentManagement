@@ -37,6 +37,7 @@ public class Course extends BaseEntity {
     private String level; // 수업 레벨
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(length = 10)

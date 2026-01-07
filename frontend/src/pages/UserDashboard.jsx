@@ -213,7 +213,14 @@ function UserDashboard() {
                     );
                   })}
                   {activeEnrollments.length > 5 && (
-                    <div className="show-more">
+                    <div 
+                      className="show-more"
+                      onClick={() => {
+                        alert('UserDashboard 더보기 클릭됨!');
+                        console.log('🔥 UserDashboard 더보기 버튼 클릭됨!');
+                      }}
+                      style={{ cursor: 'pointer', backgroundColor: '#007bff', color: 'white', padding: '10px' }}
+                    >
                       +{activeEnrollments.length - 5}개 더 보기
                     </div>
                   )}

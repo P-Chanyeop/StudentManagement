@@ -15,6 +15,12 @@ function Dashboard() {
   // 수강권 상세 모달 상태
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  
+  // 더보기 상태
+  const [showAllSchedules, setShowAllSchedules] = useState(false);
+  const [showAllEnrollments, setShowAllEnrollments] = useState(false);
+  const [showAllAttendance, setShowAllAttendance] = useState(false);
+  const [showAllReservations, setShowAllReservations] = useState(false);
 
   // 오늘 날짜
   const today = new Date().toISOString().split('T')[0];
@@ -290,7 +296,7 @@ function Dashboard() {
                 </div>
               ) : (
                 <div className="list">
-                  {todaySchedules.slice(0, 5).map((schedule) => (
+                  {(showAllSchedules ? todaySchedules : todaySchedules.slice(0, 5)).map((schedule) => (
                     <div key={schedule.id} className="list-item">
                       <div className="item-icon">
                         <i className="fas fa-book-open"></i>
@@ -309,9 +315,22 @@ function Dashboard() {
                     </div>
                   ))}
                   {todaySchedules.length > 5 && (
-                    <div className="show-more">
-                      +{todaySchedules.length - 5}개 더 보기
-                    </div>
+                    <button 
+                      type="button"
+                      className="show-more-btn"
+                      onClick={() => {
+                        setShowAllSchedules(!showAllSchedules);
+                      }}
+                      style={{
+                        transition: 'all 0.2s ease',
+                        transform: showAllSchedules ? 'scale(0.98)' : 'scale(1)'
+                      }}
+                    >
+                      {showAllSchedules ? 
+                        `▲ 접기` : 
+                        `▼ +${todaySchedules.length - 5}개 더 보기`
+                      }
+                    </button>
                   )}
                 </div>
               )}
@@ -358,7 +377,10 @@ function Dashboard() {
                     </div>
                   )}
                   <div className="list">
-                    {(isParent ? enrollments : enrollments.filter(e => e.isActive)).slice(0, 5).map((enrollment) => {
+                    {(showAllEnrollments ? 
+                      (isParent ? enrollments : enrollments.filter(e => e.isActive)) : 
+                      (isParent ? enrollments : enrollments.filter(e => e.isActive)).slice(0, 5)
+                    ).map((enrollment) => {
                     const daysLeft = Math.ceil(
                       (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
                     );
@@ -389,9 +411,22 @@ function Dashboard() {
                     );
                   })}
                   {(isParent ? enrollments.length : enrollmentStats.active) > 5 && (
-                    <div className="show-more">
-                      +{(isParent ? enrollments.length : enrollmentStats.active) - 5}개 더 보기
-                    </div>
+                    <button 
+                      type="button"
+                      className="show-more-btn"
+                      onClick={() => {
+                        setShowAllEnrollments(!showAllEnrollments);
+                      }}
+                      style={{
+                        transition: 'all 0.2s ease',
+                        transform: showAllEnrollments ? 'scale(0.98)' : 'scale(1)'
+                      }}
+                    >
+                      {showAllEnrollments ? 
+                        `▲ 접기` : 
+                        `▼ +${(isParent ? enrollments.length : enrollmentStats.active) - 5}개 더 보기`
+                      }
+                    </button>
                   )}
                 </div>
                 </>
@@ -416,7 +451,7 @@ function Dashboard() {
                 </div>
               ) : (
                 <div className="list">
-                  {todayAttendance.slice(0, 5).map((attendance) => (
+                  {(showAllAttendance ? todayAttendance : todayAttendance.slice(0, 5)).map((attendance) => (
                     <div key={attendance.id} className="list-item">
                       <div className="item-icon">
                         <i className="fas fa-user"></i>
@@ -436,9 +471,22 @@ function Dashboard() {
                     </div>
                   ))}
                   {todayAttendance.length > 5 && (
-                    <div className="show-more">
-                      +{todayAttendance.length - 5}명 더 보기
-                    </div>
+                    <button 
+                      type="button"
+                      className="show-more-btn"
+                      onClick={() => {
+                        setShowAllAttendance(!showAllAttendance);
+                      }}
+                      style={{
+                        transition: 'all 0.2s ease',
+                        transform: showAllAttendance ? 'scale(0.98)' : 'scale(1)'
+                      }}
+                    >
+                      {showAllAttendance ? 
+                        `▲ 접기` : 
+                        `▼ +${todayAttendance.length - 5}명 더 보기`
+                      }
+                    </button>
                   )}
                 </div>
               )}
@@ -462,7 +510,7 @@ function Dashboard() {
                 </div>
               ) : (
                 <div className="list">
-                  {todayReservations.slice(0, 5).map((reservation) => (
+                  {(showAllReservations ? todayReservations : todayReservations.slice(0, 5)).map((reservation) => (
                     <div key={reservation.id} className="list-item">
                       <div className="item-icon">
                         <i className="fas fa-bookmark"></i>
@@ -482,9 +530,22 @@ function Dashboard() {
                     </div>
                   ))}
                   {todayReservations.length > 5 && (
-                    <div className="show-more">
-                      +{todayReservations.length - 5}건 더 보기
-                    </div>
+                    <button 
+                      type="button"
+                      className="show-more-btn"
+                      onClick={() => {
+                        setShowAllReservations(!showAllReservations);
+                      }}
+                      style={{
+                        transition: 'all 0.2s ease',
+                        transform: showAllReservations ? 'scale(0.98)' : 'scale(1)'
+                      }}
+                    >
+                      {showAllReservations ? 
+                        `▲ 접기` : 
+                        `▼ +${todayReservations.length - 5}건 더 보기`
+                      }
+                    </button>
                   )}
                 </div>
               )}

@@ -27,6 +27,7 @@ public class SMSTemplate extends BaseEntity {
     private String content;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(length = 500)

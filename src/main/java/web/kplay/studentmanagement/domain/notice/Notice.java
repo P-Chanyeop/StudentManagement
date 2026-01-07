@@ -29,12 +29,15 @@ public class Notice extends BaseEntity {
     private User author;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isPinned = false; // 상단 고정 여부
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true; // 활성화 여부
 
     @Column
+    @Builder.Default
     private Integer viewCount = 0; // 조회수
 
     // 조회수 증가

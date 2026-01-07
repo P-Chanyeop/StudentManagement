@@ -35,21 +35,27 @@ public class ParentStudentRelation extends BaseEntity {
     private String relationship; // 관계 (부, 모, 조부모 등)
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true; // 활성화 여부
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean canViewAttendance = true; // 출석 조회 권한
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean canViewGrades = true; // 성적 조회 권한
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean canViewInvoices = true; // 청구서 조회 권한
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean canMakeReservations = true; // 예약 생성 권한
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean canReceiveMessages = true; // 문자 수신 권한
 
     // 관계 비활성화

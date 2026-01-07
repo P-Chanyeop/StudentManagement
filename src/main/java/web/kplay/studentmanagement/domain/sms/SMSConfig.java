@@ -19,6 +19,7 @@ public class SMSConfig extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private SMSProvider provider = SMSProvider.ALIGO;
 
     @Column(nullable = false, length = 200)
@@ -31,19 +32,24 @@ public class SMSConfig extends BaseEntity {
     private String senderNumber;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean testMode = false;
 
     // 자동 발송 설정
     @Column(nullable = false)
+    @Builder.Default
     private Boolean autoAttendanceReminder = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean autoEnrollmentExpiry = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean autoPaymentReminder = false;
 
     public enum SMSProvider {

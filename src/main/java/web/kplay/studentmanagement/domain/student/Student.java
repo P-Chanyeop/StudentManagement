@@ -60,6 +60,7 @@ public class Student extends BaseEntity {
     private String parentEmail;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
     // 학생 정보 업데이트

@@ -37,8 +37,34 @@ function ClassInfo() {
       if (!profile) return [];
       
       if (profile.role === 'PARENT') {
-        const response = await attendanceAPI.getMyChildSchedules(selectedDate);
-        return response.data;
+        // 학부모: 예약 정보만 가져오기 (출석 정보는 실제 수업 후에만 생성됨)
+        const reservationsResponse = await reservationAPI.getByDate(selectedDate);
+        const reservations = reservationsResponse.data || [];
+        
+        // 예약 정보를 표시용으로 변환
+        return reservations.map(reservation => ({
+          id: reservation.id,
+          type: 'reservation',
+          student: reservation.student || { 
+            name: reservation.studentName, 
+            studentName: reservation.studentName 
+          },
+          schedule: {
+            startTime: reservation.startTime,
+            endTime: reservation.endTime,
+            course: {
+              name: reservation.courseName,
+              courseName: reservation.courseName
+            }
+          },
+          status: reservation.status,
+          teacherName: reservation.schedule?.course?.teacher?.name || 
+                      reservation.schedule?.teacherName || '미배정',
+          checkInTime: null,
+          checkOutTime: null,
+          memo: reservation.memo,
+          reservationStatus: reservation.status
+        }));
       } else if (profile.role === 'TEACHER') {
         const response = await scheduleAPI.getMySchedules(selectedDate);
         return response.data;
@@ -186,6 +212,9 @@ function ClassInfo() {
       ABSENT: { text: '결석', color: '#FF0000' },
       EXCUSED: { text: '사유결석', color: '#0066FF' },
       EARLY_LEAVE: { text: '조퇴', color: '#9C27B0' },
+      PENDING: { text: '예약대기', color: '#6c757d' },
+      CONFIRMED: { text: '예약확정', color: '#28a745' },
+      CANCELLED: { text: '취소됨', color: '#dc3545' },
     };
     const { text, color } = statusMap[status] || { text: status, color: '#999' };
     return <span className="status-badge" style={{ backgroundColor: color }}>{text}</span>;
@@ -219,41 +248,41 @@ function ClassInfo() {
     if (isParent) {
       return (
         <div className="attendance-list">
-          {classData.map((attendance) => (
-            <div key={attendance.id} className="attendance-card">
+          {classData.map((item) => (
+            <div key={item.id} className="attendance-card">
               <div className="card-header">
                 <div className="student-course-info">
-                  <h3>{attendance.student?.name || attendance.student?.studentName || '학생'}</h3>
-                  <span className="course-name">{attendance.schedule?.course?.name || attendance.schedule?.course?.courseName || '수업'}</span>
+                  <h3>{item.student?.name || item.student?.studentName || '학생'}</h3>
+                  <span className="course-name">{item.schedule?.course?.name || item.schedule?.course?.courseName || '수업'}</span>
                 </div>
-                {attendance.status && getStatusBadge(attendance.status)}
+                {item.status && getStatusBadge(item.status)}
               </div>
               <div className="card-body">
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="label"><i className="fas fa-clock"></i>수업 시간</span>
-                    <span className="value">{formatTime(attendance.schedule?.startTime)} - {formatTime(attendance.schedule?.endTime)}</span>
+                    <span className="value">{formatTime(item.schedule?.startTime)} - {formatTime(item.schedule?.endTime)}</span>
                   </div>
                   <div className="info-item">
                     <span className="label"><i className="fas fa-user-tie"></i>담당 강사</span>
-                    <span className="value">{attendance.teacherName || '미배정'}</span>
+                    <span className="value">{item.teacherName || '미배정'}</span>
                   </div>
                   <div className="info-item">
                     <span className="label"><i className="fas fa-sign-in-alt"></i>출석 시간</span>
-                    <span className="value">{attendance.checkInTime ? formatTime(attendance.checkInTime) : '미출석'}</span>
+                    <span className="value">{item.checkInTime ? formatTime(item.checkInTime) : '미출석'}</span>
                   </div>
                   <div className="info-item">
                     <span className="label"><i className="fas fa-sign-out-alt"></i>퇴실 시간</span>
-                    <span className="value">{attendance.checkOutTime ? formatTime(attendance.checkOutTime) : '미퇴실'}</span>
+                    <span className="value">{item.checkOutTime ? formatTime(item.checkOutTime) : '미퇴실'}</span>
                   </div>
                 </div>
-                {attendance.memo && (
+                {item.memo && item.memo.trim() && (
                   <div className="notes-section">
                     <span className="notes-label">
                       <i className="fas fa-sticky-note"></i>
                       메모
                     </span>
-                    <p className="notes-content">{attendance.memo}</p>
+                    <p className="notes-content">{item.memo}</p>
                   </div>
                 )}
               </div>
