@@ -37,34 +37,43 @@ function ClassInfo() {
       if (!profile) return [];
       
       if (profile.role === 'PARENT') {
-        // 학부모: 예약 정보만 가져오기 (출석 정보는 실제 수업 후에만 생성됨)
-        const reservationsResponse = await reservationAPI.getByDate(selectedDate);
-        const reservations = reservationsResponse.data || [];
+        const today = new Date().toISOString().split('T')[0];
+        const isToday = selectedDate === today;
+        const isFuture = selectedDate > today;
         
-        // 예약 정보를 표시용으로 변환
-        return reservations.map(reservation => ({
-          id: reservation.id,
-          type: 'reservation',
-          student: reservation.student || { 
-            name: reservation.studentName, 
-            studentName: reservation.studentName 
-          },
-          schedule: {
-            startTime: reservation.startTime,
-            endTime: reservation.endTime,
-            course: {
-              name: reservation.courseName,
-              courseName: reservation.courseName
-            }
-          },
-          status: reservation.status,
-          teacherName: reservation.schedule?.course?.teacher?.name || 
-                      reservation.schedule?.teacherName || '미배정',
-          checkInTime: null,
-          checkOutTime: null,
-          memo: reservation.memo,
-          reservationStatus: reservation.status
-        }));
+        if (isFuture) {
+          // 미래 날짜: 예약 정보만 표시
+          const reservationsResponse = await reservationAPI.getByDate(selectedDate);
+          const reservations = reservationsResponse.data || [];
+          
+          return reservations.map(reservation => ({
+            id: `reservation-${reservation.id}`,
+            type: 'reservation',
+            student: reservation.student || { 
+              name: reservation.studentName, 
+              studentName: reservation.studentName 
+            },
+            schedule: {
+              id: reservation.scheduleId,
+              startTime: reservation.startTime,
+              endTime: reservation.endTime,
+              course: {
+                name: reservation.courseName,
+                courseName: reservation.courseName
+              }
+            },
+            status: reservation.status,
+            teacherName: '미배정',
+            checkInTime: null,
+            checkOutTime: null,
+            memo: reservation.memo,
+            reservationStatus: reservation.status
+          }));
+        } else {
+          // 과거/현재 날짜: 출석 정보만 표시
+          const attendancesResponse = await attendanceAPI.getMyChildSchedules(selectedDate);
+          return attendancesResponse.data || [];
+        }
       } else if (profile.role === 'TEACHER') {
         const response = await scheduleAPI.getMySchedules(selectedDate);
         return response.data;
