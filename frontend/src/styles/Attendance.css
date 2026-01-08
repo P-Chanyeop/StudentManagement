@@ -497,3 +497,66 @@
 .attendance-table th.sortable.active i {
   opacity: 1;
 }
+/* D/C, WR 입력 */
+.dc-input, .wr-input {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  background: white;
+  font-weight: 500;
+}
+
+.dc-input:focus, .wr-input:focus {
+  outline: none;
+  border-color: var(--naver-green);
+  box-shadow: 0 0 0 2px rgba(3, 199, 90, 0.1);
+}
+
+.dc-check, .wr-check {
+  text-align: center;
+  padding: 8px 4px;
+}
+/* 추가 수업 버튼들 */
+.additional-classes {
+  text-align: center;
+  padding: 8px 4px;
+}
+
+.class-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.class-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  background: white;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.class-btn:hover {
+  border-color: var(--naver-green);
+  background: rgba(3, 199, 90, 0.1);
+}
+
+.class-btn.active {
+  background: var(--naver-green);
+  color: white;
+  border-color: var(--naver-green);
+}
+
+.end-time {
+  font-size: 10px;
+  color: var(--gray-600);
+  margin-top: 2px;
+}

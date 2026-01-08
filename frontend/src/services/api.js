@@ -132,6 +132,18 @@ export const attendanceAPI = {
     api.delete(`/attendances/${attendanceId}`),
   updateReason: (attendanceId, reason) => 
     api.patch(`/attendances/${attendanceId}/reason`, { reason }),
+  updateDcCheck: (attendanceId, dcCheck) =>
+    api.put(`/attendances/${attendanceId}/dc-check`, { dcCheck }),
+  updateWrCheck: (attendanceId, wrCheck) =>
+    api.put(`/attendances/${attendanceId}/wr-check`, { wrCheck }),
+  toggleVocabularyClass: (attendanceId) =>
+    api.put(`/attendances/${attendanceId}/vocabulary`),
+  toggleGrammarClass: (attendanceId) =>
+    api.put(`/attendances/${attendanceId}/grammar`),
+  togglePhonicsClass: (attendanceId) =>
+    api.put(`/attendances/${attendanceId}/phonics`),
+  toggleSpeakingClass: (attendanceId) =>
+    api.put(`/attendances/${attendanceId}/speaking`),
 };
 
 // 예약 API

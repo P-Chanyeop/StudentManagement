@@ -42,6 +42,9 @@ public class Attendance extends BaseEntity {
     @Column
     private LocalTime expectedLeaveTime; // 예상 하원 시간
 
+    @Column
+    private LocalTime originalExpectedLeaveTime; // 원래 예정 하원 시간 (추가 수업 전)
+
     @Column(length = 500)
     private String memo;
 
@@ -52,10 +55,38 @@ public class Attendance extends BaseEntity {
     @Builder.Default
     private Boolean classCompleted = false; // 수업 완료 여부 (체크박스)
 
+    @Column(length = 50)
+    private String dcCheck; // D/C 체크
+
+    @Column(length = 50)
+    private String wrCheck; // WR 체크
+
+    // 추가 수업 필드들
+    @Column
+    @Builder.Default
+    private Boolean vocabularyClass = false; // V - Vocabulary 수업
+
+    @Column
+    @Builder.Default
+    private Boolean grammarClass = false; // G - Grammar 수업
+
+    @Column
+    @Builder.Default
+    private Boolean phonicsClass = false; // P - Phonics 수업
+
+    @Column
+    @Builder.Default
+    private Boolean speakingClass = false; // S - Speaking 수업
+
+    @Column
+    private LocalTime additionalClassEndTime; // 추가 수업 종료 시간
+
     // 출석 체크
     public void checkIn(LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         this.checkInTime = checkInTime;
-        this.expectedLeaveTime = expectedLeaveTime;
+        // 수업 종료시간을 기본 하원시간으로 설정
+        this.expectedLeaveTime = this.schedule.getEndTime();
+        this.originalExpectedLeaveTime = expectedLeaveTime; // 사용자가 입력한 예정시간 저장
 
         // 지각 여부 확인 (수업 시작 시간 10분 이후면 지각)
         LocalTime scheduleStartTime = schedule.getStartTime();
@@ -66,6 +97,9 @@ public class Attendance extends BaseEntity {
         } else {
             this.status = AttendanceStatus.PRESENT;
         }
+        
+        // 추가 수업 시간 계산 (체크인 후에 실행)
+        updateAdditionalClassEndTime();
     }
 
     // 하원 체크
@@ -121,5 +155,55 @@ public class Attendance extends BaseEntity {
     // 수업 완료 상태 토글
     public void toggleClassCompleted() {
         this.classCompleted = !this.classCompleted;
+    }
+
+    // D/C 체크 업데이트
+    public void updateDcCheck(String dcCheck) {
+        this.dcCheck = dcCheck;
+    }
+
+    // WR 체크 업데이트
+    public void updateWrCheck(String wrCheck) {
+        this.wrCheck = wrCheck;
+    }
+
+    // 추가 수업 토글 및 종료 시간 계산
+    public void toggleVocabularyClass() {
+        this.vocabularyClass = !this.vocabularyClass;
+        updateAdditionalClassEndTime();
+    }
+
+    public void toggleGrammarClass() {
+        this.grammarClass = !this.grammarClass;
+        updateAdditionalClassEndTime();
+    }
+
+    public void togglePhonicsClass() {
+        this.phonicsClass = !this.phonicsClass;
+        updateAdditionalClassEndTime();
+    }
+
+    public void toggleSpeakingClass() {
+        this.speakingClass = !this.speakingClass;
+        updateAdditionalClassEndTime();
+    }
+
+    // 추가 수업 종료 시간 자동 계산
+    private void updateAdditionalClassEndTime() {
+        if (hasAnyAdditionalClass() && this.schedule != null) {
+            // 추가 수업이 있으면 수업 종료시간 + 30분
+            LocalTime classEndTime = this.schedule.getEndTime();
+            this.expectedLeaveTime = classEndTime.plusMinutes(30);
+            this.additionalClassEndTime = this.expectedLeaveTime;
+        } else if (this.schedule != null) {
+            // 추가 수업이 없으면 수업 종료시간 그대로
+            this.expectedLeaveTime = this.schedule.getEndTime();
+            this.additionalClassEndTime = null;
+        }
+    }
+
+    // 추가 수업이 있는지 확인
+    public boolean hasAnyAdditionalClass() {
+        return vocabularyClass || grammarClass || phonicsClass || speakingClass;
     }
 }

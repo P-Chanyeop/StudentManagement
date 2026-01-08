@@ -247,4 +247,58 @@ public class AttendanceController {
         List<AttendanceResponse> responses = attendanceService.getMyChildMonthlySchedules(username, year, month);
         return ResponseEntity.ok(responses);
     }
+
+    // D/C 체크 업데이트
+    @PutMapping("/{id}/dc-check")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> updateDcCheck(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String dcCheck = request.get("dcCheck");
+        AttendanceResponse response = attendanceService.updateDcCheck(id, dcCheck);
+        return ResponseEntity.ok(response);
+    }
+
+    // WR 체크 업데이트
+    @PutMapping("/{id}/wr-check")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> updateWrCheck(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String wrCheck = request.get("wrCheck");
+        AttendanceResponse response = attendanceService.updateWrCheck(id, wrCheck);
+        return ResponseEntity.ok(response);
+    }
+
+    // V - Vocabulary 수업 토글
+    @PutMapping("/{id}/vocabulary")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> toggleVocabularyClass(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.toggleVocabularyClass(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // G - Grammar 수업 토글
+    @PutMapping("/{id}/grammar")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> toggleGrammarClass(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.toggleGrammarClass(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // P - Phonics 수업 토글
+    @PutMapping("/{id}/phonics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> togglePhonicsClass(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.togglePhonicsClass(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // S - Speaking 수업 토글
+    @PutMapping("/{id}/speaking")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> toggleSpeakingClass(@PathVariable Long id) {
+        AttendanceResponse response = attendanceService.toggleSpeakingClass(id);
+        return ResponseEntity.ok(response);
+    }
 }

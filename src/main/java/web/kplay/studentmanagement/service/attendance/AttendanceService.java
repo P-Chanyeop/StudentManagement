@@ -435,11 +435,19 @@ public class AttendanceService {
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())
                 .expectedLeaveTime(attendance.getExpectedLeaveTime())
+                .originalExpectedLeaveTime(attendance.getOriginalExpectedLeaveTime())
                 .memo(attendance.getMemo())
                 .reason(attendance.getReason())
                 .classCompleted(attendance.getClassCompleted())
                 .teacherName(attendance.getSchedule().getCourse().getTeacher() != null ? 
                     attendance.getSchedule().getCourse().getTeacher().getName() : null)
+                .dcCheck(attendance.getDcCheck())
+                .wrCheck(attendance.getWrCheck())
+                .vocabularyClass(attendance.getVocabularyClass())
+                .grammarClass(attendance.getGrammarClass())
+                .phonicsClass(attendance.getPhonicsClass())
+                .speakingClass(attendance.getSpeakingClass())
+                .additionalClassEndTime(attendance.getAdditionalClassEndTime())
                 .build();
     }
 
@@ -500,5 +508,93 @@ public class AttendanceService {
         return attendances.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * D/C 체크 업데이트
+     */
+    @Transactional
+    public AttendanceResponse updateDcCheck(Long attendanceId, String dcCheck) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.updateDcCheck(dcCheck);
+        log.info("D/C check updated: student={}, dcCheck={}", attendance.getStudent().getStudentName(), dcCheck);
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * WR 체크 업데이트
+     */
+    @Transactional
+    public AttendanceResponse updateWrCheck(Long attendanceId, String wrCheck) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.updateWrCheck(wrCheck);
+        log.info("WR check updated: student={}, wrCheck={}", attendance.getStudent().getStudentName(), wrCheck);
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * Vocabulary 수업 토글
+     */
+    @Transactional
+    public AttendanceResponse toggleVocabularyClass(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.toggleVocabularyClass();
+        log.info("Vocabulary class toggled: student={}, enabled={}", 
+                attendance.getStudent().getStudentName(), attendance.getVocabularyClass());
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * Grammar 수업 토글
+     */
+    @Transactional
+    public AttendanceResponse toggleGrammarClass(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.toggleGrammarClass();
+        log.info("Grammar class toggled: student={}, enabled={}", 
+                attendance.getStudent().getStudentName(), attendance.getGrammarClass());
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * Phonics 수업 토글
+     */
+    @Transactional
+    public AttendanceResponse togglePhonicsClass(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.togglePhonicsClass();
+        log.info("Phonics class toggled: student={}, enabled={}", 
+                attendance.getStudent().getStudentName(), attendance.getPhonicsClass());
+
+        return toResponse(attendance);
+    }
+
+    /**
+     * Speaking 수업 토글
+     */
+    @Transactional
+    public AttendanceResponse toggleSpeakingClass(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.toggleSpeakingClass();
+        log.info("Speaking class toggled: student={}, enabled={}", 
+                attendance.getStudent().getStudentName(), attendance.getSpeakingClass());
+
+        return toResponse(attendance);
     }
 }

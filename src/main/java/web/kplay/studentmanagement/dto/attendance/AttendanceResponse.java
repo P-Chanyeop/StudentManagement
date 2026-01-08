@@ -25,8 +25,18 @@ public class AttendanceResponse {
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
     private LocalTime expectedLeaveTime;
+    private LocalTime originalExpectedLeaveTime; // 원래 예정 하원 시간
     private String memo;
     private String reason;
     private Boolean classCompleted; // 수업 완료 여부
     private String teacherName; // 담당 강사명
+    private String dcCheck; // D/C 체크
+    private String wrCheck; // WR 체크
+    
+    // 추가 수업 필드들
+    private Boolean vocabularyClass; // V - Vocabulary 수업
+    private Boolean grammarClass; // G - Grammar 수업
+    private Boolean phonicsClass; // P - Phonics 수업
+    private Boolean speakingClass; // S - Speaking 수업
+    private LocalTime additionalClassEndTime; // 추가 수업 종료 시간
 }

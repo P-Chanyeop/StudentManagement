@@ -125,6 +125,52 @@ function Attendance() {
     }
   };
 
+  // D/C 체크 업데이트
+  const handleDcCheckUpdate = (attendanceId, dcCheck) => {
+    if (attendanceId) {
+      attendanceAPI.updateDcCheck(attendanceId, dcCheck)
+        .then(() => {
+          queryClient.invalidateQueries(['attendances', selectedDate]);
+        })
+        .catch(error => {
+          console.error('D/C 업데이트 오류:', error);
+        });
+    }
+  };
+
+  // WR 체크 업데이트
+  const handleWrCheckUpdate = (attendanceId, wrCheck) => {
+    if (attendanceId) {
+      attendanceAPI.updateWrCheck(attendanceId, wrCheck)
+        .then(() => {
+          queryClient.invalidateQueries(['attendances', selectedDate]);
+        })
+        .catch(error => {
+          console.error('WR 업데이트 오류:', error);
+        });
+    }
+  };
+
+  // 추가 수업 토글
+  const handleToggleClass = (attendanceId, classType) => {
+    if (attendanceId) {
+      const toggleFunction = {
+        vocabulary: attendanceAPI.toggleVocabularyClass,
+        grammar: attendanceAPI.toggleGrammarClass,
+        phonics: attendanceAPI.togglePhonicsClass,
+        speaking: attendanceAPI.toggleSpeakingClass
+      }[classType];
+
+      toggleFunction(attendanceId)
+        .then(() => {
+          queryClient.invalidateQueries(['attendances', selectedDate]);
+        })
+        .catch(error => {
+          console.error(`${classType} 수업 토글 오류:`, error);
+        });
+    }
+  };
+
   // 학생 검색 필터링
   const filteredStudents = allStudents ? allStudents
     .filter(student => student.name && student.name.includes(searchName))
@@ -248,6 +294,20 @@ function Attendance() {
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  // 현재 시간이 예정 시간보다 이전인지 확인
+  const isTimeBeforeExpected = (expectedTime) => {
+    if (!expectedTime) return false;
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const timeStr = expectedTime.toString();
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const expectedMinutes = hours * 60 + minutes;
+    
+    return currentTime < expectedMinutes;
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -409,6 +469,9 @@ function Attendance() {
                   )}
                 </th>
                 <th>수업 완료</th>
+                <th>D/C</th>
+                <th>WR</th>
+                <th>추가수업</th>
                 <th>비고</th>
                 <th>출석 체크</th>
               </tr>
@@ -441,7 +504,8 @@ function Attendance() {
                       formatTime(attendance.checkOutTime)
                     ) : attendance.checkInTime ? (
                       <span className="expected-time">
-                        {formatTime(attendance.expectedLeaveTime)} (예정)
+                        {formatTime(attendance.expectedLeaveTime)}
+                        {isTimeBeforeExpected(attendance.expectedLeaveTime) && ' (예정)'}
                       </span>
                     ) : (
                       '-'
@@ -458,6 +522,63 @@ function Attendance() {
                       />
                       <span className="checkmark"></span>
                     </label>
+                  </td>
+                  <td className="dc-check">
+                    <input
+                      type="text"
+                      placeholder="D/C"
+                      defaultValue={attendance.dcCheck || ''}
+                      className="dc-input"
+                      maxLength="10"
+                      onBlur={(e) => handleDcCheckUpdate(attendance.id, e.target.value)}
+                    />
+                  </td>
+                  <td className="wr-check">
+                    <input
+                      type="text"
+                      placeholder="WR"
+                      defaultValue={attendance.wrCheck || ''}
+                      className="wr-input"
+                      maxLength="10"
+                      onBlur={(e) => handleWrCheckUpdate(attendance.id, e.target.value)}
+                    />
+                  </td>
+                  <td className="additional-classes">
+                    <div className="class-buttons">
+                      <button
+                        className={`class-btn ${attendance.vocabularyClass ? 'active' : ''}`}
+                        onClick={() => handleToggleClass(attendance.id, 'vocabulary')}
+                        title="Vocabulary Class"
+                      >
+                        V
+                      </button>
+                      <button
+                        className={`class-btn ${attendance.grammarClass ? 'active' : ''}`}
+                        onClick={() => handleToggleClass(attendance.id, 'grammar')}
+                        title="Grammar Class"
+                      >
+                        G
+                      </button>
+                      <button
+                        className={`class-btn ${attendance.phonicsClass ? 'active' : ''}`}
+                        onClick={() => handleToggleClass(attendance.id, 'phonics')}
+                        title="Phonics Class"
+                      >
+                        P
+                      </button>
+                      <button
+                        className={`class-btn ${attendance.speakingClass ? 'active' : ''}`}
+                        onClick={() => handleToggleClass(attendance.id, 'speaking')}
+                        title="Speaking Class"
+                      >
+                        S
+                      </button>
+                    </div>
+                    {attendance.additionalClassEndTime && (
+                      <div className="end-time">
+                        종료: {attendance.additionalClassEndTime}
+                      </div>
+                    )}
                   </td>
                   <td className="notes">
                     <input

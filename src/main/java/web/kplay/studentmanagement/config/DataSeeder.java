@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.attendance.Attendance;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
 import web.kplay.studentmanagement.domain.course.Course;
@@ -20,6 +21,8 @@ import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.repository.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -389,8 +392,8 @@ public class DataSeeder {
                 }
             }
 
-            // 6. 테스트용 출석 데이터 생성 (비활성화)
-            // createAttendanceRecords();
+            // 6. 테스트용 출석 데이터 생성
+            createAttendanceRecords();
 
             // 테스트 공지사항 데이터 생성
             if (noticeRepository.count() == 0) {
@@ -601,39 +604,52 @@ public class DataSeeder {
     /**
      * 테스트용 출석 데이터 생성
      */
+    @Transactional
     private void createAttendanceRecords() {
-        // 학부모 계정과 연결된 학생 찾기
-        User parent1 = userRepository.findByUsername("parent1").orElse(null);
-        if (parent1 == null) return;
-
-        List<Student> parentStudents = studentRepository.findByParentPhoneAndIsActive(parent1.getPhoneNumber(), true);
-        if (parentStudents.isEmpty()) return;
-
-        // 오늘과 어제 날짜의 스케줄 찾기
-        LocalDate today = LocalDate.now();
-        LocalDate yesterday = today.minusDays(1);
-        
-        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDateBetween(yesterday, today);
-        
-        for (Student student : parentStudents) {
-            for (CourseSchedule schedule : schedules) {
-                // 출석 레코드가 없으면 생성 (간단한 체크)
-                try {
+        try {
+            // 오늘 날짜의 스케줄 찾기
+            LocalDate today = LocalDate.now();
+            List<CourseSchedule> todaySchedules = scheduleRepository.findByScheduleDate(today);
+            
+            if (todaySchedules.isEmpty()) {
+                log.info("No schedules found for today: {}", today);
+                return;
+            }
+            
+            log.info("Creating attendance records for {} schedules on {}", todaySchedules.size(), today);
+            
+            for (CourseSchedule schedule : todaySchedules) {
+                // 해당 수업에 등록된 모든 활성 학생들 찾기
+                List<Enrollment> enrollments = enrollmentRepository.findByCourseAndIsActiveTrue(schedule.getCourse());
+                
+                for (Enrollment enrollment : enrollments) {
+                    Student student = enrollment.getStudent();
+                    
+                    // 간단하게 모든 학생에게 출석 기록 생성
                     Attendance attendance = Attendance.builder()
                             .student(student)
                             .schedule(schedule)
                             .status(AttendanceStatus.PRESENT)
+                            .checkInTime(LocalDateTime.now().withHour(14).withMinute(0).withSecond(0))
+                            .expectedLeaveTime(schedule.getEndTime()) // 수업 종료시간(16:00)
+                            .originalExpectedLeaveTime(LocalTime.of(16, 30))
+                            .classCompleted(false)
+                            .dcCheck("KIM")
+                            .wrCheck("LEE")
+                            .vocabularyClass(false)
+                            .grammarClass(false)
+                            .phonicsClass(false)
+                            .speakingClass(false)
                             .build();
                     
                     attendanceRepository.save(attendance);
-                    log.info("✓ Test attendance created: student={}, date={}", 
-                            student.getStudentName(), schedule.getScheduleDate());
-                } catch (Exception e) {
-                    // 이미 존재하면 무시
-                    log.debug("Attendance already exists for student={}, schedule={}", 
-                            student.getStudentName(), schedule.getId());
+                    log.info("✓ Test attendance created: student={}, course={}, date={}", 
+                            student.getStudentName(), schedule.getCourse().getCourseName(), schedule.getScheduleDate());
                 }
             }
+        } catch (Exception e) {
+            log.error("Failed to create attendance records: {}", e.getMessage());
+            // 오류가 발생해도 서버는 계속 실행되도록 함
         }
     }
 }
