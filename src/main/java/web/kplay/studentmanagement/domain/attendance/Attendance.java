@@ -113,19 +113,7 @@ public class Attendance extends BaseEntity {
         this.reason = reason;
     }
 
-    // 자동 결석 처리 (수업 시작 20분 후)
-    public void markAsAbsentIfLate() {
-        if (this.checkInTime == null) {
-            LocalTime scheduleStartTime = schedule.getStartTime();
-            LocalTime cutoffTime = scheduleStartTime.plusMinutes(20);
-            LocalTime currentTime = LocalDateTime.now().toLocalTime();
-            
-            if (currentTime.isAfter(cutoffTime)) {
-                this.status = AttendanceStatus.ABSENT;
-                this.reason = "20분 경과로 인한 자동 결석 처리";
-            }
-        }
-    }
+
 
     // 결석 여부 확인
     public boolean isAbsent() {

@@ -23,8 +23,8 @@ import web.kplay.studentmanagement.repository.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 개발 환경용 초기 데이터 시더
@@ -115,23 +115,7 @@ public class DataSeeder {
 
             // 테스트 학생 데이터 생성
             if (studentRepository.count() == 0) {
-                // 학생 데이터는 User 없이 생성하므로 주석 처리
-                /*
-                // 학생1용 User 계정
-                User studentUser1 = User.builder()
-                        .username("student1")
-                        .password(passwordEncoder.encode("student123"))
-                        .name("홍길동")
-                        .email("student1@kplay.web")
-                        .phoneNumber("010-5678-9012")
-                        .role(UserRole.PARENT) // STUDENT 제거됨
-                        .isActive(true)
-                        .build();
-                studentUser1 = userRepository.save(studentUser1);
-                */
-
                 Student student1 = Student.builder()
-                        // .user(studentUser1) // 제거
                         .studentName("홍길동")
                         .birthDate(LocalDate.of(2010, 3, 15))
                         .gender("FEMALE")
@@ -147,20 +131,7 @@ public class DataSeeder {
                         .build();
                 studentRepository.save(student1);
 
-                // 학생2용 User 계정
-//                User studentUser2 = User.builder()
-//                        .username("student2")
-//                        .password(passwordEncoder.encode("student123"))
-//                        .name("김민수")
-//                        .email("student2@kplay.web")
-//                        .phoneNumber("010-6789-0123")
-//                        .role(UserRole.STUDENT)
-//                        .isActive(true)
-//                        .build();
-//                studentUser2 = userRepository.save(studentUser2);
-
                 Student student2 = Student.builder()
-//                        .user(studentUser2)
                         .studentName("김민수")
                         .birthDate(LocalDate.of(2011, 7, 20))
                         .gender("MALE")
@@ -176,20 +147,7 @@ public class DataSeeder {
                         .build();
                 studentRepository.save(student2);
 
-                // 학생3용 User 계정
-//                User studentUser3 = User.builder()
-//                        .username("student3")
-//                        .password(passwordEncoder.encode("student123"))
-//                        .name("이지은")
-//                        .email("student3@kplay.web")
-//                        .phoneNumber("010-7890-1234")
-//                        .role(UserRole.STUDENT)
-//                        .isActive(true)
-//                        .build();
-//                studentUser3 = userRepository.save(studentUser3);
-
                 Student student3 = Student.builder()
-//                        .user(studentUser3)
                         .studentName("이지은")
                         .birthDate(LocalDate.of(2012, 11, 5))
                         .gender("FEMALE")
@@ -287,10 +245,15 @@ public class DataSeeder {
                         .build();
                 scheduleRepository.save(todaySchedule);
 
-                // 학생들에게 수강권 할당 (12주 기간 + 24회 사용 가능)
+                // 학생들에게 수강권 할당 (12주 기간 + 24회 사용 가능) - ID 순으로 정렬
                 List<Student> students = studentRepository.findAll();
+                students.sort((s1, s2) -> s1.getId().compareTo(s2.getId())); // ID 순 정렬
+                log.info("Found {} students for enrollment", students.size());
+                
                 for (int i = 0; i < Math.min(5, students.size()); i++) {
                     Student student = students.get(i);
+                    log.info("Enrolling student {}: {} (ID: {})", i+1, student.getStudentName(), student.getId());
+                    
                     LocalDate startDate = LocalDate.now();
                     // 영업일 기준 12주 (60영업일) 계산
                     LocalDate endDate = holidayService.calculateEndDate(startDate, 60);
@@ -306,6 +269,7 @@ public class DataSeeder {
                             .isActive(true)
                             .build();
                     enrollmentRepository.save(enrollment);
+                    log.info("✓ Enrollment created for student: {}", student.getStudentName());
                 }
 
                 log.info("✓ Test courses and schedules created (Today 14:00-16:00)");
@@ -392,7 +356,7 @@ public class DataSeeder {
                 }
             }
 
-            // 6. 테스트용 출석 데이터 생성
+            // 6. 테스트용 출석 데이터 생성 (항상 실행)
             createAttendanceRecords();
 
             // 테스트 공지사항 데이터 생성
@@ -559,7 +523,7 @@ public class DataSeeder {
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusDays(30);
 
-        // 운영 시간: 09:00 ~ 18:00 (1시간 간격)
+        // 운영 시간: 09:00 ~ 20:00 (1시간 간격)
         LocalTime[] timeSlots = {
                 LocalTime.of(9, 0),
                 LocalTime.of(10, 0),
@@ -569,7 +533,10 @@ public class DataSeeder {
                 LocalTime.of(14, 0),
                 LocalTime.of(15, 0),
                 LocalTime.of(16, 0),
-                LocalTime.of(17, 0)
+                LocalTime.of(17, 0),
+                LocalTime.of(18, 0),
+                LocalTime.of(19, 0),
+                LocalTime.of(20, 0)
         };
 
         int scheduleCount = 0;
@@ -607,6 +574,11 @@ public class DataSeeder {
     @Transactional
     private void createAttendanceRecords() {
         try {
+            log.info("=== Creating test attendance records ===");
+            
+            // 기존 출석 데이터 삭제
+            attendanceRepository.deleteAll();
+            
             // 오늘 날짜의 스케줄 찾기
             LocalDate today = LocalDate.now();
             List<CourseSchedule> todaySchedules = scheduleRepository.findByScheduleDate(today);
@@ -618,24 +590,37 @@ public class DataSeeder {
             
             log.info("Creating attendance records for {} schedules on {}", todaySchedules.size(), today);
             
+            // 모든 스케줄의 등록 학생들을 출석 상태로 생성
             for (CourseSchedule schedule : todaySchedules) {
-                // 해당 수업에 등록된 모든 활성 학생들 찾기
                 List<Enrollment> enrollments = enrollmentRepository.findByCourseAndIsActiveTrue(schedule.getCourse());
+                log.info("Found {} enrollments for course: {}", enrollments.size(), schedule.getCourse().getCourseName());
                 
                 for (Enrollment enrollment : enrollments) {
                     Student student = enrollment.getStudent();
                     
-                    // 간단하게 모든 학생에게 출석 기록 생성
+                    // 중복 체크: 이미 출석 데이터가 있으면 건너뛰기
+                    Optional<Attendance> existingAttendance = attendanceRepository
+                            .findByStudentIdAndScheduleId(student.getId(), schedule.getId());
+                    
+                    if (existingAttendance.isPresent()) {
+                        log.info("Attendance already exists for student: {}, skipping", student.getStudentName());
+                        continue;
+                    }
+                    
+                    // 모든 학생을 출석 상태로 강제 생성
                     Attendance attendance = Attendance.builder()
                             .student(student)
                             .schedule(schedule)
-                            .status(AttendanceStatus.PRESENT)
-                            .checkInTime(LocalDateTime.now().withHour(14).withMinute(0).withSecond(0))
-                            .expectedLeaveTime(schedule.getEndTime()) // 수업 종료시간(16:00)
-                            .originalExpectedLeaveTime(LocalTime.of(16, 30))
+                            .status(AttendanceStatus.PRESENT)  // 강제로 출석
+                            .checkInTime(LocalDateTime.of(today, LocalTime.of(14, 0)))  // 확실히 14:00 출석
+                            .checkOutTime(null)
+                            .expectedLeaveTime(schedule.getEndTime())
+                            .originalExpectedLeaveTime(schedule.getEndTime())
+                            .memo("")
+                            .reason(null)
                             .classCompleted(false)
-                            .dcCheck("KIM")
-                            .wrCheck("LEE")
+                            .dcCheck("")
+                            .wrCheck("")
                             .vocabularyClass(false)
                             .grammarClass(false)
                             .phonicsClass(false)
@@ -643,13 +628,15 @@ public class DataSeeder {
                             .build();
                     
                     attendanceRepository.save(attendance);
-                    log.info("✓ Test attendance created: student={}, course={}, date={}", 
-                            student.getStudentName(), schedule.getCourse().getCourseName(), schedule.getScheduleDate());
+                    log.info("✓ PRESENT attendance created for: {} (checkInTime: {})", 
+                            student.getStudentName(), attendance.getCheckInTime());
                 }
             }
+            
+            log.info("=== Test attendance records creation completed ===");
+            
         } catch (Exception e) {
-            log.error("Failed to create attendance records: {}", e.getMessage());
-            // 오류가 발생해도 서버는 계속 실행되도록 함
+            log.error("Failed to create attendance records: {}", e.getMessage(), e);
         }
     }
 }

@@ -207,9 +207,8 @@ function Attendance() {
     }
   };
 
-  // 출석 목록 정렬 (결석자 제외 및 예약시간별 정렬)
+  // 출석 목록 정렬 (예약시간별 정렬)
   const sortedAttendances = attendances ? [...attendances]
-    .filter(attendance => attendance.status !== 'ABSENT') // 결석자 제외
     .sort((a, b) => {
       let result = 0;
       
@@ -396,7 +395,7 @@ function Attendance() {
                 </span>
               </div>
               <div className="stat">
-                <span className="stat-label">미출석</span>
+                <span className="stat-label">결석</span>
                 <span className="stat-value absent">
                   {attendances?.filter(a => !a.checkInTime).length || 0}명
                 </span>
@@ -486,7 +485,7 @@ function Attendance() {
                     <div className="student-info">
                       <span className="name">{attendance.studentName}</span>
                       <span className="status-badge">
-                        {attendance.checkInTime ? '출석' : '미출석'}
+                        {attendance.checkInTime ? '출석' : '결석'}
                       </span>
                     </div>
                   </td>

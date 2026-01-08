@@ -59,8 +59,24 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     Long countByStudentIdAndCheckInTimeBetween(Long studentId, LocalDateTime start, LocalDateTime end);
 
-    // 학생과 스케줄로 출석 데이터 조회
-    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId")
+    /**
+     * 학생 ID와 스케줄 ID로 모든 출석 데이터를 조회합니다 (중복 방지용)
+     * 
+     * @param studentId 학생 ID
+     * @param scheduleId 스케줄 ID
+     * @return 출석 데이터 목록 (최신순 정렬)
+     */
+    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId ORDER BY a.id DESC")
+    List<Attendance> findAllByStudentIdAndScheduleId(@Param("studentId") Long studentId, @Param("scheduleId") Long scheduleId);
+    
+    /**
+     * 학생 ID와 스케줄 ID로 첫 번째 출석 데이터를 조회합니다
+     * 
+     * @param studentId 학생 ID
+     * @param scheduleId 스케줄 ID
+     * @return 출석 데이터 (Optional, 최신 데이터 우선)
+     */
+    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId ORDER BY a.id DESC LIMIT 1")
     java.util.Optional<Attendance> findByStudentIdAndScheduleId(@Param("studentId") Long studentId, @Param("scheduleId") Long scheduleId);
 
     /**
