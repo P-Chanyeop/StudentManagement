@@ -232,8 +232,8 @@ function ClassInfo() {
   // 페이지 제목 (역할별)
   const getPageTitle = () => {
     if (isParent) return '자녀 수업 정보';
-    if (isTeacher) return '클래스 관리';
-    return '클래스 관리';
+    if (isTeacher) return '수업 스케줄';
+    return '수업 스케줄';
   };
 
   const getPageSubtitle = () => {
