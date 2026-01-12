@@ -24,6 +24,7 @@ function Students() {
     parentEmail: '',
     englishLevel: '1.0',
     memo: '',
+    selectedCourseId: null,
   });
 
   // 생년월일 선택을 위한 분리된 상태
@@ -127,6 +128,7 @@ function Students() {
         parentEmail: '',
         englishLevel: '1.0',
         memo: '',
+        selectedCourseId: null,
       });
       alert('학생이 등록되었습니다.');
     },
@@ -161,13 +163,53 @@ function Students() {
     },
   });
 
-  const handleCreateStudent = () => {
+  const handleCreateStudent = async () => {
     if (!newStudent.studentName || !newStudent.studentPhone || !newStudent.parentName || !newStudent.parentPhone) {
       alert('필수 항목을 모두 입력해주세요. (학생명, 학생 연락처, 학부모명, 학부모 연락처)');
       return;
     }
 
-    createMutation.mutate(newStudent);
+    try {
+      // 학생 생성
+      const response = await studentAPI.create(newStudent);
+      const createdStudent = response.data;
+
+      // 반이 선택되었으면 반 등록
+      if (newStudent.selectedCourseId) {
+        await enrollmentAPI.create({
+          studentId: createdStudent.id,
+          courseId: newStudent.selectedCourseId,
+          startDate: new Date().toISOString().split('T')[0],
+          endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          totalCount: 24,
+          usedCount: 0,
+          remainingCount: 24,
+          isActive: true
+        });
+      }
+
+      queryClient.invalidateQueries(['students', profile?.role]);
+      setShowCreateModal(false);
+      setNewStudent({
+        studentName: '',
+        studentPhone: '',
+        birthDate: '',
+        gender: 'MALE',
+        address: '',
+        school: '',
+        grade: '1',
+        parentName: '',
+        parentPhone: '',
+        parentEmail: '',
+        englishLevel: '1.0',
+        memo: '',
+        selectedCourseId: null,
+      });
+      setBirthDateComponents({ year: '', month: '', day: '' });
+      alert('학생이 등록되었습니다.');
+    } catch (error) {
+      alert(`등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
   };
 
   const handleUpdateStudent = () => {
@@ -480,6 +522,31 @@ function Students() {
                     onChange={(e) => setNewStudent({ ...newStudent, englishLevel: e.target.value })}
                     placeholder="1.0"
                   />
+                </div>
+
+                <div className="form-group">
+                  <label>반 선택</label>
+                  <div className="class-list">
+                    {courses.map((course) => (
+                      <div key={course.id} className="class-item">
+                        <input
+                          type="checkbox"
+                          id={`new-course-${course.id}`}
+                          checked={newStudent.selectedCourseId === course.id}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewStudent({ ...newStudent, selectedCourseId: course.id });
+                            } else {
+                              setNewStudent({ ...newStudent, selectedCourseId: null });
+                            }
+                          }}
+                        />
+                        <label htmlFor={`new-course-${course.id}`}>
+                          {course.courseName}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -899,7 +966,7 @@ function Students() {
                       {selectedStudent.enrollments && selectedStudent.enrollments.length > 0 
                         ? selectedStudent.enrollments
                             .filter(enrollment => enrollment.isActive)
-                            .map(enrollment => enrollment.course?.level || enrollment.course?.courseName)
+                            .map(enrollment => enrollment.courseName)
                             .join(', ') || '-'
                         : '-'
                       }
