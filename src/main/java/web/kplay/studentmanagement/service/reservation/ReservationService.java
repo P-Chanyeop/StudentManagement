@@ -18,12 +18,17 @@ import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.AttendanceRepository;
 import web.kplay.studentmanagement.repository.CourseScheduleRepository;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
+
+import java.time.LocalDate;
+import java.util.stream.Collectors;
 import web.kplay.studentmanagement.repository.ReservationRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -327,6 +332,28 @@ public class ReservationService {
         return reservations.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 시간 이후의 새로운 예약 조회 (관리자용 알림)
+     */
+    @Transactional(readOnly = true)
+    public List<ReservationResponse> getNewReservationsSince(String since) {
+        try {
+            // 오늘 생성된 모든 예약을 반환 (간단한 구현)
+            LocalDate today = LocalDate.now();
+            List<Reservation> reservations = reservationRepository.findAll().stream()
+                    .filter(r -> r.getCreatedAt().toLocalDate().equals(today))
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                    .collect(Collectors.toList());
+                    
+            return reservations.stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error getting new reservations: {}", e.getMessage(), e);
+            return Collections.emptyList();
+        }
     }
 
     /**

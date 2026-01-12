@@ -8,6 +8,7 @@ import web.kplay.studentmanagement.domain.reservation.Reservation;
 import web.kplay.studentmanagement.domain.reservation.ReservationStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -78,4 +79,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
            "WHERE r.student.id IN :studentIds " +
            "ORDER BY s.scheduleDate DESC, s.startTime DESC")
     List<Reservation> findByStudentIdInOrderByScheduleScheduleDateDescScheduleStartTimeDesc(@Param("studentIds") List<Long> studentIds);
+
+    /**
+     * 특정 시간 이후 생성된 예약 조회 (관리자 알림용)
+     * @param since 기준 시간
+     * @return List<Reservation> 해당 시간 이후 생성된 예약 목록 (최신순)
+     */
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH r.student st " +
+           "WHERE r.createdAt > :since " +
+           "ORDER BY r.createdAt DESC")
+    List<Reservation> findByCreatedAtAfterOrderByCreatedAtDesc(@Param("since") LocalDateTime since);
 }

@@ -120,6 +120,14 @@ public class ReservationController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/new")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReservationResponse>> getNewReservations(
+            @RequestParam String since) {
+        List<ReservationResponse> responses = reservationService.getNewReservationsSince(since);
+        return ResponseEntity.ok(responses);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {

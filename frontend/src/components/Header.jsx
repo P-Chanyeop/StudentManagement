@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link } from 'react-router-dom';
-import { authAPI, enrollmentAPI } from '../services/api';
+import { authAPI, enrollmentAPI, reservationAPI } from '../services/api';
 import '../styles/Header.css';
 
 function Header() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEnrollments, setShowEnrollments] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [lastNotificationCheck, setLastNotificationCheck] = useState(
+    localStorage.getItem('lastNotificationCheck') || new Date().toISOString()
+  );
   const location = useLocation();
 
   // 사용자 프로필 조회
@@ -19,7 +23,57 @@ function Header() {
     staleTime: 5 * 60 * 1000, // 5분 동안 캐시 유지
   });
 
-  // 사용자 수강권 조회 (학생/학부모만)
+  // 새로운 예약 조회 (관리자만)
+  const { data: newReservations = [] } = useQuery({
+    queryKey: ['newReservations', lastNotificationCheck],
+    queryFn: async () => {
+      try {
+        console.log('알림 체크 시간:', lastNotificationCheck);
+        const response = await reservationAPI.getNewReservations(lastNotificationCheck);
+        console.log('새 예약 응답:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('새 예약 조회 실패:', error);
+        return [];
+      }
+    },
+    enabled: profile && profile.role === 'ADMIN',
+    refetchInterval: 30000, // 30초마다 새로고침
+    staleTime: 0,
+    retry: false, // 에러 시 재시도 하지 않음
+  });
+
+  // 브라우저 알림 권한 요청
+  useEffect(() => {
+    if (profile?.role === 'ADMIN' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+  }, [profile]);
+
+  // 새 예약 알림
+  useEffect(() => {
+    if (profile?.role === 'ADMIN' && newReservations.length > 0) {
+      // 브라우저 푸시 알림
+      if (Notification.permission === 'granted') {
+        const notification = new Notification('새로운 예약이 있습니다!', {
+          body: `${newReservations.length}건의 새로운 예약이 들어왔습니다.`,
+          icon: '/favicon.ico',
+          tag: 'new-reservation'
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          window.location.href = '/reservations';
+          notification.close();
+        };
+
+        // 5초 후 자동 닫기
+        setTimeout(() => notification.close(), 5000);
+      }
+    }
+  }, [newReservations, profile]);
   const { data: myEnrollments = [] } = useQuery({
     queryKey: ['myEnrollments'],
     queryFn: async () => {
@@ -32,19 +86,20 @@ function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.user-menu')) {
+      if (!event.target.closest('.user-menu') && !event.target.closest('.notification-menu')) {
         setShowDropdown(false);
+        setShowNotifications(false);
       }
     };
 
-    if (showDropdown) {
+    if (showDropdown || showNotifications) {
       document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [showDropdown]);
+  }, [showDropdown, showNotifications]);
 
   if (!profile) {
     return null;
@@ -119,6 +174,66 @@ function Header() {
 
         {/* 사용자 섹션 */}
         <div className="user-section">
+          {/* 알림 아이콘 (관리자만) */}
+          {profile?.role === 'ADMIN' && (
+            <div className="notification-menu">
+              <button
+                className="notification-button"
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowDropdown(false);
+                  // 알림 확인 시간 업데이트
+                  const now = new Date().toISOString();
+                  setLastNotificationCheck(now);
+                  localStorage.setItem('lastNotificationCheck', now);
+                }}
+              >
+                <i className="fas fa-bell"></i>
+                {newReservations.length > 0 && (
+                  <span className="notification-badge">{newReservations.length}</span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="notification-dropdown">
+                  <div className="notification-header">
+                    <h4>새로운 알림</h4>
+                  </div>
+                  <div className="notification-list">
+                    {newReservations.length === 0 ? (
+                      <div className="no-notifications">
+                        새로운 알림이 없습니다.
+                      </div>
+                    ) : (
+                      newReservations.map((reservation) => (
+                        <div key={reservation.id} className="notification-item">
+                          <div className="notification-icon">
+                            <i className="fas fa-calendar-plus"></i>
+                          </div>
+                          <div className="notification-content">
+                            <div className="notification-title">새로운 예약</div>
+                            <div className="notification-text">
+                              {reservation.studentName}님이 {reservation.courseName} 수업을 예약했습니다.
+                            </div>
+                            <div className="notification-time">
+                              {new Date(reservation.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {newReservations.length > 0 && (
+                    <div className="notification-footer">
+                      <Link to="/reservations" onClick={() => setShowNotifications(false)}>
+                        모든 예약 보기
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {/* 사용자 메뉴 */}
           <div className="user-menu">
             <button

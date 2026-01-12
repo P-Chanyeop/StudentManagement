@@ -53,7 +53,22 @@ function Sidebar() {
 
   // 역할별 메뉴 아이템 정의
   const getMenuItems = () => {
-    const adminTeacherMenus = [
+    const adminMenus = [
+      { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
+      { path: '/students', icon: <i className="fas fa-users"></i>, label: '학생 관리' },
+      { path: '/courses', icon: <i className="fas fa-chalkboard-teacher"></i>, label: '반 관리' },
+      { path: '/class-info', icon: <i className="fas fa-calendar-check"></i>, label: '수업 스케줄' },
+      { path: '/attendance', icon: <i className="fas fa-check-circle"></i>, label: '출석 체크' },
+      { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 관리' },
+      { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '수업 예약' },
+      { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
+      { path: '/enrollment-adjustment', icon: <i className="fas fa-edit"></i>, label: '횟수 조정' },
+      { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
+      { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
+      { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
+    ];
+
+    const teacherMenus = [
       { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
       { path: '/students', icon: <i className="fas fa-users"></i>, label: '학생 관리' },
       { path: '/courses', icon: <i className="fas fa-chalkboard-teacher"></i>, label: '반 관리' },
@@ -82,8 +97,12 @@ function Sidebar() {
 
     if (profile?.role === 'PARENT') {
       return studentParentMenus;
+    } else if (profile?.role === 'TEACHER') {
+      return teacherMenus;
+    } else if (profile?.role === 'ADMIN') {
+      return adminMenus;
     }
-    return adminTeacherMenus;
+    return adminMenus;
   };
 
   const menuItems = getMenuItems();
