@@ -247,25 +247,27 @@ function ConsultationReservation() {
       <div className="page-content">
         <div className="reservation-content">
           <form onSubmit={handleSubmit} className="reservation-form">
-          {/* 상담 유형 선택 */}
-          <div className="form-section">
-            <h2>상담 유형</h2>
-            <div className="form-group">
-              <label htmlFor="consultationType">상담 유형 *</label>
-              <select
-                id="consultationType"
-                name="consultationType"
-                value={formData.consultationType}
-                onChange={handleInputChange}
-                className={errors.consultationType ? 'error' : ''}
-              >
-                {consultationTypes.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
-              {errors.consultationType && <span className="error-message">{errors.consultationType}</span>}
+          {/* 상담 유형 선택 - 학부모가 아닐 때만 표시 */}
+          {profile?.role !== 'PARENT' && (
+            <div className="form-section">
+              <h2>상담 유형</h2>
+              <div className="form-group">
+                <label htmlFor="consultationType">상담 유형 *</label>
+                <select
+                  id="consultationType"
+                  name="consultationType"
+                  value={formData.consultationType}
+                  onChange={handleInputChange}
+                  className={errors.consultationType ? 'error' : ''}
+                >
+                  {consultationTypes.map(type => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+                {errors.consultationType && <span className="error-message">{errors.consultationType}</span>}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 학생 정보 */}
           <div className="form-section">
@@ -419,17 +421,20 @@ function ConsultationReservation() {
               {errors.content && <span className="error-message">{errors.content}</span>}
             </div>
             
-            <div className="form-group">
-              <label htmlFor="memo">추가 메모</label>
-              <textarea
-                id="memo"
-                name="memo"
-                value={formData.memo}
-                onChange={handleInputChange}
-                placeholder="추가로 전달하고 싶은 내용이 있으면 입력해주세요"
-                rows="3"
-              />
-            </div>
+            {/* 추가 메모 - 학부모가 아닐 때만 표시 */}
+            {profile?.role !== 'PARENT' && (
+              <div className="form-group">
+                <label htmlFor="memo">추가 메모</label>
+                <textarea
+                  id="memo"
+                  name="memo"
+                  value={formData.memo}
+                  onChange={handleInputChange}
+                  placeholder="추가로 전달하고 싶은 내용이 있으면 입력해주세요"
+                  rows="3"
+                />
+              </div>
+            )}
           </div>
 
           {/* 제출 버튼 */}
