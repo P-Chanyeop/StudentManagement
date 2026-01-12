@@ -237,8 +237,9 @@ function Attendance() {
     }
   };
 
-  // 출석 목록 정렬 (예약시간별 정렬)
+  // 출석 목록 정렬 및 하원한 학생 제외 (예약시간별 정렬)
   const sortedAttendances = attendances ? [...attendances]
+    .filter(attendance => !attendance.checkOutTime) // 하원한 학생 제외
     .sort((a, b) => {
       let result = 0;
       
