@@ -40,4 +40,12 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
      * @return 최근 5개의 상담 이력 (날짜 내림차순)
      */
     List<Consultation> findTop5ByConsultantIdOrderByConsultationDateDesc(Long consultantId);
+
+    /**
+     * 특정 학생의 레코딩 파일이 있는 상담 개수 조회
+     * @param studentId 학생 ID
+     * @return 레코딩 파일이 있는 상담 개수
+     */
+    @Query("SELECT COUNT(c) FROM Consultation c WHERE c.student.id = :studentId AND c.audioFileUrl IS NOT NULL AND c.audioFileUrl != ''")
+    int countByStudentIdAndAudioFileUrlIsNotNull(@Param("studentId") Long studentId);
 }

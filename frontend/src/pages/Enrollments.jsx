@@ -543,6 +543,12 @@ function Enrollments() {
                       )}
                     </span>
                   </div>
+                  <div className="detail-item">
+                    <span className="label">레코딩 파일</span>
+                    <span className="value recording-status">
+                      {enrollment.recordingStatus || '0/0'}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="card-click-hint">
@@ -809,6 +815,13 @@ function Enrollments() {
                       {selectedEnrollment.customDurationMinutes && (
                         <span className="custom-duration"> (개별설정)</span>
                       )}
+                    </span>
+                  </div>
+
+                  <div className="detail-info-item">
+                    <span className="info-label">레코딩 파일</span>
+                    <span className="info-value recording-status">
+                      {selectedEnrollment.recordingStatus || '0/0'}
                     </span>
                   </div>
 

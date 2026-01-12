@@ -769,3 +769,8 @@
   color: #999;
   font-size: 14px;
 }
+/* 레코딩 파일 현황 스타일 */
+.recording-status {
+  color: #007AFF;
+  font-weight: 600;
+}

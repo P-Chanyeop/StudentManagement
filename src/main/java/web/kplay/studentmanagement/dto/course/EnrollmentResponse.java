@@ -30,4 +30,7 @@ public class EnrollmentResponse {
     private Integer customDurationMinutes; // 개별 수업 시간
     private Integer actualDurationMinutes; // 실제 적용되는 수업 시간
     private String memo;
+    private String recordingStatus; // 레코딩 파일 현황 (예: "0/2", "1/4")
+    private Integer expectedRecordings; // 예상 레코딩 파일 수
+    private Integer actualRecordings; // 실제 레코딩 파일 수
 }

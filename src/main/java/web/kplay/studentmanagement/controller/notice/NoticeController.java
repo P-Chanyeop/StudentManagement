@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.notice.NoticeRequest;
 import web.kplay.studentmanagement.dto.notice.NoticeResponse;
+import web.kplay.studentmanagement.dto.notice.NoticeViewResponse;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.notice.NoticeService;
 
@@ -39,9 +40,26 @@ public class NoticeController {
      * 공지사항 조회 (상세)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<NoticeResponse> getNotice(@PathVariable Long id) {
-        NoticeResponse response = noticeService.getNotice(id);
+    public ResponseEntity<NoticeResponse> getNotice(
+            @PathVariable Long id,
+            Authentication authentication) {
+        Long userId = null;
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            userId = userDetails.getId();
+        }
+        NoticeResponse response = noticeService.getNotice(id, userId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 공지사항 조회자 목록 (관리자용)
+     */
+    @GetMapping("/{id}/viewers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<NoticeViewResponse>> getNoticeViewers(@PathVariable Long id) {
+        List<NoticeViewResponse> viewers = noticeService.getNoticeViewers(id);
+        return ResponseEntity.ok(viewers);
     }
 
     /**

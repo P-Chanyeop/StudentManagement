@@ -9,6 +9,8 @@ function Notices() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showViewersModal, setShowViewersModal] = useState(false);
+  const [viewers, setViewers] = useState([]);
   const [newNotice, setNewNotice] = useState({
     title: '',
     content: '',
@@ -91,6 +93,18 @@ function Notices() {
       return;
     }
     createNotice.mutate(newNotice);
+  };
+
+  // 조회자 목록 조회
+  const handleViewViewers = async (noticeId) => {
+    try {
+      const response = await noticeAPI.getViewers(noticeId);
+      setViewers(response.data);
+      setShowViewersModal(true);
+    } catch (error) {
+      console.error('조회자 목록 조회 실패:', error);
+      alert('조회자 목록을 불러올 수 없습니다.');
+    }
   };
 
   const formatDate = (datetime) => {
@@ -298,6 +312,14 @@ function Notices() {
               <p className="notice-content">{selectedNotice.content}</p>
             </div>
             <div className="modal-footer">
+              {profile?.role === 'ADMIN' && (
+                <button
+                  className="btn-info"
+                  onClick={() => handleViewViewers(selectedNotice.id)}
+                >
+                  조회자 목록
+                </button>
+              )}
               <button
                 className="btn-secondary"
                 onClick={() => setSelectedNotice(null)}
@@ -375,6 +397,60 @@ function Notices() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 조회자 목록 모달 */}
+      {showViewersModal && (
+        <div className="modal-overlay" onClick={() => setShowViewersModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <i className="fas fa-users"></i>
+                조회자 목록
+              </h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowViewersModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              {viewers.length > 0 ? (
+                <div className="viewers-list">
+                  {viewers.map((viewer, index) => (
+                    <div key={viewer.id} className="viewer-item">
+                      <div className="viewer-info">
+                        <span className="viewer-name">{viewer.userName}</span>
+                        <span className="viewer-role">
+                          {viewer.userRole === 'ADMIN' ? '관리자' : 
+                           viewer.userRole === 'TEACHER' ? '선생님' : 
+                           viewer.userRole === 'PARENT' ? '학부모' : '학생'}
+                        </span>
+                      </div>
+                      <div className="viewer-date">
+                        {formatDateTime(viewer.viewedAt)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <i className="fas fa-users"></i>
+                  <p>아직 조회한 사용자가 없습니다.</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-secondary"
+                onClick={() => setShowViewersModal(false)}
+              >
+                닫기
+              </button>
+            </div>
           </div>
         </div>
       )}

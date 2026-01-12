@@ -21,6 +21,7 @@ import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.repository.enrollment.EnrollmentAdjustmentRepository;
+import web.kplay.studentmanagement.repository.ConsultationRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,6 +37,7 @@ public class EnrollmentService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final EnrollmentAdjustmentRepository enrollmentAdjustmentRepository;
+    private final ConsultationRepository consultationRepository;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
     @Transactional
@@ -263,6 +265,17 @@ public class EnrollmentService {
     }
 
     private EnrollmentResponse toResponse(Enrollment enrollment) {
+        // 레코딩 파일 현황 계산
+        int totalSessions = enrollment.getTotalCount();
+        int expectedRecordings = totalSessions / 6; // 6회에 1회씩 레코딩
+        
+        // 해당 학생의 상담 기록 중 레코딩 파일이 있는 개수 조회
+        int actualRecordings = consultationRepository.countByStudentIdAndAudioFileUrlIsNotNull(
+            enrollment.getStudent().getId()
+        );
+        
+        String recordingStatus = actualRecordings + "/" + expectedRecordings;
+        
         return EnrollmentResponse.builder()
                 .id(enrollment.getId())
                 .studentId(enrollment.getStudent().getId())
@@ -286,6 +299,9 @@ public class EnrollmentService {
                 .customDurationMinutes(enrollment.getCustomDurationMinutes())
                 .actualDurationMinutes(enrollment.getActualDurationMinutes())
                 .memo(enrollment.getMemo())
+                .recordingStatus(recordingStatus)
+                .expectedRecordings(expectedRecordings)
+                .actualRecordings(actualRecordings)
                 .build();
     }
 

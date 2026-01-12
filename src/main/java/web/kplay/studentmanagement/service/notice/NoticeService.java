@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.HtmlUtils;
 import web.kplay.studentmanagement.domain.notice.Notice;
+import web.kplay.studentmanagement.domain.notice.NoticeView;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.dto.notice.NoticeRequest;
 import web.kplay.studentmanagement.dto.notice.NoticeResponse;
+import web.kplay.studentmanagement.dto.notice.NoticeViewResponse;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.NoticeRepository;
+import web.kplay.studentmanagement.repository.NoticeViewRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 public class NoticeService {
 
     private final NoticeRepository noticeRepository;
+    private final NoticeViewRepository noticeViewRepository;
     private final UserRepository userRepository;
 
     /**
@@ -82,17 +86,43 @@ public class NoticeService {
     }
 
     /**
-     * 공지사항 조회 (조회수 증가)
+     * 공지사항 조회 (조회수 증가 및 조회 기록)
      */
     @Transactional
-    public NoticeResponse getNotice(Long id) {
+    public NoticeResponse getNotice(Long id, Long userId) {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("공지사항을 찾을 수 없습니다"));
 
         // 조회수 증가
         notice.incrementViewCount();
 
+        // 조회 기록 저장 (중복 방지)
+        if (userId != null) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
+            
+            // 이미 조회한 기록이 없으면 새로 생성
+            if (noticeViewRepository.findByNoticeIdAndUserId(id, userId).isEmpty()) {
+                NoticeView noticeView = NoticeView.builder()
+                        .notice(notice)
+                        .user(user)
+                        .build();
+                noticeViewRepository.save(noticeView);
+            }
+        }
+
         return toResponse(notice);
+    }
+
+    /**
+     * 공지사항 조회자 목록 조회 (관리자용)
+     */
+    @Transactional(readOnly = true)
+    public List<NoticeViewResponse> getNoticeViewers(Long noticeId) {
+        List<NoticeView> views = noticeViewRepository.findByNoticeIdWithUser(noticeId);
+        return views.stream()
+                .map(this::toViewResponse)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -185,6 +215,18 @@ public class NoticeService {
                 .viewCount(notice.getViewCount())
                 .createdAt(notice.getCreatedAt())
                 .updatedAt(notice.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * NoticeView를 NoticeViewResponse로 변환
+     */
+    private NoticeViewResponse toViewResponse(NoticeView noticeView) {
+        return NoticeViewResponse.builder()
+                .id(noticeView.getId())
+                .userName(noticeView.getUser().getName())
+                .userRole(noticeView.getUser().getRole().name())
+                .viewedAt(noticeView.getCreatedAt())
                 .build();
     }
 }

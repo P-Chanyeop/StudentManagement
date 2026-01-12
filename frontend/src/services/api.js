@@ -267,6 +267,7 @@ export const noticeAPI = {
   delete: (id) => api.delete(`/notices/${id}`),
   pin: (id) => api.patch(`/notices/${id}/pin`),
   unpin: (id) => api.patch(`/notices/${id}/unpin`),
+  getViewers: (id) => api.get(`/notices/${id}/viewers`),
 };
 
 // 보강 수업 API
