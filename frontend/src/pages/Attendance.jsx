@@ -13,6 +13,11 @@ function Attendance() {
   const [searchName, setSearchName] = useState('');
   const [tableSearchName, setTableSearchName] = useState('');
   
+  // 핸드폰 번호 입력 모달 상태
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [parentPhoneLast4, setParentPhoneLast4] = useState('');
+  
   // 테이블 헤더 정렬 상태
   const [tableSortBy, setTableSortBy] = useState('schedule');
   const [tableSortOrder, setTableSortOrder] = useState('asc'); // 'asc' 또는 'desc'
@@ -71,15 +76,19 @@ function Attendance() {
 
   // 출석 체크인 mutation
   const checkInMutation = useMutation({
-    mutationFn: ({ studentId, scheduleId }) => {
+    mutationFn: ({ studentId, scheduleId, parentPhoneLast4 }) => {
       return attendanceAPI.checkIn({ 
         studentId, 
-        scheduleId 
+        scheduleId,
+        parentPhoneLast4
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['attendances', selectedDate]);
       alert('출석 체크가 완료되었습니다!');
+      setShowPhoneModal(false);
+      setParentPhoneLast4('');
+      setSelectedAttendance(null);
     },
     onError: (error) => {
       alert(`출석 체크 중 오류가 발생했습니다: ${error.message}`);
@@ -185,14 +194,35 @@ function Attendance() {
     }
   };
 
-  // 학생 출석 체크인
+  // 학생 출석 체크인 - 모달 열기
   const handleStudentCheckIn = (attendance) => {
     if (attendance.checkInTime) return; // 이미 체크인된 경우
     
+    setSelectedAttendance(attendance);
+    setShowPhoneModal(true);
+  };
+
+  // 핸드폰 번호 확인 후 출석 체크
+  const handlePhoneSubmit = () => {
+    if (!parentPhoneLast4 || parentPhoneLast4.length !== 4) {
+      alert('부모님 핸드폰 번호 뒷자리 4자리를 정확히 입력해주세요.');
+      return;
+    }
+
+    if (!selectedAttendance) return;
+
     checkInMutation.mutate({
-      studentId: attendance.studentId,
-      scheduleId: attendance.scheduleId
+      studentId: selectedAttendance.studentId,
+      scheduleId: selectedAttendance.scheduleId,
+      parentPhoneLast4: parentPhoneLast4
     });
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setShowPhoneModal(false);
+    setParentPhoneLast4('');
+    setSelectedAttendance(null);
   };
 
   // 테이블 헤더 클릭 정렬 핸들러
@@ -622,6 +652,59 @@ function Attendance() {
           )}
         </div>
       </div>
+
+      {/* 부모님 핸드폰 번호 입력 모달 */}
+      {showPhoneModal && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>출석 체크</h3>
+              <button className="modal-close" onClick={handleCloseModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="student-info">
+                <strong>{selectedAttendance?.studentName}</strong> 학생
+              </p>
+              <div className="form-group">
+                <label htmlFor="parentPhone">부모님 핸드폰 번호 뒷자리 4자리</label>
+                <input
+                  type="text"
+                  id="parentPhone"
+                  value={parentPhoneLast4}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    if (value.length <= 4) {
+                      setParentPhoneLast4(value);
+                    }
+                  }}
+                  placeholder="1234"
+                  maxLength="4"
+                  className="phone-input"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleCloseModal}
+                disabled={checkInMutation.isPending}
+              >
+                취소
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handlePhoneSubmit}
+                disabled={checkInMutation.isPending || parentPhoneLast4.length !== 4}
+              >
+                {checkInMutation.isPending ? '처리중...' : '출석 체크'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

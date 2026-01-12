@@ -1,6 +1,7 @@
 package web.kplay.studentmanagement.dto.attendance;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,4 +21,11 @@ public class AttendanceCheckInRequest {
 
     // 예상 하원 시간 (없으면 등원 시간 + 수업 시간(분)으로 자동 계산)
     private LocalTime expectedLeaveTime;
+    
+    /**
+     * 부모님 핸드폰 번호 뒷자리 4자리
+     */
+    @NotNull(message = "부모님 핸드폰 뒷자리 4자리는 필수입니다")
+    @Pattern(regexp = "\\d{4}", message = "부모님 핸드폰 뒷자리는 4자리 숫자여야 합니다")
+    private String parentPhoneLast4;
 }

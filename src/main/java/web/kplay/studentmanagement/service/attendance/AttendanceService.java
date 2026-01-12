@@ -40,6 +40,14 @@ public class AttendanceService {
     private final UserRepository userRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
 
+    /**
+     * 출석 체크인 (부모님 핸드폰 뒷자리 4자리 검증 포함)
+     * 
+     * @param request 출석 체크인 요청 (학생ID, 스케줄ID, 부모님 핸드폰 뒷자리)
+     * @return 출석 응답 정보
+     * @throws ResourceNotFoundException 학생 또는 스케줄을 찾을 수 없는 경우
+     * @throws IllegalArgumentException 부모님 핸드폰 번호가 일치하지 않는 경우
+     */
     @Transactional
     public AttendanceResponse checkIn(AttendanceCheckInRequest request) {
         Student student = studentRepository.findById(request.getStudentId())
@@ -47,6 +55,9 @@ public class AttendanceService {
 
         CourseSchedule schedule = scheduleRepository.findById(request.getScheduleId())
                 .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
+
+        // 부모님 핸드폰 번호 뒷자리 4자리 검증
+        validateParentPhone(student, request.getParentPhoneLast4());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -238,6 +249,37 @@ public class AttendanceService {
         }
         
         return responses;
+    }
+
+    /**
+     * 부모님 핸드폰 번호 뒷자리 4자리 검증
+     * 
+     * @param student 학생 정보
+     * @param parentPhoneLast4 입력된 부모님 핸드폰 뒷자리 4자리
+     * @throws IllegalArgumentException 핸드폰 번호가 일치하지 않는 경우
+     */
+    private void validateParentPhone(Student student, String parentPhoneLast4) {
+        String parentPhone = student.getParentPhone();
+        if (parentPhone == null || parentPhone.length() < 4) {
+            throw new IllegalArgumentException("등록된 부모님 핸드폰 번호가 없습니다");
+        }
+        
+        // 핸드폰 번호에서 숫자만 추출
+        String phoneNumbers = parentPhone.replaceAll("[^0-9]", "");
+        if (phoneNumbers.length() < 4) {
+            throw new IllegalArgumentException("등록된 부모님 핸드폰 번호가 올바르지 않습니다");
+        }
+        
+        // 뒷자리 4자리 추출
+        String actualLast4 = phoneNumbers.substring(phoneNumbers.length() - 4);
+        
+        if (!actualLast4.equals(parentPhoneLast4)) {
+            log.warn("Parent phone validation failed: student={}, expected={}, actual={}", 
+                    student.getStudentName(), actualLast4, parentPhoneLast4);
+            throw new IllegalArgumentException("부모님 핸드폰 번호가 일치하지 않습니다");
+        }
+        
+        log.info("Parent phone validation success: student={}", student.getStudentName());
     }
 
     @Transactional(readOnly = true)
