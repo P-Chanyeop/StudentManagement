@@ -16,7 +16,7 @@ public class EnrollmentCreateRequest {
     @NotNull(message = "학생 ID는 필수입니다")
     private Long studentId;
 
-    @NotNull(message = "수업 ID는 필수입니다")
+    // 수업 ID는 선택사항 (반 등록은 학생 정보에서 별도 관리)
     private Long courseId;
 
     // 모든 수강권은 기간 + 횟수 모두 필수

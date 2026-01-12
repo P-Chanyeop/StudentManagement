@@ -198,6 +198,25 @@ public class StudentService {
                 .parentPhone(student.getParentPhone())
                 .parentEmail(student.getParentEmail())
                 .isActive(student.getIsActive())
+                .enrollments(student.getEnrollments().stream()
+                        .map(this::toEnrollmentResponse)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    private web.kplay.studentmanagement.dto.course.EnrollmentResponse toEnrollmentResponse(web.kplay.studentmanagement.domain.course.Enrollment enrollment) {
+        return web.kplay.studentmanagement.dto.course.EnrollmentResponse.builder()
+                .id(enrollment.getId())
+                .studentId(enrollment.getStudent().getId())
+                .studentName(enrollment.getStudent().getStudentName())
+                .courseId(enrollment.getCourse() != null ? enrollment.getCourse().getId() : null)
+                .courseName(enrollment.getCourse() != null ? enrollment.getCourse().getCourseName() : null)
+                .startDate(enrollment.getStartDate())
+                .endDate(enrollment.getEndDate())
+                .totalCount(enrollment.getTotalCount())
+                .usedCount(enrollment.getUsedCount())
+                .remainingCount(enrollment.getRemainingCount())
+                .isActive(enrollment.getIsActive())
                 .build();
     }
 }

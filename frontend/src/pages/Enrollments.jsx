@@ -96,7 +96,6 @@ function Enrollments() {
   };
   const [newEnrollment, setNewEnrollment] = useState({
     studentId: '',
-    courseId: '',
     startDate: new Date().toISOString().split('T')[0],
     endDate: '',
     totalCount: 24, // 기본 24회
@@ -209,7 +208,6 @@ function Enrollments() {
       setShowCreateModal(false);
       setNewEnrollment({
         studentId: '',
-        courseId: '',
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
         totalCount: 24,
@@ -299,8 +297,8 @@ function Enrollments() {
   });
 
   const handleCreateEnrollment = () => {
-    if (!newEnrollment.studentId || !newEnrollment.courseId) {
-      alert('학생과 코스를 선택해주세요.');
+    if (!newEnrollment.studentId) {
+      alert('학생을 선택해주세요.');
       return;
     }
 
@@ -383,8 +381,7 @@ function Enrollments() {
       
     const matchesSearch =
       searchQuery === '' ||
-      enrollment.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      enrollment.courseName?.toLowerCase().includes(searchQuery.toLowerCase());
+      enrollment.studentName?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -509,7 +506,6 @@ function Enrollments() {
                   {getStatusBadge(enrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
                 </div>
                 <h3 className="enrollment-student-name">{enrollment.studentName || '학생 정보 없음'}</h3>
-                <p className="enrollment-course-name">{enrollment.courseName || '수업 정보 없음'}</p>
 
                 <div className="enrollment-details">
                   <div className="detail-item">
@@ -623,23 +619,6 @@ function Enrollments() {
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label>코스 선택 *</label>
-                <select
-                  value={newEnrollment.courseId}
-                  onChange={(e) =>
-                    setNewEnrollment({ ...newEnrollment, courseId: e.target.value })
-                  }
-                >
-                  <option value="">코스를 선택하세요</option>
-                  {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
-                      {course.courseName} - {course.level}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="form-group">
@@ -767,10 +746,6 @@ function Enrollments() {
                   <div className="detail-info-item">
                     <span className="info-label">부모님 연락처</span>
                     <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.parentPhone || '연락처 정보 없음'}</span>
-                  </div>
-                  <div className="detail-info-item">
-                    <span className="info-label">수업</span>
-                    <span className="info-value">{selectedEnrollment.courseName || '수업 정보 없음'}</span>
                   </div>
                   <div className="detail-info-item">
                     <span className="info-label">레벨</span>

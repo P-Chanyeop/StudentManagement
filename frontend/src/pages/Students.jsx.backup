@@ -112,7 +112,7 @@ function Students() {
   const createMutation = useMutation({
     mutationFn: (data) => studentAPI.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['students', profile?.role]);
+      queryClient.invalidateQueries(['students']);
       setShowCreateModal(false);
       setNewStudent({
         studentName: '',
@@ -139,7 +139,7 @@ function Students() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => studentAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['students', profile?.role]);
+      queryClient.invalidateQueries(['students']);
       setShowEditModal(false);
       setSelectedStudent(null);
       alert('학생 정보가 수정되었습니다.');
@@ -149,11 +149,35 @@ function Students() {
     },
   });
 
+  // 수강권 등록 mutation
+  const enrollMutation = useMutation({
+    mutationFn: (data) => enrollmentAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['students']);
+      alert('수강권이 등록되었습니다.');
+    },
+    onError: (error) => {
+      alert(`수강권 등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  // 수강권 해제 mutation
+  const unenrollMutation = useMutation({
+    mutationFn: (enrollmentId) => enrollmentAPI.cancel(enrollmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['students']);
+      alert('수강권이 해제되었습니다.');
+    },
+    onError: (error) => {
+      alert(`수강권 해제 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
   // 학생 비활성화 mutation
   const deactivateMutation = useMutation({
     mutationFn: (id) => studentAPI.deactivate(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['students', profile?.role]);
+      queryClient.invalidateQueries(['students']);
       alert('학생이 비활성화되었습니다.');
     },
     onError: (error) => {
@@ -170,9 +194,50 @@ function Students() {
     createMutation.mutate(newStudent);
   };
 
+  // 수강권 등록/해제 핸들러
+  const handleEnrollmentChange = (courseId, isChecked) => {
+    if (!selectedStudent) return;
+
+    if (isChecked) {
+      // 수강권 등록
+      const enrollmentData = {
+        studentId: selectedStudent.id,
+        courseId: courseId,
+        startDate: new Date().toISOString().split('T')[0], // 오늘 날짜
+        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3개월 후
+        totalCount: 24, // 기본 24회
+        usedCount: 0,
+        remainingCount: 24,
+        isActive: true
+      };
+      enrollMutation.mutate(enrollmentData);
+    } else {
+      // 수강권 해제
+      const enrollment = selectedStudent.enrollments?.find(
+        e => e.course?.id === courseId && e.isActive
+      );
+      if (enrollment) {
+        unenrollMutation.mutate(enrollment.id);
+      }
+    }
+  };
+
   const handleUpdateStudent = () => {
-    if (!selectedStudent.studentName || !selectedStudent.studentPhone || !selectedStudent.parentName || !selectedStudent.parentPhone) {
-      alert('필수 항목을 모두 입력해주세요.');
+    // 생년월일 조합
+    let birthDate = null;
+    if (editBirthDateComponents.year && editBirthDateComponents.month && editBirthDateComponents.day) {
+      birthDate = `${editBirthDateComponents.year}-${editBirthDateComponents.month.padStart(2, '0')}-${editBirthDateComponents.day.padStart(2, '0')}`;
+    }
+
+    const updatedData = {
+      ...selectedStudent,
+      birthDate: birthDate
+    };
+
+    updateMutation.mutate({ id: selectedStudent.id, data: updatedData });
+  };
+
+  const openEditModal = (student) => {
       return;
     }
 
@@ -699,7 +764,7 @@ function Students() {
                             .filter(enrollment => enrollment.isActive)
                             .map((enrollment, index) => (
                               <span key={index} className="class-badge">
-                                {enrollment.courseName || '미지정'}
+                                {enrollment.course?.level || enrollment.course?.courseName || '미지정'}
                               </span>
                             ))
                           }
@@ -718,52 +783,14 @@ function Students() {
                               type="checkbox"
                               id={`course-${course.id}`}
                               checked={selectedStudent.enrollments?.some(
-                                enrollment => enrollment.courseId === course.id && enrollment.isActive
+                                enrollment => enrollment.course?.id === course.id && enrollment.isActive
                               ) || false}
-                              onChange={async (e) => {
-                                const isChecked = e.target.checked;
-                                try {
-                                  if (isChecked) {
-                                    // 다른 모든 반 해제
-                                    const otherEnrollments = selectedStudent.enrollments?.filter(
-                                      e => e.courseId !== course.id && e.isActive
-                                    );
-                                    for (const enrollment of otherEnrollments || []) {
-                                      await enrollmentAPI.cancel(enrollment.id);
-                                    }
-                                    
-                                    // 새 반 등록
-                                    await enrollmentAPI.create({
-                                      studentId: selectedStudent.id,
-                                      courseId: course.id,
-                                      startDate: new Date().toISOString().split('T')[0],
-                                      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                                      totalCount: 24,
-                                      usedCount: 0,
-                                      remainingCount: 24,
-                                      isActive: true
-                                    });
-                                  } else {
-                                    // 반 해제
-                                    const enrollment = selectedStudent.enrollments?.find(
-                                      e => e.courseId === course.id && e.isActive
-                                    );
-                                    if (enrollment) {
-                                      await enrollmentAPI.cancel(enrollment.id);
-                                    }
-                                  }
-                                  queryClient.invalidateQueries(['students', profile?.role]);
-                                  
-                                  // selectedStudent 상태 즉시 업데이트
-                                  const updatedResponse = await studentAPI.getById(selectedStudent.id);
-                                  setSelectedStudent(updatedResponse.data);
-                                } catch (error) {
-                                  alert('처리 실패: ' + (error.response?.data?.message || '오류가 발생했습니다.'));
-                                }
+                              onChange={(e) => {
+                                handleEnrollmentChange(course.id, e.target.checked);
                               }}
                             />
                             <label htmlFor={`course-${course.id}`}>
-                              {course.courseName}
+                              {course.courseName} ({course.level || '미지정'})
                             </label>
                           </div>
                         ))}

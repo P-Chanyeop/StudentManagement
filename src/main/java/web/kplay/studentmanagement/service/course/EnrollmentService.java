@@ -43,8 +43,11 @@ public class EnrollmentService {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
-        Course course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+        Course course = null;
+        if (request.getCourseId() != null) {
+            course = courseRepository.findById(request.getCourseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+        }
 
         // 종료일 계산 (공휴일 제외)
         LocalDate endDate;
@@ -191,8 +194,11 @@ public class EnrollmentService {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
-        Course course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+        Course course = null;
+        if (request.getCourseId() != null) {
+            course = courseRepository.findById(request.getCourseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+        }
 
         // 공휴일을 제외한 실제 종료일 계산
         LocalDate endDate;

@@ -4,8 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -26,4 +28,5 @@ public class StudentResponse {
     private String parentPhone;
     private String parentEmail;
     private Boolean isActive;
+    private List<EnrollmentResponse> enrollments;
 }

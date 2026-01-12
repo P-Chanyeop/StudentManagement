@@ -3,9 +3,12 @@ package web.kplay.studentmanagement.domain.student;
 import jakarta.persistence.*;
 import lombok.*;
 import web.kplay.studentmanagement.domain.BaseEntity;
+import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "students")
@@ -62,6 +65,10 @@ public class Student extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Enrollment> enrollments = new ArrayList<>();
 
     // 학생 정보 업데이트
     public void updateInfo(String studentName, String studentPhone, LocalDate birthDate,
