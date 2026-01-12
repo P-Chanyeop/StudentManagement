@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { attendanceAPI, studentAPI, scheduleAPI } from '../services/api';
+import { attendanceAPI, studentAPI, scheduleAPI, reservationAPI } from '../services/api';
 import '../styles/Attendance.css';
 
 function Attendance() {
@@ -55,6 +55,15 @@ function Attendance() {
     queryKey: ['schedules', selectedDate],
     queryFn: async () => {
       const response = await scheduleAPI.getByDate(selectedDate);
+      return response.data;
+    },
+  });
+
+  // 해당 날짜의 예약 조회
+  const { data: todayReservations } = useQuery({
+    queryKey: ['reservations', selectedDate],
+    queryFn: async () => {
+      const response = await reservationAPI.getByDate(selectedDate);
       return response.data;
     },
   });
@@ -237,37 +246,45 @@ function Attendance() {
     }
   };
 
-  // 출석 목록 정렬 및 하원한 학생 제외 (예약시간별 정렬)
-  const sortedAttendances = attendances ? [...attendances]
-    .filter(attendance => !attendance.checkOutTime) // 하원한 학생 제외
-    .sort((a, b) => {
-      let result = 0;
+  // 출석 목록과 예약 목록을 합쳐서 정렬 및 하원한 학생 제외
+  const sortedAttendances = (() => {
+    const attendanceList = attendances ? [...attendances] : [];
+    const reservationList = todayReservations ? [...todayReservations] : [];
+    
+    // 예약된 학생 중 아직 출석 기록이 없는 학생들을 출석 목록에 추가
+    reservationList.forEach(reservation => {
+      const existingAttendance = attendanceList.find(
+        att => att.studentId === reservation.studentId && att.scheduleId === reservation.scheduleId
+      );
       
-      // 테이블 헤더 정렬이 우선
-      if (tableSortBy === 'name') {
-        result = a.studentName.localeCompare(b.studentName);
-      } else if (tableSortBy === 'arrival') {
-        // 등원 시간 정렬
-        if (a.checkInTime && b.checkInTime) {
-          result = new Date(a.checkInTime) - new Date(b.checkInTime);
-        } else if (a.checkInTime && !b.checkInTime) {
-          result = -1;
-        } else if (!a.checkInTime && b.checkInTime) {
-          result = 1;
-        } else {
-          // 둘 다 미출석이면 예약시간순
-          result = (a.startTime || '').localeCompare(b.startTime || '');
-        }
-      } else if (tableSortBy === 'departure') {
-        // 하원 시간 정렬
-        if (a.checkOutTime && b.checkOutTime) {
-          result = new Date(a.checkOutTime) - new Date(b.checkOutTime);
-        } else if (a.checkOutTime && !b.checkOutTime) {
-          result = -1;
-        } else if (!a.checkOutTime && b.checkOutTime) {
-          result = 1;
-        } else {
-          // 둘 다 미하원이면 등원시간순 또는 예약시간순
+      if (!existingAttendance && reservation.status === 'CONFIRMED') {
+        // 예약된 학생을 출석 목록에 추가 (아직 출석하지 않은 상태)
+        attendanceList.push({
+          id: `reservation-${reservation.id}`,
+          studentId: reservation.studentId,
+          studentName: reservation.studentName,
+          scheduleId: reservation.scheduleId,
+          startTime: reservation.startTime,
+          endTime: reservation.endTime,
+          courseName: reservation.courseName,
+          checkInTime: null,
+          checkOutTime: null,
+          status: 'ABSENT',
+          isReservation: true // 예약으로 추가된 항목임을 표시
+        });
+      }
+    });
+    
+    return attendanceList
+      .filter(attendance => !attendance.checkOutTime) // 하원한 학생 제외
+      .sort((a, b) => {
+        let result = 0;
+        
+        // 테이블 헤더 정렬이 우선
+        if (tableSortBy === 'name') {
+          result = a.studentName.localeCompare(b.studentName);
+        } else if (tableSortBy === 'arrival') {
+          // 등원 시간 정렬
           if (a.checkInTime && b.checkInTime) {
             result = new Date(a.checkInTime) - new Date(b.checkInTime);
           } else if (a.checkInTime && !b.checkInTime) {
@@ -275,25 +292,46 @@ function Attendance() {
           } else if (!a.checkInTime && b.checkInTime) {
             result = 1;
           } else {
+            // 둘 다 미출석이면 예약시간순
             result = (a.startTime || '').localeCompare(b.startTime || '');
           }
-        }
-      } else {
-        // 기본: 수업 시간순
-        const timeA = a.startTime || '';
-        const timeB = b.startTime || '';
-        
-        if (timeA !== timeB) {
-          result = timeA.localeCompare(timeB);
+        } else if (tableSortBy === 'departure') {
+          // 하원 시간 정렬
+          if (a.checkOutTime && b.checkOutTime) {
+            result = new Date(a.checkOutTime) - new Date(b.checkOutTime);
+          } else if (a.checkOutTime && !b.checkOutTime) {
+            result = -1;
+          } else if (!a.checkOutTime && b.checkOutTime) {
+            result = 1;
+          } else {
+            // 둘 다 미하원이면 등원시간순 또는 예약시간순
+            if (a.checkInTime && b.checkInTime) {
+              result = new Date(a.checkInTime) - new Date(b.checkInTime);
+            } else if (a.checkInTime && !b.checkInTime) {
+              result = -1;
+            } else if (!a.checkInTime && b.checkInTime) {
+              result = 1;
+            } else {
+              result = (a.startTime || '').localeCompare(b.startTime || '');
+            }
+          }
         } else {
-          // 같은 수업 시간이면 이름 가나다순
-          result = a.studentName.localeCompare(b.studentName);
+          // 기본: 수업 시간순
+          const timeA = a.startTime || '';
+          const timeB = b.startTime || '';
+          
+          if (timeA !== timeB) {
+            result = timeA.localeCompare(timeB);
+          } else {
+            // 같은 수업 시간이면 이름 가나다순
+            result = a.studentName.localeCompare(b.studentName);
+          }
         }
-      }
-      
-      // 정렬 순서 적용
-      return tableSortOrder === 'desc' ? -result : result;
-    }) : [];
+        
+        // 정렬 순서 적용
+        return tableSortOrder === 'desc' ? -result : result;
+      });
+  })();
 
   // 테이블 필터링된 출석 목록
   const filteredAttendances = sortedAttendances.filter(attendance => 
