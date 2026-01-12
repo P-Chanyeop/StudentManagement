@@ -270,6 +270,12 @@ export const noticeAPI = {
   getViewers: (id) => api.get(`/notices/${id}/viewers`),
 };
 
+// 사용자 메뉴 설정 API
+export const userMenuAPI = {
+  saveMenuOrder: (menuPaths) => api.post('/user/menu-settings', { menuPaths }),
+  getMenuOrder: () => api.get('/user/menu-settings'),
+};
+
 // 보강 수업 API
 export const makeupClassAPI = {
   getAll: () => api.get('/makeup-classes'),

@@ -1,13 +1,41 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { authAPI } from '../services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { authAPI, userMenuAPI } from '../services/api';
 import '../styles/Sidebar.css';
 
 function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [sidebarTop, setSidebarTop] = useState(window.innerHeight / 2);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [customMenuOrder, setCustomMenuOrder] = useState([]);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
@@ -15,6 +43,25 @@ function Sidebar() {
     queryFn: async () => {
       const response = await authAPI.getProfile();
       return response.data;
+    },
+  });
+
+  // 사용자 메뉴 순서 조회
+  const { data: userMenuOrder } = useQuery({
+    queryKey: ['userMenuOrder'],
+    queryFn: async () => {
+      const response = await userMenuAPI.getMenuOrder();
+      return response.data;
+    },
+    enabled: !!profile,
+  });
+
+  // 메뉴 순서 저장
+  const saveMenuOrderMutation = useMutation({
+    mutationFn: (menuPaths) => userMenuAPI.saveMenuOrder(menuPaths),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userMenuOrder']);
+      setIsEditMode(false);
     },
   });
 
@@ -63,7 +110,7 @@ function Sidebar() {
       { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '수업 예약' },
       { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
       { path: '/enrollment-adjustment', icon: <i className="fas fa-edit"></i>, label: '횟수 조정' },
-      { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
+      { path: '/consultations', icon: <i className="fas fa-chart-line"></i>, label: '학습 현황' },
       { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
@@ -79,7 +126,7 @@ function Sidebar() {
       { path: '/consultation-reservation', icon: <i className="fas fa-user-md"></i>, label: '상담 예약' },
       { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
       { path: '/enrollment-adjustment', icon: <i className="fas fa-edit"></i>, label: '횟수 조정' },
-      { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
+      { path: '/consultations', icon: <i className="fas fa-chart-line"></i>, label: '학습 현황' },
       { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
@@ -91,7 +138,7 @@ function Sidebar() {
       { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '수업 예약' },
       { path: '/consultation-reservation', icon: <i className="fas fa-user-md"></i>, label: '상담 예약' },
       { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 내역' },
-      { path: '/consultations', icon: <i className="fas fa-comments"></i>, label: '상담 내역' },
+      { path: '/consultations', icon: <i className="fas fa-chart-line"></i>, label: '학습 현황' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
 
@@ -106,6 +153,71 @@ function Sidebar() {
   };
 
   const menuItems = getMenuItems();
+
+  // 사용자 정의 순서로 메뉴 정렬
+  const getOrderedMenuItems = () => {
+    if (!userMenuOrder?.menuPaths || userMenuOrder.menuPaths.length === 0) {
+      return menuItems;
+    }
+
+    const orderedItems = [];
+    const remainingItems = [...menuItems];
+
+    // 저장된 순서대로 메뉴 추가
+    userMenuOrder.menuPaths.forEach(path => {
+      const item = remainingItems.find(menu => menu.path === path);
+      if (item) {
+        orderedItems.push(item);
+        const index = remainingItems.indexOf(item);
+        remainingItems.splice(index, 1);
+      }
+    });
+
+    // 남은 메뉴들 추가 (새로 추가된 메뉴)
+    return [...orderedItems, ...remainingItems];
+  };
+
+  const orderedMenuItems = isEditMode ? 
+    (customMenuOrder.length > 0 ? customMenuOrder : getOrderedMenuItems()) : 
+    getOrderedMenuItems();
+
+  // 편집 모드 시작
+  const startEditMode = () => {
+    setIsEditMode(true);
+  };
+
+  // 편집 모드가 시작될 때 customMenuOrder 설정
+  useEffect(() => {
+    if (isEditMode && customMenuOrder.length === 0) {
+      setCustomMenuOrder([...getOrderedMenuItems()]);
+    }
+  }, [isEditMode]);
+
+  // 편집 취소
+  const cancelEdit = () => {
+    setIsEditMode(false);
+    setCustomMenuOrder([]);
+  };
+
+  // 메뉴 순서 저장
+  const saveMenuOrder = () => {
+    const menuPaths = customMenuOrder.map(item => item.path);
+    saveMenuOrderMutation.mutate(menuPaths);
+  };
+
+  // 드래그 앤 드롭 핸들러 (@dnd-kit)
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setCustomMenuOrder((items) => {
+        const oldIndex = items.findIndex((item) => item.path === active.id);
+        const newIndex = items.findIndex((item) => item.path === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   return (
     <div 
@@ -123,20 +235,59 @@ function Sidebar() {
           <span className="logo-icon">🎓</span>
           {!isCollapsed && <h2>학원 관리 시스템</h2>}
         </div>
+        {!isCollapsed && (
+          <div className="menu-edit-controls">
+            {!isEditMode ? (
+              <button className="edit-menu-btn" onClick={startEditMode} title="메뉴 순서 편집">
+                <i className="fas fa-edit"></i>
+              </button>
+            ) : (
+              <div className="edit-controls">
+                <button className="save-btn" onClick={saveMenuOrder} title="저장">
+                  <i className="fas fa-check"></i>
+                </button>
+                <button className="cancel-btn" onClick={cancelEdit} title="취소">
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-            title={isCollapsed ? item.label : ''}
+        {isEditMode ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <span className="nav-icon">{item.icon}</span>
-            {!isCollapsed && <span className="nav-label">{item.label}</span>}
-          </NavLink>
-        ))}
+            <SortableContext
+              items={orderedMenuItems.map(item => item.path)}
+              strategy={verticalListSortingStrategy}
+            >
+              {orderedMenuItems.map((item) => (
+                <SortableItem
+                  key={item.path}
+                  item={item}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          orderedMenuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              title={isCollapsed ? item.label : ''}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {!isCollapsed && <span className="nav-label">{item.label}</span>}
+            </NavLink>
+          ))
+        )}
       </nav>
 
       <div className="sidebar-footer">
@@ -145,6 +296,41 @@ function Sidebar() {
           {!isCollapsed && <span className="nav-label">로그아웃</span>}
         </button>
       </div>
+    </div>
+  );
+}
+
+// SortableItem 컴포넌트
+function SortableItem({ item, isCollapsed }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.path });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`nav-item draggable ${isDragging ? 'dragging' : ''}`}
+    >
+      <span className="nav-icon">{item.icon}</span>
+      {!isCollapsed && <span className="nav-label">{item.label}</span>}
+      {!isCollapsed && (
+        <span className="drag-handle">
+          <i className="fas fa-grip-vertical"></i>
+        </span>
+      )}
     </div>
   );
 }

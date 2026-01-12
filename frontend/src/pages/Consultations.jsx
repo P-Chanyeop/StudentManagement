@@ -416,11 +416,11 @@ function Consultations() {
         <div className="page-header-content">
           <div className="page-title-section">
             <h1 className="page-title">
-              <i className="fas fa-comments"></i>
-              상담 내역
+              <i className="fas fa-chart-line"></i>
+              학습 현황
             </h1>
             <p className="page-subtitle">
-              {profile?.role === 'PARENT' ? '자녀의 상담 이력을 확인하세요' : '학생 상담 이력을 관리합니다'}
+              {profile?.role === 'PARENT' ? '자녀의 학습 현황을 확인하세요' : '학생 학습 현황을 관리합니다'}
             </p>
           </div>
           {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
@@ -434,7 +434,7 @@ function Consultations() {
                 setShowCreateModal(true);
               }}>
                 <i className="fas fa-plus"></i>
-                상담 등록
+                학습 기록 등록
               </button>
             </div>
           )}
@@ -461,8 +461,8 @@ function Consultations() {
             {selectedStudent && (
               <div className="result-count-actions">
                 <div className="result-count">
-                  <i className="fas fa-comments"></i>
-                  총 <strong>{consultations.length}</strong>건의 상담 기록
+                  <i className="fas fa-chart-line"></i>
+                  총 <strong>{consultations.length}</strong>건의 학습 기록
                 </div>
                 {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
                   <button className="btn-export" onClick={handleExportByStudent}>
@@ -479,9 +479,9 @@ function Consultations() {
         <div className="consultations-section">
           {consultations.length === 0 ? (
             <div className="empty-state">
-              <i className="fas fa-comments"></i>
-              <h3>상담 이력이 없습니다</h3>
-              <p>{profile?.role === 'PARENT' ? '아직 상담 기록이 없습니다.' : '학생을 선택하고 상담을 등록해보세요.'}</p>
+              <i className="fas fa-chart-line"></i>
+              <h3>학습 기록이 없습니다</h3>
+              <p>{profile?.role === 'PARENT' ? '아직 학습 기록이 없습니다.' : '학생을 선택하고 학습 기록을 등록해보세요.'}</p>
             </div>
           ) : (
             <div className="consultations-list">

@@ -46,6 +46,6 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
      * @param studentId 학생 ID
      * @return 레코딩 파일이 있는 상담 개수
      */
-    @Query("SELECT COUNT(c) FROM Consultation c WHERE c.student.id = :studentId AND c.audioFileUrl IS NOT NULL AND c.audioFileUrl != ''")
-    int countByStudentIdAndAudioFileUrlIsNotNull(@Param("studentId") Long studentId);
+    @Query("SELECT COUNT(c) FROM Consultation c WHERE c.student.id = :studentId AND c.recordingFileUrl IS NOT NULL AND c.recordingFileUrl != ''")
+    int countByStudentIdAndRecordingFileUrlIsNotNull(@Param("studentId") Long studentId);
 }

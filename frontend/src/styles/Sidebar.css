@@ -265,3 +265,95 @@
     padding: 0.9rem 1rem;
   }
 }
+/* 메뉴 편집 컨트롤 */
+.menu-edit-controls {
+  margin-top: 10px;
+}
+
+.edit-menu-btn {
+  background: none;
+  border: none;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.edit-menu-btn:hover {
+  background: var(--gray-100);
+  color: var(--naver-green);
+}
+
+.edit-controls {
+  display: flex;
+  gap: 5px;
+}
+
+.save-btn, .cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.save-btn {
+  color: var(--naver-green);
+}
+
+.save-btn:hover {
+  background: var(--naver-green);
+  color: white;
+}
+
+.cancel-btn {
+  color: var(--gray-600);
+}
+
+.cancel-btn:hover {
+  background: var(--gray-200);
+}
+
+/* 드래그 가능한 메뉴 아이템 */
+.nav-item.draggable {
+  cursor: move;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.nav-item.draggable:hover {
+  background: var(--gray-100);
+  transform: translateX(2px);
+}
+
+.nav-item.dragging {
+  background: var(--naver-green);
+  color: white;
+  transform: rotate(2deg);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item.dragging .nav-icon,
+.nav-item.dragging .nav-label {
+  color: white;
+}
+
+.drag-over {
+  background: rgba(0, 199, 60, 0.1);
+  border-radius: 8px;
+}
+
+.drag-handle {
+  position: absolute;
+  right: 10px;
+  color: var(--gray-400);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.nav-item.draggable:hover .drag-handle {
+  opacity: 1;
+}
