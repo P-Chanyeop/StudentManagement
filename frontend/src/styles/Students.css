@@ -618,3 +618,72 @@
   outline: none;
   border-color: #03c75a;
 }
+/* 반 정보 스타일 */
+.class-selection {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.current-classes {
+  margin-bottom: 16px;
+}
+
+.current-classes strong, .available-classes strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.enrolled-classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.class-badge {
+  background-color: #03C75A;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.no-classes {
+  color: #999;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.class-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+}
+
+.class-item input[type="checkbox"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.class-item label {
+  margin: 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  flex: 1;
+}

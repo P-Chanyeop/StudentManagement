@@ -10,19 +10,20 @@ function Courses() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [activeTab, setActiveTab] = useState('info'); // activeTab state 추가
   const [newCourse, setNewCourse] = useState({
     courseName: '',
-    description: '',
+    description: '반 설명',
     level: '',
     capacity: 10,
     durationMinutes: 60,
   });
 
-  // 코스 목록 조회
+  // 코스 목록 조회 (활성화된 코스만)
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses'],
     queryFn: async () => {
-      const response = await courseAPI.getAll();
+      const response = await courseAPI.getActive(); // getAll() -> getActive()로 변경
       return response.data;
     },
   });
@@ -35,7 +36,7 @@ function Courses() {
       setShowCreateModal(false);
       setNewCourse({
         courseName: '',
-        description: '',
+        description: '반 설명',
         level: '',
         capacity: 10,
         durationMinutes: 60,
@@ -63,28 +64,40 @@ function Courses() {
 
   // 코스 삭제 mutation
   const deleteMutation = useMutation({
-    mutationFn: (id) => courseAPI.delete(id),
-    onSuccess: () => {
+    mutationFn: (id) => {
+      console.log('Calling courseAPI.delete with id:', id); // 디버깅
+      return courseAPI.delete(id);
+    },
+    onSuccess: (data) => {
+      console.log('Delete success:', data); // 디버깅
       queryClient.invalidateQueries(['courses']);
-      alert('코스가 삭제되었습니다.');
+      queryClient.refetchQueries(['courses']); // 강제 새로고침 추가
+      alert('반이 성공적으로 삭제되었습니다.');
+      window.location.reload(); // 임시 해결책: 페이지 새로고침
     },
     onError: (error) => {
-      alert(`삭제 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+      console.error('Delete error:', error); // 디버깅
+      alert(`삭제 실패: ${error.response?.data?.message || error.message || '오류가 발생했습니다.'}`);
     },
   });
 
   const handleCreateCourse = () => {
-    if (!newCourse.courseName || !newCourse.description) {
-      alert('코스명과 설명을 입력해주세요.');
+    if (!newCourse.courseName || !newCourse.level) {
+      alert('코스명과 반 이름을 입력해주세요.');
       return;
     }
 
-    if (newCourse.capacity <= 0 || newCourse.durationMinutes <= 0) {
-      alert('정원과 수업시간을 올바르게 입력해주세요.');
+    if (newCourse.durationMinutes <= 0) {
+      alert('수업시간을 올바르게 입력해주세요.');
       return;
     }
 
-    createMutation.mutate(newCourse);
+    const courseData = {
+      ...newCourse,
+      maxStudents: newCourse.capacity // capacity를 maxStudents로 매핑
+    };
+
+    createMutation.mutate(courseData);
   };
 
   const handleUpdateCourse = () => {
@@ -106,13 +119,17 @@ function Courses() {
   };
 
   const handleDeleteCourse = (id, courseName) => {
-    if (window.confirm(`"${courseName}" 수업을 삭제하시겠습니까?`)) {
+    console.log('Deleting course:', id, courseName); // 디버깅
+    if (window.confirm(`"${courseName}" 반을 삭제하시겠습니까?`)) {
+      console.log('Delete confirmed, calling API...'); // 디버깅
       deleteMutation.mutate(id);
     }
   };
 
   const openEditModal = (course) => {
+    console.log('Opening edit modal for course:', course); // 디버깅
     setSelectedCourse({ ...course });
+    setActiveTab('info'); // activeTab 설정 추가
     setShowEditModal(true);
   };
 
@@ -205,16 +222,6 @@ function Courses() {
               </div>
 
               <div className="form-group">
-                <label>설명 *</label>
-                <textarea
-                  value={newCourse.description}
-                  onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                  placeholder="코스에 대한 설명을 입력하세요"
-                  rows="4"
-                />
-              </div>
-
-              <div className="form-group">
                 <label>반 이름 *</label>
                 <input
                   type="text"
@@ -225,35 +232,20 @@ function Courses() {
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>정원 *</label>
-                  <input
-                    type="number"
-                    value={newCourse.capacity}
-                    onChange={(e) =>
-                      setNewCourse({ ...newCourse, capacity: parseInt(e.target.value) || 0 })
-                    }
-                    placeholder="10"
-                    min="1"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>수업시간 (분) *</label>
-                  <input
-                    type="number"
-                    value={newCourse.durationMinutes}
-                    onChange={(e) =>
-                      setNewCourse({
-                        ...newCourse,
-                        durationMinutes: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="60"
-                    min="1"
-                  />
-                </div>
+              <div className="form-group">
+                <label>수업시간 (분) *</label>
+                <input
+                  type="number"
+                  value={newCourse.durationMinutes}
+                  onChange={(e) =>
+                    setNewCourse({
+                      ...newCourse,
+                      durationMinutes: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="60"
+                  min="1"
+                />
               </div>
             </div>
 
@@ -320,7 +312,11 @@ function Courses() {
 // 수업 정보 탭 컴포넌트
 function CourseInfoTab({ course, onUpdate, onClose, updateMutation }) {
   const handleUpdateCourse = () => {
-    updateMutation.mutate(course);
+    const courseData = {
+      ...course,
+      maxStudents: course.capacity || course.maxStudents || 10
+    };
+    updateMutation.mutate({ id: course.id, data: courseData });
   };
 
   return (
@@ -356,35 +352,18 @@ function CourseInfoTab({ course, onUpdate, onClose, updateMutation }) {
         />
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label>정원 *</label>
-          <input
-            type="number"
-            value={course.capacity || course.maxStudents}
-            onChange={(e) => onUpdate({
-              ...course,
-              capacity: parseInt(e.target.value) || 0,
-              maxStudents: parseInt(e.target.value) || 0
-            })}
-            placeholder="10"
-            min="1"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>수업시간 (분) *</label>
-          <input
-            type="number"
-            value={course.durationMinutes}
-            onChange={(e) => onUpdate({
-              ...course,
-              durationMinutes: parseInt(e.target.value) || 0
-            })}
-            placeholder="60"
-            min="1"
-          />
-        </div>
+      <div className="form-group">
+        <label>수업시간 (분) *</label>
+        <input
+          type="number"
+          value={course.durationMinutes}
+          onChange={(e) => onUpdate({
+            ...course,
+            durationMinutes: parseInt(e.target.value) || 0
+          })}
+          placeholder="60"
+          min="1"
+        />
       </div>
 
       <div className="modal-footer">

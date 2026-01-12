@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { studentAPI, authAPI } from '../services/api';
+import { studentAPI, authAPI, courseAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/Students.css';
 
@@ -63,6 +63,15 @@ function Students() {
       return [];
     },
     enabled: !!profile,
+  });
+
+  // 반 목록 조회
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: async () => {
+      const response = await courseAPI.getActive();
+      return response.data;
+    },
   });
 
   // 생년월일 컴포넌트 변경 핸들러 (신규 학생)
@@ -678,6 +687,52 @@ function Students() {
                     placeholder="1.0"
                   />
                 </div>
+
+                <div className="form-group">
+                  <label>수강 반</label>
+                  <div className="class-selection">
+                    <div className="current-classes">
+                      <strong>현재 수강 중인 반:</strong>
+                      {selectedStudent.enrollments && selectedStudent.enrollments.length > 0 ? (
+                        <div className="enrolled-classes">
+                          {selectedStudent.enrollments
+                            .filter(enrollment => enrollment.isActive)
+                            .map((enrollment, index) => (
+                              <span key={index} className="class-badge">
+                                {enrollment.course?.level || enrollment.course?.courseName || '미지정'}
+                              </span>
+                            ))
+                          }
+                        </div>
+                      ) : (
+                        <span className="no-classes">수강 중인 반이 없습니다</span>
+                      )}
+                    </div>
+                    
+                    <div className="available-classes">
+                      <strong>등록 가능한 반:</strong>
+                      <div className="class-list">
+                        {courses.map((course) => (
+                          <div key={course.id} className="class-item">
+                            <input
+                              type="checkbox"
+                              id={`course-${course.id}`}
+                              checked={selectedStudent.enrollments?.some(
+                                enrollment => enrollment.course?.id === course.id && enrollment.isActive
+                              ) || false}
+                              onChange={(e) => {
+                                console.log('Course selection changed:', course.id, e.target.checked);
+                              }}
+                            />
+                            <label htmlFor={`course-${course.id}`}>
+                              {course.courseName} ({course.level || '미지정'})
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="form-section">
@@ -799,6 +854,18 @@ function Students() {
                   <div className="detail-item">
                     <span className="detail-label">영어 레벨</span>
                     <span className="detail-value">{getLevelBadge(selectedStudent.englishLevel)}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">수강 반</span>
+                    <span className="detail-value">
+                      {selectedStudent.enrollments && selectedStudent.enrollments.length > 0 
+                        ? selectedStudent.enrollments
+                            .filter(enrollment => enrollment.isActive)
+                            .map(enrollment => enrollment.course?.level || enrollment.course?.courseName)
+                            .join(', ') || '-'
+                        : '-'
+                      }
+                    </span>
                   </div>
                 </div>
               </div>

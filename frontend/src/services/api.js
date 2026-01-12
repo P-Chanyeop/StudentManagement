@@ -83,6 +83,7 @@ export const courseAPI = {
   getByTeacher: (teacherId) => api.get(`/courses/teacher/${teacherId}`),
   create: (data) => api.post('/courses', data),
   update: (id, data) => api.put(`/courses/${id}`, data),
+  delete: (id) => api.delete(`/courses/${id}`), // deactivate를 delete로 변경
   deactivate: (id) => api.delete(`/courses/${id}`),
 };
 
