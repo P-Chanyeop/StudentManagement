@@ -13,7 +13,7 @@ function Courses() {
   const [newCourse, setNewCourse] = useState({
     courseName: '',
     description: '',
-    level: 'BEGINNER',
+    level: '',
     capacity: 10,
     durationMinutes: 60,
   });
@@ -36,7 +36,7 @@ function Courses() {
       setNewCourse({
         courseName: '',
         description: '',
-        level: 'BEGINNER',
+        level: '',
         capacity: 10,
         durationMinutes: 60,
       });
@@ -126,20 +126,13 @@ function Courses() {
     );
   });
 
-  // 레벨별 배지
-  const getLevelBadge = (level) => {
-    const levelMap = {
-      BEGINNER: { text: '초급', color: '#03C75A' },
-      INTERMEDIATE: { text: '중급', color: '#0066FF' },
-      ADVANCED: { text: '고급', color: '#FF9800' },
-      EXPERT: { text: '전문가', color: '#9C27B0' },
-    };
-    const { text, color } = levelMap[level] || { text: level, color: '#03C75A' };
+  // 반 이름 배지
+  const getClassBadge = (className) => {
     return (
       <span 
         className="course-level-badge" 
         style={{ 
-          backgroundColor: color,
+          backgroundColor: '#03C75A',
           color: 'white',
           padding: '4px 12px',
           borderRadius: '12px',
@@ -148,7 +141,7 @@ function Courses() {
           whiteSpace: 'nowrap'
         }}
       >
-        {text}
+        {className || '미지정'}
       </span>
     );
   };
@@ -222,16 +215,14 @@ function Courses() {
               </div>
 
               <div className="form-group">
-                <label>레벨 *</label>
-                <select
+                <label>반 이름 *</label>
+                <input
+                  type="text"
                   value={newCourse.level}
                   onChange={(e) => setNewCourse({ ...newCourse, level: e.target.value })}
-                >
-                  <option value="BEGINNER">초급</option>
-                  <option value="INTERMEDIATE">중급</option>
-                  <option value="ADVANCED">고급</option>
-                  <option value="EXPERT">전문가</option>
-                </select>
+                  placeholder="예: A반, 초급반, 월수금반 등"
+                  required
+                />
               </div>
 
               <div className="form-row">
@@ -355,16 +346,14 @@ function CourseInfoTab({ course, onUpdate, onClose, updateMutation }) {
       </div>
 
       <div className="form-group">
-        <label>레벨 *</label>
-        <select
+        <label>반 이름 *</label>
+        <input
+          type="text"
           value={course.level}
           onChange={(e) => onUpdate({ ...course, level: e.target.value })}
-        >
-          <option value="BEGINNER">초급</option>
-          <option value="INTERMEDIATE">중급</option>
-          <option value="ADVANCED">고급</option>
-          <option value="EXPERT">전문가</option>
-        </select>
+          placeholder="예: A반, 초급반, 월수금반 등"
+          required
+        />
       </div>
 
       <div className="form-row">
@@ -592,22 +581,15 @@ export default Courses;
 
 // 수업 관리 탭 컴포넌트
 function CoursesTab({ courses, searchQuery, setSearchQuery, setShowCreateModal, openEditModal, handleDeleteCourse, isLoading, filteredCourses }) {
-  const getLevelBadge = (level) => {
-    const levelMap = {
-      BEGINNER: { text: '초급', class: 'beginner' },
-      INTERMEDIATE: { text: '중급', class: 'intermediate' },
-      ADVANCED: { text: '고급', class: 'advanced' },
-      EXPERT: { text: '전문가', class: 'expert' }
-    };
-    const levelInfo = levelMap[level] || { text: level, class: 'default' };
-    return <span className={`level-badge ${levelInfo.class}`}>{levelInfo.text}</span>;
+  const getClassBadge = (className) => {
+    return <span className="level-badge default">{className || '미지정'}</span>;
   };
 
   return (
     <div className="tab-content-wrapper">
       <div className="tab-header">
         <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-          <i className="fas fa-plus"></i> 수업 생성
+          <i className="fas fa-plus"></i> 반 생성
         </button>
       </div>
 
@@ -639,7 +621,7 @@ function CoursesTab({ courses, searchQuery, setSearchQuery, setShowCreateModal, 
               <div key={course.id} className="course-card">
                 <div className="course-header">
                   <h3>{course.courseName}</h3>
-                  {getLevelBadge(course.level)}
+                  {getClassBadge(course.level)}
                 </div>
 
                 <p className="course-description">{course.description}</p>
