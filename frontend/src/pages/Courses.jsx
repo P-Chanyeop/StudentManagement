@@ -82,8 +82,8 @@ function Courses() {
   });
 
   const handleCreateCourse = () => {
-    if (!newCourse.courseName || !newCourse.level) {
-      alert('코스명과 반 이름을 입력해주세요.');
+    if (!newCourse.courseName || !newCourse.durationMinutes) {
+      alert('반이름과 수업시간을 입력해주세요.');
       return;
     }
 
@@ -204,7 +204,7 @@ function Courses() {
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>코스 생성</h2>
+              <h2>반 생성</h2>
               <button className="modal-close" onClick={() => setShowCreateModal(false)}>
                 ×
               </button>
@@ -212,23 +212,22 @@ function Courses() {
 
             <div className="modal-body">
               <div className="form-group">
-                <label>코스명 *</label>
+                <label>반이름 *</label>
                 <input
                   type="text"
                   value={newCourse.courseName}
                   onChange={(e) => setNewCourse({ ...newCourse, courseName: e.target.value })}
-                  placeholder="예: 기초 영어 회화"
+                  placeholder="예: A반, 초급반, 월수금반 등"
                 />
               </div>
 
               <div className="form-group">
-                <label>반 이름 *</label>
-                <input
-                  type="text"
-                  value={newCourse.level}
-                  onChange={(e) => setNewCourse({ ...newCourse, level: e.target.value })}
-                  placeholder="예: A반, 초급반, 월수금반 등"
-                  required
+                <label>설명</label>
+                <textarea
+                  value={newCourse.description || ''}
+                  onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
+                  placeholder="반에 대한 설명을 입력하세요"
+                  rows="3"
                 />
               </div>
 

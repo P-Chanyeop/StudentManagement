@@ -17,12 +17,15 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
     List<Consultation> findByConsultantId(Long consultantId);
 
 
-    @Query("SELECT c FROM Consultation c WHERE c.consultationDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT c FROM Consultation c JOIN FETCH c.student LEFT JOIN FETCH c.consultant WHERE c.student.id = :studentId ORDER BY c.consultationDate DESC")
+    List<Consultation> findByStudentIdOrderByDateDesc(@Param("studentId") Long studentId);
+
+    @Query("SELECT c FROM Consultation c JOIN FETCH c.student LEFT JOIN FETCH c.consultant ORDER BY c.consultationDate DESC")
+    List<Consultation> findAllByOrderByConsultationDateDesc();
+
+    @Query("SELECT c FROM Consultation c JOIN FETCH c.student LEFT JOIN FETCH c.consultant WHERE c.consultationDate BETWEEN :startDate AND :endDate ORDER BY c.consultationDate DESC")
     List<Consultation> findByDateRange(@Param("startDate") LocalDate startDate,
                                         @Param("endDate") LocalDate endDate);
-
-    @Query("SELECT c FROM Consultation c WHERE c.student.id = :studentId ORDER BY c.consultationDate DESC")
-    List<Consultation> findByStudentIdOrderByDateDesc(@Param("studentId") Long studentId);
 
     // 마이페이지용 메서드
     List<Consultation> findTop5ByStudentIdOrderByConsultationDateDesc(Long studentId);

@@ -357,13 +357,20 @@ function Consultations() {
    * 전체 상담 이력 Excel 다운로드
    */
   const handleExportAll = async () => {
+    console.log('=== Export All Debug ===');
     try {
+      console.log('Calling exportAll API...');
       const response = await consultationAPI.exportAll();
+      console.log('Export All Response:', response);
       const fileName = `전체_상담이력_${new Date().toISOString().split('T')[0]}.xlsx`;
       downloadExcelFile(response.data, fileName);
       alert('전체 상담 이력이 다운로드되었습니다.');
+      console.log('=== Export All Success ===');
     } catch (error) {
-      alert('Excel 다운로드에 실패했습니다.');
+      console.error('=== Export All Error ===');
+      console.error('Error:', error);
+      console.error('Error response:', error.response);
+      alert(`전체 상담 이력 다운로드에 실패했습니다: ${error.message}`);
     }
   };
 
@@ -376,14 +383,49 @@ function Consultations() {
       return;
     }
     
+    console.log('=== Excel Export Debug ===');
+    console.log('Selected Student ID:', selectedStudent);
+    
     try {
+      console.log('Calling API...');
       const response = await consultationAPI.exportByStudent(selectedStudent);
+      console.log('API Response:', response);
+      console.log('Response status:', response.status);
+      console.log('Response data type:', typeof response.data);
+      console.log('Response data size:', response.data?.size || 'unknown');
+      
       const studentName = students.find(s => s.id == selectedStudent)?.studentName || '학생';
       const fileName = `${studentName}_상담이력_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      console.log('Student name:', studentName);
+      console.log('File name:', fileName);
+      
       downloadExcelFile(response.data, fileName);
       alert(`${studentName} 학생의 상담 이력이 다운로드되었습니다.`);
+      console.log('=== Excel Export Success ===');
     } catch (error) {
-      alert('Excel 다운로드에 실패했습니다.');
+      console.error('=== Excel Export Error ===');
+      console.error('Error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response headers:', error.response?.headers);
+      
+      // Blob 내용 확인
+      if (error.response?.data instanceof Blob) {
+        console.log('Response is Blob, reading text...');
+        const text = await error.response.data.text();
+        console.error('Blob content:', text);
+        try {
+          const jsonError = JSON.parse(text);
+          console.error('Parsed error:', jsonError);
+        } catch (e) {
+          console.error('Could not parse as JSON:', text);
+        }
+      }
+      
+      alert(`Excel 다운로드에 실패했습니다: ${error.message}`);
     }
   };
 

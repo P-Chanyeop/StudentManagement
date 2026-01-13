@@ -47,13 +47,6 @@ public class CourseController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/teacher/{teacherId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<List<CourseResponse>> getCoursesByTeacher(@PathVariable Long teacherId) {
-        List<CourseResponse> responses = courseService.getCoursesByTeacher(teacherId);
-        return ResponseEntity.ok(responses);
-    }
-
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<CourseResponse> updateCourse(
