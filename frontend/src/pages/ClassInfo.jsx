@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { attendanceAPI, authAPI, scheduleAPI, reservationAPI } from '../services/api';
+import { attendanceAPI, authAPI, scheduleAPI, reservationAPI, enrollmentAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/ClassInfo.css';
 
@@ -30,11 +30,57 @@ function ClassInfo() {
   const isTeacher = profile?.role === 'TEACHER';
   const isAdmin = profile?.role === 'ADMIN';
 
+  // 학부모용 출석 데이터 조회 (학부모 계정에서만)
+  const { data: attendanceData = [], isLoading: attendanceLoading, error: attendanceError } = useQuery({
+    queryKey: ['parentAttendance', profile?.studentId],
+    queryFn: async () => {
+      if (!isParent || !profile?.studentId) {
+        console.log('Attendance query skipped - not parent or no studentId');
+        return [];
+      }
+      
+      console.log('Fetching attendance data for studentId:', profile.studentId);
+      
+      try {
+        const response = await attendanceAPI.getByStudent(profile.studentId);
+        const attendances = response.data || [];
+        
+        console.log('Attendance API response:', response);
+        console.log('Attendance data received:', attendances);
+        console.log('First attendance detail:', attendances[0]);
+        return attendances;
+      } catch (error) {
+        console.error('Error fetching attendance:', error);
+        console.error('Error details:', error.response?.data);
+        return [];
+      }
+    },
+    enabled: isParent && !!profile?.studentId,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
+    cacheTime: 0,
+    refetchIntervalInBackground: true, // 백그라운드에서도 새로고침
+  });
+  
+  // 디버깅용 로그
+  console.log('=== ATTENDANCE DEBUG ===');
+  console.log('Attendance query enabled:', isParent && !!profile?.studentId);
+  console.log('isParent:', isParent);
+  console.log('profile?.studentId:', profile?.studentId);
+  console.log('attendanceLoading:', attendanceLoading);
+  console.log('attendanceError:', attendanceError);
+  console.log('attendanceData length:', attendanceData.length);
+  console.log('========================');
+
   // 선택된 날짜의 수업 정보 조회 (역할별)
   const { data: classData = [], isLoading, error: classDataError } = useQuery({
     queryKey: ['classInfo', selectedDate, profile?.role],
     queryFn: async () => {
       if (!profile) return [];
+      
+      console.log('Fetching class data for:', { selectedDate, role: profile.role, studentId: profile.studentId });
       
       if (profile.role === 'PARENT') {
         const today = new Date().toISOString().split('T')[0];
@@ -42,37 +88,134 @@ function ClassInfo() {
         const isFuture = selectedDate > today;
         
         if (isFuture) {
-          // 미래 날짜: 예약 정보만 표시
-          const reservationsResponse = await reservationAPI.getByDate(selectedDate);
-          const reservations = reservationsResponse.data || [];
-          
-          return reservations.map(reservation => ({
-            id: `reservation-${reservation.id}`,
-            type: 'reservation',
-            student: reservation.student || { 
-              name: reservation.studentName, 
-              studentName: reservation.studentName 
-            },
-            schedule: {
-              id: reservation.scheduleId,
-              startTime: reservation.startTime,
-              endTime: reservation.endTime,
-              course: {
-                name: reservation.courseName,
-                courseName: reservation.courseName
-              }
-            },
-            status: reservation.status,
-            teacherName: '미배정',
-            checkInTime: null,
-            checkOutTime: null,
-            memo: reservation.memo,
-            reservationStatus: reservation.status
-          }));
+          // 미래 날짜: 스케줄 정보(수업 예정) + 예약 정보 모두 표시
+          try {
+            const results = [];
+            
+            // 1. 스케줄 정보 가져오기 (수업 예정)
+            const allSchedulesResponse = await scheduleAPI.getByDate(selectedDate);
+            const allSchedules = allSchedulesResponse.data || [];
+            
+            // 학생이 수강하는 코스의 스케줄만 필터링
+            const enrollmentsResponse = await enrollmentAPI.getByStudent(profile.studentId);
+            const enrollments = enrollmentsResponse.data || [];
+            const activeEnrollments = enrollments.filter(e => e.isActive);
+            const studentCourseIds = activeEnrollments.map(e => e.courseId);
+            
+            const studentSchedules = allSchedules.filter(schedule => 
+              studentCourseIds.includes(schedule.courseId)
+            );
+            
+            // 스케줄을 "수업 예정" 형태로 변환
+            studentSchedules.forEach(schedule => {
+              results.push({
+                id: `schedule-${schedule.id}`,
+                type: 'scheduled',
+                courseName: schedule.courseName,
+                courseLevel: schedule.courseLevel,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                teacherName: schedule.teacherName || '미배정',
+                status: '수업 예정',
+                student: { 
+                  id: profile.studentId,
+                  studentName: profile.name 
+                }
+              });
+            });
+            
+            // 2. 예약 정보 가져오기
+            const reservationsResponse = await reservationAPI.getByDate(selectedDate);
+            const reservations = reservationsResponse.data || [];
+            
+            // 예약을 "예약" 형태로 변환
+            reservations.forEach(reservation => {
+              results.push({
+                id: `reservation-${reservation.id}`,
+                type: 'reservation',
+                courseName: reservation.courseName,
+                startTime: reservation.startTime,
+                endTime: reservation.endTime,
+                teacherName: '미배정',
+                status: reservation.status,
+                reservationStatus: reservation.status,
+                memo: reservation.memo,
+                student: reservation.student || { 
+                  name: reservation.studentName, 
+                  studentName: reservation.studentName 
+                }
+              });
+            });
+            
+            console.log('Future date results (schedules + reservations):', results);
+            return results;
+          } catch (error) {
+            console.error('Failed to fetch future date info:', error);
+            return [];
+          }
         } else {
-          // 과거/현재 날짜: 출석 정보만 표시
-          const attendancesResponse = await attendanceAPI.getMyChildSchedules(selectedDate);
-          return attendancesResponse.data || [];
+          // 과거/현재 날짜: 학생의 수강권 기반으로 수업 정보 표시
+          try {
+            // 1. 학생의 활성 수강권 조회
+            const enrollmentsResponse = await enrollmentAPI.getByStudent(profile.studentId);
+            const enrollments = enrollmentsResponse.data || [];
+            const activeEnrollments = enrollments.filter(e => e.isActive);
+            
+            console.log('Student active enrollments:', activeEnrollments);
+            
+            if (activeEnrollments.length === 0) {
+              return [];
+            }
+            
+            // 2. 해당 날짜의 모든 스케줄 조회
+            console.log('Calling scheduleAPI.getByDate with:', selectedDate);
+            const allSchedulesResponse = await scheduleAPI.getByDate(selectedDate);
+            const allSchedules = allSchedulesResponse.data || [];
+            
+            console.log('API Response status:', allSchedulesResponse.status);
+            console.log('API Response data:', allSchedulesResponse.data);
+            console.log('All schedules for selected date:', selectedDate, allSchedules);
+            
+            // 3. 학생이 수강하는 코스의 스케줄만 필터링
+            const studentCourseIds = activeEnrollments.map(e => e.courseId);
+            const studentSchedules = allSchedules.filter(schedule => {
+              console.log('Checking schedule courseId:', schedule.courseId, 'vs student courseIds:', studentCourseIds);
+              return studentCourseIds.includes(schedule.courseId);
+            });
+            
+            console.log('Student course IDs:', studentCourseIds);
+            console.log('Filtered student schedules:', studentSchedules);
+            
+            // 4. 출석 데이터 가져오기
+            const attendancesResponse = await attendanceAPI.getByStudent(profile.studentId);
+            const attendances = attendancesResponse.data || [];
+            
+            // 5. 스케줄에 출석 정보와 수강권 정보 추가
+            const schedulesWithData = studentSchedules.map(schedule => {
+              const attendance = attendances.find(att => 
+                att.schedule && att.schedule.id === schedule.id
+              );
+              
+              const enrollment = activeEnrollments.find(e => e.courseId === schedule.courseId);
+              
+              return {
+                ...schedule,
+                attendance: attendance,
+                enrollment: enrollment,
+                type: 'schedule',
+                student: { 
+                  id: profile.studentId,
+                  studentName: profile.name 
+                }
+              };
+            });
+            
+            console.log('Final schedules with data:', schedulesWithData);
+            return schedulesWithData;
+          } catch (error) {
+            console.error('Failed to fetch student class info:', error);
+            return [];
+          }
         }
       } else if (profile.role === 'TEACHER') {
         const response = await scheduleAPI.getMySchedules(selectedDate);
@@ -96,9 +239,47 @@ function ClassInfo() {
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth() + 1;
       
+      console.log('=== MONTHLY SCHEDULES DEBUG ===');
+      console.log('Fetching monthly schedules for:', { year, month, role: profile.role });
+      
       if (profile.role === 'PARENT') {
-        const response = await attendanceAPI.getMyChildMonthlySchedules(year, month);
-        return response.data;
+        try {
+          // 학생의 활성 수강권 조회
+          const enrollmentsResponse = await enrollmentAPI.getByStudent(profile.studentId);
+          const enrollments = enrollmentsResponse.data || [];
+          const activeEnrollments = enrollments.filter(e => e.isActive);
+          
+          console.log('Active enrollments:', activeEnrollments);
+          
+          if (activeEnrollments.length === 0) {
+            console.log('No active enrollments found');
+            return [];
+          }
+          
+          // 해당 월의 모든 스케줄 조회
+          const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+          const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+          console.log('Fetching schedules for range:', startDate, 'to', endDate);
+          
+          const allSchedulesResponse = await scheduleAPI.getByRange(startDate, endDate);
+          const allSchedules = allSchedulesResponse.data || [];
+          
+          console.log('All schedules in range:', allSchedules.length);
+          
+          // 학생이 수강하는 코스의 스케줄만 필터링
+          const studentCourseIds = activeEnrollments.map(e => e.courseId);
+          const monthlyData = allSchedules.filter(schedule => 
+            studentCourseIds.includes(schedule.courseId)
+          );
+          
+          console.log('Student course IDs:', studentCourseIds);
+          console.log('Filtered monthly schedules:', monthlyData.length);
+          console.log('Monthly schedules data:', monthlyData);
+          return monthlyData;
+        } catch (error) {
+          console.error('Failed to fetch monthly schedules:', error);
+          return [];
+        }
       } else if (profile.role === 'TEACHER') {
         const response = await scheduleAPI.getMyMonthlySchedules(year, month);
         return response.data;
@@ -154,15 +335,51 @@ function ClassInfo() {
       const hasSchedule = monthlySchedules.some(schedule => 
         schedule.scheduleDate === dateStr || schedule.date === dateStr
       );
+
+      // 학부모용 출석 상태 확인 (학부모 계정에서만, 오늘 이전 날짜만)
+      let attendanceStatus = null;
+      if (isParent && attendanceData.length > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 오늘 이전 날짜만 출석 상태 표시
+        if (dateStr <= today) {
+          // 출석 데이터에서 직접 날짜 매칭 (최신 데이터 우선)
+          const attendance = attendanceData
+            .filter(att => {
+              // 만약 checkInTime이 있으면 그 날짜로 매칭
+              if (att.checkInTime) {
+                const attDate = att.checkInTime.split('T')[0];
+                return attDate === dateStr;
+              }
+              // checkInTime이 없으면 스케줄 ID로 월별 스케줄과 매칭
+              const daySchedule = monthlySchedules.find(schedule => {
+                const scheduleDate = schedule.scheduleDate || schedule.date;
+                return scheduleDate === dateStr && schedule.id === att.scheduleId;
+              });
+              return !!daySchedule;
+            })
+            .sort((a, b) => b.id - a.id)[0]; // ID 내림차순으로 정렬해서 최신 데이터 선택
+          
+          if (attendance) {
+            attendanceStatus = attendance.status;
+            console.log('Found attendance for', dateStr, ':', attendanceStatus);
+          }
+        }
+      }
       
       days.push(
         <div
           key={day}
-          className={`calendar-day ${dateStr === selectedDate ? 'selected' : ''} ${hasSchedule ? 'has-schedule' : ''}`}
+          className={`calendar-day ${dateStr === selectedDate ? 'selected' : ''} ${attendanceStatus ? `attendance-${attendanceStatus.toLowerCase()}` : ''}`}
           onClick={() => setSelectedDate(dateStr)}
         >
           <span className="day-number">{day}</span>
-          {hasSchedule && <div className="schedule-indicator"></div>}
+          {!isParent && hasSchedule && <div className="schedule-indicator"></div>}
+          {isParent && attendanceStatus && (
+            <div className={`attendance-indicator ${attendanceStatus.toLowerCase()}`}>
+              <div className="attendance-dot"></div>
+            </div>
+          )}
         </div>
       );
     }
@@ -245,82 +462,82 @@ function ClassInfo() {
 
     if (isParent) {
       return (
-        <div className="attendance-list">
-          {classData.map((item) => (
-            <div key={item.id} className="attendance-card">
-              <div className="card-header">
-                <div className="student-course-info">
-                  <h3>{item.student?.name || item.student?.studentName || '학생'}</h3>
-                  <span className="course-name">{item.schedule?.course?.name || item.schedule?.course?.courseName || '수업'}</span>
-                </div>
-                {item.status && getStatusBadge(item.status)}
-              </div>
-              <div className="card-body">
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="label"><i className="fas fa-clock"></i>수업 시간</span>
-                    <span className="value">{formatTime(item.schedule?.startTime)} - {formatTime(item.schedule?.endTime)}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="label"><i className="fas fa-user-tie"></i>담당 강사</span>
-                    <span className="value">{item.teacherName || '미배정'}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="label"><i className="fas fa-sign-in-alt"></i>출석 시간</span>
-                    <span className="value">{item.checkInTime ? formatTime(item.checkInTime) : '미출석'}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="label"><i className="fas fa-sign-out-alt"></i>퇴실 시간</span>
-                    <span className="value">{item.checkOutTime ? formatTime(item.checkOutTime) : '미퇴실'}</span>
-                  </div>
-                </div>
-                {item.memo && item.memo.trim() && (
-                  <div className="notes-section">
-                    <span className="notes-label">
-                      <i className="fas fa-sticky-note"></i>
-                      메모
-                    </span>
-                    <p className="notes-content">{item.memo}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    } else {
-      return (
         <div className="schedule-list">
           {classData.map((schedule) => (
             <div key={schedule.id} className="schedule-card">
               <div className="card-header">
                 <div className="course-info">
-                  <h3>{schedule.course?.name || schedule.courseName || '수업'}</h3>
-                  <span className="time-info">{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
+                  <h3>{schedule.courseName}</h3>
+                  <span className="course-level">{schedule.courseLevel}</span>
                 </div>
-                <span className="capacity-badge">{schedule.currentStudents || 0}/{schedule.maxCapacity || schedule.maxStudents || 0}</span>
+                {schedule.attendance && getStatusBadge(schedule.attendance.status)}
               </div>
               <div className="card-body">
-                {isTeacher && (
-                  <div className="teacher-info">
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="label"><i className="fas fa-clock"></i>수업 시간</span>
+                    <span className="value">{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
+                  </div>
+                  <div className="info-item">
                     <span className="label"><i className="fas fa-user-tie"></i>담당 강사</span>
                     <span className="value">{schedule.teacherName || '미배정'}</span>
                   </div>
-                )}
-                {schedule.currentStudents > 0 && (
-                  <div className="students-list">
-                    <span className="label"><i className="fas fa-users"></i>수강생</span>
-                    <div className="students-info">
-                      <span className="student-count">{schedule.currentStudents}명 수강 중</span>
-                    </div>
+                  <div className="info-item">
+                    <span className="label"><i className="fas fa-users"></i>수강 인원</span>
+                    <span className="value">{schedule.currentStudents || 0}/{schedule.maxStudents || '무제한'}</span>
                   </div>
-                )}
+                  {schedule.attendance && (
+                    <>
+                      <div className="info-item">
+                        <span className="label"><i className="fas fa-sign-in-alt"></i>출석 시간</span>
+                        <span className="value">{schedule.attendance.checkInTime ? formatDateTime(schedule.attendance.checkInTime) : '-'}</span>
+                      </div>
+                      <div className="info-item">
+                        <span className="label"><i className="fas fa-sign-out-alt"></i>퇴실 시간</span>
+                        <span className="value">{schedule.attendance.checkOutTime ? formatDateTime(schedule.attendance.checkOutTime) : '-'}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
       );
     }
+
+    // 관리자/선생님용 렌더링
+    return (
+      <div className="schedule-list">
+        {classData.map((schedule) => (
+          <div key={schedule.id} className="schedule-card">
+            <div className="card-header">
+              <div className="course-info">
+                <h3>{schedule.course?.name || schedule.courseName || '수업'}</h3>
+                <span className="time-info">{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
+              </div>
+              <span className="capacity-badge">{schedule.currentStudents || 0}/{schedule.maxCapacity || schedule.maxStudents || 0}</span>
+            </div>
+            <div className="card-body">
+              {isTeacher && (
+                <div className="teacher-info">
+                  <span className="label"><i className="fas fa-user-tie"></i>담당 강사</span>
+                  <span className="value">{schedule.teacherName || '미배정'}</span>
+                </div>
+              )}
+              {schedule.currentStudents > 0 && (
+                <div className="students-list">
+                  <span className="label"><i className="fas fa-users"></i>수강생</span>
+                  <div className="students-info">
+                    <span className="student-count">{schedule.currentStudents}명 수강 중</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (profileError?.response?.status === 401) {

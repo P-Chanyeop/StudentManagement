@@ -49,7 +49,7 @@ public class DataSeeder {
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
 
     @Bean
-    @Profile("dev") // dev 프로파일에서만 실행
+    // @Profile("dev") // 주석 처리 - 항상 실행
     public CommandLineRunner loadInitialData() {
         return args -> {
             log.info("=== Initial data loading started ===");
@@ -233,17 +233,34 @@ public class DataSeeder {
                         .build();
                 courseRepository.save(englishCourse);
 
-                // 오늘 스케줄 생성
-                CourseSchedule todaySchedule = CourseSchedule.builder()
-                        .course(englishCourse)
-                        .scheduleDate(LocalDate.now())
-                        .startTime(LocalTime.of(14, 0))
-                        .endTime(LocalTime.of(16, 0))
-                        .dayOfWeek(LocalDate.now().getDayOfWeek().name())
-                        .currentStudents(0)
-                        .isCancelled(false)
-                        .build();
-                scheduleRepository.save(todaySchedule);
+                // 기존 스케줄 삭제 후 2달치 스케줄 생성 (월~금, 14:00-16:00)
+                scheduleRepository.deleteAll();
+                log.info("Deleted all existing schedules");
+                
+                LocalDate scheduleStartDate = LocalDate.of(2026, 1, 1);
+                LocalDate scheduleEndDate = scheduleStartDate.plusMonths(2);
+                
+                log.info("Creating 2-month schedules from {} to {}", scheduleStartDate, scheduleEndDate);
+                
+                int createdCount = 0;
+                for (LocalDate date = scheduleStartDate; !date.isAfter(scheduleEndDate); date = date.plusDays(1)) {
+                    // 월요일부터 금요일까지만 수업 생성
+                    if (date.getDayOfWeek().getValue() >= 1 && date.getDayOfWeek().getValue() <= 5) {
+                        CourseSchedule schedule = CourseSchedule.builder()
+                                .course(englishCourse)
+                                .scheduleDate(date)
+                                .startTime(LocalTime.of(14, 0))
+                                .endTime(LocalTime.of(16, 0))
+                                .dayOfWeek(date.getDayOfWeek().name())
+                                .currentStudents(0)
+                                .isCancelled(false)
+                                .build();
+                        scheduleRepository.save(schedule);
+                        createdCount++;
+                    }
+                }
+                
+                log.info("Created {} schedules for English course over 2 months", createdCount);
 
                 // 학생들에게 수강권 할당 (12주 기간 + 24회 사용 가능) - ID 순으로 정렬
                 List<Student> students = studentRepository.findAll();
@@ -356,8 +373,8 @@ public class DataSeeder {
                 }
             }
 
-            // 6. 테스트용 출석 데이터 생성 (항상 실행)
-            createAttendanceRecords();
+            // 6. 테스트용 출석 데이터 생성 (주석 처리 - 실제 출석 데이터 보존)
+            // createAttendanceRecords();
 
             // 테스트 공지사항 데이터 생성
             if (noticeRepository.count() == 0) {
@@ -579,57 +596,79 @@ public class DataSeeder {
             // 기존 출석 데이터 삭제
             attendanceRepository.deleteAll();
             
-            // 오늘 날짜의 스케줄 찾기
+            // 과거 10일간의 출석 데이터 생성
             LocalDate today = LocalDate.now();
-            List<CourseSchedule> todaySchedules = scheduleRepository.findByScheduleDate(today);
-            
-            if (todaySchedules.isEmpty()) {
-                log.info("No schedules found for today: {}", today);
-                return;
-            }
-            
-            log.info("Creating attendance records for {} schedules on {}", todaySchedules.size(), today);
-            
-            // 모든 스케줄의 등록 학생들을 출석 상태로 생성
-            for (CourseSchedule schedule : todaySchedules) {
-                List<Enrollment> enrollments = enrollmentRepository.findByCourseAndIsActiveTrue(schedule.getCourse());
-                log.info("Found {} enrollments for course: {}", enrollments.size(), schedule.getCourse().getCourseName());
+            for (int i = 1; i <= 10; i++) {
+                LocalDate targetDate = today.minusDays(i);
                 
-                for (Enrollment enrollment : enrollments) {
-                    Student student = enrollment.getStudent();
+                // 해당 날짜의 스케줄 찾기
+                List<CourseSchedule> schedules = scheduleRepository.findByScheduleDate(targetDate);
+                
+                if (schedules.isEmpty()) {
+                    log.info("No schedules found for date: {}", targetDate);
+                    continue;
+                }
+                
+                log.info("Creating attendance records for {} schedules on {}", schedules.size(), targetDate);
+                
+                // 각 스케줄의 등록 학생들에게 출석 데이터 생성
+                for (CourseSchedule schedule : schedules) {
+                    List<Enrollment> enrollments = enrollmentRepository.findByCourseAndIsActiveTrue(schedule.getCourse());
                     
-                    // 중복 체크: 이미 출석 데이터가 있으면 건너뛰기
-                    Optional<Attendance> existingAttendance = attendanceRepository
-                            .findByStudentIdAndScheduleId(student.getId(), schedule.getId());
-                    
-                    if (existingAttendance.isPresent()) {
-                        log.info("Attendance already exists for student: {}, skipping", student.getStudentName());
-                        continue;
+                    for (Enrollment enrollment : enrollments) {
+                        Student student = enrollment.getStudent();
+                        
+                        // 중복 체크
+                        Optional<Attendance> existingAttendance = attendanceRepository
+                                .findByStudentIdAndScheduleId(student.getId(), schedule.getId());
+                        
+                        if (existingAttendance.isPresent()) {
+                            continue;
+                        }
+                        
+                        // 다양한 출석 상태 생성 (랜덤)
+                        AttendanceStatus status;
+                        LocalDateTime checkInTime = null;
+                        String reason = null;
+                        
+                        int randomStatus = (int) (Math.random() * 10);
+                        if (randomStatus < 6) {
+                            // 60% 출석
+                            status = AttendanceStatus.PRESENT;
+                            checkInTime = LocalDateTime.of(targetDate, schedule.getStartTime());
+                        } else if (randomStatus < 8) {
+                            // 20% 지각
+                            status = AttendanceStatus.LATE;
+                            checkInTime = LocalDateTime.of(targetDate, schedule.getStartTime().plusMinutes(15));
+                        } else {
+                            // 20% 결석
+                            status = AttendanceStatus.ABSENT;
+                            reason = "무단결석";
+                        }
+                        
+                        Attendance attendance = Attendance.builder()
+                                .student(student)
+                                .schedule(schedule)
+                                .status(status)
+                                .checkInTime(checkInTime)
+                                .checkOutTime(null)
+                                .expectedLeaveTime(schedule.getEndTime())
+                                .originalExpectedLeaveTime(schedule.getEndTime())
+                                .memo("")
+                                .reason(reason)
+                                .classCompleted(false)
+                                .dcCheck("")
+                                .wrCheck("")
+                                .vocabularyClass(false)
+                                .grammarClass(false)
+                                .phonicsClass(false)
+                                .speakingClass(false)
+                                .build();
+                        
+                        attendanceRepository.save(attendance);
+                        log.info("✓ {} attendance created for: {} on {}", 
+                                status, student.getStudentName(), targetDate);
                     }
-                    
-                    // 모든 학생을 출석 상태로 강제 생성
-                    Attendance attendance = Attendance.builder()
-                            .student(student)
-                            .schedule(schedule)
-                            .status(AttendanceStatus.PRESENT)  // 강제로 출석
-                            .checkInTime(LocalDateTime.of(today, LocalTime.of(14, 0)))  // 확실히 14:00 출석
-                            .checkOutTime(null)
-                            .expectedLeaveTime(schedule.getEndTime())
-                            .originalExpectedLeaveTime(schedule.getEndTime())
-                            .memo("")
-                            .reason(null)
-                            .classCompleted(false)
-                            .dcCheck("")
-                            .wrCheck("")
-                            .vocabularyClass(false)
-                            .grammarClass(false)
-                            .phonicsClass(false)
-                            .speakingClass(false)
-                            .build();
-                    
-                    attendanceRepository.save(attendance);
-                    log.info("✓ PRESENT attendance created for: {} (checkInTime: {})", 
-                            student.getStudentName(), attendance.getCheckInTime());
                 }
             }
             

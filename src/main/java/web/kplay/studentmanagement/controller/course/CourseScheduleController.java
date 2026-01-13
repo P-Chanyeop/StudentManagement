@@ -54,7 +54,7 @@ public class CourseScheduleController {
     }
 
     @GetMapping("/range")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<CourseScheduleResponse>> getSchedulesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
