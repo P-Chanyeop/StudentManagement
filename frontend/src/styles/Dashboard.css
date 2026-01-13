@@ -751,3 +751,394 @@
   transform: translateY(0) scale(0.98);
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
+/* 학부모 대시보드 스타일 */
+.parent-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.parent-dashboard .dashboard-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.parent-dashboard .dashboard-header h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.parent-dashboard .dashboard-header p {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.enrollment-cards {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+.enrollment-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.enrollment-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.enrollment-card .card-header h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.urgent {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.info-value.highlight {
+  color: #059669;
+  font-weight: 700;
+}
+
+.info-value.urgent {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.parent-dashboard .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9ca3af;
+}
+
+.parent-dashboard .empty-state i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  color: #d1d5db;
+}
+
+.parent-dashboard .empty-state p {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .parent-dashboard {
+    padding: 1rem;
+  }
+  
+  .enrollment-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .enrollment-card {
+    padding: 1.5rem;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+/* 학부모 대시보드 학생별 섹션 */
+.student-info-section {
+  margin-bottom: 3rem;
+}
+
+.student-name-header {
+  font-size: 1.8rem;
+  color: #1f2937;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #03C75A;
+  font-weight: 700;
+}
+
+.schedule-time {
+  font-size: 1.2rem !important;
+}
+
+.period-dates {
+  font-size: 1rem !important;
+}
+/* 레코딩 파일 모달 스타일 */
+.recording-modal {
+  max-width: 800px;
+  max-height: 85vh;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, #03C75A 0%, #02b350 100%);
+  color: white;
+}
+
+.recording-modal .modal-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 2rem;
+}
+
+.recording-modal .modal-header h2 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.recording-modal .modal-header h2 i {
+  color: #fbbf24;
+  margin-right: 1rem;
+}
+
+.recording-modal .modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.recording-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.recording-modal .modal-body {
+  padding: 2rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.recording-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.recording-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+}
+
+.recording-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 1);
+}
+
+.recording-info {
+  flex: 1;
+}
+
+.recording-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.recording-title i {
+  color: #03C75A;
+  margin-right: 0.8rem;
+  font-size: 1.5rem;
+}
+
+.recording-date {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+}
+
+.recording-memo {
+  font-size: 0.95rem;
+  color: #4b5563;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 0.8rem;
+  border-left: 4px solid #fbbf24;
+}
+
+.recording-memo i {
+  color: #f59e0b;
+  margin-right: 0.8rem;
+  font-size: 1.1rem;
+}
+
+.recording-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.btn-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #03C75A, #02b350);
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(3, 199, 90, 0.4);
+}
+
+.btn-play:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(3, 199, 90, 0.6);
+  background: linear-gradient(135deg, #02b350, #028a42);
+}
+
+.btn-play i {
+  font-size: 1.1rem;
+}
+
+.recording-modal .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.recording-modal .empty-state i {
+  font-size: 5rem;
+  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.recording-modal .empty-state p {
+  font-size: 1.3rem;
+  font-weight: 300;
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stat-card.clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* 스크롤바 스타일링 */
+.recording-modal .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.recording-modal .modal-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.recording-modal .modal-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.recording-modal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .recording-modal {
+    max-width: 95vw;
+    margin: 1rem;
+    border-radius: 16px;
+  }
+  
+  .recording-modal .modal-header,
+  .recording-modal .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .recording-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+  
+  .recording-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .btn-play {
+    width: 100%;
+    justify-content: center;
+  }
+}

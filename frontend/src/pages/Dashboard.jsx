@@ -34,7 +34,18 @@ function Dashboard() {
     },
   });
 
-  const isParent = profile?.role === 'PARENT';
+  // 모든 가능한 role 형태 확인
+  const isParent = profile?.role === 'PARENT' || 
+                   profile?.role === 'ROLE_PARENT' ||
+                   profile?.authorities?.some(auth => auth.authority === 'ROLE_PARENT') ||
+                   profile?.roles?.includes('PARENT');
+  
+  // 디버깅용 로그
+  console.log('Profile keys:', Object.keys(profile || {}));
+  console.log('Profile role:', profile?.role);
+  console.log('Profile authorities:', profile?.authorities);
+  console.log('Profile roles:', profile?.roles);
+  console.log('Is Parent:', isParent);
 
   // 대시보드 통계 조회 (관리자/선생님만)
   const { data: dashboardStats } = useQuery({
@@ -169,16 +180,107 @@ function Dashboard() {
 
   return (
     <div className="dashboard-wrapper">
-      {/* 히어로 섹션 */}
-      <section className="hero">
-        <div className="hero-container">
-          <h1>안녕하세요, {profile?.name || '사용자'}님! 👋</h1>
-          <p>오늘도 학원 운영을 효율적으로 관리하세요</p>
+      {/* 학부모 전용 간단한 대시보드 */}
+      {isParent ? (
+        <div className="parent-dashboard">
+          <div className="dashboard-header">
+            <h1>안녕하세요, {profile?.name || '사용자'}님! 👋</h1>
+            <p>자녀의 수강 정보를 확인하세요</p>
+          </div>
+          
+          {/* 수강권 정보 카드 */}
+          <div className="enrollment-cards">
+            {enrollments.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-graduation-cap"></i>
+                <p>등록된 수강권이 없습니다</p>
+              </div>
+            ) : (
+              enrollments.map((enrollment) => {
+                const daysLeft = Math.ceil(
+                  (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
+                );
+                
+                return (
+                  <div key={enrollment.id} className="enrollment-card">
+                    <div className="card-header">
+                      <h3>{enrollment.studentName}</h3>
+                      <span className={`status-badge ${daysLeft <= 7 ? 'urgent' : 'active'}`}>
+                        {daysLeft > 0 ? `${daysLeft}일 남음` : '만료'}
+                      </span>
+                    </div>
+                    
+                    <div className="card-content">
+                      <div className="info-grid">
+                        <div className="info-item">
+                          <div className="info-label">학생 이름</div>
+                          <div className="info-value">{enrollment.studentName}</div>
+                        </div>
+                        
+                        <div className="info-item">
+                          <div className="info-label">반</div>
+                          <div className="info-value">{enrollment.courseName}</div>
+                        </div>
+                        
+                        <div className="info-item">
+                          <div className="info-label">수업 시간</div>
+                          <div className="info-value">
+                            {enrollment.courseSchedules?.map(schedule => 
+                              `${schedule.dayOfWeek} ${schedule.startTime}-${schedule.endTime}`
+                            ).join(', ') || '미정'}
+                          </div>
+                        </div>
+                        
+                        <div className="info-item">
+                          <div className="info-label">잔여 횟수</div>
+                          <div className="info-value highlight">
+                            {enrollment.enrollmentType === 'COUNT' 
+                              ? `${enrollment.remainingCount}회` 
+                              : '무제한'}
+                          </div>
+                        </div>
+                        
+                        <div className="info-item">
+                          <div className="info-label">수강 기간</div>
+                          <div className="info-value">
+                            {new Date(enrollment.startDate).toLocaleDateString('ko-KR')} ~ 
+                            {new Date(enrollment.endDate).toLocaleDateString('ko-KR')}
+                          </div>
+                        </div>
+                        
+                        <div className="info-item">
+                          <div className="info-label">남은 일수</div>
+                          <div className={`info-value ${daysLeft <= 7 ? 'urgent' : ''}`}>
+                            {daysLeft > 0 ? `${daysLeft}일` : '만료'}
+                          </div>
+                        </div>
+                        
+                        <div className="info-item">
+                          <div className="info-label">레코딩 파일</div>
+                          <div className="info-value">
+                            {enrollment.actualRecordings || 0}/{enrollment.expectedRecordings || 0}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
-      </section>
+      ) : (
+        <>
+          {/* 히어로 섹션 */}
+          <section className="hero">
+            <div className="hero-container">
+              <h1>안녕하세요, {profile?.name || '사용자'}님! 👋</h1>
+              <p>오늘도 학원 운영을 효율적으로 관리하세요</p>
+            </div>
+          </section>
 
-      {/* 메인 컨텐츠 */}
-      <div className="dashboard-container">
+          {/* 메인 컨텐츠 */}
+          <div className="dashboard-container">
         {/* 통계 카드 - 관리자/선생님만 */}
         {!isParent && (
           <div className="stats-grid">
@@ -625,6 +727,8 @@ function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -772,3 +772,8 @@
     width: calc(100% - 40px);
   }
 }
+
+/* 캘린더 일요일 스타일 */
+.calendar-grid .calendar-day:nth-child(7n+1):not(.empty) {
+  color: #ff6b6b;
+}

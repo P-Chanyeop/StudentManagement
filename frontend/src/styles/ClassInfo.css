@@ -103,6 +103,11 @@
   background: #03C75A;
 }
 
+/* 일요일만 빨간색 (첫 번째 열) */
+.calendar-grid .calendar-day:nth-child(7n+1):not(.other-month) {
+  color: #ff6b6b;
+}
+
 .day-number {
   font-size: 0.9rem;
   font-weight: 500;

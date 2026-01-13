@@ -437,6 +437,11 @@
   color: #ff6b6b;
 }
 
+/* 일요일만 빨간색 (첫 번째 열) */
+.calendar-grid .calendar-day:nth-child(7n+1):not(.empty) {
+  color: #ff6b6b;
+}
+
 
 
 .calendar-day.holiday {
