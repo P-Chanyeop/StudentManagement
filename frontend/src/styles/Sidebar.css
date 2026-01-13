@@ -275,9 +275,10 @@
   border: none;
   color: var(--gray-600);
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
   border-radius: 4px;
   transition: all 0.2s;
+  font-size: 16px;
 }
 
 .edit-menu-btn:hover {
@@ -294,9 +295,10 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 5px 8px;
+  padding: 8px 10px;
   border-radius: 4px;
   transition: all 0.2s;
+  font-size: 16px;
 }
 
 .save-btn {

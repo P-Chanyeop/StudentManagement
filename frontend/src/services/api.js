@@ -31,13 +31,13 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const response = await axios.post('/api/auth/refresh', { refreshToken });
+          const response = await api.post('/api/auth/refresh', { refreshToken });
           const { accessToken } = response.data;
           localStorage.setItem('accessToken', accessToken);
 
           // 원래 요청 재시도
           error.config.headers.Authorization = `Bearer ${accessToken}`;
-          return axios(error.config);
+          return api(error.config);
         } catch (refreshError) {
           // 리프레시 토큰도 만료됨
           localStorage.clear();

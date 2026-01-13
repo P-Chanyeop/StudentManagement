@@ -193,16 +193,13 @@ function Sidebar() {
     }
   }, [isEditMode]);
 
-  // 편집 취소
+  // 편집 취소 및 저장
   const cancelEdit = () => {
-    setIsEditMode(false);
-    setCustomMenuOrder([]);
-  };
-
-  // 메뉴 순서 저장
-  const saveMenuOrder = () => {
+    // X 버튼 클릭 시 저장하고 편집 모드 종료
     const menuPaths = customMenuOrder.map(item => item.path);
     saveMenuOrderMutation.mutate(menuPaths);
+    setIsEditMode(false);
+    setCustomMenuOrder([]);
   };
 
   // 드래그 앤 드롭 핸들러 (@dnd-kit)
@@ -243,10 +240,7 @@ function Sidebar() {
               </button>
             ) : (
               <div className="edit-controls">
-                <button className="save-btn" onClick={saveMenuOrder} title="저장">
-                  <i className="fas fa-check"></i>
-                </button>
-                <button className="cancel-btn" onClick={cancelEdit} title="취소">
+                <button className="cancel-btn" onClick={cancelEdit} title="저장하고 닫기">
                   <i className="fas fa-times"></i>
                 </button>
               </div>

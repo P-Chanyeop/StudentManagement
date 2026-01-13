@@ -7,7 +7,7 @@ import '../styles/ParentReservation.css';
 function ParentReservation() {
   const [reservationStatus, setReservationStatus] = useState(null); // 'success', 'error', null
   // 사용자 프로필 조회
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
       const response = await authAPI.getProfile();
@@ -15,14 +15,25 @@ function ParentReservation() {
     },
   });
 
+  // 프로필 로딩 중이면 로딩 표시
+  if (profileLoading) {
+    return <div>로딩 중...</div>;
+  }
+
   // 학부모 자녀 목록 조회
   const { data: myStudents = [] } = useQuery({
     queryKey: ['myStudents'],
     queryFn: async () => {
-      const response = await studentAPI.getMyStudents();
-      return response.data;
+      try {
+        const response = await studentAPI.getMyStudents();
+        return response.data;
+      } catch (error) {
+        console.error('자녀 목록 조회 실패:', error);
+        return [];
+      }
     },
     enabled: !!profile && profile.role === 'PARENT',
+    retry: false,
   });
 
   // 전체 학생 목록 조회 (관리자/선생님용)
@@ -404,8 +415,7 @@ function ParentReservation() {
       <div className="parent-reservation">
         <div className="reservation-result success">
           <div className="result-icon">✓</div>
-          <h2>예약 요청이 완료되었습니다!</h2>
-          <p>확인 후 연락드리겠습니다.</p>
+          <h2>예약이 완료되었습니다!</h2>
           <div className="result-buttons">
             <button onClick={handleRetryReservation} className="btn-retry">
               다시 예약
@@ -464,6 +474,8 @@ function ParentReservation() {
     
     if (!formData.consultationType) {
       newErrors.consultationType = '수업 유형을 선택해주세요.';
+      // 수업 유형을 선택하지 않았을 때 팝업 표시
+      alert('원하시는 예약을 눌러주세요');
     }
     
     setErrors(newErrors);
