@@ -32,6 +32,69 @@ function Attendance() {
     };
   });
 
+  // 출석 상태에 따른 행 클래스 반환
+  const getAttendanceRowClass = (attendance) => {
+    // 미래 시간대 체크
+    if (isFutureTime(attendance)) return 'waiting';
+    
+    if (!attendance.status) return 'absent';
+    
+    switch (attendance.status) {
+      case 'PRESENT':
+        return 'present';
+      case 'LATE':
+        return 'late';
+      case 'ABSENT':
+        return 'absent';
+      case 'EXCUSED':
+        return 'excused';
+      case 'EARLY_LEAVE':
+        return 'early-leave';
+      default:
+        return 'absent';
+    }
+  };
+
+  // 출석 상태 텍스트 반환
+  const getAttendanceStatusText = (attendance) => {
+    // 미래 시간대 체크
+    if (isFutureTime(attendance)) return '대기';
+    
+    if (!attendance.status) return '결석';
+    
+    switch (attendance.status) {
+      case 'PRESENT':
+        return '출석';
+      case 'LATE':
+        return '지각';
+      case 'ABSENT':
+        return '결석';
+      case 'EXCUSED':
+        return '사유결석';
+      case 'EARLY_LEAVE':
+        return '조퇴';
+      default:
+        return '결석';
+    }
+  };
+
+  // 미래 시간대인지 확인하는 함수
+  const isFutureTime = (attendance) => {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    // 오늘이 아닌 미래 날짜면 대기
+    if (selectedDate > today) return true;
+    
+    // 오늘 날짜인 경우 수업 시작 시간과 비교
+    if (selectedDate === today && attendance.startTime) {
+      const currentTime = now.toTimeString().substring(0, 5); // HH:MM
+      return currentTime < attendance.startTime;
+    }
+    
+    return false;
+  };
+
   // 오늘 날짜의 전체 출석 현황 조회
   const { data: attendances, isLoading } = useQuery({
     queryKey: ['attendances', selectedDate],
@@ -203,12 +266,30 @@ function Attendance() {
     }
   };
 
-  // 학생 출석 체크인 - 모달 열기
+  // 미래 날짜인지 확인하는 함수 (버튼 비활성화용)
+  const isFutureDate = (attendance) => {
+    const today = new Date().toISOString().split('T')[0];
+    return selectedDate > today;
+  };
+
+  // 학생 출석 체크인 - 모달 열기 또는 바로 출석 처리
   const handleStudentCheckIn = (attendance) => {
     if (attendance.checkInTime) return; // 이미 체크인된 경우
     
-    setSelectedAttendance(attendance);
-    setShowPhoneModal(true);
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 오늘 당일이면 바로 출석 처리 (모달 없이)
+    if (selectedDate === today) {
+      checkInMutation.mutate({
+        studentId: attendance.studentId,
+        scheduleId: attendance.scheduleId,
+        parentPhoneLast4: '0000' // 당일은 핸드폰 번호 확인 생략
+      });
+    } else {
+      // 과거 날짜면 모달 열기 (기존 로직)
+      setSelectedAttendance(attendance);
+      setShowPhoneModal(true);
+    }
   };
 
   // 핸드폰 번호 확인 후 출석 체크
@@ -548,13 +629,13 @@ function Attendance() {
               {filteredAttendances.map((attendance, index) => (
                 <tr 
                   key={attendance.id || `attendance-${index}`}
-                  className={`attendance-row ${!attendance.checkInTime ? 'absent' : ''}`}
+                  className={`attendance-row ${getAttendanceRowClass(attendance)}`}
                 >
                   <td className="student-name-td">
                     <div className="student-info">
                       <span className="name">{attendance.studentName}</span>
                       <span className="status-badge">
-                        {attendance.checkInTime ? '출석' : '결석'}
+                        {getAttendanceStatusText(attendance)}
                       </span>
                     </div>
                   </td>
@@ -662,9 +743,9 @@ function Attendance() {
                       <button
                         onClick={() => handleStudentCheckIn(attendance)}
                         className="checkin-btn"
-                        disabled={checkInMutation.isPending}
+                        disabled={checkInMutation.isPending || isFutureDate(attendance)}
                       >
-                        출석 체크
+                        {isFutureDate(attendance) ? '대기' : '출석 체크'}
                       </button>
                     ) : (
                       <div className="action-buttons">
