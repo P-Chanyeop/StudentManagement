@@ -163,6 +163,8 @@ export const reservationAPI = {
   confirm: (id) => api.post(`/reservations/${id}/confirm`),
   cancel: (id, reason) => api.post(`/reservations/${id}/cancel`, { reason }),
   forceCancel: (id, reason) => api.post(`/reservations/${id}/force-cancel`, { reason }),
+  checkAvailability: () => api.get('/reservations/availability'),
+  getAvailableDates: () => api.get('/reservations/available-dates'),
 };
 
 // 스케줄 API

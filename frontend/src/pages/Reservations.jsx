@@ -187,17 +187,6 @@ function Reservations() {
     const firstDay = new Date(year, month, 1).getDay();
     
     const days = [];
-    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
-    
-    // 요일 헤더
-    weekDays.forEach(day => {
-      days.push(
-        <div key={`header-${day}`} className="calendar-header-day">
-          {day}
-        </div>
-      );
-    });
-    
     // 빈 칸 (이전 달)
     for (let i = 0; i < firstDay; i++) {
       const prevMonth = month === 0 ? 11 : month - 1;
@@ -345,6 +334,15 @@ function Reservations() {
               </button>
             </div>
             
+            <div className="calendar-weekdays">
+              <div className="weekday">일</div>
+              <div className="weekday">월</div>
+              <div className="weekday">화</div>
+              <div className="weekday">수</div>
+              <div className="weekday">목</div>
+              <div className="weekday">금</div>
+              <div className="weekday">토</div>
+            </div>
             <div className="calendar-grid">
               {renderCalendar()}
             </div>

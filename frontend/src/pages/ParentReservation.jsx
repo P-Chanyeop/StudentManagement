@@ -15,6 +15,17 @@ function ParentReservation() {
     },
   });
 
+  // 예약 가능한 날짜 범위 조회
+  const { data: availableDates } = useQuery({
+    queryKey: ['availableDates'],
+    queryFn: async () => {
+      const response = await reservationAPI.getAvailableDates();
+      console.log('availableDates 응답:', response.data);
+      return response.data;
+    },
+    refetchInterval: 60000, // 1분마다 확인
+  });
+
   // 프로필 로딩 중이면 로딩 표시
   if (profileLoading) {
     return <div>로딩 중...</div>;
@@ -171,6 +182,51 @@ function ParentReservation() {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   };
 
+  // 날짜가 선택 가능한지 확인 (재원생 예약만 격주 제한 적용)
+  const isDateSelectable = (year, month, day) => {
+    const date = new Date(year, month, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    console.log('isDateSelectable 호출:', { year, month, day, consultationType: formData.consultationType });
+    
+    // 과거 날짜는 선택 불가
+    if (date < today) {
+      console.log('과거 날짜로 선택 불가');
+      return false;
+    }
+    
+    // 재원생 예약(영어 수업)이 아니면 원래 로직 사용
+    if (formData.consultationType !== '재원생상담') {
+      console.log('재원생 예약이 아니므로 제한 없음');
+      return true; // 레벨테스트 등은 제한 없음
+    }
+    
+    console.log('재원생 예약 - 격주 제한 적용');
+    
+    // 재원생 예약만 격주 제한 적용
+    // 주말은 선택 불가 (토요일=6, 일요일=0)
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      console.log('주말로 선택 불가');
+      return false;
+    }
+    
+    // 예약 가능한 날짜 범위가 없으면 선택 불가
+    if (!availableDates?.startDate || !availableDates?.endDate) {
+      console.log('예약 가능한 날짜 범위 없음');
+      return false;
+    }
+    
+    const startDate = new Date(availableDates.startDate);
+    const endDate = new Date(availableDates.endDate);
+    
+    console.log('날짜 범위 체크:', { startDate, endDate, date });
+    
+    // 예약 가능한 날짜 범위 내에서만 선택 가능
+    return date >= startDate && date <= endDate;
+  };
+
   const isDateDisabled = (year, month, day) => {
     const date = new Date(year, month, day);
     const today = new Date();
@@ -213,6 +269,11 @@ function ParentReservation() {
   };
 
   const handleDateSelect = (year, month, day) => {
+    // 선택 불가능한 날짜면 클릭 무시
+    if (!isDateSelectable(year, month, day)) {
+      return;
+    }
+    
     const selectedDate = new Date(year, month, day);
     
     // 상담 유형에 따른 예약 가능 날짜 체크
@@ -244,17 +305,6 @@ function ParentReservation() {
     const firstDay = getFirstDayOfMonth(currentMonth);
     
     const days = [];
-    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
-    
-    // 요일 헤더
-    weekDays.forEach(day => {
-      days.push(
-        <div key={`header-${day}`} className="calendar-header">
-          {day}
-        </div>
-      );
-    });
-    
     // 빈 칸 (이전 달)
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
@@ -264,6 +314,7 @@ function ParentReservation() {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const isDisabled = isDateDisabled(year, month, day);
+      const isSelectable = isDateSelectable(year, month, day);
       const isSelected = formData.preferredDate === formatDate(year, month, day);
       const yearHolidays = holidays[year] || [];
       const isHolidayDate = holidayService.isHoliday(date, yearHolidays);
@@ -271,14 +322,17 @@ function ParentReservation() {
       
       // 상담 유형에 따른 예약 가능 여부 체크
       const isAvailable = isDateAvailable(date, formData.consultationType);
-      const finalDisabled = isDisabled || !isAvailable;
+      const finalDisabled = isDisabled || !isAvailable || !isSelectable;
       
       days.push(
         <div
           key={day}
-          className={`calendar-day ${finalDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''} ${!isAvailable ? 'unavailable' : ''} ${isAvailable && !finalDisabled ? 'available' : ''}`}
+          className={`calendar-day ${finalDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isHolidayDate ? 'holiday' : ''} ${isWeekendDate ? 'weekend' : ''} ${!isAvailable ? 'unavailable' : ''} ${!isSelectable ? 'out-of-range' : ''} ${isAvailable && !finalDisabled ? 'available' : ''}`}
           onClick={() => !finalDisabled && handleDateSelect(year, month, day)}
-          title={isHolidayDate ? yearHolidays.find(h => holidayService.isHoliday(date, [h]))?.name : ''}
+          title={
+            !isSelectable ? '예약 가능한 기간이 아닙니다' :
+            isHolidayDate ? yearHolidays.find(h => holidayService.isHoliday(date, [h]))?.name : ''
+          }
         >
           {day}
         </div>
@@ -456,26 +510,37 @@ function ParentReservation() {
     if (profile?.role === 'PARENT') {
       if (!formData.selectedStudentId) {
         newErrors.selectedStudentId = '수업 대상 자녀를 선택해주세요.';
+        window.alert('수업 대상 자녀를 선택해주세요.');
+        return false;
       }
     } else {
       // 관리자/선생님용 유효성 검사
       if (!formData.selectedStudentId) {
         newErrors.selectedStudentId = '학생을 선택해주세요.';
+        window.alert('학생을 선택해주세요.');
+        return false;
       }
     }
     
     if (!formData.preferredDate) {
       newErrors.preferredDate = '희망 날짜를 선택해주세요.';
+      window.alert('희망 날짜를 선택해주세요.');
+      setErrors(newErrors);
+      return false;
     }
     
     if (!formData.preferredTime) {
       newErrors.preferredTime = '희망 시간을 선택해주세요.';
+      window.alert('희망 시간을 선택해주세요.');
+      setErrors(newErrors);
+      return false;
     }
     
     if (!formData.consultationType) {
       newErrors.consultationType = '수업 유형을 선택해주세요.';
-      // 수업 유형을 선택하지 않았을 때 팝업 표시
-      alert('원하시는 예약을 눌러주세요');
+      window.alert('원하시는 예약을 눌러주세요');
+      setErrors(newErrors);
+      return false;
     }
     
     setErrors(newErrors);
@@ -720,6 +785,16 @@ function ParentReservation() {
                 <button type="button" onClick={() => navigateMonth(1)}>
                   <i className="fas fa-chevron-right"></i>
                 </button>
+              </div>
+
+              <div className="calendar-weekdays">
+                <div className="weekday">일</div>
+                <div className="weekday">월</div>
+                <div className="weekday">화</div>
+                <div className="weekday">수</div>
+                <div className="weekday">목</div>
+                <div className="weekday">금</div>
+                <div className="weekday">토</div>
               </div>
               <div className="calendar-grid">
                 {renderCalendar()}

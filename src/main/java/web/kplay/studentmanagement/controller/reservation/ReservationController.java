@@ -10,7 +10,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.reservation.ReservationCreateRequest;
 import web.kplay.studentmanagement.dto.reservation.ReservationResponse;
+import web.kplay.studentmanagement.domain.reservation.ReservationPeriod;
 import web.kplay.studentmanagement.service.reservation.ReservationService;
+import web.kplay.studentmanagement.service.reservation.ReservationPeriodService;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +29,7 @@ import java.util.Map;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final ReservationPeriodService reservationPeriodService;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT', 'STUDENT')")
@@ -133,5 +141,30 @@ public class ReservationController {
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
         reservationService.deleteReservation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 예약 가능 여부 확인
+     */
+    @GetMapping("/availability")
+    public ResponseEntity<Boolean> checkReservationAvailability() {
+        boolean isOpen = reservationPeriodService.isReservationOpen();
+        return ResponseEntity.ok(isOpen);
+    }
+
+    /**
+     * 예약 가능한 날짜 범위 조회
+     */
+    @GetMapping("/available-dates")
+    public ResponseEntity<Map<String, String>> getAvailableDates() {
+        ReservationPeriod period = reservationPeriodService.getCurrentReservationPeriod();
+        Map<String, String> dates = new HashMap<>();
+        
+        if (period != null) {
+            dates.put("startDate", period.getReservationStartDate().toLocalDate().toString());
+            dates.put("endDate", period.getReservationEndDate().toLocalDate().toString());
+        }
+        
+        return ResponseEntity.ok(dates);
     }
 }
