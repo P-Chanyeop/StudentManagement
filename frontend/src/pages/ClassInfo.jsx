@@ -419,6 +419,16 @@ function ClassInfo() {
     return timeString.substring(0, 5); // HH:MM 형식
   };
 
+  // 날짜시간 포맷팅 (시간만)
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return '-';
+    const date = new Date(dateTimeString);
+    return date.toLocaleString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   // 출석 상태별 배지
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -479,25 +489,27 @@ function ClassInfo() {
                     <span className="value">{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
                   </div>
                   <div className="info-item">
-                    <span className="label"><i className="fas fa-user-tie"></i>담당 강사</span>
-                    <span className="value">{schedule.teacherName || '미배정'}</span>
+                    <span className="label"><i className="fas fa-sign-in-alt"></i>출석 시간</span>
+                    <span className="value">{(() => {
+                      const attendance = attendanceData
+                        .filter(att => att.scheduleId === schedule.id)
+                        .sort((a, b) => b.id - a.id)[0];
+                      return attendance?.checkInTime ? formatDateTime(attendance.checkInTime) : '-';
+                    })()}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="label"><i className="fas fa-sign-out-alt"></i>퇴실 시간</span>
+                    <span className="value">{(() => {
+                      const attendance = attendanceData
+                        .filter(att => att.scheduleId === schedule.id)
+                        .sort((a, b) => b.id - a.id)[0];
+                      return attendance?.checkOutTime ? formatDateTime(attendance.checkOutTime) : '-';
+                    })()}</span>
                   </div>
                   <div className="info-item">
                     <span className="label"><i className="fas fa-users"></i>수강 인원</span>
                     <span className="value">{schedule.currentStudents || 0}/{schedule.maxStudents || '무제한'}</span>
                   </div>
-                  {schedule.attendance && (
-                    <>
-                      <div className="info-item">
-                        <span className="label"><i className="fas fa-sign-in-alt"></i>출석 시간</span>
-                        <span className="value">{schedule.attendance.checkInTime ? formatDateTime(schedule.attendance.checkInTime) : '-'}</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="label"><i className="fas fa-sign-out-alt"></i>퇴실 시간</span>
-                        <span className="value">{schedule.attendance.checkOutTime ? formatDateTime(schedule.attendance.checkOutTime) : '-'}</span>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
