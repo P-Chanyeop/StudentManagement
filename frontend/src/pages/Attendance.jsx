@@ -272,24 +272,17 @@ function Attendance() {
     return selectedDate > today;
   };
 
-  // 학생 출석 체크인 - 모달 열기 또는 바로 출석 처리
+  // 학생 출석 체크인 - 항상 모달 열기
   const handleStudentCheckIn = (attendance) => {
     if (attendance.checkInTime) return; // 이미 체크인된 경우
     
-    const today = new Date().toISOString().split('T')[0];
+    // 미래 날짜면 체크인 불가
+    if (isFutureDate(attendance)) return;
     
-    // 오늘 당일이면 바로 출석 처리 (모달 없이)
-    if (selectedDate === today) {
-      checkInMutation.mutate({
-        studentId: attendance.studentId,
-        scheduleId: attendance.scheduleId,
-        parentPhoneLast4: '0000' // 당일은 핸드폰 번호 확인 생략
-      });
-    } else {
-      // 과거 날짜면 모달 열기 (기존 로직)
-      setSelectedAttendance(attendance);
-      setShowPhoneModal(true);
-    }
+    // 항상 핸드폰 번호 확인 모달 열기
+    setSelectedAttendance(attendance);
+    setShowPhoneModal(true);
+    setParentPhoneLast4('');
   };
 
   // 핸드폰 번호 확인 후 출석 체크

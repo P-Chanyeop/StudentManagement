@@ -60,19 +60,22 @@ public class AttendanceService {
         validateParentPhone(student, request.getParentPhoneLast4());
 
         LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDateTime classStartTime = LocalDateTime.of(today, schedule.getStartTime());
+        LocalDateTime checkInDeadline = classStartTime.plusMinutes(30);
+
+        // 수업 시작 30분 후에는 출석 체크 불가
+        if (now.isAfter(checkInDeadline)) {
+            throw new BusinessException("수업 시작 30분이 경과하여 출석 체크가 불가능합니다");
+        }
 
         // Expected leave time auto calculated
-        // 1. 요청에 명시적으로 지정된 경우 사용
-        // 2. 그렇지 않으면 등원 시간 + 코스 수업 시간(분)으로 자동 계산
         LocalTime expectedLeave;
         if (request.getExpectedLeaveTime() != null) {
             expectedLeave = request.getExpectedLeaveTime();
         } else {
-            // 등원 시간 + 수업 시간으로 자동 계산
             Integer courseDuration = schedule.getCourse().getDurationMinutes();
             expectedLeave = now.toLocalTime().plusMinutes(courseDuration);
-            log.info("Expected leave time auto calculated: arrival={}, class duration={}min, expected leave={}",
-                    now.toLocalTime(), courseDuration, expectedLeave);
         }
 
         Attendance attendance = Attendance.builder()
@@ -82,7 +85,6 @@ public class AttendanceService {
                 .classCompleted(false)
                 .build();
 
-        // 체크인 처리 (자동 지각 판단 포함)
         attendance.checkIn(now, expectedLeave);
 
         Attendance savedAttendance = attendanceRepository.save(attendance);
@@ -91,15 +93,6 @@ public class AttendanceService {
                 schedule.getCourse().getCourseName(),
                 savedAttendance.getStatus(),
                 expectedLeave);
-
-        // 지각인 경우 자동으로 문자 알림 발송
-        if (savedAttendance.getStatus() == AttendanceStatus.LATE) {
-            LocalDateTime scheduledStartTime = LocalDateTime.of(
-                    now.toLocalDate(),
-                    schedule.getStartTime()
-            );
-            automatedMessageService.sendLateNotification(student, now, scheduledStartTime);
-        }
 
         return toResponse(savedAttendance);
     }
@@ -188,10 +181,10 @@ public class AttendanceService {
                     // 출석체크 안한 학생만 자동 결석 처리
                     if (attendance.getCheckInTime() == null) {
                         LocalDateTime classStartTime = LocalDateTime.of(date, schedule.getStartTime());
-                        LocalDateTime absentDeadline = classStartTime.plusMinutes(10);
+                        LocalDateTime absentDeadline = classStartTime.plusMinutes(30);
                         
                         if (now.isAfter(absentDeadline)) {
-                            attendance.updateStatus(AttendanceStatus.ABSENT, "10분 경과로 인한 자동 결석 처리");
+                            attendance.updateStatus(AttendanceStatus.ABSENT, "30분 경과로 인한 자동 결석 처리");
                             attendanceRepository.save(attendance);
                         }
                     }
@@ -202,20 +195,20 @@ public class AttendanceService {
                 } else {
                     // 출석 데이터가 없는 경우 - 수업 있는 학생이므로 테이블에 표시
                     LocalDateTime classStartTime = LocalDateTime.of(date, schedule.getStartTime());
-                    LocalDateTime absentDeadline = classStartTime.plusMinutes(10);
+                    LocalDateTime absentDeadline = classStartTime.plusMinutes(30);
                     
                     if (now.isAfter(absentDeadline)) {
-                        // 10분 지났으면 결석 데이터 생성
+                        // 30분 지났으면 결석 데이터 생성
                         Attendance absentAttendance = Attendance.builder()
                                 .student(student)
                                 .schedule(schedule)
                                 .status(AttendanceStatus.ABSENT)
-                                .reason("10분 경과로 인한 자동 결석 처리")
+                                .reason("30분 경과로 인한 자동 결석 처리")
                                 .build();
                         attendanceRepository.save(absentAttendance);
                         responses.add(toResponse(absentAttendance));
                     } else {
-                        // 아직 10분 안지났으면 출석 대기 상태로 표시
+                        // 아직 30분 안지났으면 출석 대기 상태로 표시
                         AttendanceResponse response = AttendanceResponse.builder()
                                 .id(null)
                                 .studentId(student.getId())

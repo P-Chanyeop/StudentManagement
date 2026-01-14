@@ -84,21 +84,10 @@ public class Attendance extends BaseEntity {
     // 출석 체크
     public void checkIn(LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         this.checkInTime = checkInTime;
-        // 수업 종료시간을 기본 하원시간으로 설정
         this.expectedLeaveTime = this.schedule.getEndTime();
-        this.originalExpectedLeaveTime = expectedLeaveTime; // 사용자가 입력한 예정시간 저장
-
-        // 지각 여부 확인 (수업 시작 시간 10분 이후면 지각)
-        LocalTime scheduleStartTime = schedule.getStartTime();
-        LocalTime actualCheckInTime = checkInTime.toLocalTime();
-
-        if (actualCheckInTime.isAfter(scheduleStartTime.plusMinutes(10))) {
-            this.status = AttendanceStatus.LATE;
-        } else {
-            this.status = AttendanceStatus.PRESENT;
-        }
+        this.originalExpectedLeaveTime = expectedLeaveTime;
+        this.status = AttendanceStatus.PRESENT;
         
-        // 추가 수업 시간 계산 (체크인 후에 실행)
         updateAdditionalClassEndTime();
     }
 

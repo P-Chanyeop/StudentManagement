@@ -46,6 +46,10 @@ dependencies {
 
     // Web Crawling (Jsoup for Naver Booking)
     implementation 'org.jsoup:jsoup:1.17.2'
+    
+    // Selenium for dynamic web scraping
+    implementation 'org.seleniumhq.selenium:selenium-java:4.15.0'
+    implementation 'org.seleniumhq.selenium:selenium-chrome-driver:4.15.0'
 
     // HTTP Client (for SMS API)
     // implementation 'org.springframework.boot:spring-boot-starter-webflux'
