@@ -22,11 +22,6 @@
   color: var(--naver-green);
   text-align: center;
   padding: 1rem !important;
-  background: white !important;
-}
-
-.class-time {
-  background: white !important;
 }
 
 .student-checkin h3 {
