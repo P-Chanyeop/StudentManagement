@@ -281,8 +281,9 @@
 }
 
 .attendance-row.present .status-badge {
-  background: #dcfce7;
-  color: #166534;
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  font-weight: 600;
 }
 
 .attendance-row.late {
