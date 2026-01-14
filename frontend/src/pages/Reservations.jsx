@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI } from '../services/api';
 import '../styles/Reservations.css';
 
 function Reservations() {
@@ -146,6 +146,22 @@ function Reservations() {
       alert(`확정 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     },
   });
+
+  // 네이버 예약 동기화 mutation
+  const syncNaverMutation = useMutation({
+    mutationFn: () => naverBookingAPI.sync(),
+    onSuccess: () => {
+      // 알림 없이 조용히 완료
+      queryClient.invalidateQueries(['reservations', selectedDate]);
+    },
+    onError: (error) => {
+      alert(`동기화 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  const handleSyncNaver = () => {
+    syncNaverMutation.mutate();
+  };
 
   const handleCreateReservation = () => {
     if (!newReservation.studentId || !newReservation.scheduleId || !newReservation.enrollmentId) {
@@ -379,9 +395,13 @@ function Reservations() {
                     <span className="stat-value">{reservations.length}건</span>
                   </div>
                 </div>
-                <button className="sync-button">
-                  <i className="fas fa-sync-alt"></i>
-                  네이버 예약 동기화
+                <button 
+                  className="sync-button"
+                  onClick={handleSyncNaver}
+                  disabled={syncNaverMutation.isPending}
+                >
+                  <i className={`fas fa-sync-alt ${syncNaverMutation.isPending ? 'fa-spin' : ''}`}></i>
+                  {syncNaverMutation.isPending ? '동기화 중...' : '네이버 예약 동기화'}
                 </button>
               </div>
             )}

@@ -169,6 +169,11 @@ export const reservationAPI = {
   getAvailableDates: () => api.get('/reservations/available-dates'),
 };
 
+// 네이버 예약 API
+export const naverBookingAPI = {
+  sync: () => api.post('/naver-booking/sync'),
+};
+
 // 스케줄 API
 export const scheduleAPI = {
   create: (data) => api.post('/schedules', data),
