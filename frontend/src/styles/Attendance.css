@@ -252,6 +252,7 @@
   font-weight: 600;
   color: #374151;
   border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
 }
 
 .attendance-table td {
