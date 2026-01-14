@@ -313,10 +313,6 @@ function Header() {
                 )}
                 
                 <div className="dropdown-divider"></div>
-                <Link to="/mypage" className="dropdown-item">
-                  <i className="fas fa-user"></i>
-                  마이페이지
-                </Link>
                 <button
                   className="dropdown-item logout"
                   onClick={async () => {

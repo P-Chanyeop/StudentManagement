@@ -4,30 +4,32 @@
   padding: 2rem;
 }
 
-.page-header {
+.parent-mypage .page-header {
   margin-bottom: 2rem;
 }
 
-.page-header h1 {
+.parent-mypage .page-header h1 {
   font-size: 2rem;
   color: #1f2937;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem 0;
 }
 
-.page-header p {
+.parent-mypage .page-header p {
   color: #6b7280;
   font-size: 1rem;
+  margin: 0;
 }
 
-.profile-card {
+.parent-mypage .profile-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 2rem;
 }
 
-.card-header {
+.parent-mypage .profile-card .card-header {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
@@ -35,73 +37,78 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
-.card-header h2 {
+.parent-mypage .profile-card .card-header h2 {
   font-size: 1.5rem;
   color: #1f2937;
   margin: 0;
+  text-align: left;
 }
 
-.edit-btn {
+.parent-mypage .profile-card .edit-btn {
   padding: 0.5rem 1rem;
   background: #03C75A;
   color: white;
   border: none;
   border-radius: 6px;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
-.edit-btn:hover {
+.parent-mypage .profile-card .edit-btn:hover {
   background: #02b350;
 }
 
-.edit-btn i {
-  margin-right: 0.5rem;
-}
-
-.profile-form {
+.parent-mypage .profile-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.form-group {
+.parent-mypage .profile-form .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  text-align: left;
 }
 
-.form-group label {
+.parent-mypage .profile-form .form-group label {
   font-weight: 600;
   color: #374151;
   font-size: 0.95rem;
+  text-align: left;
 }
 
-.form-group input {
+.parent-mypage .profile-form .form-group input {
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 1rem;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
-.form-group input:focus {
+.parent-mypage .profile-form .form-group input:focus {
   outline: none;
   border-color: #03C75A;
   box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
 }
 
-.form-value {
+.parent-mypage .profile-form .form-group .form-value {
   padding: 0.75rem;
   background: #f9fafb;
   border-radius: 6px;
   color: #1f2937;
   font-size: 1rem;
+  text-align: left;
 }
 
-.form-actions {
+.parent-mypage .profile-form .form-actions {
   display: flex;
+  flex-direction: row;
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1rem;
@@ -109,38 +116,40 @@
   border-top: 1px solid #e5e7eb;
 }
 
-.cancel-btn {
+.parent-mypage .profile-form .cancel-btn {
   padding: 0.75rem 1.5rem;
   background: white;
   color: #6b7280;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.cancel-btn:hover {
+.parent-mypage .profile-form .cancel-btn:hover {
   background: #f9fafb;
   border-color: #9ca3af;
 }
 
-.save-btn {
+.parent-mypage .profile-form .save-btn {
   padding: 0.75rem 1.5rem;
   background: #03C75A;
   color: white;
   border: none;
   border-radius: 6px;
   font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.save-btn:hover:not(:disabled) {
+.parent-mypage .profile-form .save-btn:hover:not(:disabled) {
   background: #02b350;
 }
 
-.save-btn:disabled {
+.parent-mypage .profile-form .save-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

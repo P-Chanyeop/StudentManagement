@@ -77,19 +77,23 @@ function ParentMyPage() {
     return <LoadingSpinner />;
   }
 
+  if (!userData) {
+    return <div>사용자 정보를 불러올 수 없습니다.</div>;
+  }
+
   return (
-    <div className="parent-mypage">
-      <div className="page-header">
-        <h1>마이페이지</h1>
-        <p>개인정보를 관리할 수 있습니다</p>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+      <div style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', color: '#1f2937', margin: '0 0 0.5rem 0' }}>마이페이지</h1>
+        <p style={{ color: '#6b7280', fontSize: '1rem', margin: 0 }}>개인정보를 관리할 수 있습니다</p>
       </div>
 
-      <div className="profile-card">
-        <div className="card-header">
-          <h2>개인정보</h2>
+      <div style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', padding: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '2px solid #e5e7eb' }}>
+          <h2 style={{ fontSize: '1.5rem', color: '#1f2937', margin: 0 }}>개인정보</h2>
           {!isEditing && (
             <button 
-              className="edit-btn"
+              style={{ padding: '0.5rem 1rem', background: '#03C75A', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}
               onClick={() => setIsEditing(true)}
             >
               <i className="fas fa-edit"></i> 수정
@@ -97,9 +101,9 @@ function ParentMyPage() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="profile-form">
-          <div className="form-group">
-            <label>이름</label>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontWeight: 600, color: '#374151', fontSize: '0.95rem' }}>이름</label>
             {isEditing ? (
               <input
                 type="text"
@@ -108,14 +112,15 @@ function ParentMyPage() {
                 onChange={handleChange}
                 placeholder="이름을 입력하세요"
                 required
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '1rem', boxSizing: 'border-box' }}
               />
             ) : (
-              <div className="form-value">{userData.name}</div>
+              <div style={{ padding: '0.75rem', background: '#f9fafb', borderRadius: '6px', color: '#1f2937', fontSize: '1rem' }}>{userData?.name || '-'}</div>
             )}
           </div>
 
-          <div className="form-group">
-            <label>핸드폰 번호</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontWeight: 600, color: '#374151', fontSize: '0.95rem' }}>핸드폰 번호</label>
             {isEditing ? (
               <input
                 type="tel"
@@ -124,14 +129,15 @@ function ParentMyPage() {
                 onChange={handleChange}
                 placeholder="010-0000-0000"
                 required
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '1rem', boxSizing: 'border-box' }}
               />
             ) : (
-              <div className="form-value">{userData.phoneNumber}</div>
+              <div style={{ padding: '0.75rem', background: '#f9fafb', borderRadius: '6px', color: '#1f2937', fontSize: '1rem' }}>{userData?.phoneNumber || '-'}</div>
             )}
           </div>
 
-          <div className="form-group">
-            <label>주소</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={{ fontWeight: 600, color: '#374151', fontSize: '0.95rem' }}>주소</label>
             {isEditing ? (
               <input
                 type="text"
@@ -139,24 +145,25 @@ function ParentMyPage() {
                 value={formData.address}
                 onChange={handleChange}
                 placeholder="주소를 입력하세요"
+                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '1rem', boxSizing: 'border-box' }}
               />
             ) : (
-              <div className="form-value">{userData.address || '-'}</div>
+              <div style={{ padding: '0.75rem', background: '#f9fafb', borderRadius: '6px', color: '#1f2937', fontSize: '1rem' }}>{userData?.address || '-'}</div>
             )}
           </div>
 
           {isEditing && (
-            <div className="form-actions">
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
               <button 
                 type="button" 
-                className="cancel-btn"
+                style={{ padding: '0.75rem 1.5rem', background: 'white', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '1rem', fontWeight: 500, cursor: 'pointer' }}
                 onClick={handleCancel}
               >
                 취소
               </button>
               <button 
                 type="submit" 
-                className="save-btn"
+                style={{ padding: '0.75rem 1.5rem', background: '#03C75A', color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', fontWeight: 500, cursor: 'pointer', opacity: updateMutation.isPending ? 0.6 : 1 }}
                 disabled={updateMutation.isPending}
               >
                 {updateMutation.isPending ? '저장 중...' : '저장'}

@@ -208,14 +208,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/mypage"
-        element={
-          <ProtectedRoute>
-            <RoleMyPage />
-          </ProtectedRoute>
-        }
-      />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
     </>

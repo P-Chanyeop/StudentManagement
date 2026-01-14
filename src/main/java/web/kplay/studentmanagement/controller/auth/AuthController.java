@@ -76,6 +76,14 @@ public class AuthController {
         return ResponseEntity.ok(profile);
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<UserProfileResponse> updateProfile(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody Map<String, String> updates) {
+        UserProfileResponse profile = authService.updateProfile(userDetails.getId(), updates);
+        return ResponseEntity.ok(profile);
+    }
+
     @GetMapping("/check-username")
     public ResponseEntity<Map<String, Object>> checkUsername(@RequestParam String username) {
         boolean available = authService.isUsernameAvailable(username);

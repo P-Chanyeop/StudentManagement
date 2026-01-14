@@ -360,74 +360,42 @@ function Reservations() {
               <span className="count-badge">{reservations.length}건</span>
             </div>
 
-        <div className="reservations-content">
-          {/* 관리자/선생님용: 스케줄 + 예약 관리 */}
-          {!isParent && (
-            <>
-              {/* 왼쪽: 스케줄 목록 */}
-              <div className="schedules-section">
-                <div className="section-header">
-                  <h2>수업 스케줄</h2>
-                  <span className="count-badge">{schedules.length}개</span>
+            {/* 통계 및 동기화 버튼 */}
+            {!isParent && (
+              <div className="reservation-stats">
+                <div className="stats-row">
+                  <div className="stat-item">
+                    <span className="stat-label">시스템 예약</span>
+                    <span className="stat-value">{reservations.length}건</span>
+                  </div>
+                  <div className="stat-divider"></div>
+                  <div className="stat-item">
+                    <span className="stat-label">네이버 예약</span>
+                    <span className="stat-value">0건</span>
+                  </div>
+                  <div className="stat-divider"></div>
+                  <div className="stat-item total">
+                    <span className="stat-label">총</span>
+                    <span className="stat-value">{reservations.length}건</span>
+                  </div>
                 </div>
-
-                <div className="schedules-grid">
-                  {schedules.length === 0 ? (
-                    <div className="empty-state">
-                      <i className="fas fa-calendar-alt"></i>
-                      <p>오늘 예정된 수업이 없습니다.</p>
-                    </div>
-                  ) : (
-                    schedules.map((schedule) => {
-                      const reservationCount = reservations.filter(
-                        (r) => r.schedule?.id === schedule.id && r.status !== 'CANCELLED'
-                      ).length;
-                      const isAvailable = reservationCount < schedule.maxCapacity;
-
-                      return (
-                        <div key={schedule.id} className="schedule-card">
-                          <div className="schedule-info">
-                            <h3>{schedule.courseName || '수업명 미정'}</h3>
-                            <p className="schedule-time">
-                              {schedule.startTime} - {schedule.endTime}
-                            </p>
-                            <p className="schedule-teacher">
-                              강사: {schedule.teacherName || '미배정'}
-                            </p>
-                            <div className="schedule-capacity">
-                              <span className={`capacity-badge ${isAvailable ? 'available' : 'full'}`}>
-                                {reservationCount} / {schedule.maxCapacity}
-                              </span>
-                              {isAvailable ? (
-                                <span className="availability">예약 가능</span>
-                              ) : (
-                                <span className="availability full">정원 마감</span>
-                              )}
-                            </div>
-                          </div>
-                          {isAvailable && (
-                            <button
-                              className="btn-primary"
-                              onClick={() => openCreateModal(schedule)}
-                            >
-                              <i className="fas fa-plus"></i> 예약 등록
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
+                <button className="sync-button">
+                  <i className="fas fa-sync-alt"></i>
+                  네이버 예약 동기화
+                </button>
               </div>
-            </>
-          )}
+            )}
 
-          {/* 예약 목록 (공통) */}
-          <div className={`reservations-section ${isParent ? 'full-width' : ''}`}>
-            <div className="section-header">
-              <h2>{isParent ? '내 자녀 예약 현황' : '예약 현황'}</h2>
-              <span className="count-badge">{reservations.length}건</span>
-            </div>
+        <div className="reservations-content">
+          {/* 관리자/선생님용: 시스템 예약 + 네이버 예약 */}
+          {!isParent ? (
+            <div className="dual-reservations-layout">
+              {/* 왼쪽: 시스템 예약 */}
+              <div className="system-reservations-section">
+                <div className="section-header">
+                  <h2><i className="fas fa-calendar-check"></i> 시스템 예약</h2>
+                  <span className="count-badge">{reservations.length}건</span>
+                </div>
 
             <div className="reservations-list">
               {reservations.length === 0 ? (
@@ -547,6 +515,77 @@ function Reservations() {
               )}
             </div>
           </div>
+
+          {/* 오른쪽: 네이버 예약 */}
+          <div className="naver-reservations-section">
+            <div className="section-header">
+              <h2><i className="fas fa-globe"></i> 네이버 예약</h2>
+              <span className="count-badge">0건</span>
+            </div>
+
+            <div className="reservations-list">
+              <div className="empty-state">
+                <i className="fas fa-calendar-alt"></i>
+                <p>네이버 예약 내역이 없습니다</p>
+                <div className="naver-info-badge">
+                  <i className="fas fa-info-circle"></i>
+                  상단의 동기화 버튼을 눌러 네이버 예약을 가져오세요
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          ) : (
+            /* 학부모용: 기존 레이아웃 유지 */
+            <div className="reservations-section full-width">
+              <div className="section-header">
+                <h2>내 자녀 예약 현황</h2>
+                <span className="count-badge">{reservations.length}건</span>
+              </div>
+
+              <div className="reservations-list">
+                {reservations.length === 0 ? (
+                  <div className="empty-state">
+                    <i className="fas fa-calendar-alt"></i>
+                    <p>예약 내역이 없습니다.</p>
+                  </div>
+                ) : (
+                  reservations.map((reservation) => (
+                    <div key={reservation.id} className="reservation-card">
+                      <div className="reservation-header">
+                        <div className="student-info">
+                          <h3>{reservation.student?.name || reservation.studentName}</h3>
+                        </div>
+                        {getStatusBadge(reservation.status)}
+                      </div>
+                      <div className="reservation-details">
+                        <div className="detail-row">
+                          <span className="label">수업:</span>
+                          <span className="value">{reservation.schedule?.course?.name || reservation.courseName}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="label">시간:</span>
+                          <span className="value">
+                            {reservation.schedule?.startTime || reservation.startTime} - {reservation.schedule?.endTime || reservation.endTime}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="reservation-actions">
+                        {reservation.status === 'CONFIRMED' && canCancelReservation(reservation) && (
+                          <button
+                            className="btn-table-delete"
+                            onClick={() => handleCancel(reservation.id)}
+                          >
+                            <i className="fas fa-times"></i> 예약 취소
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

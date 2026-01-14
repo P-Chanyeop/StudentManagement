@@ -31,6 +31,9 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String email;
 
+    @Column(length = 200)
+    private String address;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
@@ -67,5 +70,17 @@ public class User extends BaseEntity {
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.email = email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

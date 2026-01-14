@@ -18,6 +18,8 @@ import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
 import web.kplay.studentmanagement.dto.auth.RegisterRequest;
 import web.kplay.studentmanagement.dto.auth.SignupRequest;
+
+import java.util.Map;
 import web.kplay.studentmanagement.dto.user.UserProfileResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
@@ -156,6 +158,7 @@ public class AuthService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
                 .role(user.getRole().name());
 
         // 부모인 경우 자녀 정보 조회
@@ -184,6 +187,25 @@ public class AuthService {
         }
 
         return builder.build();
+    }
+
+    @Transactional
+    public UserProfileResponse updateProfile(Long userId, Map<String, String> updates) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다"));
+
+        if (updates.containsKey("name")) {
+            user.setName(updates.get("name"));
+        }
+        if (updates.containsKey("phoneNumber")) {
+            user.setPhoneNumber(updates.get("phoneNumber"));
+        }
+        if (updates.containsKey("address")) {
+            user.setAddress(updates.get("address"));
+        }
+
+        userRepository.save(user);
+        return getUserProfile(userId);
     }
 
     /**

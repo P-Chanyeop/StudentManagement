@@ -49,16 +49,14 @@
 
 /* 페이지 컨텐츠 */
 .page-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 32px 48px;
 }
 
 .reservations-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  align-items: start;
+  width: 100%;
 }
 
 .reservations-content.full-width {
@@ -345,17 +343,27 @@
 
 /* 페이지 컨텐츠 */
 .page-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 32px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 32px 48px;
+}
+
+.reservations-layout {
+  width: 100%;
+  max-width: none;
+}
+
+.selected-info-section {
+  width: 100%;
+  max-width: none;
+}
+
+.selected-date-header {
+  margin-bottom: 24px;
 }
 
 /* 예약 컨텐츠 레이아웃 */
-.reservations-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-}
 
 /* 섹션 공통 스타일 */
 .schedules-section,
@@ -377,25 +385,37 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--gray-200);
 }
 
 .section-header h2 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--gray-900);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.section-header h2 i {
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
 .count-badge {
-  background: var(--naver-green);
+  background: linear-gradient(135deg, var(--naver-green), var(--naver-green-dark));
   color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(3, 199, 90, 0.3);
+  min-width: 60px;
+  text-align: center;
 }
 
 /* 스케줄 그리드 */
@@ -604,19 +624,21 @@
 /* 빈 상태 */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 40px;
   color: var(--gray-500);
 }
 
 .empty-state i {
-  font-size: 48px;
+  font-size: 72px;
   color: var(--gray-300);
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .empty-state p {
-  font-size: 16px;
+  font-size: 18px;
   margin: 0;
+  font-weight: 500;
+  color: var(--gray-600);
 }
 
 /* 모달 스타일 */
@@ -776,4 +798,164 @@
 /* 캘린더 일요일 스타일 */
 .calendar-grid .calendar-day:nth-child(7n+1):not(.empty) {
   color: #ff6b6b;
+}
+
+/* 예약 통계 */
+.reservation-stats {
+  background: white;
+  border-radius: 16px;
+  padding: 32px 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--gray-200);
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--gray-600);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--gray-900);
+  line-height: 1;
+}
+
+.stat-item.total .stat-value {
+  color: var(--naver-green);
+}
+
+.stat-divider {
+  width: 2px;
+  height: 60px;
+  background: var(--gray-200);
+}
+
+.sync-button {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--naver-green), #02b350);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.25);
+}
+
+.sync-button:hover {
+  background: linear-gradient(135deg, #02b350, #029943);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(3, 199, 90, 0.35);
+}
+
+.sync-button:active {
+  transform: translateY(0);
+}
+
+.sync-button i {
+  font-size: 16px;
+}
+
+/* 이중 예약 레이아웃 */
+.dual-reservations-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 24px;
+  width: 100%;
+}
+
+.system-reservations-section,
+.naver-reservations-section {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  min-height: 700px;
+  border: 2px solid var(--gray-200);
+  transition: all 0.3s ease;
+}
+
+.system-reservations-section:hover,
+.naver-reservations-section:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.system-reservations-section .section-header h2 i {
+  color: var(--naver-green);
+}
+
+.naver-reservations-section .section-header h2 i {
+  color: #03C75A;
+}
+
+.naver-reservations-section {
+  border-color: #c8f0dd;
+  background: linear-gradient(to bottom, #ffffff, #f9fffe);
+}
+
+.naver-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #e8f8f0;
+  color: var(--naver-green);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.naver-reservation-card {
+  background: #f9fffe;
+  border-left: 3px solid var(--naver-green);
+}
+
+.naver-reservation-card .reservation-actions {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.naver-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 28px;
+  background: linear-gradient(135deg, #e8f8f0, #d4f3e6);
+  color: var(--naver-green);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 24px;
+  border: 1px solid #c8f0dd;
+}
+
+.naver-info-badge i {
+  font-size: 18px;
 }
