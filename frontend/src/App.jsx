@@ -19,6 +19,7 @@ import Messages from './pages/Messages';
 import MakeupClasses from './pages/MakeupClasses';
 import Notices from './pages/Notices';
 import MyPage from './pages/MyPage';
+import ParentMyPage from './pages/ParentMyPage';
 import { useQuery } from '@tanstack/react-query';
 import { authAPI } from './services/api';
 
@@ -63,6 +64,28 @@ function RoleDashboard() {
     return <UserDashboard />;
   } else {
     return <Dashboard />;
+  }
+}
+
+// 역할별 마이페이지 라우팅
+function RoleMyPage() {
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const response = await authAPI.getProfile();
+      return response.data;
+    },
+  });
+
+  if (isLoading) {
+    return <div>로딩 중...</div>;
+  }
+
+  // 부모님은 ParentMyPage, 관리자/선생님은 MyPage
+  if (profile?.role === 'PARENT') {
+    return <ParentMyPage />;
+  } else {
+    return <MyPage />;
   }
 }
 
@@ -189,7 +212,7 @@ function App() {
         path="/mypage"
         element={
           <ProtectedRoute>
-            <MyPage />
+            <RoleMyPage />
           </ProtectedRoute>
         }
       />
