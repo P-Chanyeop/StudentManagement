@@ -959,3 +959,99 @@
 .naver-info-badge i {
   font-size: 18px;
 }
+
+/* 자세히 보기 버튼 */
+.detail-view-button {
+  margin-top: 12px;
+  padding: 6px 12px;
+  background: white;
+  color: #03c75a;
+  border: 1px solid #03c75a;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detail-view-button:hover {
+  background: #03c75a;
+  color: white;
+}
+
+.detail-view-button i {
+  margin-right: 8px;
+}
+
+/* 네이버 상세 모달 */
+.naver-detail-modal {
+  width: 95vw !important;
+  max-width: 95vw !important;
+  height: 95vh;
+  max-height: none;
+  margin: 0;
+}
+
+.naver-table-container {
+  overflow: auto;
+  max-height: calc(95vh - 80px);
+}
+
+.naver-booking-table {
+  width: 100%;
+  min-width: 1800px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.naver-booking-table thead {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.naver-booking-table th {
+  padding: 14px 12px;
+  text-align: center;
+  font-weight: 600;
+  color: #333;
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.naver-booking-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+  color: #495057;
+  font-size: 13px;
+}
+
+.naver-booking-table tbody tr {
+  transition: background 0.15s;
+}
+
+.naver-booking-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.naver-booking-table .empty-data {
+  padding: 60px 20px;
+  text-align: center;
+  color: #999;
+}
+
+.naver-booking-table .empty-data i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.naver-booking-table .empty-data p {
+  font-size: 16px;
+  margin: 0;
+}

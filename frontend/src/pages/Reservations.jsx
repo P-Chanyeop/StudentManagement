@@ -11,6 +11,7 @@ function Reservations() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showNaverDetailModal, setShowNaverDetailModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [newReservation, setNewReservation] = useState({
     studentId: '',
@@ -551,6 +552,12 @@ function Reservations() {
                   <i className="fas fa-info-circle"></i>
                   상단의 동기화 버튼을 눌러 네이버 예약을 가져오세요
                 </div>
+                <button 
+                  className="detail-view-button"
+                  onClick={() => setShowNaverDetailModal(true)}
+                >
+                  자세히 보기
+                </button>
               </div>
             </div>
           </div>
@@ -682,6 +689,52 @@ function Reservations() {
               >
                 예약 등록
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 네이버 예약 상세 모달 */}
+      {showNaverDetailModal && (
+        <div className="modal-overlay" onClick={() => setShowNaverDetailModal(false)}>
+          <div className="modal-content naver-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2><i className="fas fa-globe"></i> 네이버 예약 상세</h2>
+              <button className="close-button" onClick={() => setShowNaverDetailModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="naver-table-container">
+                <table className="naver-booking-table">
+                  <thead>
+                    <tr>
+                      <th>상태</th>
+                      <th>이름</th>
+                      <th>전화번호</th>
+                      <th>예약번호</th>
+                      <th>이용일시</th>
+                      <th>상품</th>
+                      <th>인원</th>
+                      <th>옵션</th>
+                      <th>요청사항</th>
+                      <th>예약금</th>
+                      <th>결제금액</th>
+                      <th>신청일시</th>
+                      <th>확정일시</th>
+                      <th>취소일시</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colSpan="14" className="empty-data">
+                        <i className="fas fa-inbox"></i>
+                        <p>네이버 예약 데이터가 없습니다</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
