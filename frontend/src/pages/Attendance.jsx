@@ -34,6 +34,22 @@ function Attendance() {
 
   // 출석 상태에 따른 행 클래스 반환
   const getAttendanceRowClass = (attendance) => {
+    // 출석 체크가 완료된 경우 실제 상태 표시
+    if (attendance.checkInTime) {
+      switch (attendance.status) {
+        case 'PRESENT':
+          return 'present';
+        case 'ABSENT':
+          return 'absent';
+        case 'EXCUSED':
+          return 'excused';
+        case 'EARLY_LEAVE':
+          return 'early-leave';
+        default:
+          return 'present';
+      }
+    }
+    
     // 미래 시간대 체크
     if (isFutureTime(attendance)) return 'waiting';
     
@@ -57,6 +73,22 @@ function Attendance() {
 
   // 출석 상태 텍스트 반환
   const getAttendanceStatusText = (attendance) => {
+    // 출석 체크가 완료된 경우 실제 상태 표시
+    if (attendance.checkInTime) {
+      switch (attendance.status) {
+        case 'PRESENT':
+          return '출석';
+        case 'ABSENT':
+          return '결석';
+        case 'EXCUSED':
+          return '사유결석';
+        case 'EARLY_LEAVE':
+          return '조퇴';
+        default:
+          return '출석';
+      }
+    }
+    
     // 미래 시간대 체크
     if (isFutureTime(attendance)) return '대기';
     
