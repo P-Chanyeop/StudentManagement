@@ -17,7 +17,7 @@ import java.time.Duration;
 @Service
 public class NaverBookingCrawlerService {
 
-    private static final String NAVER_BOOKING_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view?bookingBusinessId=1047988";
+    private static final String NAVER_BOOKING_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view?bookingBusinessId=1047988&dateDropdownType=TODAY";
     private static final String NAVER_ID = "littlebearrc";
     private static final String NAVER_PW = "littlebear!";
 
@@ -49,16 +49,15 @@ public class NaverBookingCrawlerService {
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
             
-            // 먼저 네이버 메인으로 이동 (쿠키가 있으면 자동 로그인됨)
-            log.info("네이버 메인 페이지로 이동");
+            // 네이버 접속해서 로그인 확인
+            log.info("네이버 접속");
             driver.get("https://www.naver.com/");
+            Thread.sleep(500);
             
-            Thread.sleep(2000);
-            
-            // 로그인 여부 확인 (로그인 버튼이 있는지 체크)
+            // 로그인 여부 확인
             try {
                 driver.findElement(By.linkText("로그인"));
-                log.info("로그인 필요 - 로그인 페이지로 이동");
+                log.info("로그인 필요");
                 
                 // 로그인 페이지로 이동
                 driver.get("https://nid.naver.com/nidlogin.login?mode=form&url=https://www.naver.com/");
@@ -110,7 +109,12 @@ public class NaverBookingCrawlerService {
                 loginBtn.click();
                 log.info("로그인 버튼 클릭");
                 
-                Thread.sleep(2000);
+                Thread.sleep(1500);
+                
+                // 네이버 홈으로 이동
+                log.info("네이버 홈으로 이동");
+                driver.get("https://www.naver.com/");
+                Thread.sleep(500);
             } catch (Exception e) {
                 log.info("이미 로그인되어 있습니다!");
             }
@@ -118,7 +122,7 @@ public class NaverBookingCrawlerService {
             // 네이버 예약 관리 페이지로 이동
             log.info("네이버 예약 관리 페이지로 이동");
             driver.get(NAVER_BOOKING_URL);
-            Thread.sleep(2000);
+            Thread.sleep(500);
             
             String currentUrl = driver.getCurrentUrl();
             log.info("현재 URL: {}", currentUrl);
