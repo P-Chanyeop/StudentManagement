@@ -15,16 +15,18 @@
 }
 
 .student-name-td {
-  /*display: flex;*/
   align-items: center;
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
   color: var(--naver-green);
   text-align: center;
-  /* background: rgba(3, 199, 90, 0.1); */
   padding: 1rem !important;
-  /*border-radius: 20px;*/
+  background: white !important;
+}
+
+.class-time {
+  background: white !important;
 }
 
 .student-checkin h3 {
@@ -426,6 +428,8 @@
   cursor: pointer;
   transition: background 0.2s;
   vertical-align: middle;
+  white-space: nowrap;
+  min-width: 80px;
 }
 
 .checkin-btn:hover:not(:disabled) {
