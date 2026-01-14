@@ -277,7 +277,7 @@
 }
 
 .attendance-row.present {
-  background: #f0fdf4;
+  background: white;
 }
 
 .attendance-row.present .status-badge {
