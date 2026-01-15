@@ -983,6 +983,25 @@
   margin-right: 8px;
 }
 
+/* 더보기 버튼 */
+.show-more-button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 12px;
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.show-more-button:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
 /* 네이버 상세 모달 */
 .naver-detail-modal {
   width: 95vw !important;

@@ -13,6 +13,8 @@ function Reservations() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNaverDetailModal, setShowNaverDetailModal] = useState(false);
   const [naverBookings, setNaverBookings] = useState([]);
+  const [showAllNaverBookings, setShowAllNaverBookings] = useState(false);
+  const [showAllSystemReservations, setShowAllSystemReservations] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [newReservation, setNewReservation] = useState({
     studentId: '',
@@ -430,7 +432,8 @@ function Reservations() {
                   <p>{isParent ? '예약 내역이 없습니다.' : '등록된 예약이 없습니다.'}</p>
                 </div>
               ) : (
-                reservations.map((reservation) => (
+                <>
+                  {(showAllSystemReservations ? reservations : reservations.slice(0, 2)).map((reservation) => (
                   <div key={reservation.id} className="reservation-card">
                     <div className="reservation-header">
                       <div className="student-info">
@@ -537,7 +540,24 @@ function Reservations() {
                       )}
                     </div>
                   </div>
-                ))
+                  ))}
+                  {reservations.length > 2 && !showAllSystemReservations && (
+                    <button 
+                      className="show-more-button"
+                      onClick={() => setShowAllSystemReservations(true)}
+                    >
+                      더보기 ({reservations.length - 2}개 더)
+                    </button>
+                  )}
+                  {showAllSystemReservations && (
+                    <button 
+                      className="show-more-button"
+                      onClick={() => setShowAllSystemReservations(false)}
+                    >
+                      접기
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -567,7 +587,7 @@ function Reservations() {
                 </div>
               ) : (
                 <React.Fragment>
-                  {naverBookings.map((booking, index) => (
+                  {(showAllNaverBookings ? naverBookings : naverBookings.slice(0, 2)).map((booking, index) => (
                     <div key={index} className="reservation-card">
                       <div className="card-header">
                         <div className="student-info">
@@ -594,6 +614,22 @@ function Reservations() {
                       </div>
                     </div>
                   ))}
+                  {naverBookings.length > 2 && !showAllNaverBookings && (
+                    <button 
+                      className="show-more-button"
+                      onClick={() => setShowAllNaverBookings(true)}
+                    >
+                      더보기 ({naverBookings.length - 2}개 더)
+                    </button>
+                  )}
+                  {showAllNaverBookings && (
+                    <button 
+                      className="show-more-button"
+                      onClick={() => setShowAllNaverBookings(false)}
+                    >
+                      접기
+                    </button>
+                  )}
                   <button 
                     className="detail-view-button"
                     onClick={() => setShowNaverDetailModal(true)}
@@ -602,7 +638,6 @@ function Reservations() {
                     자세히 보기
                   </button>
                 </React.Fragment>
-              )}
               )}
             </div>
           </div>
