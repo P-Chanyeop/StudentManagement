@@ -1,5 +1,6 @@
 package web.kplay.studentmanagement.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -10,20 +11,29 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import web.kplay.studentmanagement.domain.reservation.NaverBooking;
 import web.kplay.studentmanagement.dto.NaverBookingDTO;
+import web.kplay.studentmanagement.repository.NaverBookingRepository;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NaverBookingCrawlerService {
+
+    private final NaverBookingRepository naverBookingRepository;
 
     private static final String NAVER_BOOKING_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view?bookingBusinessId=1047988&dateDropdownType=TODAY";
     private static final String NAVER_ID = "littlebearrc";
     private static final String NAVER_PW = "littlebear!";
 
+    @Transactional
     public List<NaverBookingDTO> crawlNaverBookings() {
         WebDriver driver = null;
         
@@ -181,19 +191,89 @@ public class NaverBookingCrawlerService {
             }
             
             log.info("크롤링 완료: 총 {}건", bookings.size());
+            
+            // DB에 저장
+            saveBookingsToDatabase(bookings);
+            
             return bookings;
             
         } catch (Exception e) {
             log.error("네이버 예약 크롤링 실패", e);
             throw new RuntimeException("크롤링 실패: " + e.getMessage());
         } finally {
-            // 개발 중 - 브라우저 창 유지
-            // if (driver != null) {
-            //     driver.quit();
-            //     log.info("WebDriver 종료");
-            // }
-            log.info("크롤링 완료 - 브라우저 창 유지");
+            if (driver != null) {
+                driver.quit();
+                log.info("WebDriver 종료");
+            }
         }
+    }
+    
+    private void saveBookingsToDatabase(List<NaverBookingDTO> bookings) {
+        LocalDateTime now = LocalDateTime.now();
+        int savedCount = 0;
+        int updatedCount = 0;
+        
+        for (NaverBookingDTO dto : bookings) {
+            try {
+                NaverBooking entity = naverBookingRepository.findByBookingNumber(dto.getBookingNumber())
+                    .orElse(NaverBooking.builder()
+                        .bookingNumber(dto.getBookingNumber())
+                        .build());
+                
+                // 데이터 업데이트
+                entity = NaverBooking.builder()
+                    .id(entity.getId())
+                    .bookingNumber(dto.getBookingNumber())
+                    .status(dto.getStatus())
+                    .name(dto.getName())
+                    .phone(dto.getPhone())
+                    .bookingTime(dto.getBookingTime())
+                    .product(dto.getProduct())
+                    .quantity(dto.getQuantity())
+                    .option(dto.getOption())
+                    .comment(dto.getComment())
+                    .deposit(dto.getDeposit())
+                    .totalPrice(dto.getTotalPrice())
+                    .orderDate(dto.getOrderDate())
+                    .confirmDate(dto.getConfirmDate())
+                    .cancelDate(dto.getCancelDate())
+                    .syncedAt(now)
+                    .build();
+                
+                naverBookingRepository.save(entity);
+                
+                if (entity.getId() == null) {
+                    savedCount++;
+                } else {
+                    updatedCount++;
+                }
+            } catch (Exception e) {
+                log.error("예약 저장 실패: {}", dto.getBookingNumber(), e);
+            }
+        }
+        
+        log.info("DB 저장 완료: 신규 {}건, 업데이트 {}건", savedCount, updatedCount);
+    }
+    
+    public List<NaverBookingDTO> getTodayBookings() {
+        return naverBookingRepository.findAll().stream()
+            .map(entity -> NaverBookingDTO.builder()
+                .status(entity.getStatus())
+                .name(entity.getName())
+                .phone(entity.getPhone())
+                .bookingNumber(entity.getBookingNumber())
+                .bookingTime(entity.getBookingTime())
+                .product(entity.getProduct())
+                .quantity(entity.getQuantity())
+                .option(entity.getOption())
+                .comment(entity.getComment())
+                .deposit(entity.getDeposit())
+                .totalPrice(entity.getTotalPrice())
+                .orderDate(entity.getOrderDate())
+                .confirmDate(entity.getConfirmDate())
+                .cancelDate(entity.getCancelDate())
+                .build())
+            .collect(Collectors.toList());
     }
 }
 

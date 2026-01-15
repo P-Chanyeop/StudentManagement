@@ -33,6 +33,40 @@ function Reservations() {
 
   const isParent = profile?.role === 'PARENT';
 
+  // 네이버 예약 조회
+  const { data: naverBookingsData } = useQuery({
+    queryKey: ['naverBookings'],
+    queryFn: () => naverBookingAPI.getToday(),
+    enabled: !isParent,
+  });
+  
+  // 네이버 예약 데이터 업데이트
+  React.useEffect(() => {
+    if (naverBookingsData?.data) {
+      setNaverBookings(naverBookingsData.data);
+    }
+  }, [naverBookingsData]);
+  
+  // SSE로 크롤링 완료 알림 받기
+  React.useEffect(() => {
+    if (isParent) return;
+    
+    const eventSource = new EventSource('/api/naver-booking/events');
+    
+    eventSource.addEventListener('crawling-complete', () => {
+      console.log('크롤링 완료 알림 받음 - 데이터 갱신');
+      queryClient.invalidateQueries(['naverBookings']);
+    });
+    
+    eventSource.onerror = (error) => {
+      console.error('SSE 연결 오류', error);
+    };
+    
+    return () => {
+      eventSource.close();
+    };
+  }, [isParent, queryClient]);
+
   // 월별 예약 조회 (캘린더용) - 간소화
   const { data: monthlyReservations = [] } = useQuery({
     queryKey: ['monthlyReservations', currentMonth.getFullYear(), currentMonth.getMonth(), profile?.role],
@@ -159,6 +193,7 @@ function Reservations() {
       const data = response.data || response;
       console.log('실제 데이터:', data);
       setNaverBookings(Array.isArray(data) ? data : []);
+      queryClient.invalidateQueries(['naverBookings']);
       queryClient.invalidateQueries(['reservations', selectedDate]);
     },
     onError: (error) => {
