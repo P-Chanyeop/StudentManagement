@@ -40,12 +40,16 @@ function Reservations() {
     enabled: !isParent,
   });
   
-  // 네이버 예약 데이터 업데이트
+  // 네이버 예약 데이터 업데이트 (선택된 날짜로 필터링)
   React.useEffect(() => {
     if (naverBookingsData?.data) {
-      setNaverBookings(naverBookingsData.data);
+      const filtered = naverBookingsData.data.filter(booking => {
+        const bookingDate = booking.orderDate?.split(' ')[0]; // "2026-01-15 09:00" -> "2026-01-15"
+        return bookingDate === selectedDate;
+      });
+      setNaverBookings(filtered);
     }
-  }, [naverBookingsData]);
+  }, [naverBookingsData, selectedDate]);
   
   // SSE로 크롤링 완료 알림 받기
   React.useEffect(() => {
