@@ -142,7 +142,6 @@ function Reservations() {
       queryClient.invalidateQueries(['reservations', selectedDate]);
       setShowCreateModal(false);
       setNewReservation({ studentId: '', scheduleId: '', enrollmentId: '' });
-      alert('예약이 완료되었습니다.');
     },
     onError: (error) => {
       alert(`예약 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
@@ -494,10 +493,6 @@ function Reservations() {
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="label">강사:</span>
-                        <span className="value">{reservation.schedule?.teacher?.name || '미배정'}</span>
-                      </div>
-                      <div className="detail-row">
                         <span className="label">수강권:</span>
                         <span className="value">
                           {reservation.enrollment?.course?.name || '수강권 정보 없음'}
@@ -747,7 +742,6 @@ function Reservations() {
                 <div className="selected-schedule-info">
                   <h3>{selectedSchedule.course.name}</h3>
                   <p>{selectedSchedule.startTime} - {selectedSchedule.endTime}</p>
-                  <p>강사: {selectedSchedule.teacher.name}</p>
                 </div>
               )}
 
