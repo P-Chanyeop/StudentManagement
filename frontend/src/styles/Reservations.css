@@ -1055,3 +1055,22 @@
   font-size: 16px;
   margin: 0;
 }
+
+/* 상태 라벨 */
+.status-label {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-label.confirmed {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-label.cancelled {
+  background: #ffebee;
+  color: #d32f2f;
+}
+

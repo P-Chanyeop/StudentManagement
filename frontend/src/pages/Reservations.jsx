@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -12,6 +12,7 @@ function Reservations() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNaverDetailModal, setShowNaverDetailModal] = useState(false);
+  const [naverBookings, setNaverBookings] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [newReservation, setNewReservation] = useState({
     studentId: '',
@@ -151,11 +152,15 @@ function Reservations() {
   // 네이버 예약 동기화 mutation
   const syncNaverMutation = useMutation({
     mutationFn: () => naverBookingAPI.sync(),
-    onSuccess: () => {
-      // 알림 없이 조용히 완료
+    onSuccess: (response) => {
+      console.log('네이버 예약 동기화 성공:', response);
+      const data = response.data || response;
+      console.log('실제 데이터:', data);
+      setNaverBookings(Array.isArray(data) ? data : []);
       queryClient.invalidateQueries(['reservations', selectedDate]);
     },
     onError: (error) => {
+      console.error('네이버 예약 동기화 실패:', error);
       alert(`동기화 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     },
   });
@@ -541,24 +546,64 @@ function Reservations() {
           <div className="naver-reservations-section">
             <div className="section-header">
               <h2><i className="fas fa-globe"></i> 네이버 예약</h2>
-              <span className="count-badge">0건</span>
+              <span className="count-badge">{Array.isArray(naverBookings) ? naverBookings.length : 0}건</span>
             </div>
 
             <div className="reservations-list">
-              <div className="empty-state">
-                <i className="fas fa-calendar-alt"></i>
-                <p>네이버 예약 내역이 없습니다</p>
-                <div className="naver-info-badge">
-                  <i className="fas fa-info-circle"></i>
-                  상단의 동기화 버튼을 눌러 네이버 예약을 가져오세요
+              {!Array.isArray(naverBookings) || naverBookings.length === 0 ? (
+                <div className="empty-state">
+                  <i className="fas fa-calendar-alt"></i>
+                  <p>네이버 예약 내역이 없습니다</p>
+                  <div className="naver-info-badge">
+                    <i className="fas fa-info-circle"></i>
+                    상단의 동기화 버튼을 눌러 네이버 예약을 가져오세요
+                  </div>
+                  <button 
+                    className="detail-view-button"
+                    onClick={() => setShowNaverDetailModal(true)}
+                  >
+                    자세히 보기
+                  </button>
                 </div>
-                <button 
-                  className="detail-view-button"
-                  onClick={() => setShowNaverDetailModal(true)}
-                >
-                  자세히 보기
-                </button>
-              </div>
+              ) : (
+                <React.Fragment>
+                  {naverBookings.map((booking, index) => (
+                    <div key={index} className="reservation-card">
+                      <div className="card-header">
+                        <div className="student-info">
+                          <span className="student-name">{booking.name}</span>
+                          <span className={`status-badge ${booking.status === '확정' ? 'confirmed' : 'cancelled'}`}>
+                            {booking.status}
+                          </span>
+                        </div>
+                        <span className="time">{booking.bookingTime}</span>
+                      </div>
+                      <div className="card-body">
+                        <div className="info-row">
+                          <i className="fas fa-phone"></i>
+                          <span>{booking.phone}</span>
+                        </div>
+                        <div className="info-row">
+                          <i className="fas fa-tag"></i>
+                          <span>{booking.product}</span>
+                        </div>
+                        <div className="info-row">
+                          <i className="fas fa-users"></i>
+                          <span>{booking.quantity}명</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button 
+                    className="detail-view-button"
+                    onClick={() => setShowNaverDetailModal(true)}
+                    style={{ marginTop: '16px', width: '100%' }}
+                  >
+                    자세히 보기
+                  </button>
+                </React.Fragment>
+              )}
+              )}
             </div>
           </div>
         </div>
@@ -726,12 +771,37 @@ function Reservations() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td colSpan="14" className="empty-data">
-                        <i className="fas fa-inbox"></i>
-                        <p>네이버 예약 데이터가 없습니다</p>
-                      </td>
-                    </tr>
+                    {!Array.isArray(naverBookings) || naverBookings.length === 0 ? (
+                      <tr>
+                        <td colSpan="14" className="empty-data">
+                          <i className="fas fa-inbox"></i>
+                          <p>네이버 예약 데이터가 없습니다</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      naverBookings.map((booking, index) => (
+                        <tr key={index}>
+                          <td>
+                            <span className={`status-label ${booking.status === '확정' ? 'confirmed' : 'cancelled'}`}>
+                              {booking.status}
+                            </span>
+                          </td>
+                          <td>{booking.name}</td>
+                          <td>{booking.phone}</td>
+                          <td>{booking.bookingNumber}</td>
+                          <td>{booking.bookingTime}</td>
+                          <td>{booking.product}</td>
+                          <td>{booking.quantity}</td>
+                          <td>{booking.option || '-'}</td>
+                          <td>{booking.comment || '-'}</td>
+                          <td>{booking.deposit || '-'}</td>
+                          <td>{booking.totalPrice}</td>
+                          <td>{booking.orderDate}</td>
+                          <td>{booking.confirmDate}</td>
+                          <td>{booking.cancelDate || '-'}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

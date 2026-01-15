@@ -7,9 +7,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import web.kplay.studentmanagement.dto.NaverBookingDTO;
 import web.kplay.studentmanagement.service.NaverBookingCrawlerService;
 
-import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -21,20 +22,15 @@ public class NaverBookingController {
 
     @PostMapping("/sync")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<?> syncNaverBookings() {
+    public ResponseEntity<List<NaverBookingDTO>> syncNaverBookings() {
         try {
             log.info("네이버 예약 동기화 요청");
-            crawlerService.crawlNaverBookings();
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "네이버 예약 동기화 완료"
-            ));
+            List<NaverBookingDTO> bookings = crawlerService.crawlNaverBookings();
+            log.info("네이버 예약 동기화 완료: {}건", bookings.size());
+            return ResponseEntity.ok(bookings);
         } catch (Exception e) {
             log.error("네이버 예약 동기화 실패", e);
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "동기화 실패: " + e.getMessage()
-            ));
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

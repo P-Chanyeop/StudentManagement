@@ -10,8 +10,11 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
+import web.kplay.studentmanagement.dto.NaverBookingDTO;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -21,7 +24,7 @@ public class NaverBookingCrawlerService {
     private static final String NAVER_ID = "littlebearrc";
     private static final String NAVER_PW = "littlebear!";
 
-    public void crawlNaverBookings() {
+    public List<NaverBookingDTO> crawlNaverBookings() {
         WebDriver driver = null;
         
         try {
@@ -122,7 +125,7 @@ public class NaverBookingCrawlerService {
             // 네이버 예약 관리 페이지로 이동
             log.info("네이버 예약 관리 페이지로 이동");
             driver.get(NAVER_BOOKING_URL);
-            Thread.sleep(500);
+            Thread.sleep(2000);
             
             String currentUrl = driver.getCurrentUrl();
             log.info("현재 URL: {}", currentUrl);
@@ -130,7 +133,55 @@ public class NaverBookingCrawlerService {
             String pageTitle = driver.getTitle();
             log.info("페이지 제목: {}", pageTitle);
             
-            // TODO: 예약 데이터 파싱
+            // 예약 데이터 크롤링
+            log.info("예약 데이터 크롤링 시작");
+            List<NaverBookingDTO> bookings = new ArrayList<>();
+            
+            // 모든 예약 행 찾기 (XPath contains 사용)
+            List<WebElement> bookingRows = driver.findElements(
+                By.xpath("//a[contains(@class, 'BookingListView__contents-user')]")
+            );
+            log.info("총 {}건의 예약 발견", bookingRows.size());
+            
+            for (int i = 0; i < bookingRows.size(); i++) {
+                try {
+                    WebElement row = bookingRows.get(i);
+                    
+                    // 상태 추출 (label 텍스트)
+                    String status = "";
+                    try {
+                        status = row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__state')]//span[contains(@class, 'label')]")).getText();
+                    } catch (Exception e) {
+                        status = "확정"; // 기본값
+                    }
+                    
+                    NaverBookingDTO booking = NaverBookingDTO.builder()
+                        .status(status)
+                        .name(row.findElement(By.xpath(".//span[contains(@class, 'BookingListView__name-ellipsis')]")).getText())
+                        .phone(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__phone')]/span")).getText())
+                        .bookingNumber(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__book-number')]")).getText())
+                        .bookingTime(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__book-date')]")).getText())
+                        .product(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__host')]")).getText())
+                        .quantity(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__qty')]/span")).getText())
+                        .option(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__option')]")).getText())
+                        .comment(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__comment')]")).getText())
+                        .deposit(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__payment-state')]")).getText())
+                        .totalPrice(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__total-price')]")).getText())
+                        .orderDate(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__order-date')]")).getText())
+                        .confirmDate(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__order-success-date')]")).getText())
+                        .cancelDate(row.findElement(By.xpath(".//div[contains(@class, 'BookingListView__order-cancel-date')]")).getText())
+                        .build();
+                    
+                    bookings.add(booking);
+                    log.info("예약 {}번 크롤링 완료: {} - {}", i + 1, booking.getName(), booking.getBookingNumber());
+                    
+                } catch (Exception e) {
+                    log.error("예약 {}번 크롤링 실패: {}", i + 1, e.getMessage());
+                }
+            }
+            
+            log.info("크롤링 완료: 총 {}건", bookings.size());
+            return bookings;
             
         } catch (Exception e) {
             log.error("네이버 예약 크롤링 실패", e);
