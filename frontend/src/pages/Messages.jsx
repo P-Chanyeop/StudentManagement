@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { messageAPI, studentAPI } from '../services/api';
+import { messageAPI, studentAPI, smsAPI } from '../services/api';
 import '../styles/Messages.css';
 
 function Messages() {
   const queryClient = useQueryClient();
   const [showSendModal, setShowSendModal] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [testMessage, setTestMessage] = useState('테스트 메시지입니다.');
   const [newMessage, setNewMessage] = useState({
     studentId: '',
     recipientPhone: '',
@@ -88,6 +90,41 @@ function Messages() {
     });
   };
 
+  // SMS 테스트 발송
+  const testSmsMutation = useMutation({
+    mutationFn: (data) => smsAPI.send(data),
+    onSuccess: (response) => {
+      console.log('SMS 응답:', response);
+      const data = response.data;
+      if (data.resultCode < 0) {
+        alert(`발송 실패\n에러코드: ${data.resultCode}\n메시지: ${data.message}`);
+      } else {
+        alert(`테스트 문자 발송 성공!\n성공: ${data.successCnt}건\n실패: ${data.errorCnt}건\nMSG ID: ${data.msgId}`);
+      }
+      setTestPhone('');
+      setTestMessage('테스트 메시지입니다.');
+    },
+    onError: (error) => {
+      console.error('SMS 에러:', error);
+      alert(`발송 실패: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  const handleTestSms = () => {
+    if (!testPhone) {
+      alert('전화번호를 입력하세요');
+      return;
+    }
+    if (!testMessage) {
+      alert('메시지를 입력하세요');
+      return;
+    }
+    testSmsMutation.mutate({
+      receiver: testPhone,
+      message: testMessage,
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMutation.mutate(newMessage);
@@ -139,6 +176,34 @@ function Messages() {
       </div>
 
       <div className="page-content">
+        {/* SMS 테스트 발송 */}
+        <div className="sms-test-section">
+          <h2>SMS 테스트 발송</h2>
+          <div className="sms-test-form">
+            <input
+              type="tel"
+              placeholder="전화번호 (01012345678)"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              className="sms-test-input"
+            />
+            <input
+              type="text"
+              placeholder="메시지 내용"
+              value={testMessage}
+              onChange={(e) => setTestMessage(e.target.value)}
+              className="sms-test-input"
+            />
+            <button 
+              onClick={handleTestSms} 
+              disabled={testSmsMutation.isPending}
+              className="btn-primary"
+            >
+              {testSmsMutation.isPending ? '발송중...' : '테스트 발송'}
+            </button>
+          </div>
+        </div>
+
         {/* 통계 카드 */}
         <div className="messages-stats-grid">
           <div className="messages-stat-card">

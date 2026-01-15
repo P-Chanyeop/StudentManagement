@@ -23,23 +23,15 @@ jwt:
   refresh-expiration: 604800000  # 7일 (밀리초)
 
 # SMS API 설정
-# provider: test (테스트 모드), aligo (알리고), munjanara (문자나라)
 sms:
   provider: ${SMS_PROVIDER:test}
 
-  # 알리고 SMS 설정
-  aligo:
-    enabled: ${SMS_ALIGO_ENABLED:false}
-    api-key: ${SMS_ALIGO_API_KEY:}
-    user-id: ${SMS_ALIGO_USER_ID:}
-    sender: ${SMS_ALIGO_SENDER:}
-
-  # 문자나라 SMS 설정
-  munjanara:
-    enabled: ${SMS_MUNJANARA_ENABLED:false}
-    api-key: ${SMS_MUNJANARA_API_KEY:}
-    user-id: ${SMS_MUNJANARA_USER_ID:}
-    sender: ${SMS_MUNJANARA_SENDER:}
+# 알리고 SMS 설정
+aligo:
+  api:
+    key: ${ALIGO_API_KEY:3r91ijgybd265j3x9nwtmwoe1cly8r7l}
+    user-id: ${ALIGO_USER_ID:qkrcksduq1gh}
+    sender: ${ALIGO_SENDER:01044147579}
 
 # 공휴일 API 설정 (공공데이터포털)
 holiday:

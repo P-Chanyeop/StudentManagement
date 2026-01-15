@@ -255,6 +255,12 @@ export const messageAPI = {
   getAll: () => api.get('/messages'),
 };
 
+// SMS API
+export const smsAPI = {
+  send: (data) => api.post('/sms/send', data),
+  getRemain: () => api.get('/sms/remain'),
+};
+
 // 마이페이지 API
 export const mypageAPI = {
   getMyPage: () => api.get('/mypage/me'),

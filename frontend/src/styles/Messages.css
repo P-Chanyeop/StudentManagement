@@ -1,5 +1,39 @@
 /* Messages Page - Independent CSS */
 
+/* SMS 테스트 섹션 */
+.sms-test-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 2px solid var(--primary);
+}
+
+.sms-test-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: var(--gray-900);
+}
+
+.sms-test-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.sms-test-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.sms-test-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
 /* 통계 카드 그리드 - 독립적 */
 .messages-stats-grid {
   display: grid;
