@@ -178,13 +178,12 @@ function Attendance() {
     }
   };
 
-  // 출석 체크인 mutation
+  // 출석 체크인 mutation (전화번호로 통합)
   const checkInMutation = useMutation({
-    mutationFn: ({ studentId, scheduleId, parentPhoneLast4 }) => {
-      return attendanceAPI.checkIn({ 
-        studentId, 
+    mutationFn: ({ scheduleId, phoneLast4 }) => {
+      return attendanceAPI.checkInByPhone({ 
         scheduleId,
-        parentPhoneLast4
+        phoneLast4
       });
     },
     onSuccess: () => {
@@ -195,7 +194,7 @@ function Attendance() {
       setSelectedAttendance(null);
     },
     onError: (error) => {
-      alert(`출석 체크 중 오류가 발생했습니다: ${error.message}`);
+      alert(`출석 체크 중 오류가 발생했습니다: ${error.response?.data?.message || error.message}`);
       console.error('출석 체크 오류:', error);
     },
   });
@@ -327,9 +326,8 @@ function Attendance() {
     if (!selectedAttendance) return;
 
     checkInMutation.mutate({
-      studentId: selectedAttendance.studentId,
       scheduleId: selectedAttendance.scheduleId,
-      parentPhoneLast4: parentPhoneLast4
+      phoneLast4: parentPhoneLast4
     });
   };
 
@@ -659,6 +657,12 @@ function Attendance() {
                   <td className="student-name-td">
                     <div className="student-info">
                       <span className="name">{attendance.studentName}</span>
+                      {attendance.isNaverBooking && (
+                        <span className="naver-badge">네이버 예약</span>
+                      )}
+                      {!attendance.isNaverBooking && attendance.className && (
+                        <span className="class-badge">{attendance.className}</span>
+                      )}
                       <span className="status-badge">
                         {getAttendanceStatusText(attendance)}
                       </span>

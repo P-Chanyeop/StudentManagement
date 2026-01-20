@@ -358,6 +358,26 @@
   width: fit-content;
 }
 
+.naver-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: #03C75A;
+  color: white;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.class-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: #e5e7eb;
+  color: #374151;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
 .attendance-row .status-badge {
   background: #f3f4f6;
   color: #374151;

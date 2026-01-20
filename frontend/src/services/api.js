@@ -115,6 +115,7 @@ export const enrollmentAPI = {
 // 출석 API
 export const attendanceAPI = {
   checkIn: (data) => api.post('/attendances/checkin', data),
+  checkInByPhone: (data) => api.post('/attendances/checkin-by-phone', data),
   checkOut: (id) => api.post(`/attendances/${id}/checkout`),
   updateStatus: (id, status, reason) => api.patch(`/attendances/${id}/status?status=${status}${reason ? `&reason=${reason}` : ''}`),
   completeClass: (id) => api.post(`/attendances/${id}/complete`),
