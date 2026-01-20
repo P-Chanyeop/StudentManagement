@@ -16,6 +16,8 @@ import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.consultation.Consultation;
 import web.kplay.studentmanagement.domain.notice.Notice;
 import web.kplay.studentmanagement.domain.student.Student;
+import web.kplay.studentmanagement.domain.terms.Terms;
+import web.kplay.studentmanagement.domain.terms.TermsType;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.repository.*;
@@ -47,6 +49,7 @@ public class DataSeeder {
     private final AttendanceRepository attendanceRepository;
     private final PasswordEncoder passwordEncoder;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
+    private final TermsRepository termsRepository;
 
     @Bean
     // @Profile("dev") // 주석 처리 - 항상 실행
@@ -467,6 +470,9 @@ public class DataSeeder {
             // 레벨테스트 및 일반 수업 Course 및 스케줄 생성
             createCoursesAndSchedules();
 
+            // 약관 데이터 생성
+            createTermsData();
+
             log.info("=== Initial data loading completed ===");
             log.info("");
             log.info("📋 Initial accounts created (see CREDENTIALS.md for passwords)");
@@ -676,6 +682,71 @@ public class DataSeeder {
             
         } catch (Exception e) {
             log.error("Failed to create attendance records: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 약관 데이터 생성
+     */
+    private void createTermsData() {
+        try {
+            log.info("=== Creating terms data ===");
+
+            // 이용약관
+            if (termsRepository.findByTypeAndIsActiveTrue(TermsType.TERMS_OF_USE).isEmpty()) {
+                Terms termsOfUse = Terms.builder()
+                        .type(TermsType.TERMS_OF_USE)
+                        .content("제1조 (목적)\n본 약관은 학원 관리 시스템 이용에 관한 조건 및 절차를 규정함을 목적으로 합니다.\n\n제2조 (서비스 이용)\n회원은 본 약관에 동의함으로써 서비스를 이용할 수 있습니다.")
+                        .version("1.0")
+                        .isActive(true)
+                        .effectiveDate(LocalDateTime.now())
+                        .build();
+                termsRepository.save(termsOfUse);
+                log.info("✓ Terms of Use created");
+            }
+
+            // 개인정보 수집/이용
+            if (termsRepository.findByTypeAndIsActiveTrue(TermsType.PRIVACY_POLICY).isEmpty()) {
+                Terms privacyPolicy = Terms.builder()
+                        .type(TermsType.PRIVACY_POLICY)
+                        .content("1. 수집하는 개인정보 항목\n- 필수: 이름, 연락처, 이메일\n- 선택: 주소\n\n2. 개인정보의 수집 및 이용목적\n- 학원 관리 및 출석 관리\n- 수업 예약 및 문자 발송\n\n3. 개인정보의 보유 및 이용기간\n- 회원 탈퇴 시까지")
+                        .version("1.0")
+                        .isActive(true)
+                        .effectiveDate(LocalDateTime.now())
+                        .build();
+                termsRepository.save(privacyPolicy);
+                log.info("✓ Privacy Policy created");
+            }
+
+            // 마케팅 정보 수신 동의
+            if (termsRepository.findByTypeAndIsActiveTrue(TermsType.MARKETING).isEmpty()) {
+                Terms marketing = Terms.builder()
+                        .type(TermsType.MARKETING)
+                        .content("학원의 이벤트, 프로모션, 신규 수업 안내 등 마케팅 정보를 수신하는 것에 동의합니다.\n\n- 수신 방법: 이메일, 문자메시지\n- 철회 방법: 언제든지 마이페이지에서 수신 거부 가능")
+                        .version("1.0")
+                        .isActive(true)
+                        .effectiveDate(LocalDateTime.now())
+                        .build();
+                termsRepository.save(marketing);
+                log.info("✓ Marketing Terms created");
+            }
+
+            // 문자 발송 동의
+            if (termsRepository.findByTypeAndIsActiveTrue(TermsType.SMS).isEmpty()) {
+                Terms sms = Terms.builder()
+                        .type(TermsType.SMS)
+                        .content("학원 운영에 필요한 다음의 문자 발송에 동의합니다:\n\n- 출석 확인 및 지각 안내\n- 수업 예약 확인 및 취소 안내\n- 수강권 만료 임박 안내\n- 레벨테스트 일정 안내\n\n※ 본 동의는 학원 운영에 필수적인 안내 문자 발송을 위한 것입니다.")
+                        .version("1.0")
+                        .isActive(true)
+                        .effectiveDate(LocalDateTime.now())
+                        .build();
+                termsRepository.save(sms);
+                log.info("✓ SMS Terms created");
+            }
+
+            log.info("=== Terms data creation completed ===");
+        } catch (Exception e) {
+            log.error("Failed to create terms data: {}", e.getMessage(), e);
         }
     }
 }

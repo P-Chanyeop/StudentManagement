@@ -333,3 +333,73 @@
 .btn-remove-student:hover {
   background: #c82333;
 }
+
+/* 약관 동의 스타일 */
+.terms-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.terms-item {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  background: #f8f9fa;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #03c75a;
+}
+
+.checkbox-label .required {
+  color: #dc3545;
+  font-weight: 700;
+}
+
+.checkbox-label .optional {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.terms-content {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 12px;
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #495057;
+}
+
+.terms-content p {
+  margin: 8px 0;
+}
+
+.terms-content p:first-child {
+  margin-top: 0;
+}
+
+.terms-content p:last-child {
+  margin-bottom: 0;
+}
+
+.terms-content strong {
+  color: #212529;
+  font-weight: 600;
+}

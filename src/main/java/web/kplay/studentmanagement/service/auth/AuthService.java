@@ -81,6 +81,12 @@ public class AuthService {
 
     @Transactional
     public void signup(SignupRequest signupRequest) {
+        // 필수 약관 동의 체크
+        if (!Boolean.TRUE.equals(signupRequest.getTermsAgreed()) || 
+            !Boolean.TRUE.equals(signupRequest.getPrivacyAgreed())) {
+            throw new BusinessException("필수 약관에 동의해주세요");
+        }
+
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
             throw new BusinessException("이미 존재하는 사용자명입니다");
         }
@@ -93,6 +99,11 @@ public class AuthService {
                 .email(signupRequest.getEmail())
                 .role(signupRequest.getRole())
                 .isActive(true)
+                .termsAgreed(signupRequest.getTermsAgreed())
+                .privacyAgreed(signupRequest.getPrivacyAgreed())
+                .marketingAgreed(Optional.ofNullable(signupRequest.getMarketingAgreed()).orElse(false))
+                .smsAgreed(Optional.ofNullable(signupRequest.getSmsAgreed()).orElse(false))
+                .agreedAt(java.time.LocalDateTime.now())
                 .build();
 
         userRepository.save(user);

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import web.kplay.studentmanagement.domain.BaseEntity;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -44,6 +46,26 @@ public class User extends BaseEntity {
 
     @Column
     private String refreshToken;
+
+    // 약관 동의 필드
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean termsAgreed = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean privacyAgreed = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean marketingAgreed = false;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean smsAgreed = false;
+
+    @Column
+    private LocalDateTime agreedAt;
 
     // 비밀번호 변경
     public void changePassword(String encodedPassword) {

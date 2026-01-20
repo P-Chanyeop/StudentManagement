@@ -32,4 +32,15 @@ public class SignupRequest {
 
     @NotNull(message = "역할은 필수입니다")
     private UserRole role;
+
+    // 약관 동의 항목
+    @NotNull(message = "이용약관 동의는 필수입니다")
+    private Boolean termsAgreed;
+
+    @NotNull(message = "개인정보 수집/이용 동의는 필수입니다")
+    private Boolean privacyAgreed;
+
+    private Boolean marketingAgreed;  // 선택
+
+    private Boolean smsAgreed;  // 선택
 }

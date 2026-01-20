@@ -23,7 +23,13 @@ function Register() {
       gender: 'MALE',
       school: '',
       grade: '1'
-    }]
+    }],
+    
+    // 약관 동의
+    termsAgreed: false,
+    privacyAgreed: false,
+    marketingAgreed: false,
+    smsAgreed: false
   });
 
   const [errors, setErrors] = useState({});
@@ -181,6 +187,17 @@ function Register() {
       }
     });
     
+    // 약관 동의 검증
+    if (!formData.termsAgreed) {
+      newErrors.termsAgreed = '이용약관에 동의해주세요.';
+    }
+    if (!formData.privacyAgreed) {
+      newErrors.privacyAgreed = '개인정보 수집/이용에 동의해주세요.';
+    }
+    if (!formData.smsAgreed) {
+      newErrors.smsAgreed = '문자 발송에 동의해주세요.';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -200,6 +217,12 @@ function Register() {
       phoneNumber: formData.parentPhone,
       address: formData.address,
       role: 'PARENT',
+      
+      // 약관 동의
+      termsAgreed: formData.termsAgreed,
+      privacyAgreed: formData.privacyAgreed,
+      marketingAgreed: formData.marketingAgreed,
+      smsAgreed: formData.smsAgreed,
       
       // 학생 정보
       student: {
@@ -522,6 +545,86 @@ function Register() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* 약관 동의 */}
+          <div className="form-section">
+            <h2>약관 동의</h2>
+            
+            <div className="terms-container">
+              <div className="terms-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.termsAgreed}
+                    onChange={(e) => setFormData(prev => ({...prev, termsAgreed: e.target.checked}))}
+                  />
+                  <span className="required">[필수]</span> 이용약관 동의
+                </label>
+                <div className="terms-content">
+                  <p>제1조 (목적)</p>
+                  <p>본 약관은 학원 관리 시스템 이용에 관한 조건 및 절차를 규정함을 목적으로 합니다.</p>
+                  <p>제2조 (서비스 이용)</p>
+                  <p>회원은 본 약관에 동의함으로써 서비스를 이용할 수 있습니다.</p>
+                </div>
+                {errors.termsAgreed && <span className="error-message">{errors.termsAgreed}</span>}
+              </div>
+
+              <div className="terms-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.privacyAgreed}
+                    onChange={(e) => setFormData(prev => ({...prev, privacyAgreed: e.target.checked}))}
+                  />
+                  <span className="required">[필수]</span> 개인정보 수집/이용 동의
+                </label>
+                <div className="terms-content">
+                  <p><strong>1. 수집하는 개인정보 항목</strong></p>
+                  <p>- 필수: 이름, 연락처, 주소</p>
+                  <p><strong>2. 개인정보의 수집 및 이용목적</strong></p>
+                  <p>- 학원 관리 및 출석 관리</p>
+                  <p>- 수업 예약 및 문자 발송</p>
+                  <p><strong>3. 개인정보의 보유 및 이용기간</strong></p>
+                  <p>- 회원 탈퇴 시까지</p>
+                </div>
+                {errors.privacyAgreed && <span className="error-message">{errors.privacyAgreed}</span>}
+              </div>
+
+              <div className="terms-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.smsAgreed}
+                    onChange={(e) => setFormData(prev => ({...prev, smsAgreed: e.target.checked}))}
+                  />
+                  <span className="required">[필수]</span> 문자 발송 동의
+                </label>
+                <div className="terms-content">
+                  <p>학원 운영에 필요한 다음의 문자 발송에 동의합니다:</p>
+                  <p>- 출석 확인 및 지각 안내</p>
+                  <p>- 수업 예약 확인 및 취소 안내</p>
+                  <p>- 수강권 만료 임박 안내</p>
+                  <p>- 레벨테스트 일정 안내</p>
+                  <p>※ 본 동의는 학원 운영에 필수적인 안내 문자 발송을 위한 것입니다.</p>
+                </div>
+                {errors.smsAgreed && <span className="error-message">{errors.smsAgreed}</span>}
+              </div>
+
+              <div className="terms-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.marketingAgreed}
+                    onChange={(e) => setFormData(prev => ({...prev, marketingAgreed: e.target.checked}))}
+                  />
+                  <span className="optional">[선택]</span> 마케팅 정보 수신 동의
+                </label>
+                <div className="terms-content">
+                  <p>학원의 이벤트, 프로모션, 신규 수업 안내 등 마케팅 정보를 수신하는 것에 동의합니다.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* 제출 버튼 */}
