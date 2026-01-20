@@ -376,8 +376,12 @@ public class DataSeeder {
                 }
             }
 
-            // 6. 테스트용 출석 데이터 생성 (주석 처리 - 실제 출석 데이터 보존)
-            // createAttendanceRecords();
+            // 6. 기존 출석 데이터 삭제 (더미 데이터 제거)
+            if (attendanceRepository.count() > 0) {
+                log.info("=== Deleting existing attendance records ===");
+                attendanceRepository.deleteAll();
+                log.info("✓ All attendance records deleted");
+            }
 
             // 테스트 공지사항 데이터 생성
             if (noticeRepository.count() == 0) {
