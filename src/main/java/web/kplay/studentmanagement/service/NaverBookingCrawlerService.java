@@ -332,7 +332,14 @@ public class NaverBookingCrawlerService {
     }
     
     public List<NaverBookingDTO> getBookingsByDate(String date) {
-        return naverBookingRepository.findByBookingDate(date).stream()
+        // 2026-01-20 -> 26. 1. 20. 형식으로 변환
+        String[] parts = date.split("-");
+        String year = parts[0].substring(2); // 2026 -> 26
+        String month = String.valueOf(Integer.parseInt(parts[1])); // 01 -> 1
+        String day = String.valueOf(Integer.parseInt(parts[2])); // 20 -> 20
+        String naverDateFormat = year + ". " + month + ". " + day + ".";
+        
+        return naverBookingRepository.findByBookingDate(naverDateFormat).stream()
             .map(entity -> NaverBookingDTO.builder()
                 .status(entity.getStatus())
                 .name(entity.getName())

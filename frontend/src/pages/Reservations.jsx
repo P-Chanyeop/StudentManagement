@@ -36,13 +36,18 @@ function Reservations() {
   // 네이버 예약 조회 (선택된 날짜로)
   const { data: naverBookingsData } = useQuery({
     queryKey: ['naverBookings', selectedDate],
-    queryFn: () => naverBookingAPI.getByDate(selectedDate),
+    queryFn: () => {
+      console.log('네이버 예약 API 호출:', selectedDate);
+      return naverBookingAPI.getByDate(selectedDate);
+    },
     enabled: !isParent,
   });
   
   // 네이버 예약 데이터 업데이트
   React.useEffect(() => {
+    console.log('네이버 예약 데이터:', naverBookingsData);
     if (naverBookingsData?.data) {
+      console.log('실제 데이터:', naverBookingsData.data);
       setNaverBookings(naverBookingsData.data);
     }
   }, [naverBookingsData]);
@@ -429,12 +434,12 @@ function Reservations() {
                   <div className="stat-divider"></div>
                   <div className="stat-item">
                     <span className="stat-label">네이버 예약</span>
-                    <span className="stat-value">0건</span>
+                    <span className="stat-value">{naverBookings.length}건</span>
                   </div>
                   <div className="stat-divider"></div>
                   <div className="stat-item total">
                     <span className="stat-label">총</span>
-                    <span className="stat-value">{reservations.length}건</span>
+                    <span className="stat-value">{reservations.length + naverBookings.length}건</span>
                   </div>
                 </div>
                 <button 
