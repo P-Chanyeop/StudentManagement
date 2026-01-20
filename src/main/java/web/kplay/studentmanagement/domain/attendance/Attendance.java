@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import web.kplay.studentmanagement.domain.BaseEntity;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
+import web.kplay.studentmanagement.domain.reservation.NaverBooking;
 import web.kplay.studentmanagement.domain.student.Student;
 
 import java.time.LocalDateTime;
@@ -22,8 +23,12 @@ public class Attendance extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id")
     private Student student;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "naver_booking_id")
+    private NaverBooking naverBooking;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id", nullable = false)

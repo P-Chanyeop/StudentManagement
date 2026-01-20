@@ -39,6 +39,7 @@ public class AttendanceService {
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
+    private final web.kplay.studentmanagement.repository.NaverBookingRepository naverBookingRepository;
 
     /**
      * 출석 체크인 (부모님 핸드폰 뒷자리 4자리 검증 포함)
@@ -95,6 +96,64 @@ public class AttendanceService {
                 expectedLeave);
 
         return toResponse(savedAttendance);
+    }
+
+    /**
+     * 전화번호 뒷 4자리로 출석 체크인 (회원 학생 + 네이버 예약 통합)
+     */
+    @Transactional
+    public AttendanceResponse checkInByPhone(Long scheduleId, String phoneLast4, LocalTime expectedLeaveTime) {
+        CourseSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        
+        // 1. 먼저 회원 학생 찾기 (부모 전화번호로)
+        List<Student> students = studentRepository.findAll().stream()
+                .filter(s -> s.getParentPhone() != null && s.getParentPhone().endsWith(phoneLast4))
+                .collect(Collectors.toList());
+        
+        if (!students.isEmpty()) {
+            Student student = students.get(0);
+            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : schedule.getEndTime();
+            
+            Attendance attendance = Attendance.builder()
+                    .student(student)
+                    .schedule(schedule)
+                    .status(AttendanceStatus.PRESENT)
+                    .classCompleted(false)
+                    .build();
+            
+            attendance.checkIn(now, expectedLeave);
+            Attendance saved = attendanceRepository.save(attendance);
+            log.info("Student attendance check-in: name={}, phone={}", student.getStudentName(), student.getParentPhone());
+            return toResponse(saved);
+        }
+        
+        // 2. 네이버 예약 찾기
+        var naverBookings = naverBookingRepository.findAll().stream()
+                .filter(nb -> nb.getPhone() != null && nb.getPhone().endsWith(phoneLast4))
+                .collect(Collectors.toList());
+        
+        if (!naverBookings.isEmpty()) {
+            var naverBooking = naverBookings.get(0);
+            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : schedule.getEndTime();
+            
+            Attendance attendance = Attendance.builder()
+                    .naverBooking(naverBooking)
+                    .schedule(schedule)
+                    .status(AttendanceStatus.PRESENT)
+                    .classCompleted(false)
+                    .build();
+            
+            attendance.checkIn(now, expectedLeave);
+            Attendance saved = attendanceRepository.save(attendance);
+            log.info("Naver booking attendance check-in: name={}, phone={}", naverBooking.getName(), naverBooking.getPhone());
+            return toResponse(saved);
+        }
+        
+        throw new ResourceNotFoundException("전화번호 뒷 4자리(" + phoneLast4 + ")와 일치하는 학생 또는 예약을 찾을 수 없습니다");
     }
 
     @Transactional
@@ -487,10 +546,15 @@ public class AttendanceService {
     }
 
     private AttendanceResponse toResponse(Attendance attendance) {
+        boolean isNaver = attendance.getNaverBooking() != null;
+        
         return AttendanceResponse.builder()
                 .id(attendance.getId())
-                .studentId(attendance.getStudent().getId())
-                .studentName(attendance.getStudent().getStudentName())
+                .studentId(isNaver ? null : attendance.getStudent().getId())
+                .studentName(isNaver ? attendance.getNaverBooking().getName() : attendance.getStudent().getStudentName())
+                .studentPhone(isNaver ? attendance.getNaverBooking().getPhone() : attendance.getStudent().getParentPhone())
+                .className(isNaver ? "네이버 예약" : (attendance.getStudent().getEnglishLevel() != null ? attendance.getStudent().getEnglishLevel() : "-"))
+                .isNaverBooking(isNaver)
                 .scheduleId(attendance.getSchedule().getId())
                 .courseName(attendance.getSchedule().getCourse().getCourseName())
                 .startTime(attendance.getSchedule().getStartTime().toString())

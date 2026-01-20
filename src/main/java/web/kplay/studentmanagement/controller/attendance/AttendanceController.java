@@ -31,6 +31,18 @@ public class AttendanceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/checkin-by-phone")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> checkInByPhone(@RequestBody Map<String, Object> request) {
+        Long scheduleId = Long.valueOf(request.get("scheduleId").toString());
+        String phoneLast4 = request.get("phoneLast4").toString();
+        java.time.LocalTime expectedLeaveTime = request.get("expectedLeaveTime") != null ? 
+            java.time.LocalTime.parse(request.get("expectedLeaveTime").toString()) : null;
+        
+        AttendanceResponse response = attendanceService.checkInByPhone(scheduleId, phoneLast4, expectedLeaveTime);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/{id}/checkout")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<AttendanceResponse> checkOut(@PathVariable Long id) {
