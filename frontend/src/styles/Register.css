@@ -200,29 +200,34 @@
     flex-direction: column;
   }
 }
-/* 생년월일 select 박스 */
-.birth-date-inputs {
+/* 생년월일 select 박스 - 완전 독립 스타일 */
+.student-birth-date-container {
   display: flex;
   gap: 8px;
 }
 
-.birth-date-inputs select {
+.student-birth-date-select {
   flex: 1;
-  padding: 12px 16px;
+  width: 100%;
+  padding: 10px 14px;
   border: 2px solid #e9ecef;
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.2s ease;
   background: white;
+  height: 42px;
+  box-sizing: border-box;
+  cursor: pointer;
+  line-height: 1.5;
 }
 
-.birth-date-inputs select:focus {
+.student-birth-date-select:focus {
   outline: none;
   border-color: #03c75a;
   box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
 }
 
-.birth-date-inputs select.error {
+.student-birth-date-select.error {
   border-color: #dc3545;
 }
 /* 아이디 중복 검사 */

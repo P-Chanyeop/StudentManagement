@@ -451,8 +451,9 @@ function Register() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>생년월일 *</label>
-                    <div className="birth-date-inputs">
+                    <div className="student-birth-date-container">
                       <select
+                        className={`student-birth-date-select ${errors[`student_${index}_birthDate`] ? 'error' : ''}`}
                         value={student.birthDate.split('-')[0] || ''}
                         onChange={(e) => {
                           const year = e.target.value;
@@ -460,7 +461,6 @@ function Register() {
                           const day = student.birthDate.split('-')[2] || '01';
                           handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
                         }}
-                        className={errors[`student_${index}_birthDate`] ? 'error' : ''}
                       >
                         <option value="">년도</option>
                         {Array.from({length: 20}, (_, i) => {
@@ -470,6 +470,7 @@ function Register() {
                       </select>
                       
                       <select
+                        className={`student-birth-date-select ${errors[`student_${index}_birthDate`] ? 'error' : ''}`}
                         value={student.birthDate.split('-')[1] || ''}
                         onChange={(e) => {
                           const year = student.birthDate.split('-')[0] || '';
@@ -477,7 +478,6 @@ function Register() {
                           const day = student.birthDate.split('-')[2] || '01';
                           handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
                         }}
-                        className={errors[`student_${index}_birthDate`] ? 'error' : ''}
                       >
                         <option value="">월</option>
                         {Array.from({length: 12}, (_, i) => {
@@ -487,6 +487,7 @@ function Register() {
                       </select>
                       
                       <select
+                        className={`student-birth-date-select ${errors[`student_${index}_birthDate`] ? 'error' : ''}`}
                         value={student.birthDate.split('-')[2] || ''}
                         onChange={(e) => {
                           const year = student.birthDate.split('-')[0] || '';
@@ -494,7 +495,6 @@ function Register() {
                           const day = e.target.value.padStart(2, '0');
                           handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
                         }}
-                        className={errors[`student_${index}_birthDate`] ? 'error' : ''}
                       >
                         <option value="">일</option>
                         {Array.from({length: 31}, (_, i) => {
