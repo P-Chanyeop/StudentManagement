@@ -33,23 +33,19 @@ function Reservations() {
 
   const isParent = profile?.role === 'PARENT';
 
-  // 네이버 예약 조회
+  // 네이버 예약 조회 (선택된 날짜로)
   const { data: naverBookingsData } = useQuery({
-    queryKey: ['naverBookings'],
-    queryFn: () => naverBookingAPI.getToday(),
+    queryKey: ['naverBookings', selectedDate],
+    queryFn: () => naverBookingAPI.getByDate(selectedDate),
     enabled: !isParent,
   });
   
-  // 네이버 예약 데이터 업데이트 (선택된 날짜로 필터링)
+  // 네이버 예약 데이터 업데이트
   React.useEffect(() => {
     if (naverBookingsData?.data) {
-      const filtered = naverBookingsData.data.filter(booking => {
-        const bookingDate = booking.orderDate?.split(' ')[0]; // "2026-01-15 09:00" -> "2026-01-15"
-        return bookingDate === selectedDate;
-      });
-      setNaverBookings(filtered);
+      setNaverBookings(naverBookingsData.data);
     }
-  }, [naverBookingsData, selectedDate]);
+  }, [naverBookingsData]);
   
   // SSE로 크롤링 완료 알림 받기
   React.useEffect(() => {

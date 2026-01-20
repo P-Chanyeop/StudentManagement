@@ -29,9 +29,16 @@ public class NaverBookingCrawlerService {
 
     private final NaverBookingRepository naverBookingRepository;
 
-    private static final String NAVER_BOOKING_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view?bookingBusinessId=1047988&dateDropdownType=TODAY";
+    private static final String NAVER_BOOKING_BASE_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view";
     private static final String NAVER_ID = "littlebearrc";
     private static final String NAVER_PW = "littlebear!";
+    
+    private String buildNaverBookingUrl() {
+        java.time.Instant now = java.time.Instant.now();
+        String timestamp = now.toString(); // ISO-8601 형식: 2026-01-20T06:11:08.066Z
+        return String.format("%s?dateDropdownTpye=TODAY&startDateTime=%s&endDateTime=%s", 
+            NAVER_BOOKING_BASE_URL, timestamp, timestamp);
+    }
 
     @Transactional
     public List<NaverBookingDTO> crawlNaverBookings() {
@@ -134,8 +141,10 @@ public class NaverBookingCrawlerService {
             
             // 네이버 예약 관리 페이지로 이동
             log.info("네이버 예약 관리 페이지로 이동");
-            driver.get(NAVER_BOOKING_URL);
-            Thread.sleep(2000);
+            String naverBookingUrl = buildNaverBookingUrl();
+            log.info("접속 URL: {}", naverBookingUrl);
+            driver.get(naverBookingUrl);
+            Thread.sleep(3000);
             
             String currentUrl = driver.getCurrentUrl();
             log.info("현재 URL: {}", currentUrl);
@@ -143,11 +152,58 @@ public class NaverBookingCrawlerService {
             String pageTitle = driver.getTitle();
             log.info("페이지 제목: {}", pageTitle);
             
+            // 스크롤을 끝까지 내려서 모든 데이터 로드
+            log.info("페이지 스크롤 시작");
+            int previousCount = 0;
+            int currentCount = 0;
+            int sameCountRetry = 0;
+            
+            // 예약 리스트 컨테이너 찾기
+            WebElement listContainer = null;
+            try {
+                listContainer = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.className("BookingListView__list-contents__g037Y")
+                ));
+                log.info("예약 리스트 컨테이너 찾음");
+            } catch (Exception e) {
+                log.warn("예약 리스트 컨테이너를 찾을 수 없음");
+            }
+            
+            while (sameCountRetry < 3) {
+                // 현재 로드된 예약 개수 확인
+                List<WebElement> currentRows = driver.findElements(
+                    By.xpath("//a[contains(@class, 'BookingListView__contents-user')]")
+                );
+                currentCount = currentRows.size();
+                log.info("현재 로드된 예약: {}건", currentCount);
+                
+                // 마지막 예약 항목으로 스크롤
+                if (!currentRows.isEmpty()) {
+                    WebElement lastRow = currentRows.get(currentRows.size() - 1);
+                    ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
+                        "arguments[0].scrollIntoView(true);", lastRow
+                    );
+                }
+                
+                Thread.sleep(2000);
+                
+                // 개수가 변하지 않으면 카운트 증가
+                if (currentCount == previousCount) {
+                    sameCountRetry++;
+                    log.info("더 이상 로드되지 않음 ({}번째 시도)", sameCountRetry);
+                } else {
+                    sameCountRetry = 0;
+                    previousCount = currentCount;
+                }
+            }
+            
+            log.info("스크롤 완료: 총 {}건 로드됨", currentCount);
+            
             // 예약 데이터 크롤링
             log.info("예약 데이터 크롤링 시작");
             List<NaverBookingDTO> bookings = new ArrayList<>();
             
-            // 모든 예약 행 찾기 (XPath contains 사용)
+            // 모든 예약 행 찾기
             List<WebElement> bookingRows = driver.findElements(
                 By.xpath("//a[contains(@class, 'BookingListView__contents-user')]")
             );
@@ -215,14 +271,13 @@ public class NaverBookingCrawlerService {
         
         for (NaverBookingDTO dto : bookings) {
             try {
-                NaverBooking entity = naverBookingRepository.findByBookingNumber(dto.getBookingNumber())
-                    .orElse(NaverBooking.builder()
-                        .bookingNumber(dto.getBookingNumber())
-                        .build());
+                NaverBooking existingEntity = naverBookingRepository.findByBookingNumber(dto.getBookingNumber())
+                    .orElse(null);
                 
-                // 데이터 업데이트
-                entity = NaverBooking.builder()
-                    .id(entity.getId())
+                boolean isNew = (existingEntity == null);
+                
+                NaverBooking entity = NaverBooking.builder()
+                    .id(isNew ? null : existingEntity.getId())
                     .bookingNumber(dto.getBookingNumber())
                     .status(dto.getStatus())
                     .name(dto.getName())
@@ -242,7 +297,7 @@ public class NaverBookingCrawlerService {
                 
                 naverBookingRepository.save(entity);
                 
-                if (entity.getId() == null) {
+                if (isNew) {
                     savedCount++;
                 } else {
                     updatedCount++;
@@ -274,6 +329,31 @@ public class NaverBookingCrawlerService {
                 .cancelDate(entity.getCancelDate())
                 .build())
             .collect(Collectors.toList());
+    }
+    
+    public List<NaverBookingDTO> getBookingsByDate(String date) {
+        return naverBookingRepository.findByBookingDate(date).stream()
+            .map(entity -> NaverBookingDTO.builder()
+                .status(entity.getStatus())
+                .name(entity.getName())
+                .phone(entity.getPhone())
+                .bookingNumber(entity.getBookingNumber())
+                .bookingTime(entity.getBookingTime())
+                .product(entity.getProduct())
+                .quantity(entity.getQuantity())
+                .option(entity.getOption())
+                .comment(entity.getComment())
+                .deposit(entity.getDeposit())
+                .totalPrice(entity.getTotalPrice())
+                .orderDate(entity.getOrderDate())
+                .confirmDate(entity.getConfirmDate())
+                .cancelDate(entity.getCancelDate())
+                .build())
+            .collect(Collectors.toList());
+    }
+    
+    public List<NaverBooking> getAllBookings() {
+        return naverBookingRepository.findAll();
     }
 }
 

@@ -173,6 +173,7 @@ export const reservationAPI = {
 export const naverBookingAPI = {
   sync: () => api.post('/naver-booking/sync'),
   getToday: () => api.get('/naver-booking/today'),
+  getByDate: (date) => api.get(`/naver-booking/date/${date}`),
 };
 
 // 스케줄 API
