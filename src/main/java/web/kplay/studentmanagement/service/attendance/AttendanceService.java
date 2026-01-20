@@ -236,71 +236,121 @@ public class AttendanceService {
                 
                 if (existingAttendance.isPresent()) {
                     Attendance attendance = existingAttendance.get();
-                    
-                    // 출석체크 안한 학생만 자동 결석 처리
-                    if (attendance.getCheckInTime() == null) {
-                        LocalDateTime classStartTime = LocalDateTime.of(date, schedule.getStartTime());
-                        LocalDateTime absentDeadline = classStartTime.plusMinutes(30);
-                        
-                        if (now.isAfter(absentDeadline)) {
-                            attendance.updateStatus(AttendanceStatus.ABSENT, "30분 경과로 인한 자동 결석 처리");
-                            attendanceRepository.save(attendance);
-                        }
-                    }
-                    // 이미 출석체크한 학생(checkInTime != null)은 그대로 유지
-                    
-                    // 모든 학생 테이블에 표시 (출석/결석 관계없이)
                     responses.add(toResponse(attendance));
                 } else {
-                    // 출석 데이터가 없는 경우 - 수업 있는 학생이므로 테이블에 표시
-                    LocalDateTime classStartTime = LocalDateTime.of(date, schedule.getStartTime());
-                    LocalDateTime absentDeadline = classStartTime.plusMinutes(30);
-                    
-                    if (now.isAfter(absentDeadline)) {
-                        // 30분 지났으면 결석 데이터 생성
-                        Attendance absentAttendance = Attendance.builder()
-                                .student(student)
-                                .schedule(schedule)
-                                .status(AttendanceStatus.ABSENT)
-                                .reason("30분 경과로 인한 자동 결석 처리")
-                                .build();
-                        attendanceRepository.save(absentAttendance);
-                        responses.add(toResponse(absentAttendance));
-                    } else {
-                        // 아직 30분 안지났으면 출석 대기 상태로 표시
-                        AttendanceResponse response = AttendanceResponse.builder()
-                                .id(null)
-                                .studentId(student.getId())
-                                .studentName(student.getStudentName())
-                                .scheduleId(schedule.getId())
-                                .courseName(schedule.getCourse().getCourseName())
-                                .startTime(schedule.getStartTime().toString())
-                                .endTime(schedule.getEndTime().toString())
-                                .status(AttendanceStatus.ABSENT) // 아직 체크인 안함
-                                .checkInTime(null)
-                                .checkOutTime(null)
-                                .expectedLeaveTime(null)
-                                .originalExpectedLeaveTime(null)
-                                .memo("")
-                                .reason(null)
-                                .classCompleted(false)
-                                .teacherName(schedule.getCourse().getTeacher() != null ? 
-                                    schedule.getCourse().getTeacher().getName() : null)
-                                .dcCheck(null)
-                                .wrCheck(null)
-                                .vocabularyClass(null)
-                                .grammarClass(null)
-                                .phonicsClass(null)
-                                .speakingClass(null)
-                                .additionalClassEndTime(null)
-                                .build();
-                        responses.add(response);
-                    }
+                    // 출석 대기 상태로 표시 (자동 결석 처리 제거)
+                    AttendanceResponse response = AttendanceResponse.builder()
+                            .id(null)
+                            .studentId(student.getId())
+                            .studentName(student.getStudentName())
+                            .studentPhone(student.getParentPhone())
+                            .className(student.getEnglishLevel())
+                            .isNaverBooking(false)
+                            .scheduleId(schedule.getId())
+                            .courseName(schedule.getCourse().getCourseName())
+                            .startTime(schedule.getStartTime().toString())
+                            .endTime(schedule.getEndTime().toString())
+                            .status(AttendanceStatus.ABSENT)
+                            .checkInTime(null)
+                            .checkOutTime(null)
+                            .expectedLeaveTime(null)
+                            .originalExpectedLeaveTime(null)
+                            .memo("")
+                            .reason(null)
+                            .classCompleted(false)
+                            .teacherName(schedule.getCourse().getTeacher() != null ? 
+                                schedule.getCourse().getTeacher().getName() : null)
+                            .dcCheck(null)
+                            .wrCheck(null)
+                            .vocabularyClass(null)
+                            .grammarClass(null)
+                            .phonicsClass(null)
+                            .speakingClass(null)
+                            .additionalClassEndTime(null)
+                            .build();
+                    responses.add(response);
                 }
             }
         }
         
+        // 네이버 예약 데이터 추가
+        String dateStr = date.toString(); // 2026-01-20
+        String[] parts = dateStr.split("-");
+        String year = parts[0].substring(2);
+        String month = String.valueOf(Integer.parseInt(parts[1]));
+        String day = String.valueOf(Integer.parseInt(parts[2]));
+        String naverDateFormat = year + ". " + month + ". " + day + ".";
+        
+        List<web.kplay.studentmanagement.domain.reservation.NaverBooking> naverBookings = 
+            naverBookingRepository.findByBookingDate(naverDateFormat);
+        
+        for (var booking : naverBookings) {
+            // 이미 출석 체크된 네이버 예약이 있는지 확인
+            boolean alreadyCheckedIn = responses.stream()
+                .anyMatch(r -> r.getIsNaverBooking() != null && r.getIsNaverBooking() && 
+                              r.getStudentName().equals(booking.getName()));
+            
+            if (!alreadyCheckedIn) {
+                // bookingTime 파싱: "26. 1. 20.(화) 오전 10:00" -> "10:00"
+                String timeStr = parseNaverBookingTime(booking.getBookingTime());
+                
+                // 출석 대기 상태로 표시
+                AttendanceResponse response = AttendanceResponse.builder()
+                        .id(null)
+                        .studentId(null)
+                        .studentName(booking.getName())
+                        .studentPhone(booking.getPhone())
+                        .className("네이버 예약")
+                        .isNaverBooking(true)
+                        .scheduleId(schedules.isEmpty() ? null : schedules.get(0).getId())
+                        .courseName(booking.getProduct())
+                        .startTime(timeStr)
+                        .endTime("-")
+                        .status(AttendanceStatus.ABSENT)
+                        .checkInTime(null)
+                        .checkOutTime(null)
+                        .expectedLeaveTime(null)
+                        .originalExpectedLeaveTime(null)
+                        .memo("")
+                        .reason(null)
+                        .classCompleted(false)
+                        .teacherName(null)
+                        .dcCheck(null)
+                        .wrCheck(null)
+                        .vocabularyClass(null)
+                        .grammarClass(null)
+                        .phonicsClass(null)
+                        .speakingClass(null)
+                        .additionalClassEndTime(null)
+                        .build();
+                responses.add(response);
+            }
+        }
+        
         return responses;
+    }
+    
+    private String parseNaverBookingTime(String bookingTime) {
+        // "26. 1. 20.(화) 오전 10:00" -> "10:00"
+        // "26. 1. 20.(화) 오후 4:00" -> "16:00"
+        try {
+            if (bookingTime.contains("오전")) {
+                String time = bookingTime.split("오전")[1].trim();
+                String[] timeParts = time.split(":");
+                int hour = Integer.parseInt(timeParts[0].trim());
+                if (hour == 12) hour = 0; // 오전 12시는 00시
+                return String.format("%02d:%s", hour, timeParts[1]);
+            } else if (bookingTime.contains("오후")) {
+                String time = bookingTime.split("오후")[1].trim();
+                String[] timeParts = time.split(":");
+                int hour = Integer.parseInt(timeParts[0].trim());
+                if (hour != 12) hour += 12; // 오후는 +12 (단, 12시는 그대로)
+                return String.format("%02d:%s", hour, timeParts[1]);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse booking time: {}", bookingTime);
+        }
+        return bookingTime;
     }
 
     /**
