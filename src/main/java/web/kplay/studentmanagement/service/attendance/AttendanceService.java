@@ -285,6 +285,11 @@ public class AttendanceService {
             naverBookingRepository.findByBookingDate(naverDateFormat);
         
         for (var booking : naverBookings) {
+            // 레벨테스트 및 상담 예약은 제외
+            if (booking.getProduct() != null && booking.getProduct().contains("레벨테스트")) {
+                continue;
+            }
+            
             // 이미 출석 체크된 네이버 예약이 있는지 확인
             boolean alreadyCheckedIn = responses.stream()
                 .anyMatch(r -> r.getIsNaverBooking() != null && r.getIsNaverBooking() && 
