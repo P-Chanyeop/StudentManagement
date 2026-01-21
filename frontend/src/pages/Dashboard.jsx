@@ -184,7 +184,7 @@ function Dashboard() {
       {isParent ? (
         <div className="parent-dashboard">
           <div className="dashboard-header">
-            <h1>안녕하세요, {profile?.name || '사용자'}님! 👋</h1>
+            <h1>안녕하세요, {profile?.nickname || profile?.name || '사용자'}님! 👋</h1>
             <p>자녀의 수강 정보를 확인하세요</p>
           </div>
           
@@ -274,7 +274,7 @@ function Dashboard() {
           {/* 히어로 섹션 */}
           <section className="hero">
             <div className="hero-container">
-              <h1>안녕하세요, {profile?.name || '사용자'}님! 👋</h1>
+              <h1>안녕하세요, {profile?.nickname || profile?.name || '사용자'}님! 👋</h1>
               <p>오늘도 학원 운영을 효율적으로 관리하세요</p>
             </div>
           </section>

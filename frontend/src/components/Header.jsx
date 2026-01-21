@@ -106,7 +106,8 @@ function Header() {
   }
 
   const getInitial = () => {
-    return profile.name ? profile.name.charAt(0) : profile.username.charAt(0);
+    const displayName = profile.nickname || profile.name;
+    return displayName ? displayName.charAt(0) : profile.username.charAt(0);
   };
 
   const isActive = (path) => {
@@ -247,7 +248,7 @@ function Header() {
                 {getInitial()}
               </div>
               <div className="user-info">
-                <span className="user-name">{profile.name}</span>
+                <span className="user-name">{profile.nickname || profile.name}</span>
                 <span className="user-role">
                   {profile.role === 'ADMIN' && '관리자'}
                   {profile.role === 'TEACHER' && '선생님'}
@@ -273,7 +274,7 @@ function Header() {
             {showDropdown && (
               <div className="dropdown-menu">
                 <div className="dropdown-header">
-                  <p className="dropdown-name">{profile.name}</p>
+                  <p className="dropdown-name">{profile.nickname || profile.name}</p>
                   <p className="dropdown-email">{profile.email || profile.username}</p>
                 </div>
                 

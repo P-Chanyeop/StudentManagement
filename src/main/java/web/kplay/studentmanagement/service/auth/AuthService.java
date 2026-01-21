@@ -75,6 +75,7 @@ public class AuthService {
                 userDetails.getId(),
                 userDetails.getUsername(),
                 user.getName(),
+                user.getNickname(),
                 userDetails.getRole()
         );
     }
@@ -142,6 +143,7 @@ public class AuthService {
                 user.getId(),
                 user.getUsername(),
                 user.getName(),
+                user.getNickname(),
                 user.getRole()
         );
     }
