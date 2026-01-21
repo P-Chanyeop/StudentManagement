@@ -17,6 +17,7 @@ public class UserProfileResponse {
     private Long userId;
     private String username;
     private String name;
+    private String nickname;
     private String email;
     private String phoneNumber;
     private String address;

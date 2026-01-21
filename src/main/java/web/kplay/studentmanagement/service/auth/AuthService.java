@@ -170,6 +170,7 @@ public class AuthService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
