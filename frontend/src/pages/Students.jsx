@@ -521,13 +521,18 @@ function Students() {
                     value={newStudent.englishLevel}
                     onChange={(e) => setNewStudent({ ...newStudent, englishLevel: e.target.value })}
                     placeholder="1.0"
+                    disabled={profile?.role === 'PARENT'}
+                    readOnly={profile?.role === 'PARENT'}
                   />
                 </div>
 
                 <div className="form-group">
                   <label>반 선택</label>
                   <div className="class-list">
-                    {courses.map((course) => (
+                    {profile?.role === 'PARENT' ? (
+                      <p className="info-text">반 배정은 관리자가 진행합니다.</p>
+                    ) : (
+                    courses.map((course) => (
                       <div key={course.id} className="class-item">
                         <input
                           type="checkbox"
@@ -545,7 +550,8 @@ function Students() {
                           {course.courseName}
                         </label>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -752,6 +758,8 @@ function Students() {
                       setSelectedStudent({ ...selectedStudent, englishLevel: e.target.value })
                     }
                     placeholder="1.0"
+                    disabled={profile?.role === 'PARENT'}
+                    readOnly={profile?.role === 'PARENT'}
                   />
                 </div>
 

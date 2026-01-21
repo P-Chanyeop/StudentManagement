@@ -27,6 +27,9 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(length = 50)
+    private String nickname;
+
     @Column(length = 20)
     private String phoneNumber;
 
@@ -88,14 +91,19 @@ public class User extends BaseEntity {
     }
 
     // 정보 업데이트
-    public void updateInfo(String name, String phoneNumber, String email) {
+    public void updateInfo(String name, String nickname, String phoneNumber, String email) {
         this.name = name;
+        this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.email = email;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     public void setPhoneNumber(String phoneNumber) {

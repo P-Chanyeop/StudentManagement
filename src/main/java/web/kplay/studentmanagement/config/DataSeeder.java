@@ -57,6 +57,21 @@ public class DataSeeder {
         return args -> {
             log.info("=== Initial data loading started ===");
 
+            // 더미 데이터 전체 삭제
+            log.info("=== Deleting all dummy data ===");
+            attendanceRepository.deleteAll();
+            consultationRepository.deleteAll();
+            noticeRepository.deleteAll();
+            enrollmentRepository.deleteAll();
+            scheduleRepository.deleteAll();
+            courseRepository.deleteAll();
+            studentRepository.deleteAll();
+            // admin, teacher 계정은 유지
+            userRepository.findAll().stream()
+                .filter(u -> !u.getRole().equals(UserRole.ADMIN) && !u.getRole().equals(UserRole.TEACHER))
+                .forEach(userRepository::delete);
+            log.info("✓ All dummy data deleted");
+
             // 관리자 계정 생성
             if (userRepository.findByUsername("admin").isEmpty()) {
                 User admin = User.builder()
@@ -116,7 +131,8 @@ public class DataSeeder {
                 log.info("✓ Parent account created (username: parent1)");
             }
 
-            // 테스트 학생 데이터 생성
+            // 테스트 학생 데이터 생성 - 주석 처리
+            /*
             if (studentRepository.count() == 0) {
                 Student student1 = Student.builder()
                         .studentName("홍길동")
@@ -217,8 +233,10 @@ public class DataSeeder {
                     }
                 }
             }
+            */
 
-            // 테스트 수업 및 스케줄 생성
+            // 테스트 수업 및 스케줄 생성 - 주석 처리
+            /*
             if (courseRepository.count() == 0) {
                 // 선생님 조회
                 User teacher = userRepository.findByUsername("teacher1").orElse(null);
@@ -294,8 +312,10 @@ public class DataSeeder {
 
                 log.info("✓ Test courses and schedules created (Today 14:00-16:00)");
             }
+            */
 
-            // 테스트 상담 데이터 생성
+            // 테스트 상담 데이터 생성 - 주석 처리
+            /*
             if (consultationRepository.count() == 0) {
                 User admin = userRepository.findByUsername("admin").orElse(null);
                 User teacher = userRepository.findByUsername("teacher1").orElse(null);
@@ -375,15 +395,10 @@ public class DataSeeder {
                     log.info("✓ 5 test consultation records created");
                 }
             }
+            */
 
-            // 6. 기존 출석 데이터 삭제 (더미 데이터 제거)
-            if (attendanceRepository.count() > 0) {
-                log.info("=== Deleting existing attendance records ===");
-                attendanceRepository.deleteAll();
-                log.info("✓ All attendance records deleted");
-            }
-
-            // 테스트 공지사항 데이터 생성
+            // 테스트 공지사항 데이터 생성 - 주석 처리
+            /*
             if (noticeRepository.count() == 0) {
                 User admin = userRepository.findByUsername("admin").orElse(null);
                 User teacher = userRepository.findByUsername("teacher1").orElse(null);
@@ -470,19 +485,12 @@ public class DataSeeder {
                     log.info("✓ 5 test notice records created");
                 }
             }
-
-            // 레벨테스트 및 일반 수업 Course 및 스케줄 생성
-            createCoursesAndSchedules();
+            */
 
             // 약관 데이터 생성
             createTermsData();
 
             log.info("=== Initial data loading completed ===");
-            log.info("");
-            log.info("📋 Initial accounts created (see CREDENTIALS.md for passwords)");
-            log.info("  - admin (Administrator)");
-            log.info("  - teacher1, teacher2 (Teachers)");
-            log.info("  - parent1 (Parent)");
             log.info("  - student1, student2, student3 (Students)");
             log.info("📝 5 test consultation records created");
             log.info("");

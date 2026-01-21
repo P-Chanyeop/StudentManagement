@@ -24,6 +24,10 @@ public class RegisterRequest {
     @NotBlank(message = "이름은 필수입니다")
     private String name;
     
+    @NotBlank(message = "닉네임은 필수입니다")
+    @Size(min = 2, max = 50, message = "닉네임은 2-50자 사이여야 합니다")
+    private String nickname;
+    
     @NotBlank(message = "연락처는 필수입니다")
     @Pattern(regexp = "^010-\\d{4}-\\d{4}$", message = "올바른 연락처 형식을 입력해주세요")
     private String phoneNumber;
@@ -32,6 +36,12 @@ public class RegisterRequest {
     private String address;
     
     private String role = "PARENT";
+    
+    // 약관 동의
+    private Boolean termsAgreed;
+    private Boolean privacyAgreed;
+    private Boolean marketingAgreed;
+    private Boolean smsAgreed;
     
     // 학생 정보
     private StudentInfo student;

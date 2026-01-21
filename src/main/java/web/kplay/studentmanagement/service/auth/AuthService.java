@@ -95,6 +95,7 @@ public class AuthService {
                 .username(signupRequest.getUsername())
                 .password(passwordEncoder.encode(signupRequest.getPassword()))
                 .name(signupRequest.getName())
+                .nickname(signupRequest.getNickname())
                 .phoneNumber(signupRequest.getPhoneNumber())
                 .email(signupRequest.getEmail())
                 .role(signupRequest.getRole())
@@ -261,9 +262,15 @@ public class AuthService {
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
+                .nickname(request.getNickname())
                 .phoneNumber(request.getPhoneNumber())
                 .role(UserRole.PARENT)
                 .isActive(true)
+                .termsAgreed(request.getTermsAgreed())
+                .privacyAgreed(request.getPrivacyAgreed())
+                .marketingAgreed(Optional.ofNullable(request.getMarketingAgreed()).orElse(false))
+                .smsAgreed(Optional.ofNullable(request.getSmsAgreed()).orElse(false))
+                .agreedAt(java.time.LocalDateTime.now())
                 .build();
 
         User savedParent = userRepository.save(parentUser);
@@ -276,7 +283,7 @@ public class AuthService {
                     .parentUser(savedParent)
                     .studentName(studentInfo.getStudentName())
                     .studentPhone(studentInfo.getStudentPhone())
-                    .birthDate(LocalDate.parse(studentInfo.getBirthDate()))
+                    .birthDate(studentInfo.getBirthDate() != null ? LocalDate.parse(studentInfo.getBirthDate()) : null)
                     .gender(studentInfo.getGender())
                     .school(studentInfo.getSchool())
                     .grade(studentInfo.getGrade())

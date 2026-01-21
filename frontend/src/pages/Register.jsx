@@ -12,6 +12,7 @@ function Register() {
     password: '',
     confirmPassword: '',
     parentName: '',
+    nickname: '',
     parentPhone: '',
     address: '',
     
@@ -164,6 +165,12 @@ function Register() {
       newErrors.parentName = '학부모 이름을 입력해주세요.';
     }
     
+    if (!formData.nickname.trim()) {
+      newErrors.nickname = '닉네임을 입력해주세요.';
+    } else if (formData.nickname.trim().length < 2) {
+      newErrors.nickname = '닉네임은 2자 이상이어야 합니다.';
+    }
+    
     if (!formData.parentPhone.trim()) {
       newErrors.parentPhone = '연락처를 입력해주세요.';
     } else if (!/^010-\d{4}-\d{4}$/.test(formData.parentPhone)) {
@@ -179,7 +186,7 @@ function Register() {
       if (!student.studentName.trim()) {
         newErrors[`student_${index}_name`] = '학생 이름을 입력해주세요.';
       }
-      if (!student.birthDate) {
+      if (!student.birthDate || student.birthDate.split('-')[0] === '') {
         newErrors[`student_${index}_birthDate`] = '생년월일을 선택해주세요.';
       }
       if (!student.school.trim()) {
@@ -214,6 +221,7 @@ function Register() {
       username: formData.username,
       password: formData.password,
       name: formData.parentName,
+      nickname: formData.nickname,
       phoneNumber: formData.parentPhone,
       address: formData.address,
       role: 'PARENT',
@@ -224,18 +232,18 @@ function Register() {
       marketingAgreed: formData.marketingAgreed,
       smsAgreed: formData.smsAgreed,
       
-      // 학생 정보
-      student: {
-        studentName: formData.studentName,
-        studentPhone: formData.studentPhone,
-        birthDate: formData.birthDate,
-        gender: formData.gender,
-        school: formData.school,
-        grade: formData.grade,
-        englishLevel: '1.0', // 기본값
+      // 학생 정보 (첫 번째 학생)
+      student: formData.students && formData.students.length > 0 ? {
+        studentName: formData.students[0].studentName,
+        studentPhone: formData.students[0].studentPhone,
+        birthDate: formData.students[0].birthDate || null,
+        gender: formData.students[0].gender,
+        school: formData.students[0].school,
+        grade: formData.students[0].grade,
+        englishLevel: formData.students[0].englishLevel || '1.0',
         parentName: formData.parentName,
         parentPhone: formData.parentPhone
-      }
+      } : null
     };
 
     registerMutation.mutate(registerData);
@@ -349,6 +357,22 @@ function Register() {
               </div>
 
               <div className="form-group">
+                <label htmlFor="nickname">닉네임 * <span className="hint">(예: 서울초 홍길동 엄마)</span></label>
+                <input
+                  type="text"
+                  id="nickname"
+                  name="nickname"
+                  value={formData.nickname}
+                  onChange={handleInputChange}
+                  placeholder="닉네임을 입력하세요"
+                  className={errors.nickname ? 'error' : ''}
+                />
+                {errors.nickname && <span className="error-message">{errors.nickname}</span>}
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
                 <label htmlFor="parentPhone">연락처 *</label>
                 <input
                   type="tel"
@@ -454,12 +478,12 @@ function Register() {
                     <div className="student-birth-date-container">
                       <select
                         className={`student-birth-date-select ${errors[`student_${index}_birthDate`] ? 'error' : ''}`}
-                        value={student.birthDate.split('-')[0] || ''}
+                        value={student.birthDate ? student.birthDate.split('-')[0] : ''}
                         onChange={(e) => {
                           const year = e.target.value;
-                          const month = student.birthDate.split('-')[1] || '01';
-                          const day = student.birthDate.split('-')[2] || '01';
-                          handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
+                          const month = student.birthDate ? student.birthDate.split('-')[1] : '01';
+                          const day = student.birthDate ? student.birthDate.split('-')[2] : '01';
+                          handleStudentChange(index, 'birthDate', year ? `${year}-${month}-${day}` : '');
                         }}
                       >
                         <option value="">년도</option>
@@ -471,12 +495,12 @@ function Register() {
                       
                       <select
                         className={`student-birth-date-select ${errors[`student_${index}_birthDate`] ? 'error' : ''}`}
-                        value={student.birthDate.split('-')[1] || ''}
+                        value={student.birthDate ? student.birthDate.split('-')[1] : ''}
                         onChange={(e) => {
-                          const year = student.birthDate.split('-')[0] || '';
+                          const year = student.birthDate ? student.birthDate.split('-')[0] : '';
                           const month = e.target.value.padStart(2, '0');
-                          const day = student.birthDate.split('-')[2] || '01';
-                          handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
+                          const day = student.birthDate ? student.birthDate.split('-')[2] : '01';
+                          handleStudentChange(index, 'birthDate', year ? `${year}-${month}-${day}` : '');
                         }}
                       >
                         <option value="">월</option>
@@ -488,12 +512,12 @@ function Register() {
                       
                       <select
                         className={`student-birth-date-select ${errors[`student_${index}_birthDate`] ? 'error' : ''}`}
-                        value={student.birthDate.split('-')[2] || ''}
+                        value={student.birthDate ? student.birthDate.split('-')[2] : ''}
                         onChange={(e) => {
-                          const year = student.birthDate.split('-')[0] || '';
-                          const month = student.birthDate.split('-')[1] || '01';
+                          const year = student.birthDate ? student.birthDate.split('-')[0] : '';
+                          const month = student.birthDate ? student.birthDate.split('-')[1] : '01';
                           const day = e.target.value.padStart(2, '0');
-                          handleStudentChange(index, 'birthDate', `${year}-${month}-${day}`);
+                          handleStudentChange(index, 'birthDate', year ? `${year}-${month}-${day}` : '');
                         }}
                       >
                         <option value="">일</option>

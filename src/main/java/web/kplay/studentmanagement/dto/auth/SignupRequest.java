@@ -25,6 +25,10 @@ public class SignupRequest {
     @NotBlank(message = "이름은 필수입니다")
     private String name;
 
+    @NotBlank(message = "닉네임은 필수입니다")
+    @Size(min = 2, max = 50, message = "닉네임은 2-50자 사이여야 합니다")
+    private String nickname;
+
     private String phoneNumber;
 
     @Email(message = "유효한 이메일 주소를 입력하세요")
