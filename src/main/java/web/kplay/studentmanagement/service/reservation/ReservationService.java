@@ -28,6 +28,7 @@ import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,6 +67,16 @@ public class ReservationService {
 
             // 수강권 횟수 차감
             enrollment.useCount();
+        } else {
+            // enrollmentId가 없으면 학생의 활성 수강권 자동 조회
+            List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentIdAndIsActive(student.getId(), true);
+            if (!activeEnrollments.isEmpty()) {
+                enrollment = activeEnrollments.get(0); // 첫 번째 활성 수강권 사용
+                log.info("Auto-selected enrollment: {}", enrollment.getId());
+                
+                // 수강권 횟수 차감
+                enrollment.useCount();
+            }
         }
 
         // 같은 날짜/시간 중복 체크
@@ -311,7 +322,7 @@ public class ReservationService {
                 .map(Student::getId)
                 .collect(Collectors.toList());
         
-        List<Reservation> reservations = reservationRepository.findByStudentIdInOrderByScheduleScheduleDateDescScheduleStartTimeDesc(studentIds);
+        List<Reservation> reservations = reservationRepository.findByStudentIdInOrderByReservationDateDesc(studentIds);
         
         return reservations.stream()
                 .map(this::toResponse)
@@ -345,6 +356,12 @@ public class ReservationService {
      */
     private void createAttendanceRecord(Reservation reservation) {
         try {
+            // 학생 정보가 없으면 출석 레코드 생성하지 않음
+            if (reservation.getStudent() == null) {
+                log.warn("Cannot create attendance record: reservation has no student. reservationId={}", reservation.getId());
+                return;
+            }
+            
             // 학생의 활성 수강권에서 Course 정보 가져오기
             web.kplay.studentmanagement.domain.course.Course course = null;
             if (reservation.getEnrollment() != null) {

@@ -79,7 +79,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.student st " +
            "WHERE r.student.id IN :studentIds " +
            "ORDER BY r.reservationDate DESC, r.reservationTime DESC")
-    List<Reservation> findByStudentIdInOrderByScheduleScheduleDateDescScheduleStartTimeDesc(@Param("studentIds") List<Long> studentIds);
+    List<Reservation> findByStudentIdInOrderByReservationDateDesc(@Param("studentIds") List<Long> studentIds);
 
     /**
      * 특정 시간 이후 생성된 예약 조회 (관리자 알림용)

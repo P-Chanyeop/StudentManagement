@@ -47,6 +47,7 @@ public class DataSeeder {
     private final ConsultationRepository consultationRepository;
     private final NoticeRepository noticeRepository;
     private final AttendanceRepository attendanceRepository;
+    private final ReservationRepository reservationRepository;
     private final PasswordEncoder passwordEncoder;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
     private final TermsRepository termsRepository;
@@ -60,6 +61,7 @@ public class DataSeeder {
             // 더미 데이터 전체 삭제
             log.info("=== Deleting all dummy data ===");
             attendanceRepository.deleteAll();
+            reservationRepository.deleteAll(); // 예약 먼저 삭제
             consultationRepository.deleteAll();
             noticeRepository.deleteAll();
             enrollmentRepository.deleteAll();

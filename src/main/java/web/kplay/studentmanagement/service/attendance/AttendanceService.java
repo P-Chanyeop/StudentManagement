@@ -238,6 +238,7 @@ public class AttendanceService {
         
         return attendances.stream()
                 .map(this::toResponse)
+                .filter(response -> response != null) // null 필터링
                 .collect(Collectors.toList());
     }
     
@@ -503,13 +504,19 @@ public class AttendanceService {
 
     private AttendanceResponse toResponse(Attendance attendance) {
         boolean isNaver = attendance.getNaverBooking() != null;
+        Student student = attendance.getStudent();
+        
+        // student가 null이면 null 반환 (필터링됨)
+        if (!isNaver && student == null) {
+            return null;
+        }
         
         return AttendanceResponse.builder()
                 .id(attendance.getId())
-                .studentId(isNaver ? null : attendance.getStudent().getId())
-                .studentName(isNaver ? attendance.getNaverBooking().getName() : attendance.getStudent().getStudentName())
-                .studentPhone(isNaver ? attendance.getNaverBooking().getPhone() : attendance.getStudent().getParentPhone())
-                .className(isNaver ? "네이버 예약" : (attendance.getStudent().getEnglishLevel() != null ? attendance.getStudent().getEnglishLevel() : "-"))
+                .studentId(isNaver ? null : student.getId())
+                .studentName(isNaver ? attendance.getNaverBooking().getName() : student.getStudentName())
+                .studentPhone(isNaver ? attendance.getNaverBooking().getPhone() : student.getParentPhone())
+                .className(isNaver ? "네이버 예약" : (attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음"))
                 .isNaverBooking(isNaver)
                 .courseName(attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음")
                 .startTime(attendance.getAttendanceTime().toString())

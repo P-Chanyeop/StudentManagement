@@ -61,6 +61,7 @@ public class AligoSmsProvider implements SmsProvider {
             params.add("msg", content);
             params.add("msg_type", "SMS"); // SMS: 단문, LMS: 장문, MMS: 이미지
             params.add("title", ""); // LMS/MMS 제목
+            params.add("testmode_yn", "Y"); // 테스트 모드 활성화
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 

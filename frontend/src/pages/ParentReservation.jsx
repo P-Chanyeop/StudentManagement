@@ -354,12 +354,11 @@ function ParentReservation() {
   const createReservation = useMutation({
     mutationFn: (data) => reservationAPI.create(data),
     onSuccess: () => {
-      setReservationStatus('success');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      alert('예약이 완료되었습니다!');
+      navigate('/reservations'); // 예약 내역 페이지로 이동
     },
     onError: (error) => {
-      setReservationStatus('error');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      alert(error.response?.data?.message || '예약에 실패했습니다.');
       console.error('예약 오류:', error);
     },
   });
@@ -462,46 +461,6 @@ function ParentReservation() {
   const handleGoHome = () => {
     window.location.href = '/';
   };
-
-  // 성공/실패 컴포넌트 렌더링
-  if (reservationStatus === 'success') {
-    return (
-      <div className="parent-reservation">
-        <div className="reservation-result success">
-          <div className="result-icon">✓</div>
-          <h2>예약이 완료되었습니다!</h2>
-          <div className="result-buttons">
-            <button onClick={handleRetryReservation} className="btn-retry">
-              다시 예약
-            </button>
-            <button onClick={handleGoHome} className="btn-home">
-              홈으로
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (reservationStatus === 'error') {
-    return (
-      <div className="parent-reservation">
-        <div className="reservation-result error">
-          <div className="result-icon">✗</div>
-          <h2>예약 요청 중 오류가 발생했습니다</h2>
-          <p>다시 시도해주세요.</p>
-          <div className="result-buttons">
-            <button onClick={handleRetryReservation} className="btn-retry">
-              다시 예약
-            </button>
-            <button onClick={handleGoHome} className="btn-home">
-              홈으로
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const validateForm = () => {
     const newErrors = {};

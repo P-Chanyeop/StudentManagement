@@ -136,7 +136,8 @@ function Header() {
     } else if (profile.role === 'PARENT') {
       return [
         ...baseItems,
-        { path: '/reservations', label: '수업 예약', icon: 'fa-calendar-alt' },
+        { path: '/parent-reservation', label: '수업 예약', icon: 'fa-calendar-plus' },
+        { path: '/reservations', label: '예약 내역', icon: 'fa-calendar-alt' },
         { path: '/notices', label: '공지사항', icon: 'fa-bell' },
       ];
     } else if (profile.role === 'STUDENT') {

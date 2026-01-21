@@ -27,6 +27,8 @@ public class NaverBooking extends BaseEntity {
     private String bookingTime;    // 이용일시
     private String product;        // 상품
     private String quantity;       // 인원
+    
+    @Column(name = "`option`")
     private String option;         // 옵션
     
     @Column(length = 1000)
