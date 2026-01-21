@@ -237,7 +237,7 @@ public class AttendanceService {
         List<Attendance> attendances = attendanceRepository.findByDate(date);
         
         return attendances.stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .filter(response -> response != null) // null 필터링
                 .collect(Collectors.toList());
     }
@@ -299,7 +299,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByStudent(Long studentId) {
         return attendanceRepository.findByStudentId(studentId).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -309,7 +309,7 @@ public class AttendanceService {
     public List<AttendanceResponse> getAttendanceByStudentAndDateRange(
             Long studentId, LocalDate startDate, LocalDate endDate) {
         return attendanceRepository.findByStudentAndDateRange(studentId, startDate, endDate).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -319,7 +319,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByCheckInOrder(LocalDate date) {
         return attendanceRepository.findByDateOrderByCheckInTime(date).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -329,7 +329,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByLeaveOrder(LocalDate date) {
         return attendanceRepository.findByDateOrderByExpectedLeaveTime(date).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -339,7 +339,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendedStudents(LocalDate date) {
         return attendanceRepository.findAttendedByDate(date).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -349,7 +349,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getNotAttendedStudents(LocalDate date) {
         return attendanceRepository.findNotAttendedByDate(date).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -359,7 +359,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getCheckedOutStudents(LocalDate date) {
         return attendanceRepository.findCheckedOutByDate(date).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -369,7 +369,7 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getNotCheckedOutStudents(LocalDate date) {
         return attendanceRepository.findNotCheckedOutByDate(date).stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -467,7 +467,7 @@ public class AttendanceService {
         List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDate(studentIds, date);
         
         return attendances.stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -498,7 +498,7 @@ public class AttendanceService {
         List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDateBetween(studentIds, startDate, endDate);
         
         return attendances.stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -565,7 +565,7 @@ public class AttendanceService {
         List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDate(studentIds, date);
         
         return attendances.stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 
@@ -596,7 +596,7 @@ public class AttendanceService {
         List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDateBetween(studentIds, startDate, endDate);
         
         return attendances.stream()
-                .map(this::toResponse)
+                .map(this::toResponse).filter(response -> response != null)
                 .collect(Collectors.toList());
     }
 

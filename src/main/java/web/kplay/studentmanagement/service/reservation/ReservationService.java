@@ -161,6 +161,9 @@ public class ReservationService {
         // 예약 취소 (전날 오후 6시까지만 가능)
         reservation.cancel(reason);
 
+        // 해당 예약의 출석 레코드 삭제
+        deleteAttendanceRecord(reservation);
+
         log.info("예약 취소: 학생={}, 날짜={}, 시간={}, 사유={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
                 reservation.getReservationDate(),
@@ -181,6 +184,9 @@ public class ReservationService {
 
         // 관리자 강제 취소 (시간 제한 없음)
         reservation.forceCancel(reason);
+
+        // 해당 예약의 출석 레코드 삭제
+        deleteAttendanceRecord(reservation);
 
         log.info("예약 강제 취소 (관리자): 학생={}, 날짜={}, 시간={}, 사유={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
@@ -384,7 +390,7 @@ public class ReservationService {
                     .durationMinutes(course != null ? course.getDurationMinutes() : 120) // 기본 2시간
                     .expectedLeaveTime(expectedLeave)
                     .originalExpectedLeaveTime(expectedLeave)
-                    .status(AttendanceStatus.ABSENT) // 초기 상태는 결석
+                    .status(AttendanceStatus.NOTYET) // 초기 상태는 미출석
                     .build();
             
             attendanceRepository.save(attendance);
@@ -396,6 +402,35 @@ public class ReservationService {
                     expectedLeave);
         } catch (Exception e) {
             log.warn("Failed to create attendance record for reservation: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 예약 취소 시 출석 레코드 삭제
+     */
+    private void deleteAttendanceRecord(Reservation reservation) {
+        try {
+            if (reservation.getStudent() == null) {
+                return;
+            }
+
+            // 해당 예약의 출석 레코드 찾기 (날짜와 시간으로)
+            List<Attendance> attendances = attendanceRepository.findByDate(reservation.getReservationDate());
+
+            // 같은 학생, 같은 시간의 출석 레코드 삭제
+            attendances.stream()
+                    .filter(a -> a.getStudent() != null && 
+                                 a.getStudent().getId().equals(reservation.getStudent().getId()) &&
+                                 a.getAttendanceTime().equals(reservation.getReservationTime()))
+                    .forEach(a -> {
+                        attendanceRepository.delete(a);
+                        log.info("Attendance record deleted for cancelled reservation: student={}, date={}, time={}",
+                                reservation.getStudent().getStudentName(),
+                                reservation.getReservationDate(),
+                                reservation.getReservationTime());
+                    });
+        } catch (Exception e) {
+            log.warn("Failed to delete attendance record for reservation: {}", e.getMessage());
         }
     }
 }

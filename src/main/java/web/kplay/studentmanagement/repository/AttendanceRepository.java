@@ -23,7 +23,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     List<Attendance> findByStatus(AttendanceStatus status);
 
-    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date")
+    @Query("SELECT a FROM Attendance a LEFT JOIN FETCH a.student LEFT JOIN FETCH a.course WHERE a.attendanceDate = :date")
     List<Attendance> findByDate(@Param("date") LocalDate date);
 
     // 출석한 순서대로 (등원 시간 오름차순)

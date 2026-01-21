@@ -1093,3 +1093,34 @@
   color: #d32f2f;
 }
 
+
+/* 예약 취소 버튼 */
+.btn-table-delete {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f44336;
+  color: white;
+}
+
+.btn-table-delete:hover {
+  background: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+.cancel-deadline-notice {
+  padding: 8px 16px;
+  background: #FFF3E0;
+  color: #F57C00;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}

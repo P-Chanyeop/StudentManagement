@@ -86,8 +86,7 @@ function Reservations() {
         const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
         
         return response.data.filter(r => {
-          const reservationDate = r.scheduleDate || r.schedule?.scheduleDate;
-          return reservationDate >= startDate && reservationDate <= endDate;
+          return r.reservationDate >= startDate && r.reservationDate <= endDate;
         });
       } else {
         // 관리자/선생님: 선택된 날짜의 예약만 조회 (월별 조회는 생략)
@@ -104,8 +103,7 @@ function Reservations() {
         // 학부모는 본인 자녀 예약만 조회
         const response = await reservationAPI.getMyReservations();
         return response.data.filter(r => {
-          const reservationDate = r.scheduleDate || r.schedule?.scheduleDate;
-          return reservationDate === selectedDate;
+          return r.reservationDate === selectedDate;
         });
       } else {
         // 관리자/선생님은 전체 예약 조회
@@ -325,7 +323,7 @@ function Reservations() {
 
   // 취소 가능 여부 확인 (수업 전날 오후 6시까지)
   const canCancelReservation = (reservation) => {
-    const scheduleDate = new Date(reservation.schedule?.scheduleDate || reservation.scheduleDate);
+    const scheduleDate = new Date(reservation.reservationDate);
     const cancelDeadline = new Date(scheduleDate);
     cancelDeadline.setDate(cancelDeadline.getDate() - 1);
     cancelDeadline.setHours(18, 0, 0, 0);
@@ -485,16 +483,16 @@ function Reservations() {
                     <div className="reservation-details">
                       <div className="detail-row">
                         <span className="label">수업:</span>
-                        <span className="value">{reservation.schedule?.course?.name || reservation.courseName}</span>
+                        <span className="value">{reservation.courseName || "-"}</span>
                       </div>
                       <div className="detail-row">
                         <span className="label">날짜:</span>
-                        <span className="value">{reservation.schedule?.scheduleDate || reservation.scheduleDate}</span>
+                        <span className="value">{reservation.reservationDate}</span>
                       </div>
                       <div className="detail-row">
                         <span className="label">시간:</span>
                         <span className="value">
-                          {reservation.schedule?.startTime || reservation.startTime} - {reservation.schedule?.endTime || reservation.endTime}
+                          {reservation.reservationTime}
                         </span>
                       </div>
                       <div className="detail-row">
@@ -703,12 +701,12 @@ function Reservations() {
                       <div className="reservation-details">
                         <div className="detail-row">
                           <span className="label">수업:</span>
-                          <span className="value">{reservation.schedule?.course?.name || reservation.courseName}</span>
+                          <span className="value">{reservation.courseName || "-"}</span>
                         </div>
                         <div className="detail-row">
                           <span className="label">시간:</span>
                           <span className="value">
-                            {reservation.schedule?.startTime || reservation.startTime} - {reservation.schedule?.endTime || reservation.endTime}
+                            {reservation.reservationTime}
                           </span>
                         </div>
                       </div>

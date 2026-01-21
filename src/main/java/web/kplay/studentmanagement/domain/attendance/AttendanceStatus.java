@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum AttendanceStatus {
+    NOTYET("미출석", "아직 출석하지 않음"),
     PRESENT("출석", "정상 출석"),
     LATE("지각", "지각"),
     ABSENT("결석", "결석"),

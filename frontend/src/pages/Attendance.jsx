@@ -99,6 +99,8 @@ function Attendance() {
         return '출석';
       case 'LATE':
         return '지각';
+      case 'NOTYET':
+        return '미출석';
       case 'ABSENT':
         return '결석';
       case 'EXCUSED':
@@ -350,34 +352,9 @@ function Attendance() {
     }
   };
 
-  // 출석 목록과 예약 목록을 합쳐서 정렬 및 하원한 학생 제외
+  // 출석 목록 정렬 및 하원한 학생 제외
   const sortedAttendances = (() => {
     const attendanceList = attendances ? [...attendances] : [];
-    const reservationList = todayReservations ? [...todayReservations] : [];
-    
-    // 예약된 학생 중 아직 출석 기록이 없는 학생들을 출석 목록에 추가
-    reservationList.forEach(reservation => {
-      const existingAttendance = attendanceList.find(
-        att => att.studentId === reservation.studentId && att.scheduleId === reservation.scheduleId
-      );
-      
-      if (!existingAttendance && reservation.status === 'CONFIRMED') {
-        // 예약된 학생을 출석 목록에 추가 (아직 출석하지 않은 상태)
-        attendanceList.push({
-          id: `reservation-${reservation.id}`,
-          studentId: reservation.studentId,
-          studentName: reservation.studentName,
-          scheduleId: reservation.scheduleId,
-          startTime: reservation.startTime,
-          endTime: reservation.endTime,
-          courseName: reservation.courseName,
-          checkInTime: null,
-          checkOutTime: null,
-          status: 'ABSENT',
-          isReservation: true // 예약으로 추가된 항목임을 표시
-        });
-      }
-    });
     
     return attendanceList
       .filter(attendance => !attendance.checkOutTime) // 하원한 학생 제외
@@ -568,9 +545,15 @@ function Attendance() {
                 </span>
               </div>
               <div className="stat">
+                <span className="stat-label">미출석</span>
+                <span className="stat-value notyet">
+                  {attendances?.filter(a => !a.checkInTime && a.status === 'NOTYET').length || 0}명
+                </span>
+              </div>
+              <div className="stat">
                 <span className="stat-label">결석</span>
                 <span className="stat-value absent">
-                  {attendances?.filter(a => !a.checkInTime).length || 0}명
+                  {attendances?.filter(a => !a.checkInTime && a.status === 'ABSENT').length || 0}명
                 </span>
               </div>
             </div>

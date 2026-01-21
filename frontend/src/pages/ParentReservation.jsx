@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { reservationAPI, scheduleAPI, authAPI, studentAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import '../styles/ParentReservation.css';
 
 function ParentReservation() {
+  const navigate = useNavigate();
   const [reservationStatus, setReservationStatus] = useState(null); // 'success', 'error', null
   // 사용자 프로필 조회
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -353,14 +355,18 @@ function ParentReservation() {
   // 예약 생성 mutation
   const createReservation = useMutation({
     mutationFn: (data) => reservationAPI.create(data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log('예약 성공:', response);
       alert('예약이 완료되었습니다!');
-      navigate('/reservations'); // 예약 내역 페이지로 이동
+      navigate('/reservations', { replace: true });
     },
     onError: (error) => {
+      console.error('예약 실패:', error);
       alert(error.response?.data?.message || '예약에 실패했습니다.');
-      console.error('예약 오류:', error);
     },
+    onSettled: () => {
+      console.log('예약 처리 완료');
+    }
   });
 
   const handleInputChange = (e) => {
@@ -508,6 +514,12 @@ function ParentReservation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 이미 제출 중이면 무시
+    if (createReservation.isPending) {
+      console.log('이미 예약 처리 중입니다.');
+      return;
+    }
     
     if (!validateForm()) {
       return;
