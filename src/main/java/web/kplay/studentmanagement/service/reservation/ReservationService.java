@@ -49,12 +49,9 @@ public class ReservationService {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
-        CourseSchedule schedule = scheduleRepository.findById(request.getScheduleId())
-                .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
-
-        // 재원생 상담 예약 시 날짜/시간 검증
+        // 날짜/시간 검증
         if ("재원생상담".equals(request.getConsultationType())) {
-            validateReservationDateTime(schedule.getScheduleDate());
+            validateReservationDateTime(request.getReservationDate());
         }
 
         Enrollment enrollment = null;
@@ -71,20 +68,17 @@ public class ReservationService {
             enrollment.useCount();
         }
 
-        // 같은 유형의 예약 중복 체크
-        List<Reservation> existingReservations = reservationRepository.findByScheduleDateAndConsultationType(
-            schedule.getScheduleDate(), request.getConsultationType());
+        // 같은 날짜/시간 중복 체크
+        List<Reservation> existingReservations = reservationRepository
+            .findByReservationDateAndReservationTime(request.getReservationDate(), request.getReservationTime());
         if (!existingReservations.isEmpty()) {
-            boolean timeConflict = existingReservations.stream()
-                .anyMatch(r -> r.getSchedule().getStartTime().equals(schedule.getStartTime()));
-            if (timeConflict) {
-                throw new BusinessException("해당 시간에 이미 " + request.getConsultationType() + " 예약이 있습니다");
-            }
+            throw new BusinessException("해당 시간에 이미 예약이 있습니다");
         }
 
         Reservation reservation = Reservation.builder()
                 .student(student)
-                .schedule(schedule)
+                .reservationDate(request.getReservationDate())
+                .reservationTime(request.getReservationTime())
                 .enrollment(enrollment)
                 .status(ReservationStatus.CONFIRMED)
                 .memo(request.getMemo())
@@ -97,13 +91,10 @@ public class ReservationService {
         // 예약 생성 시 출석 레코드도 자동 생성
         createAttendanceRecord(savedReservation);
 
-        // 스케줄에 학생 수 증가
-        schedule.addStudent();
-
-        log.info("예약 생성: 학생={}, 수업={}, 날짜={}",
+        log.info("예약 생성: 학생={}, 날짜={}, 시간={}",
                 student.getStudentName(),
-                schedule.getCourse().getCourseName(),
-                schedule.getScheduleDate());
+                request.getReservationDate(),
+                request.getReservationTime());
 
         return toResponse(savedReservation);
     }
@@ -118,9 +109,10 @@ public class ReservationService {
         }
 
         reservation.confirm();
-        log.info("예약 확정: 학생={}, 수업={}",
+        log.info("예약 확정: 학생={}, 날짜={}, 시간={}",
                 reservation.getStudent().getStudentName(),
-                reservation.getSchedule().getCourse().getCourseName());
+                reservation.getReservationDate(),
+                reservation.getReservationTime());
 
         return toResponse(reservation);
     }
@@ -135,15 +127,13 @@ public class ReservationService {
             reservation.getEnrollment().restoreCount();
         }
 
-        // 스케줄에서 학생 수 감소
-        reservation.getSchedule().removeStudent();
-
         // 실제로 DB에서 삭제
         reservationRepository.delete(reservation);
 
-        log.info("예약 삭제: 학생={}, 수업={}, 수강권 복원={}",
+        log.info("예약 삭제: 학생={}, 날짜={}, 시간={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
-                reservation.getSchedule().getCourse().getCourseName(),
+                reservation.getReservationDate(),
+                reservation.getReservationTime(),
                 reservation.getEnrollment() != null);
     }
 
@@ -160,12 +150,10 @@ public class ReservationService {
         // 예약 취소 (전날 오후 6시까지만 가능)
         reservation.cancel(reason);
 
-        // 스케줄에서 학생 수 감소
-        reservation.getSchedule().removeStudent();
-
-        log.info("예약 취소: 학생={}, 수업={}, 사유={}, 수강권 복원={}",
+        log.info("예약 취소: 학생={}, 날짜={}, 시간={}, 사유={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
-                reservation.getSchedule().getCourse().getCourseName(),
+                reservation.getReservationDate(),
+                reservation.getReservationTime(),
                 reason,
                 reservation.getEnrollment() != null);
     }
@@ -183,12 +171,10 @@ public class ReservationService {
         // 관리자 강제 취소 (시간 제한 없음)
         reservation.forceCancel(reason);
 
-        // 스케줄에서 학생 수 감소
-        reservation.getSchedule().removeStudent();
-
-        log.info("예약 강제 취소 (관리자): 학생={}, 수업={}, 사유={}, 수강권 복원={}",
+        log.info("예약 강제 취소 (관리자): 학생={}, 날짜={}, 시간={}, 사유={}, 수강권 복원={}",
                 reservation.getStudent().getStudentName(),
-                reservation.getSchedule().getCourse().getCourseName(),
+                reservation.getReservationDate(),
+                reservation.getReservationTime(),
                 reason,
                 reservation.getEnrollment() != null);
     }
@@ -218,23 +204,13 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<ReservationResponse> getReservationsBySchedule(Long scheduleId) {
-        return reservationRepository.findByScheduleId(scheduleId).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
     private ReservationResponse toResponse(Reservation reservation) {
         return ReservationResponse.builder()
                 .id(reservation.getId())
                 .studentId(reservation.getStudent().getId())
                 .studentName(reservation.getStudent().getStudentName())
-                .scheduleId(reservation.getSchedule().getId())
-                .courseName(reservation.getSchedule().getCourse().getCourseName())
-                .scheduleDate(reservation.getSchedule().getScheduleDate())
-                .startTime(reservation.getSchedule().getStartTime())
-                .endTime(reservation.getSchedule().getEndTime())
+                .reservationDate(reservation.getReservationDate())
+                .reservationTime(reservation.getReservationTime())
                 .enrollmentId(reservation.getEnrollment() != null ? reservation.getEnrollment().getId() : null)
                 .status(reservation.getStatus())
                 .memo(reservation.getMemo())
@@ -282,10 +258,11 @@ public class ReservationService {
      * 특정 날짜의 모든 예약된 시간 목록 조회
      */
     public List<String> getReservedTimesByDate(LocalDate date) {
-        List<Reservation> reservations = reservationRepository.findByScheduleScheduleDate(date);
+        List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
+            date, List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING));
         
         return reservations.stream()
-                .map(reservation -> reservation.getSchedule().getStartTime().toString().substring(0, 5))
+                .map(reservation -> reservation.getReservationTime().toString().substring(0, 5))
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -295,14 +272,21 @@ public class ReservationService {
      */
     public List<String> getReservedTimesByDateAndType(LocalDate date, String consultationType) {
         log.info("예약된 시간 조회 - 날짜: {}, 유형: {}", date, consultationType);
-        List<Reservation> reservations = reservationRepository.findByScheduleDateAndConsultationType(date, consultationType);
+        List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
+            date, List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING));
+        
+        // 상담 유형 필터링
+        reservations = reservations.stream()
+            .filter(r -> consultationType.equals(r.getConsultationType()))
+            .collect(Collectors.toList());
+            
         log.info("조회된 예약 수: {}", reservations.size());
         
         reservations.forEach(r -> log.info("예약 정보 - 시간: {}, 유형: {}", 
-            r.getSchedule().getStartTime(), r.getConsultationType()));
+            r.getReservationTime(), r.getConsultationType()));
         
         return reservations.stream()
-                .map(reservation -> reservation.getSchedule().getStartTime().toString().substring(0, 5))
+                .map(reservation -> reservation.getReservationTime().toString().substring(0, 5))
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -361,15 +345,38 @@ public class ReservationService {
      */
     private void createAttendanceRecord(Reservation reservation) {
         try {
+            // 학생의 활성 수강권에서 Course 정보 가져오기
+            web.kplay.studentmanagement.domain.course.Course course = null;
+            if (reservation.getEnrollment() != null) {
+                course = reservation.getEnrollment().getCourse();
+            }
+            
+            // 예상 하원 시간 계산
+            LocalTime expectedLeave = null;
+            if (course != null) {
+                expectedLeave = reservation.getReservationTime().plusMinutes(course.getDurationMinutes());
+            } else {
+                expectedLeave = reservation.getReservationTime().plusHours(2); // 기본 2시간
+            }
+            
             Attendance attendance = Attendance.builder()
                     .student(reservation.getStudent())
-                    .schedule(reservation.getSchedule())
+                    .course(course)
+                    .attendanceDate(reservation.getReservationDate())
+                    .attendanceTime(reservation.getReservationTime())
+                    .durationMinutes(course != null ? course.getDurationMinutes() : 120) // 기본 2시간
+                    .expectedLeaveTime(expectedLeave)
+                    .originalExpectedLeaveTime(expectedLeave)
                     .status(AttendanceStatus.ABSENT) // 초기 상태는 결석
                     .build();
             
             attendanceRepository.save(attendance);
-            log.info("Attendance record created for reservation: student={}, schedule={}", 
-                    reservation.getStudent().getStudentName(), reservation.getSchedule().getId());
+            log.info("Attendance record created for reservation: student={}, date={}, time={}, course={}, expectedLeave={}", 
+                    reservation.getStudent().getStudentName(), 
+                    reservation.getReservationDate(),
+                    reservation.getReservationTime(),
+                    course != null ? course.getCourseName() : "없음",
+                    expectedLeave);
         } catch (Exception e) {
             log.warn("Failed to create attendance record for reservation: {}", e.getMessage());
         }

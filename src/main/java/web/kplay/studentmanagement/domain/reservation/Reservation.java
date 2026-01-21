@@ -27,9 +27,12 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "schedule_id", nullable = false)
-    private CourseSchedule schedule;
+    // 예약 날짜 및 시간 (스케줄 없이 직접 예약)
+    @Column(nullable = false)
+    private LocalDate reservationDate;
+
+    @Column(nullable = false)
+    private LocalTime reservationTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "enrollment_id")
@@ -61,8 +64,7 @@ public class Reservation extends BaseEntity {
 
     // 예약 취소 가능 여부 체크
     public boolean canCancel() {
-        LocalDate scheduleDate = schedule.getScheduleDate();
-        LocalDateTime cancelDeadline = scheduleDate.minusDays(1).atTime(18, 0); // 전날 오후 6시
+        LocalDateTime cancelDeadline = reservationDate.minusDays(1).atTime(18, 0); // 전날 오후 6시
         return LocalDateTime.now().isBefore(cancelDeadline) && status == ReservationStatus.CONFIRMED;
     }
 

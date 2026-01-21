@@ -39,24 +39,26 @@ public class AutoDeductionScheduler {
         
         for (Reservation reservation : confirmedReservations) {
             try {
-                // 수업 시작 시간 + 10분 계산
-                LocalTime classStartTime = reservation.getSchedule().getStartTime();
-                LocalTime deductionTime = classStartTime.plusMinutes(10);
+                // 예약 시간 + 10분 계산
+                LocalTime reservationTime = reservation.getReservationTime();
+                LocalTime deductionTime = reservationTime.plusMinutes(10);
                 
                 // 현재 시간이 차감 시간과 일치하는지 확인 (분 단위로)
                 if (now.toLocalTime().getHour() == deductionTime.getHour() && 
                     now.toLocalTime().getMinute() == deductionTime.getMinute()) {
                     
                     // 수강권 횟수 차감
-                    enrollmentService.deductCount(reservation.getEnrollment().getId(), 
-                        "수업 시작 10분 후 자동 차감");
+                    if (reservation.getEnrollment() != null) {
+                        enrollmentService.deductCount(reservation.getEnrollment().getId(), 
+                            "수업 시작 10분 후 자동 차감");
+                    }
                     
                     // 예약 상태를 AUTO_DEDUCTED로 변경
                     reservation.updateStatus(ReservationStatus.AUTO_DEDUCTED);
                     
-                    log.info("Auto deduction completed - Reservation ID: {}, Student: {}, Class time: {}, Deducted time: {}", 
+                    log.info("Auto deduction completed - Reservation ID: {}, Student: {}, Reservation time: {}, Deducted time: {}", 
                         reservation.getId(), reservation.getStudent().getStudentName(), 
-                        classStartTime, deductionTime);
+                        reservationTime, deductionTime);
                 }
                     
             } catch (Exception e) {

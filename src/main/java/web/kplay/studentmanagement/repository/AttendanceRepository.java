@@ -16,40 +16,38 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     List<Attendance> findByStudentId(Long studentId);
 
-    List<Attendance> findByScheduleId(Long scheduleId);
-
-    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.scheduleDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.attendanceDate BETWEEN :startDate AND :endDate")
     List<Attendance> findByStudentAndDateRange(@Param("studentId") Long studentId,
                                                  @Param("startDate") LocalDate startDate,
                                                  @Param("endDate") LocalDate endDate);
 
     List<Attendance> findByStatus(AttendanceStatus status);
 
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date")
     List<Attendance> findByDate(@Param("date") LocalDate date);
 
     // 출석한 순서대로 (등원 시간 오름차순)
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date ORDER BY a.checkInTime ASC")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date ORDER BY a.checkInTime ASC")
     List<Attendance> findByDateOrderByCheckInTime(@Param("date") LocalDate date);
 
     // 하원 예정 순서대로 (예상 하원 시간 오름차순)
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date ORDER BY a.expectedLeaveTime ASC")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date ORDER BY a.expectedLeaveTime ASC")
     List<Attendance> findByDateOrderByExpectedLeaveTime(@Param("date") LocalDate date);
 
     // 오늘 출석한 학생만 조회 (등원 시간 순서)
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.checkInTime IS NOT NULL ORDER BY a.checkInTime ASC")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.checkInTime IS NOT NULL ORDER BY a.checkInTime ASC")
     List<Attendance> findAttendedByDate(@Param("date") LocalDate date);
 
     // 오늘 출석하지 않은 학생 조회 (예정되었으나 체크인 안 함)
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.checkInTime IS NULL")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.checkInTime IS NULL")
     List<Attendance> findNotAttendedByDate(@Param("date") LocalDate date);
 
     // 하원 완료된 학생만 조회 (하원 시간 순서)
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.checkOutTime IS NOT NULL ORDER BY a.checkOutTime ASC")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.checkOutTime IS NOT NULL ORDER BY a.checkOutTime ASC")
     List<Attendance> findCheckedOutByDate(@Param("date") LocalDate date);
 
     // 아직 하원하지 않은 학생 조회 (등원했으나 하원 안 함, 예상 하원 시간 순서)
-    @Query("SELECT a FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.checkInTime IS NOT NULL AND a.checkOutTime IS NULL ORDER BY a.expectedLeaveTime ASC")
+    @Query("SELECT a FROM Attendance a WHERE a.attendanceDate = :date AND a.checkInTime IS NOT NULL AND a.checkOutTime IS NULL ORDER BY a.expectedLeaveTime ASC")
     List<Attendance> findNotCheckedOutByDate(@Param("date") LocalDate date);
 
     // 마이페이지용 메서드
@@ -60,26 +58,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Long countByStudentIdAndCheckInTimeBetween(Long studentId, LocalDateTime start, LocalDateTime end);
 
     /**
-     * 학생 ID와 스케줄 ID로 모든 출석 데이터를 조회합니다 (중복 방지용)
-     * 
-     * @param studentId 학생 ID
-     * @param scheduleId 스케줄 ID
-     * @return 출석 데이터 목록 (최신순 정렬)
-     */
-    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId ORDER BY a.id DESC")
-    List<Attendance> findAllByStudentIdAndScheduleId(@Param("studentId") Long studentId, @Param("scheduleId") Long scheduleId);
-    
-    /**
-     * 학생 ID와 스케줄 ID로 첫 번째 출석 데이터를 조회합니다
-     * 
-     * @param studentId 학생 ID
-     * @param scheduleId 스케줄 ID
-     * @return 출석 데이터 (Optional, 최신 데이터 우선)
-     */
-    @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.schedule.id = :scheduleId ORDER BY a.id DESC LIMIT 1")
-    java.util.Optional<Attendance> findByStudentIdAndScheduleId(@Param("studentId") Long studentId, @Param("scheduleId") Long scheduleId);
-
-    /**
      * 전체 시스템의 특정 상태별 출석 수 조회 (관리자용)
      * @param status 출석 상태 (PRESENT, LATE, ABSENT 등)
      * @return 해당 상태의 총 출석 수
@@ -87,47 +65,20 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     Long countByStatus(AttendanceStatus status);
 
     /**
-     * 특정 선생님이 담당하는 수업들의 출석 상태별 개수 조회 (선생님용)
-     * @param teacherId 선생님 ID
-     * @param status 출석 상태
-     * @return 해당 선생님 수업의 특정 상태 출석 수
-     */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.course.teacher.id = :teacherId AND a.status = :status")
-    Long countByTeacherIdAndStatus(@Param("teacherId") Long teacherId, @Param("status") AttendanceStatus status);
-
-    /**
      * 특정 날짜의 실제 출석 수 조회 (체크인한 학생만)
      * @param date 조회할 날짜
      * @return 해당 날짜에 체크인한 학생 수
      */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.checkInTime IS NOT NULL")
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.attendanceDate = :date AND a.checkInTime IS NOT NULL")
     int countByScheduleDateAndCheckInTimeIsNotNull(@Param("date") LocalDate date);
-
-    /**
-     * 특정 날짜와 선생님의 실제 출석 수 조회 (체크인한 학생만)
-     * @param date 조회할 날짜
-     * @param teacherId 선생님 ID
-     * @return 해당 날짜에 해당 선생님 수업에서 체크인한 학생 수
-     */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.schedule.course.teacher.id = :teacherId AND a.checkInTime IS NOT NULL")
-    int countByScheduleDateAndCourseTeacherIdAndCheckInTimeIsNotNull(@Param("date") LocalDate date, @Param("teacherId") Long teacherId);
 
     /**
      * 특정 날짜의 총 출석 예정 학생 수 조회 (예약된 모든 학생)
      * @param date 조회할 날짜
      * @return 해당 날짜에 예약된 총 학생 수
      */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date")
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.attendanceDate = :date")
     int countByScheduleDate(@Param("date") LocalDate date);
-
-    /**
-     * 특정 날짜와 선생님의 총 출석 예정 학생 수 조회
-     * @param date 조회할 날짜
-     * @param teacherId 선생님 ID
-     * @return 해당 날짜에 해당 선생님 수업에 예약된 총 학생 수
-     */
-    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.schedule.scheduleDate = :date AND a.schedule.course.teacher.id = :teacherId")
-    int countByScheduleDateAndCourseTeacherId(@Param("date") LocalDate date, @Param("teacherId") Long teacherId);
 
     /**
      * 여러 학생의 특정 날짜 출석 기록 조회 (학부모용)
@@ -135,15 +86,15 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
      * @param date 조회할 날짜
      * @return List<Attendance> 해당 학생들의 출석 기록
      */
-    @Query("SELECT a FROM Attendance a JOIN FETCH a.schedule s JOIN FETCH s.course c LEFT JOIN FETCH c.teacher t JOIN FETCH a.student st " +
-           "WHERE a.student.id IN :studentIds AND s.scheduleDate = :date " +
-           "ORDER BY s.startTime ASC")
+    @Query("SELECT a FROM Attendance a JOIN FETCH a.student st LEFT JOIN FETCH a.course c LEFT JOIN FETCH c.teacher t " +
+           "WHERE a.student.id IN :studentIds AND a.attendanceDate = :date " +
+           "ORDER BY a.attendanceTime ASC")
     List<Attendance> findByStudentIdInAndScheduleScheduleDate(@Param("studentIds") List<Long> studentIds, @Param("date") LocalDate date);
 
     // 월별 출석 조회
-    @Query("SELECT a FROM Attendance a JOIN FETCH a.schedule s JOIN FETCH s.course c LEFT JOIN FETCH c.teacher t JOIN FETCH a.student st " +
-           "WHERE a.student.id IN :studentIds AND s.scheduleDate BETWEEN :startDate AND :endDate " +
-           "ORDER BY s.scheduleDate ASC, s.startTime ASC")
+    @Query("SELECT a FROM Attendance a JOIN FETCH a.student st LEFT JOIN FETCH a.course c LEFT JOIN FETCH c.teacher t " +
+           "WHERE a.student.id IN :studentIds AND a.attendanceDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY a.attendanceDate ASC, a.attendanceTime ASC")
     List<Attendance> findByStudentIdInAndScheduleScheduleDateBetween(@Param("studentIds") List<Long> studentIds, 
                                                                      @Param("startDate") LocalDate startDate, 
                                                                      @Param("endDate") LocalDate endDate);

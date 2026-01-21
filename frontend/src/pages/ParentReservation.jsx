@@ -580,23 +580,9 @@ function ParentReservation() {
         });
       });
       
-      // 예약 유형에 따른 수업 매핑
-      const targetCourseName = formData.consultationType === '재원생상담' ? '영어 수업' : '레벨테스트';
-      console.log('예약할 수업:', targetCourseName);
+      // 09:00~18:00 사이 모든 시간대 예약 가능
+      // 스케줄 체크 제거 - 시간대만 선택하면 예약 가능
       
-      const availableSchedule = scheduleResponse.data.find(schedule => 
-        schedule.startTime === selectedTime && 
-        schedule.courseName === targetCourseName
-      );
-      
-      console.log('매칭된 스케줄:', availableSchedule);
-      console.log('==================');
-      
-      if (!availableSchedule) {
-        alert('선택한 시간에 예약 가능한 수업이 없습니다.');
-        return;
-      }
-
       // 선택된 학생 정보 처리
       const selectedStudent = getSelectedStudent();
       if (!selectedStudent) {
@@ -616,7 +602,8 @@ function ParentReservation() {
         studentName: studentInfo.studentName,
         parentName: studentInfo.parentName,
         phoneNumber: studentInfo.phoneNumber,
-        scheduleId: availableSchedule.id,
+        reservationDate: formData.preferredDate,
+        reservationTime: formData.preferredTime,
         consultationType: formData.consultationType,
         memo: formData.requirements,
         reservationSource: 'WEB'

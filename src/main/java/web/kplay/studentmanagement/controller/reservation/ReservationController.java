@@ -86,12 +86,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservedTimes);
     }
 
-    @GetMapping("/schedule/{scheduleId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<List<ReservationResponse>> getReservationsBySchedule(@PathVariable Long scheduleId) {
-        List<ReservationResponse> responses = reservationService.getReservationsBySchedule(scheduleId);
-        return ResponseEntity.ok(responses);
-    }
+    // getReservationsBySchedule 메서드 삭제 (schedule 제거로 인해 사용 안 함)
 
     @PostMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")

@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -17,8 +19,11 @@ public class ReservationCreateRequest {
     // 기존 학생 ID (기존 학생용)
     private Long studentId;
 
-    @NotNull(message = "스케줄 ID는 필수입니다")
-    private Long scheduleId;
+    @NotNull(message = "예약 날짜는 필수입니다")
+    private LocalDate reservationDate;
+
+    @NotNull(message = "예약 시간은 필수입니다")
+    private LocalTime reservationTime;
 
     private Long enrollmentId;
 

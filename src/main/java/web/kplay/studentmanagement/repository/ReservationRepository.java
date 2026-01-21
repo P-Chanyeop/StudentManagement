@@ -16,30 +16,31 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByStudentId(Long studentId);
 
-    List<Reservation> findByScheduleId(Long scheduleId);
-
     List<Reservation> findByStatus(ReservationStatus status);
+
+    // 날짜/시간으로 예약 조회
+    List<Reservation> findByReservationDateAndReservationTime(LocalDate date, java.time.LocalTime time);
 
     @Query("SELECT r FROM Reservation r WHERE r.student.id = :studentId AND r.status = :status")
     List<Reservation> findByStudentIdAndStatus(@Param("studentId") Long studentId,
                                                  @Param("status") ReservationStatus status);
 
-    @Query("SELECT r FROM Reservation r WHERE r.schedule.scheduleDate = :date AND r.status IN :statuses")
+    @Query("SELECT r FROM Reservation r WHERE r.reservationDate = :date AND r.status IN :statuses")
     List<Reservation> findByDateAndStatuses(@Param("date") LocalDate date,
                                              @Param("statuses") List<ReservationStatus> statuses);
 
-    @Query("SELECT r FROM Reservation r WHERE r.schedule.scheduleDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT r FROM Reservation r WHERE r.reservationDate BETWEEN :startDate AND :endDate")
     List<Reservation> findByDateRange(@Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate);
 
     // 마이페이지용 메서드
-    @Query("SELECT r FROM Reservation r WHERE r.student.id = :studentId AND r.schedule.scheduleDate > :date")
+    @Query("SELECT r FROM Reservation r WHERE r.student.id = :studentId AND r.reservationDate > :date")
     List<Reservation> findByStudentIdAndScheduleDateAfter(@Param("studentId") Long studentId,
                                                             @Param("date") LocalDate date);
 
     // 자동 차감용 메서드
     @Query("SELECT r FROM Reservation r " +
-           "WHERE r.schedule.scheduleDate = :date " +
+           "WHERE r.reservationDate = :date " +
            "AND r.status = :status " +
            "AND r.status != 'AUTO_DEDUCTED'")
     List<Reservation> findByScheduleDateAndStatusAndNotDeducted(@Param("date") LocalDate date,
@@ -50,15 +51,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * @param date 기준 날짜
      * @return 기준 날짜 이후의 모든 예약 목록
      */
-    @Query("SELECT r FROM Reservation r WHERE r.schedule.scheduleDate > :date")
+    @Query("SELECT r FROM Reservation r WHERE r.reservationDate > :date")
     List<Reservation> findByScheduleDateAfter(@Param("date") LocalDate date);
 
     /**
-     * 특정 날짜의 예약 목록 조회 (스케줄 정보 포함)
+     * 특정 날짜의 예약 목록 조회
      * @param date 조회할 날짜
-     * @return List<Reservation> 해당 날짜의 예약 목록 (스케줄 정보 포함)
+     * @return List<Reservation> 해당 날짜의 예약 목록
      */
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule WHERE r.schedule.scheduleDate = :date")
+    @Query("SELECT r FROM Reservation r WHERE r.reservationDate = :date")
     List<Reservation> findByScheduleScheduleDate(@Param("date") LocalDate date);
 
     /**
@@ -67,7 +68,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * @param consultationType 상담 유형
      * @return List<Reservation> 해당 날짜와 유형의 예약 목록
      */
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule WHERE r.schedule.scheduleDate = :date AND r.consultationType = :consultationType")
+    @Query("SELECT r FROM Reservation r WHERE r.reservationDate = :date AND r.consultationType = :consultationType")
     List<Reservation> findByScheduleDateAndConsultationType(@Param("date") LocalDate date, @Param("consultationType") String consultationType);
 
     /**
@@ -75,9 +76,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * @param studentIds 학생 ID 목록
      * @return List<Reservation> 해당 학생들의 예약 목록 (최신순)
      */
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH r.student st " +
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.student st " +
            "WHERE r.student.id IN :studentIds " +
-           "ORDER BY s.scheduleDate DESC, s.startTime DESC")
+           "ORDER BY r.reservationDate DESC, r.reservationTime DESC")
     List<Reservation> findByStudentIdInOrderByScheduleScheduleDateDescScheduleStartTimeDesc(@Param("studentIds") List<Long> studentIds);
 
     /**
@@ -85,7 +86,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * @param since 기준 시간
      * @return List<Reservation> 해당 시간 이후 생성된 예약 목록 (최신순)
      */
-    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH r.student st " +
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.student st " +
            "WHERE r.createdAt > :since " +
            "ORDER BY r.createdAt DESC")
     List<Reservation> findByCreatedAtAfterOrderByCreatedAtDesc(@Param("since") LocalDateTime since);

@@ -604,8 +604,9 @@ public class DataSeeder {
     }
 
     /**
-     * 테스트용 출석 데이터 생성
+     * 테스트용 출석 데이터 생성 - 사용 안 함 (schedule 제거로 인해 주석 처리)
      */
+    /*
     @Transactional
     private void createAttendanceRecords() {
         try {
@@ -696,6 +697,7 @@ public class DataSeeder {
             log.error("Failed to create attendance records: {}", e.getMessage(), e);
         }
     }
+    */
 
     /**
      * 약관 데이터 생성

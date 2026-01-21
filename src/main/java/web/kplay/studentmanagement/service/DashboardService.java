@@ -118,15 +118,14 @@ public class DashboardService {
         // 담당 수업의 학생 수
         int totalStudents = enrollmentRepository.countActiveStudentsByTeacherId(teacherId);
         
-        // 오늘 담당 스케줄 수
-        int todaySchedules = scheduleRepository.countByScheduleDateAndCourseTeacherId(today, teacherId);
+        // 오늘 담당 스케줄 수 (schedule 제거로 인해 0으로 설정)
+        int todaySchedules = 0;
         
-        // 오늘 담당 수업 총 예약된 학생 수
-        int totalExpectedStudents = attendanceRepository.countByScheduleDateAndCourseTeacherId(today, teacherId);
+        // 오늘 총 예약된 학생 수
+        int totalExpectedStudents = attendanceRepository.countByScheduleDate(today);
         
-        // 오늘 담당 수업 실제 출석 수
-        int todayAttendance = attendanceRepository.countByScheduleDateAndCourseTeacherIdAndCheckInTimeIsNotNull(
-                today, teacherId);
+        // 오늘 실제 출석 수
+        int todayAttendance = attendanceRepository.countByScheduleDateAndCheckInTimeIsNotNull(today);
         
         // 출석률 계산 (예약된 학생 대비 실제 출석)
         double attendanceRate = totalExpectedStudents > 0 ? 

@@ -34,12 +34,11 @@ public class AttendanceController {
     @PostMapping("/checkin-by-phone")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<AttendanceResponse> checkInByPhone(@RequestBody Map<String, Object> request) {
-        Long scheduleId = Long.valueOf(request.get("scheduleId").toString());
         String phoneLast4 = request.get("phoneLast4").toString();
         java.time.LocalTime expectedLeaveTime = request.get("expectedLeaveTime") != null ? 
             java.time.LocalTime.parse(request.get("expectedLeaveTime").toString()) : null;
         
-        AttendanceResponse response = attendanceService.checkInByPhone(scheduleId, phoneLast4, expectedLeaveTime);
+        AttendanceResponse response = attendanceService.checkInByPhone(phoneLast4, expectedLeaveTime);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -75,12 +74,7 @@ public class AttendanceController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/schedule/{scheduleId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<List<AttendanceResponse>> getAttendanceBySchedule(@PathVariable Long scheduleId) {
-        List<AttendanceResponse> responses = attendanceService.getAttendanceBySchedule(scheduleId);
-        return ResponseEntity.ok(responses);
-    }
+    // getAttendanceBySchedule 메서드 삭제 (schedule 제거로 인해 사용 안 함)
 
     @GetMapping("/student/{studentId}/range")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")

@@ -44,9 +44,9 @@ public class AttendanceService {
     /**
      * 출석 체크인 (부모님 핸드폰 뒷자리 4자리 검증 포함)
      * 
-     * @param request 출석 체크인 요청 (학생ID, 스케줄ID, 부모님 핸드폰 뒷자리)
+     * @param request 출석 체크인 요청 (학생ID, 부모님 핸드폰 뒷자리)
      * @return 출석 응답 정보
-     * @throws ResourceNotFoundException 학생 또는 스케줄을 찾을 수 없는 경우
+     * @throws ResourceNotFoundException 학생을 찾을 수 없는 경우
      * @throws IllegalArgumentException 부모님 핸드폰 번호가 일치하지 않는 경우
      */
     @Transactional
@@ -54,34 +54,35 @@ public class AttendanceService {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
-        CourseSchedule schedule = scheduleRepository.findById(request.getScheduleId())
-                .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
-
         // 부모님 핸드폰 번호 뒷자리 4자리 검증
         validateParentPhone(student, request.getParentPhoneLast4());
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
-        LocalDateTime classStartTime = LocalDateTime.of(today, schedule.getStartTime());
-        LocalDateTime checkInDeadline = classStartTime.plusMinutes(30);
-
-        // 수업 시작 30분 후에는 출석 체크 불가
-        if (now.isAfter(checkInDeadline)) {
-            throw new BusinessException("수업 시작 30분이 경과하여 출석 체크가 불가능합니다");
+        
+        // 학생의 활성 수강권에서 Course 정보 가져오기
+        web.kplay.studentmanagement.domain.course.Course course = null;
+        List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+        if (!activeEnrollments.isEmpty()) {
+            course = activeEnrollments.get(0).getCourse();
         }
 
         // Expected leave time auto calculated
         LocalTime expectedLeave;
         if (request.getExpectedLeaveTime() != null) {
             expectedLeave = request.getExpectedLeaveTime();
-        } else {
-            Integer courseDuration = schedule.getCourse().getDurationMinutes();
+        } else if (course != null) {
+            Integer courseDuration = course.getDurationMinutes();
             expectedLeave = now.toLocalTime().plusMinutes(courseDuration);
+        } else {
+            expectedLeave = now.toLocalTime().plusHours(2); // 기본 2시간
         }
 
         Attendance attendance = Attendance.builder()
                 .student(student)
-                .schedule(schedule)
+                .course(course)
+                .attendanceDate(now.toLocalDate())
+                .attendanceTime(now.toLocalTime())
+                .durationMinutes(course != null ? course.getDurationMinutes() : 120)
                 .status(AttendanceStatus.PRESENT)
                 .classCompleted(false)
                 .build();
@@ -91,7 +92,7 @@ public class AttendanceService {
         Attendance savedAttendance = attendanceRepository.save(attendance);
         log.info("Attendance check-in: student={}, course={}, status={}, expected leave={}",
                 student.getStudentName(),
-                schedule.getCourse().getCourseName(),
+                course != null ? course.getCourseName() : "없음",
                 savedAttendance.getStatus(),
                 expectedLeave);
 
@@ -102,10 +103,7 @@ public class AttendanceService {
      * 전화번호 뒷 4자리로 출석 체크인 (회원 학생 + 네이버 예약 통합)
      */
     @Transactional
-    public AttendanceResponse checkInByPhone(Long scheduleId, String phoneLast4, LocalTime expectedLeaveTime) {
-        CourseSchedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ResourceNotFoundException("수업 스케줄을 찾을 수 없습니다"));
-
+    public AttendanceResponse checkInByPhone(String phoneLast4, LocalTime expectedLeaveTime) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
         
@@ -116,11 +114,23 @@ public class AttendanceService {
         
         if (!students.isEmpty()) {
             Student student = students.get(0);
-            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : schedule.getEndTime();
+            
+            // 학생의 활성 수강권에서 Course 정보 가져오기
+            web.kplay.studentmanagement.domain.course.Course course = null;
+            List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+            if (!activeEnrollments.isEmpty()) {
+                course = activeEnrollments.get(0).getCourse();
+            }
+            
+            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : 
+                (course != null ? now.toLocalTime().plusMinutes(course.getDurationMinutes()) : now.toLocalTime().plusHours(2));
             
             Attendance attendance = Attendance.builder()
                     .student(student)
-                    .schedule(schedule)
+                    .course(course)
+                    .attendanceDate(today)
+                    .attendanceTime(now.toLocalTime())
+                    .durationMinutes(course != null ? course.getDurationMinutes() : 120)
                     .status(AttendanceStatus.PRESENT)
                     .classCompleted(false)
                     .build();
@@ -138,11 +148,13 @@ public class AttendanceService {
         
         if (!naverBookings.isEmpty()) {
             var naverBooking = naverBookings.get(0);
-            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : schedule.getEndTime();
+            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : now.toLocalTime().plusHours(2);
             
             Attendance attendance = Attendance.builder()
                     .naverBooking(naverBooking)
-                    .schedule(schedule)
+                    .attendanceDate(today)
+                    .attendanceTime(now.toLocalTime())
+                    .durationMinutes(120)
                     .status(AttendanceStatus.PRESENT)
                     .classCompleted(false)
                     .build();
@@ -193,7 +205,12 @@ public class AttendanceService {
      */
     private void deductEnrollmentCount(Attendance attendance) {
         Long studentId = attendance.getStudent().getId();
-        Long courseId = attendance.getSchedule().getCourse().getId();
+        Long courseId = attendance.getCourse() != null ? attendance.getCourse().getId() : null;
+
+        if (courseId == null) {
+            log.warn("Absence processing: No course info - studentId={}", studentId);
+            return;
+        }
 
         // 해당 학생의 해당 수업에 대한 활성 수강권 조회
         List<Enrollment> activeEnrollments = enrollmentRepository
@@ -216,123 +233,12 @@ public class AttendanceService {
 
     @Transactional
     public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
-        // 해당 날짜의 모든 스케줄 조회
-        List<CourseSchedule> schedules = scheduleRepository.findByScheduleDate(date);
+        // 해당 날짜의 모든 출석 데이터 조회
+        List<Attendance> attendances = attendanceRepository.findByDate(date);
         
-        // 각 스케줄에 등록된 모든 학생들의 출석 데이터 생성/조회
-        List<AttendanceResponse> responses = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
-        
-        for (CourseSchedule schedule : schedules) {
-            // 해당 스케줄에 등록된 학생들 조회 (그 날짜 수업 있는 학생들만)
-            List<Enrollment> enrollments = enrollmentRepository.findByCourseAndIsActiveTrue(schedule.getCourse());
-            
-            for (Enrollment enrollment : enrollments) {
-                Student student = enrollment.getStudent();
-                
-                // 기존 출석 데이터 조회
-                Optional<Attendance> existingAttendance = attendanceRepository
-                    .findByStudentIdAndScheduleId(student.getId(), schedule.getId());
-                
-                if (existingAttendance.isPresent()) {
-                    Attendance attendance = existingAttendance.get();
-                    responses.add(toResponse(attendance));
-                } else {
-                    // 출석 대기 상태로 표시 (자동 결석 처리 제거)
-                    AttendanceResponse response = AttendanceResponse.builder()
-                            .id(null)
-                            .studentId(student.getId())
-                            .studentName(student.getStudentName())
-                            .studentPhone(student.getParentPhone())
-                            .className(student.getEnglishLevel())
-                            .isNaverBooking(false)
-                            .scheduleId(schedule.getId())
-                            .courseName(schedule.getCourse().getCourseName())
-                            .startTime(schedule.getStartTime().toString())
-                            .endTime(schedule.getEndTime().toString())
-                            .status(AttendanceStatus.ABSENT)
-                            .checkInTime(null)
-                            .checkOutTime(null)
-                            .expectedLeaveTime(null)
-                            .originalExpectedLeaveTime(null)
-                            .memo("")
-                            .reason(null)
-                            .classCompleted(false)
-                            .teacherName(schedule.getCourse().getTeacher() != null ? 
-                                schedule.getCourse().getTeacher().getName() : null)
-                            .dcCheck(null)
-                            .wrCheck(null)
-                            .vocabularyClass(null)
-                            .grammarClass(null)
-                            .phonicsClass(null)
-                            .speakingClass(null)
-                            .additionalClassEndTime(null)
-                            .build();
-                    responses.add(response);
-                }
-            }
-        }
-        
-        // 네이버 예약 데이터 추가
-        String dateStr = date.toString(); // 2026-01-20
-        String[] parts = dateStr.split("-");
-        String year = parts[0].substring(2);
-        String month = String.valueOf(Integer.parseInt(parts[1]));
-        String day = String.valueOf(Integer.parseInt(parts[2]));
-        String naverDateFormat = year + ". " + month + ". " + day + ".";
-        
-        List<web.kplay.studentmanagement.domain.reservation.NaverBooking> naverBookings = 
-            naverBookingRepository.findByBookingDate(naverDateFormat);
-        
-        for (var booking : naverBookings) {
-            // 레벨테스트 및 상담 예약은 제외
-            if (booking.getProduct() != null && booking.getProduct().contains("레벨테스트")) {
-                continue;
-            }
-            
-            // 이미 출석 체크된 네이버 예약이 있는지 확인
-            boolean alreadyCheckedIn = responses.stream()
-                .anyMatch(r -> r.getIsNaverBooking() != null && r.getIsNaverBooking() && 
-                              r.getStudentName().equals(booking.getName()));
-            
-            if (!alreadyCheckedIn) {
-                // bookingTime 파싱: "26. 1. 20.(화) 오전 10:00" -> "10:00"
-                String timeStr = parseNaverBookingTime(booking.getBookingTime());
-                
-                // 출석 대기 상태로 표시
-                AttendanceResponse response = AttendanceResponse.builder()
-                        .id(null)
-                        .studentId(null)
-                        .studentName(booking.getName())
-                        .studentPhone(booking.getPhone())
-                        .className("네이버 예약")
-                        .isNaverBooking(true)
-                        .scheduleId(schedules.isEmpty() ? null : schedules.get(0).getId())
-                        .courseName(booking.getProduct())
-                        .startTime(timeStr)
-                        .endTime("-")
-                        .status(AttendanceStatus.ABSENT)
-                        .checkInTime(null)
-                        .checkOutTime(null)
-                        .expectedLeaveTime(null)
-                        .originalExpectedLeaveTime(null)
-                        .memo("")
-                        .reason(null)
-                        .classCompleted(false)
-                        .teacherName(null)
-                        .dcCheck(null)
-                        .wrCheck(null)
-                        .vocabularyClass(null)
-                        .grammarClass(null)
-                        .phonicsClass(null)
-                        .speakingClass(null)
-                        .additionalClassEndTime(null)
-                        .build();
-                responses.add(response);
-            }
-        }
-        
-        return responses;
+        return attendances.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
     
     private String parseNaverBookingTime(String bookingTime) {
@@ -396,12 +302,7 @@ public class AttendanceService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<AttendanceResponse> getAttendanceBySchedule(Long scheduleId) {
-        return attendanceRepository.findByScheduleId(scheduleId).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
+    // getAttendanceBySchedule 메서드 삭제 (schedule 제거로 인해 사용 안 함)
 
     @Transactional(readOnly = true)
     public List<AttendanceResponse> getAttendanceByStudentAndDateRange(
@@ -482,7 +383,7 @@ public class AttendanceService {
         attendanceRepository.delete(attendance);
         log.info("Attendance cancelled: student={}, course={}", 
                 attendance.getStudent().getStudentName(),
-                attendance.getSchedule().getCourse().getCourseName());
+                attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음");
     }
 
     /**
@@ -610,10 +511,9 @@ public class AttendanceService {
                 .studentPhone(isNaver ? attendance.getNaverBooking().getPhone() : attendance.getStudent().getParentPhone())
                 .className(isNaver ? "네이버 예약" : (attendance.getStudent().getEnglishLevel() != null ? attendance.getStudent().getEnglishLevel() : "-"))
                 .isNaverBooking(isNaver)
-                .scheduleId(attendance.getSchedule().getId())
-                .courseName(attendance.getSchedule().getCourse().getCourseName())
-                .startTime(attendance.getSchedule().getStartTime().toString())
-                .endTime(attendance.getSchedule().getEndTime().toString())
+                .courseName(attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음")
+                .startTime(attendance.getAttendanceTime().toString())
+                .endTime(attendance.getExpectedLeaveTime() != null ? attendance.getExpectedLeaveTime().toString() : null)
                 .status(attendance.getStatus())
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())
@@ -622,8 +522,8 @@ public class AttendanceService {
                 .memo(attendance.getMemo())
                 .reason(attendance.getReason())
                 .classCompleted(attendance.getClassCompleted())
-                .teacherName(attendance.getSchedule().getCourse().getTeacher() != null ? 
-                    attendance.getSchedule().getCourse().getTeacher().getName() : null)
+                .teacherName(attendance.getCourse() != null && attendance.getCourse().getTeacher() != null ? 
+                    attendance.getCourse().getTeacher().getName() : null)
                 .dcCheck(attendance.getDcCheck())
                 .wrCheck(attendance.getWrCheck())
                 .vocabularyClass(attendance.getVocabularyClass())

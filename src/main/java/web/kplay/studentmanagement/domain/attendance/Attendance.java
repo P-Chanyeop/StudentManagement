@@ -31,8 +31,18 @@ public class Attendance extends BaseEntity {
     private NaverBooking naverBooking;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "schedule_id", nullable = false)
-    private CourseSchedule schedule;
+    @JoinColumn(name = "course_id")
+    private web.kplay.studentmanagement.domain.course.Course course;
+
+    // 예약 날짜 및 시간
+    @Column(nullable = false)
+    private java.time.LocalDate attendanceDate;
+
+    @Column(nullable = false)
+    private LocalTime attendanceTime;
+
+    @Column
+    private Integer durationMinutes; // 수업 시간 (분)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -89,8 +99,15 @@ public class Attendance extends BaseEntity {
     // 출석 체크
     public void checkIn(LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         this.checkInTime = checkInTime;
-        this.expectedLeaveTime = this.schedule.getEndTime();
-        this.originalExpectedLeaveTime = expectedLeaveTime;
+        // course의 수업 시간을 사용하거나, durationMinutes 사용
+        if (this.course != null) {
+            this.expectedLeaveTime = this.attendanceTime.plusMinutes(this.course.getDurationMinutes());
+        } else if (this.durationMinutes != null) {
+            this.expectedLeaveTime = this.attendanceTime.plusMinutes(this.durationMinutes);
+        } else {
+            this.expectedLeaveTime = expectedLeaveTime != null ? expectedLeaveTime : this.attendanceTime.plusHours(2);
+        }
+        this.originalExpectedLeaveTime = this.expectedLeaveTime;
         this.status = AttendanceStatus.PRESENT;
         
         updateAdditionalClassEndTime();
@@ -172,14 +189,22 @@ public class Attendance extends BaseEntity {
 
     // 추가 수업 종료 시간 자동 계산
     private void updateAdditionalClassEndTime() {
-        if (hasAnyAdditionalClass() && this.schedule != null) {
+        LocalTime baseEndTime;
+        if (this.course != null) {
+            baseEndTime = this.attendanceTime.plusMinutes(this.course.getDurationMinutes());
+        } else if (this.durationMinutes != null) {
+            baseEndTime = this.attendanceTime.plusMinutes(this.durationMinutes);
+        } else {
+            baseEndTime = this.expectedLeaveTime;
+        }
+        
+        if (hasAnyAdditionalClass()) {
             // 추가 수업이 있으면 수업 종료시간 + 30분
-            LocalTime classEndTime = this.schedule.getEndTime();
-            this.expectedLeaveTime = classEndTime.plusMinutes(30);
+            this.expectedLeaveTime = baseEndTime.plusMinutes(30);
             this.additionalClassEndTime = this.expectedLeaveTime;
-        } else if (this.schedule != null) {
+        } else {
             // 추가 수업이 없으면 수업 종료시간 그대로
-            this.expectedLeaveTime = this.schedule.getEndTime();
+            this.expectedLeaveTime = baseEndTime;
             this.additionalClassEndTime = null;
         }
     }

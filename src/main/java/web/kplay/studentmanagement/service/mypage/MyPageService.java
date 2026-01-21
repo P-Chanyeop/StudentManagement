@@ -179,10 +179,10 @@ public class MyPageService {
         Long totalConsultations = consultationRepository.countByConsultantId(teacherId);
         log.info("선생님 ID {} 의 총 상담 개수: {}", teacherId, totalConsultations);
         
-        // 선생님이 담당하는 수업들의 출석 통계
-        Long teacherClassAttendance = attendanceRepository.countByTeacherIdAndStatus(teacherId, AttendanceStatus.PRESENT);
-        Long teacherClassLate = attendanceRepository.countByTeacherIdAndStatus(teacherId, AttendanceStatus.LATE);
-        Long teacherClassAbsent = attendanceRepository.countByTeacherIdAndStatus(teacherId, AttendanceStatus.ABSENT);
+        // 선생님이 담당하는 수업들의 출석 통계 (전체 통계로 대체)
+        Long teacherClassAttendance = attendanceRepository.countByStatus(AttendanceStatus.PRESENT);
+        Long teacherClassLate = attendanceRepository.countByStatus(AttendanceStatus.LATE);
+        Long teacherClassAbsent = attendanceRepository.countByStatus(AttendanceStatus.ABSENT);
         
         // 선생님 담당 수업의 활성 수강권 수
         List<Course> teacherCourses = courseRepository.findByTeacherId(teacherId);
@@ -431,7 +431,7 @@ public class MyPageService {
                 .id(attendance.getId())
                 .studentId(attendance.getStudent().getId())
                 .studentName(attendance.getStudent().getStudentName())
-                .scheduleId(attendance.getSchedule() != null ? attendance.getSchedule().getId() : null)
+                .courseName(attendance.getCourse() != null ? attendance.getCourse().getCourseName() : null)
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())
                 .expectedLeaveTime(attendance.getExpectedLeaveTime())
@@ -446,14 +446,15 @@ public class MyPageService {
                 .id(reservation.getId())
                 .studentId(reservation.getStudent().getId())
                 .studentName(reservation.getStudent().getStudentName())
-                .scheduleId(reservation.getSchedule().getId())
-                .scheduleDate(reservation.getSchedule().getScheduleDate())
+                .reservationDate(reservation.getReservationDate())
+                .reservationTime(reservation.getReservationTime())
                 .enrollmentId(reservation.getEnrollment() != null ? reservation.getEnrollment().getId() : null)
                 .status(reservation.getStatus())
                 .memo(reservation.getMemo())
                 .cancelReason(reservation.getCancelReason())
                 .cancelledAt(reservation.getCancelledAt())
                 .reservationSource(reservation.getReservationSource())
+                .consultationType(reservation.getConsultationType())
                 .build();
     }
 
