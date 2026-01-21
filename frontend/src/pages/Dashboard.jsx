@@ -41,11 +41,16 @@ function Dashboard() {
                    profile?.roles?.includes('PARENT');
   
   // 디버깅용 로그
+  console.log('=== DASHBOARD DEBUG ===');
+  console.log('Profile:', profile);
+  console.log('Profile nickname:', profile?.nickname);
+  console.log('Profile name:', profile?.name);
   console.log('Profile keys:', Object.keys(profile || {}));
   console.log('Profile role:', profile?.role);
   console.log('Profile authorities:', profile?.authorities);
   console.log('Profile roles:', profile?.roles);
   console.log('Is Parent:', isParent);
+  console.log('=======================');
 
   // 대시보드 통계 조회 (관리자/선생님만)
   const { data: dashboardStats } = useQuery({
@@ -184,7 +189,7 @@ function Dashboard() {
       {isParent ? (
         <div className="parent-dashboard">
           <div className="dashboard-header">
-            <h1>안녕하세요, {profile?.nickname || profile?.name || '사용자'}님! 👋</h1>
+            <h1>안녕하세요, {profile?.nickname}님! 👋</h1>
             <p>자녀의 수강 정보를 확인하세요</p>
           </div>
           
@@ -274,7 +279,7 @@ function Dashboard() {
           {/* 히어로 섹션 */}
           <section className="hero">
             <div className="hero-container">
-              <h1>안녕하세요, {profile?.nickname || profile?.name || '사용자'}님! 👋</h1>
+              <h1>안녕하세요, {profile?.name}님! 👋</h1>
               <p>오늘도 학원 운영을 효율적으로 관리하세요</p>
             </div>
           </section>

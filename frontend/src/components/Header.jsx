@@ -105,8 +105,13 @@ function Header() {
     return null;
   }
 
+  const isParent = profile?.role === 'PARENT' || 
+                   profile?.role === 'ROLE_PARENT' ||
+                   profile?.authorities?.some(auth => auth.authority === 'ROLE_PARENT') ||
+                   profile?.roles?.includes('PARENT');
+
   const getInitial = () => {
-    const displayName = profile.nickname || profile.name;
+    const displayName = isParent ? profile.nickname : profile.name;
     return displayName ? displayName.charAt(0) : profile.username.charAt(0);
   };
 
@@ -248,7 +253,7 @@ function Header() {
                 {getInitial()}
               </div>
               <div className="user-info">
-                <span className="user-name">{profile.nickname || profile.name}</span>
+                <span className="user-name">{isParent ? profile.nickname : profile.name}</span>
                 <span className="user-role">
                   {profile.role === 'ADMIN' && '관리자'}
                   {profile.role === 'TEACHER' && '선생님'}
@@ -274,7 +279,7 @@ function Header() {
             {showDropdown && (
               <div className="dropdown-menu">
                 <div className="dropdown-header">
-                  <p className="dropdown-name">{profile.nickname || profile.name}</p>
+                  <p className="dropdown-name">{isParent ? profile.nickname : profile.name}</p>
                   <p className="dropdown-email">{profile.email || profile.username}</p>
                 </div>
                 
