@@ -110,6 +110,8 @@ export const enrollmentAPI = {
   expire: (id) => api.patch(`/enrollments/${id}/expire`),
   delete: (id) => api.delete(`/enrollments/${id}/force`),
   update: (id, data) => api.put(`/enrollments/${id}`, data),
+  startHold: (id, data) => api.post(`/enrollments/${id}/hold`, data),
+  endHold: (id) => api.delete(`/enrollments/${id}/hold`),
 };
 
 // 출석 API

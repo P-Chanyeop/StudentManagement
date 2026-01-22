@@ -12,7 +12,12 @@ function Enrollments() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showHoldModal, setShowHoldModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [holdData, setHoldData] = useState({
+    holdStartDate: '',
+    holdEndDate: ''
+  });
   
   // 학생 선택 드롭다운 상태
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
@@ -308,6 +313,32 @@ function Enrollments() {
     },
     onError: (error) => {
       alert(`삭제 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  // 홀딩 시작 mutation
+  const startHoldMutation = useMutation({
+    mutationFn: ({ id, data }) => enrollmentAPI.startHold(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      setShowHoldModal(false);
+      setHoldData({ holdStartDate: '', holdEndDate: '' });
+      alert('수강권 홀딩이 시작되었습니다.');
+    },
+    onError: (error) => {
+      alert(`홀딩 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  // 홀딩 종료 mutation
+  const endHoldMutation = useMutation({
+    mutationFn: (id) => enrollmentAPI.endHold(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      alert('수강권 홀딩이 종료되었습니다.');
+    },
+    onError: (error) => {
+      alert(`홀딩 종료 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     }
   });
 
@@ -1015,19 +1046,114 @@ function Enrollments() {
               )}
               
               {isAdminOrTeacher && (
-                <button 
-                  className="btn-primary" 
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setShowEditModal(true);
-                  }}
-                >
-                  수정
-                </button>
+                <>
+                  {selectedEnrollment?.isOnHold ? (
+                    <button 
+                      className="btn-warning" 
+                      onClick={() => {
+                        if (window.confirm('홀딩을 종료하시겠습니까?')) {
+                          endHoldMutation.mutate(selectedEnrollment.id);
+                        }
+                      }}
+                    >
+                      홀딩 종료
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn-info" 
+                      onClick={() => {
+                        setShowHoldModal(true);
+                        setShowDetailModal(false);
+                      }}
+                    >
+                      홀딩 시작
+                    </button>
+                  )}
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setShowEditModal(true);
+                    }}
+                  >
+                    수정
+                  </button>
+                </>
               )}
               
               <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
                 닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 홀딩 모달 */}
+      {showHoldModal && selectedEnrollment && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>수강권 홀딩</h2>
+              <button className="close-button" onClick={() => setShowHoldModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>학생명</label>
+                <input type="text" value={selectedEnrollment.studentName} disabled />
+              </div>
+              <div className="form-group">
+                <label>수업명</label>
+                <input type="text" value={selectedEnrollment.courseName} disabled />
+              </div>
+              <div className="form-group">
+                <label>현재 종료일</label>
+                <input type="text" value={selectedEnrollment.endDate} disabled />
+              </div>
+              <div className="form-group">
+                <label>홀딩 시작일 *</label>
+                <input
+                  type="date"
+                  value={holdData.holdStartDate}
+                  onChange={(e) => setHoldData({ ...holdData, holdStartDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>홀딩 종료일 *</label>
+                <input
+                  type="date"
+                  value={holdData.holdEndDate}
+                  onChange={(e) => setHoldData({ ...holdData, holdEndDate: e.target.value })}
+                  required
+                />
+              </div>
+              {holdData.holdStartDate && holdData.holdEndDate && (
+                <div className="info-box">
+                  <p>홀딩 기간: {Math.ceil((new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate)) / (1000 * 60 * 60 * 24)) + 1}일</p>
+                  <p>연장될 종료일: {new Date(new Date(selectedEnrollment.endDate).getTime() + (new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate) + 86400000)).toISOString().split('T')[0]}</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  if (!holdData.holdStartDate || !holdData.holdEndDate) {
+                    alert('홀딩 기간을 입력해주세요.');
+                    return;
+                  }
+                  if (new Date(holdData.holdStartDate) > new Date(holdData.holdEndDate)) {
+                    alert('홀딩 시작일은 종료일보다 이전이어야 합니다.');
+                    return;
+                  }
+                  startHoldMutation.mutate({ id: selectedEnrollment.id, data: holdData });
+                }}
+              >
+                홀딩 시작
+              </button>
+              <button className="btn-secondary" onClick={() => setShowHoldModal(false)}>
+                취소
               </button>
             </div>
           </div>

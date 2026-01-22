@@ -11,6 +11,7 @@ import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
+import web.kplay.studentmanagement.dto.course.EnrollmentHoldRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
 import web.kplay.studentmanagement.dto.course.CourseResponse;
 import web.kplay.studentmanagement.dto.student.StudentResponse;
@@ -329,6 +330,10 @@ public class EnrollmentService {
                 .recordingStatus(recordingStatus)
                 .expectedRecordings(expectedRecordings)
                 .actualRecordings(actualRecordings)
+                .holdStartDate(enrollment.getHoldStartDate())
+                .holdEndDate(enrollment.getHoldEndDate())
+                .isOnHold(enrollment.getIsOnHold())
+                .totalHoldDays(enrollment.getTotalHoldDays())
                 .build();
     }
 
@@ -452,5 +457,34 @@ public class EnrollmentService {
         
         enrollmentRepository.delete(enrollment);
         log.info("수강권 강제 삭제 - ID: {}", enrollmentId);
+    }
+
+    /**
+     * 수강권 홀딩 시작
+     */
+    @Transactional
+    public EnrollmentResponse startHold(Long id, EnrollmentHoldRequest request) {
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
+
+        enrollment.startHold(request.getHoldStartDate(), request.getHoldEndDate());
+        log.info("수강권 홀딩 시작: enrollmentId={}, 기간={} ~ {}, 연장된 종료일={}",
+                id, request.getHoldStartDate(), request.getHoldEndDate(), enrollment.getEndDate());
+
+        return toResponse(enrollment);
+    }
+
+    /**
+     * 수강권 홀딩 종료
+     */
+    @Transactional
+    public EnrollmentResponse endHold(Long id) {
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
+
+        enrollment.endHold();
+        log.info("수강권 홀딩 종료: enrollmentId={}", id);
+
+        return toResponse(enrollment);
     }
 }

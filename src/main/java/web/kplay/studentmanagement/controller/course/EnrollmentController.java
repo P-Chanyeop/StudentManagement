@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.course.EnrollmentAdjustRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
+import web.kplay.studentmanagement.dto.course.EnrollmentHoldRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.course.EnrollmentService;
@@ -200,5 +201,21 @@ public class EnrollmentController {
     public ResponseEntity<Void> forceDeleteEnrollment(@PathVariable Long id) {
         enrollmentService.forceDeleteEnrollment(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/hold")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EnrollmentResponse> startHold(
+            @PathVariable Long id,
+            @RequestBody EnrollmentHoldRequest request) {
+        EnrollmentResponse response = enrollmentService.startHold(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}/hold")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EnrollmentResponse> endHold(@PathVariable Long id) {
+        EnrollmentResponse response = enrollmentService.endHold(id);
+        return ResponseEntity.ok(response);
     }
 }

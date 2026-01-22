@@ -54,6 +54,21 @@ public class Enrollment extends BaseEntity {
     @Column(length = 500)
     private String memo;
 
+    // 홀딩 관련 필드
+    @Column
+    private LocalDate holdStartDate; // 홀딩 시작일
+
+    @Column
+    private LocalDate holdEndDate; // 홀딩 종료일
+
+    @Column
+    @Builder.Default
+    private Boolean isOnHold = false; // 홀딩 중 여부
+
+    @Column
+    @Builder.Default
+    private Integer totalHoldDays = 0; // 총 홀딩 일수
+
     // 횟수 사용
     public void useCount() {
         if (remainingCount > 0) {
@@ -253,5 +268,42 @@ public class Enrollment extends BaseEntity {
         this.remainingCount += count;
         this.usedCount = Math.max(0, this.usedCount - count);
         this.isActive = true;
+    }
+
+    /**
+     * 홀딩 시작
+     */
+    public void startHold(LocalDate holdStartDate, LocalDate holdEndDate) {
+        if (holdStartDate.isAfter(holdEndDate)) {
+            throw new IllegalArgumentException("홀딩 시작일은 종료일보다 이전이어야 합니다");
+        }
+        this.holdStartDate = holdStartDate;
+        this.holdEndDate = holdEndDate;
+        this.isOnHold = true;
+        
+        // 홀딩 일수 계산 및 수강권 종료일 연장
+        int holdDays = (int) java.time.temporal.ChronoUnit.DAYS.between(holdStartDate, holdEndDate) + 1;
+        this.totalHoldDays += holdDays;
+        this.endDate = this.endDate.plusDays(holdDays);
+    }
+
+    /**
+     * 홀딩 종료
+     */
+    public void endHold() {
+        this.isOnHold = false;
+        this.holdStartDate = null;
+        this.holdEndDate = null;
+    }
+
+    /**
+     * 홀딩 중인지 확인
+     */
+    public boolean isCurrentlyOnHold() {
+        if (!isOnHold || holdStartDate == null || holdEndDate == null) {
+            return false;
+        }
+        LocalDate now = LocalDate.now();
+        return !now.isBefore(holdStartDate) && !now.isAfter(holdEndDate);
     }
 }
