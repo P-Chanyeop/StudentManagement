@@ -759,8 +759,10 @@ function Reservations() {
                       <div className="reservation-header">
                         <div className="student-info">
                           <h3>{reservation.student?.name || reservation.studentName}</h3>
-                          {reservation.isConsultation && (
+                          {reservation.isConsultation ? (
                             <span className="consultation-type-badge">상담</span>
+                          ) : (
+                            <span className="class-type-badge">수업</span>
                           )}
                         </div>
                         {getStatusBadge(reservation.status)}

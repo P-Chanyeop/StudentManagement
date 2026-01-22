@@ -1210,6 +1210,19 @@
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
+.class-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #03C75A 0%, #02b350 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(3, 199, 90, 0.3);
+}
+
 .consultation-text {
   color: #667eea;
   font-weight: 700;
