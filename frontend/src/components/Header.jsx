@@ -9,9 +9,6 @@ function Header() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEnrollments, setShowEnrollments] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [lastNotificationCheck, setLastNotificationCheck] = useState(
-    localStorage.getItem('lastNotificationCheck') || new Date().toISOString()
-  );
   const location = useLocation();
 
   // 사용자 프로필 조회
@@ -26,11 +23,12 @@ function Header() {
 
   // 새로운 예약 조회 (관리자만)
   const { data: newReservations = [] } = useQuery({
-    queryKey: ['newReservations', lastNotificationCheck],
+    queryKey: ['newReservations'],
     queryFn: async () => {
       try {
-        console.log('알림 체크 시간:', lastNotificationCheck);
-        const response = await reservationAPI.getNewReservations(lastNotificationCheck);
+        const checkTime = localStorage.getItem('lastNotificationCheck') || new Date().toISOString();
+        console.log('알림 체크 시간:', checkTime);
+        const response = await reservationAPI.getNewReservations(checkTime);
         console.log('새 예약 응답:', response.data);
         return response.data;
       } catch (error) {
@@ -91,7 +89,6 @@ function Header() {
         // 알림 드롭다운이 열려있었다면 확인 시간 업데이트
         if (showNotifications) {
           const now = new Date().toISOString();
-          setLastNotificationCheck(now);
           localStorage.setItem('lastNotificationCheck', now);
           // 쿼리 즉시 무효화하여 새로고침
           queryClient.invalidateQueries(['newReservations']);
@@ -202,10 +199,9 @@ function Header() {
                     setShowDropdown(false);
                   } else {
                     // 드롭다운 닫을 때 알림 확인 시간 업데이트
-                    setShowNotifications(false);
                     const now = new Date().toISOString();
-                    setLastNotificationCheck(now);
                     localStorage.setItem('lastNotificationCheck', now);
+                    setShowNotifications(false);
                     // 쿼리 즉시 무효화하여 새로고침
                     queryClient.invalidateQueries(['newReservations']);
                   }
@@ -250,7 +246,6 @@ function Header() {
                     <div className="notification-footer">
                       <Link to="/reservations" onClick={() => {
                         const now = new Date().toISOString();
-                        setLastNotificationCheck(now);
                         localStorage.setItem('lastNotificationCheck', now);
                         setShowNotifications(false);
                         // 쿼리 즉시 무효화하여 새로고침
