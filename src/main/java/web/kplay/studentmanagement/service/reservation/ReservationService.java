@@ -356,7 +356,9 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public List<ReservationResponse> getNewReservationsSince(String since) {
         try {
-            LocalDateTime sinceTime = LocalDateTime.parse(since);
+            // ISO 8601 형식 (Z 포함) 파싱
+            java.time.Instant instant = java.time.Instant.parse(since);
+            LocalDateTime sinceTime = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault());
             log.info("since 시간 이후 예약 조회: {}", sinceTime);
             
             List<Reservation> reservations = reservationRepository.findAll().stream()
