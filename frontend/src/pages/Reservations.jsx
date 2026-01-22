@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI, consultationAPI } from '../services/api';
 import '../styles/Reservations.css';
 
 function Reservations() {
@@ -79,15 +79,29 @@ function Reservations() {
       if (!profile) return [];
       
       if (isParent) {
-        const response = await reservationAPI.getMyReservations();
+        const reservationResponse = await reservationAPI.getMyReservations();
+        const consultationResponse = await consultationAPI.getMyChildren();
+        
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth() + 1;
         const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
         const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
         
-        return response.data.filter(r => {
+        // 수업 예약 필터링
+        const filteredReservations = reservationResponse.data.filter(r => {
           return r.reservationDate >= startDate && r.reservationDate <= endDate;
         });
+        
+        // 상담 예약 필터링 및 변환
+        const consultations = consultationResponse.data
+          .filter(c => c.consultationDate >= startDate && c.consultationDate <= endDate)
+          .map(c => ({
+            id: `consultation-${c.id}`,
+            reservationDate: c.consultationDate,
+            isConsultation: true
+          }));
+        
+        return [...filteredReservations, ...consultations];
       } else {
         // 관리자/선생님: 선택된 날짜의 예약만 조회 (월별 조회는 생략)
         return [];
@@ -101,10 +115,31 @@ function Reservations() {
     queryFn: async () => {
       if (isParent) {
         // 학부모는 본인 자녀 예약만 조회
-        const response = await reservationAPI.getMyReservations();
-        return response.data.filter(r => {
+        const reservationResponse = await reservationAPI.getMyReservations();
+        const consultationResponse = await consultationAPI.getMyChildren();
+        
+        // 수업 예약 필터링
+        const filteredReservations = reservationResponse.data.filter(r => {
           return r.reservationDate === selectedDate;
         });
+        
+        // 상담 예약을 예약 형식으로 변환하여 병합
+        const consultations = consultationResponse.data
+          .filter(c => c.consultationDate === selectedDate)
+          .map(c => ({
+            id: `consultation-${c.id}`,
+            studentId: c.studentId,
+            studentName: c.studentName,
+            student: { name: c.studentName, phone: c.studentPhone },
+            reservationDate: c.consultationDate,
+            reservationTime: c.consultationTime,
+            consultationType: c.consultationType,
+            notes: c.content || c.memo,
+            status: 'CONFIRMED',
+            isConsultation: true
+          }));
+        
+        return [...filteredReservations, ...consultations];
       } else {
         // 관리자/선생님은 전체 예약 조회
         console.log('관리자 예약 조회 - 날짜:', selectedDate);
@@ -481,10 +516,23 @@ function Reservations() {
                     </div>
 
                     <div className="reservation-details">
-                      <div className="detail-row">
-                        <span className="label">수업:</span>
-                        <span className="value">{reservation.courseName || "-"}</span>
-                      </div>
+                      {reservation.consultationType ? (
+                        <>
+                          <div className="detail-row">
+                            <span className="label">유형:</span>
+                            <span className="value consultation-badge">상담 예약</span>
+                          </div>
+                          <div className="detail-row">
+                            <span className="label">상담 유형:</span>
+                            <span className="value">{reservation.consultationType}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="detail-row">
+                          <span className="label">수업:</span>
+                          <span className="value">{reservation.courseName || "-"}</span>
+                        </div>
+                      )}
                       <div className="detail-row">
                         <span className="label">날짜:</span>
                         <span className="value">{reservation.reservationDate}</span>
@@ -495,17 +543,19 @@ function Reservations() {
                           {reservation.reservationTime}
                         </span>
                       </div>
-                      <div className="detail-row">
-                        <span className="label">수강권:</span>
-                        <span className="value">
-                          {reservation.enrollment?.course?.name || '수강권 정보 없음'}
-                          {reservation.enrollment?.type === 'COUNT_BASED' && (
-                            <span className="remaining-count">
-                              ({reservation.enrollment.remainingCount}회 남음)
-                            </span>
-                          )}
-                        </span>
-                      </div>
+                      {!reservation.consultationType && (
+                        <div className="detail-row">
+                          <span className="label">수강권:</span>
+                          <span className="value">
+                            {reservation.enrollment?.course?.name || '수강권 정보 없음'}
+                            {reservation.enrollment?.type === 'COUNT_BASED' && (
+                              <span className="remaining-count">
+                                ({reservation.enrollment.remainingCount}회 남음)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
                       {reservation.notes && (
                         <div className="detail-row">
                           <span className="label">메모:</span>

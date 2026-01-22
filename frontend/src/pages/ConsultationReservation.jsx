@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { consultationAPI, authAPI, studentAPI } from '../services/api';
+import { reservationAPI, authAPI, studentAPI } from '../services/api';
 import '../styles/ConsultationReservation.css';
 
 function ConsultationReservation() {
@@ -44,13 +44,7 @@ function ConsultationReservation() {
   });
 
   const [errors, setErrors] = useState({});
-  
-  // 날짜 선택을 위한 분리된 상태
-  const [dateComponents, setDateComponents] = useState({
-    year: '',
-    month: '',
-    day: ''
-  });
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   
   // 학생 선택 드롭다운 상태
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
@@ -93,30 +87,63 @@ function ConsultationReservation() {
     }
   };
 
-  // 날짜 컴포넌트 변경 핸들러
-  const handleDateComponentChange = (component, value) => {
-    const newDateComponents = {
-      ...dateComponents,
-      [component]: value
-    };
-    setDateComponents(newDateComponents);
+  // 날짜 선택 핸들러
+  const handleDateSelect = (year, month, day) => {
+    const date = new Date(year, month, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // 모든 컴포넌트가 선택되면 consultationDate 업데이트
-    if (newDateComponents.year && newDateComponents.month && newDateComponents.day) {
-      const formattedDate = `${newDateComponents.year}-${newDateComponents.month.padStart(2, '0')}-${newDateComponents.day.padStart(2, '0')}`;
-      setFormData(prev => ({
+    // 과거 날짜 선택 불가
+    if (date < today) return;
+    
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setFormData(prev => ({
+      ...prev,
+      consultationDate: formattedDate
+    }));
+    
+    if (errors.consultationDate) {
+      setErrors(prev => ({
         ...prev,
-        consultationDate: formattedDate
+        consultationDate: ''
       }));
-      
-      // 에러 제거
-      if (errors.consultationDate) {
-        setErrors(prev => ({
-          ...prev,
-          consultationDate: ''
-        }));
-      }
     }
+  };
+
+  // 캘린더 렌더링
+  const renderCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const days = [];
+    
+    // 빈 칸 추가
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
+    }
+    
+    // 날짜 추가
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const isPast = date < today;
+      const isSelected = formData.consultationDate === `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      days.push(
+        <div
+          key={day}
+          className={`calendar-day ${isPast ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+          onClick={() => !isPast && handleDateSelect(year, month, day)}
+        >
+          {day}
+        </div>
+      );
+    }
+    
+    return days;
   };
 
   // 드롭다운 외부 클릭 시 닫기
@@ -333,44 +360,40 @@ function ConsultationReservation() {
           <div className="form-section">
             <h2>상담 일정</h2>
             <div className="form-row">
-              <div className="form-group">
+              <div className="form-group full-width">
                 <label>상담 날짜 *</label>
-                <div className="date-inputs">
-                  <select
-                    value={dateComponents.year}
-                    onChange={(e) => handleDateComponentChange('year', e.target.value)}
-                    className={errors.consultationDate ? 'error' : ''}
-                  >
-                    <option value="">년도</option>
-                    {Array.from({length: 3}, (_, i) => {
-                      const year = new Date().getFullYear() + i;
-                      return <option key={year} value={year}>{year}년</option>;
-                    })}
-                  </select>
-                  
-                  <select
-                    value={dateComponents.month}
-                    onChange={(e) => handleDateComponentChange('month', e.target.value)}
-                    className={errors.consultationDate ? 'error' : ''}
-                  >
-                    <option value="">월</option>
-                    {Array.from({length: 12}, (_, i) => {
-                      const month = i + 1;
-                      return <option key={month} value={month}>{month}월</option>;
-                    })}
-                  </select>
-                  
-                  <select
-                    value={dateComponents.day}
-                    onChange={(e) => handleDateComponentChange('day', e.target.value)}
-                    className={errors.consultationDate ? 'error' : ''}
-                  >
-                    <option value="">일</option>
-                    {Array.from({length: 31}, (_, i) => {
-                      const day = i + 1;
-                      return <option key={day} value={day}>{day}일</option>;
-                    })}
-                  </select>
+                <div className="calendar-container">
+                  <div className="calendar-header">
+                    <button
+                      type="button"
+                      className="calendar-nav-btn"
+                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                    >
+                      ◀
+                    </button>
+                    <span className="calendar-title">
+                      {currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월
+                    </span>
+                    <button
+                      type="button"
+                      className="calendar-nav-btn"
+                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                  <div className="calendar-weekdays">
+                    <div>일</div>
+                    <div>월</div>
+                    <div>화</div>
+                    <div>수</div>
+                    <div>목</div>
+                    <div>금</div>
+                    <div>토</div>
+                  </div>
+                  <div className="calendar-days">
+                    {renderCalendar()}
+                  </div>
                 </div>
                 {errors.consultationDate && <span className="error-message">{errors.consultationDate}</span>}
               </div>
@@ -389,14 +412,21 @@ function ConsultationReservation() {
                   >
                     <option value="">시간을 선택하세요</option>
                     {Array.from({length: 12}, (_, i) => {
-                      const times = [];
                       const hour = (i + 9).toString().padStart(2, '0');
-                      times.push(`${hour}:00`);
-                      times.push(`${hour}:30`);
-                      return times;
-                    }).flat().map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
+                      const time = `${hour}:00`;
+                      
+                      // 오늘 날짜이고 과거 시간이면 비활성화
+                      const now = new Date();
+                      const today = now.toISOString().split('T')[0];
+                      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                      const isPastTime = formData.consultationDate === today && time < currentTime;
+                      
+                      return (
+                        <option key={time} value={time} disabled={isPastTime}>
+                          {time} {isPastTime ? '(지난 시간)' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 {errors.consultationTime && <span className="error-message">{errors.consultationTime}</span>}

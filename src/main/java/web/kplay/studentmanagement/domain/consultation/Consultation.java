@@ -7,6 +7,7 @@ import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.domain.user.User;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "consultations")
@@ -30,6 +31,9 @@ public class Consultation extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDate consultationDate;
+
+    @Column
+    private LocalTime consultationTime;
 
     @Column(nullable = false, length = 100)
     private String title;

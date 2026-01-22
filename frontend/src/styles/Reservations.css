@@ -47,6 +47,17 @@
   margin: 0;
 }
 
+/* 상담 예약 배지 */
+.consultation-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* 페이지 컨텐츠 */
 .page-content {
   width: 100%;

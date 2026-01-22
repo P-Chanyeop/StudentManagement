@@ -44,6 +44,7 @@ public class ConsultationService {
                 .student(student)
                 .consultant(consultant)
                 .consultationDate(request.getConsultationDate())
+                .consultationTime(request.getConsultationTime())
                 .title(request.getTitle())
                 .content(request.getContent())
                 .recordingFileUrl(request.getRecordingFileUrl())
@@ -51,8 +52,8 @@ public class ConsultationService {
                 .build();
 
         Consultation savedConsultation = consultationRepository.save(consultation);
-        log.info("Consultation record saved: student={}, consultant={}, date={}",
-                student.getStudentName(), consultant.getName(), request.getConsultationDate());
+        log.info("Consultation record saved: student={}, consultant={}, date={}, time={}",
+                student.getStudentName(), consultant.getName(), request.getConsultationDate(), request.getConsultationTime());
 
         return toResponse(savedConsultation);
     }
@@ -129,9 +130,12 @@ public class ConsultationService {
                 .id(consultation.getId())
                 .studentId(consultation.getStudent().getId())
                 .studentName(consultation.getStudent().getStudentName())
+                .studentPhone(consultation.getStudent().getStudentPhone())
                 .consultantId(consultation.getConsultant().getId())
                 .consultantName(consultation.getConsultant().getName())
                 .consultationDate(consultation.getConsultationDate())
+                .consultationTime(consultation.getConsultationTime())
+                .consultationType(consultation.getTitle())
                 .title(consultation.getTitle())
                 .content(consultation.getContent())
                 .recordingFileUrl(consultation.getRecordingFileUrl())
