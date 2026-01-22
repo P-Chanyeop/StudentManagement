@@ -87,6 +87,12 @@ function Header() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.user-menu') && !event.target.closest('.notification-menu')) {
+        // 알림 드롭다운이 열려있었다면 확인 시간 업데이트
+        if (showNotifications) {
+          const now = new Date().toISOString();
+          setLastNotificationCheck(now);
+          localStorage.setItem('lastNotificationCheck', now);
+        }
         setShowDropdown(false);
         setShowNotifications(false);
       }
@@ -187,12 +193,17 @@ function Header() {
               <button
                 className="notification-button"
                 onClick={() => {
-                  setShowNotifications(!showNotifications);
-                  setShowDropdown(false);
-                  // 알림 확인 시간 업데이트
-                  const now = new Date().toISOString();
-                  setLastNotificationCheck(now);
-                  localStorage.setItem('lastNotificationCheck', now);
+                  if (!showNotifications) {
+                    // 드롭다운 열 때
+                    setShowNotifications(true);
+                    setShowDropdown(false);
+                  } else {
+                    // 드롭다운 닫을 때 알림 확인 시간 업데이트
+                    setShowNotifications(false);
+                    const now = new Date().toISOString();
+                    setLastNotificationCheck(now);
+                    localStorage.setItem('lastNotificationCheck', now);
+                  }
                 }}
               >
                 <i className="fas fa-bell"></i>
@@ -232,7 +243,12 @@ function Header() {
                   </div>
                   {newReservations.length > 0 && (
                     <div className="notification-footer">
-                      <Link to="/reservations" onClick={() => setShowNotifications(false)}>
+                      <Link to="/reservations" onClick={() => {
+                        const now = new Date().toISOString();
+                        setLastNotificationCheck(now);
+                        localStorage.setItem('lastNotificationCheck', now);
+                        setShowNotifications(false);
+                      }}>
                         모든 예약 보기
                       </Link>
                     </div>
