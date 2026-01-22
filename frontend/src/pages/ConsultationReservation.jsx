@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { reservationAPI, authAPI, studentAPI } from '../services/api';
+import { consultationAPI, authAPI, studentAPI } from '../services/api';
 import '../styles/ConsultationReservation.css';
 
 function ConsultationReservation() {
@@ -52,8 +52,14 @@ function ConsultationReservation() {
 
   // 상담 생성
   const createConsultation = useMutation({
-    mutationFn: (data) => consultationAPI.create(data),
-    onSuccess: () => {
+    mutationFn: (data) => {
+      console.log('=== 상담 예약 요청 데이터 ===');
+      console.log(JSON.stringify(data, null, 2));
+      return consultationAPI.create(data);
+    },
+    onSuccess: (response) => {
+      console.log('=== 상담 예약 성공 ===');
+      console.log(response);
       alert('상담이 예약되었습니다.');
       // 폼 초기화
       setFormData({
@@ -67,7 +73,12 @@ function ConsultationReservation() {
       setErrors({});
     },
     onError: (error) => {
-      alert(`상담 예약 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+      console.error('=== 상담 예약 실패 ===');
+      console.error('Error:', error);
+      console.error('Response:', error.response);
+      console.error('Data:', error.response?.data);
+      console.error('Status:', error.response?.status);
+      alert(`상담 예약 실패: ${error.response?.data?.message || error.message || '오류가 발생했습니다.'}`);
     }
   });
 
@@ -221,14 +232,22 @@ function ConsultationReservation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('=== handleSubmit 시작 ===');
+    console.log('formData:', formData);
+    
     if (!validateForm()) {
+      console.log('유효성 검사 실패');
       return;
     }
 
     try {
       // 선택된 학생 정보 가져오기
       const studentList = profile?.role === 'PARENT' ? myStudents : allStudents;
+      console.log('studentList:', studentList);
+      console.log('selectedStudentId:', formData.selectedStudentId);
+      
       const selectedStudent = studentList.find(s => s.id.toString() === formData.selectedStudentId);
+      console.log('selectedStudent:', selectedStudent);
       
       if (!selectedStudent) {
         alert('선택된 학생 정보를 찾을 수 없습니다.');
@@ -239,14 +258,19 @@ function ConsultationReservation() {
       const consultationData = {
         studentId: selectedStudent.id,
         consultationDate: formData.consultationDate,
+        consultationTime: formData.consultationTime,
         title: formData.consultationType,
         content: formData.content,
         consultationType: formData.consultationType,
         recordingFileUrl: null
       };
       
+      console.log('=== 최종 전송 데이터 ===');
+      console.log(JSON.stringify(consultationData, null, 2));
+      
       createConsultation.mutate(consultationData);
     } catch (error) {
+      console.error('=== handleSubmit catch 에러 ===');
       console.error('상담 예약 실패:', error);
       alert('상담 예약 중 오류가 발생했습니다.');
     }

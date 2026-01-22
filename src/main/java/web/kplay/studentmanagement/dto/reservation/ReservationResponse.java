@@ -18,6 +18,8 @@ public class ReservationResponse {
     private Long id;
     private Long studentId;
     private String studentName;
+    private String studentEnglishLevel;
+    private String courseName;
     private LocalDate reservationDate;
     private LocalTime reservationTime;
     private Long enrollmentId;

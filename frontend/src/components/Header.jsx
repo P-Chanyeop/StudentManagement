@@ -37,7 +37,7 @@ function Header() {
         return [];
       }
     },
-    enabled: profile && profile.role === 'ADMIN',
+    enabled: !!profile && profile.role === 'ADMIN',
     refetchInterval: 30000, // 30초마다 새로고침
     staleTime: 0,
     retry: false, // 에러 시 재시도 하지 않음

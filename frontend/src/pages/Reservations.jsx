@@ -253,7 +253,21 @@ function Reservations() {
 
   const handleCancel = (reservationId) => {
     if (window.confirm('예약을 취소하시겠습니까?')) {
-      cancelMutation.mutate(reservationId);
+      // 상담 예약인 경우 (ID가 'consultation-'로 시작)
+      if (typeof reservationId === 'string' && reservationId.startsWith('consultation-')) {
+        const consultationId = reservationId.replace('consultation-', '');
+        consultationAPI.delete(consultationId)
+          .then(() => {
+            queryClient.invalidateQueries(['reservations', selectedDate]);
+            alert('상담 예약이 취소되었습니다.');
+          })
+          .catch((error) => {
+            alert(`취소 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+          });
+      } else {
+        // 일반 수업 예약
+        cancelMutation.mutate(reservationId);
+      }
     }
   };
 
@@ -745,20 +759,58 @@ function Reservations() {
                       <div className="reservation-header">
                         <div className="student-info">
                           <h3>{reservation.student?.name || reservation.studentName}</h3>
+                          {reservation.isConsultation && (
+                            <span className="consultation-type-badge">상담</span>
+                          )}
                         </div>
                         {getStatusBadge(reservation.status)}
                       </div>
                       <div className="reservation-details">
-                        <div className="detail-row">
-                          <span className="label">수업:</span>
-                          <span className="value">{reservation.courseName || "-"}</span>
-                        </div>
-                        <div className="detail-row">
-                          <span className="label">시간:</span>
-                          <span className="value">
-                            {reservation.reservationTime}
-                          </span>
-                        </div>
+                        {reservation.isConsultation ? (
+                          <>
+                            <div className="detail-row">
+                              <span className="label">유형:</span>
+                              <span className="value consultation-text">
+                                <i className="fas fa-comments"></i> {reservation.consultationType || '상담'}
+                              </span>
+                            </div>
+                            <div className="detail-row">
+                              <span className="label">날짜:</span>
+                              <span className="value">{reservation.reservationDate}</span>
+                            </div>
+                            <div className="detail-row">
+                              <span className="label">시간:</span>
+                              <span className="value">{reservation.reservationTime}</span>
+                            </div>
+                            {reservation.notes && (
+                              <div className="detail-row">
+                                <span className="label">내용:</span>
+                                <span className="value">{reservation.notes}</span>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="detail-row">
+                              <span className="label">유형:</span>
+                              <span className="value class-text">
+                                <i className="fas fa-book"></i> 수업
+                              </span>
+                            </div>
+                            <div className="detail-row">
+                              <span className="label">반:</span>
+                              <span className="value">{reservation.courseName || "미지정"}</span>
+                            </div>
+                            <div className="detail-row">
+                              <span className="label">날짜:</span>
+                              <span className="value">{reservation.reservationDate}</span>
+                            </div>
+                            <div className="detail-row">
+                              <span className="label">시간:</span>
+                              <span className="value">{reservation.reservationTime}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="reservation-actions">
                         {reservation.status === 'CONFIRMED' && canCancelReservation(reservation) && (

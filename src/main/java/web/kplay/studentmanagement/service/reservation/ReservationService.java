@@ -222,10 +222,17 @@ public class ReservationService {
     }
 
     private ReservationResponse toResponse(Reservation reservation) {
+        String courseName = null;
+        if (reservation.getEnrollment() != null && reservation.getEnrollment().getCourse() != null) {
+            courseName = reservation.getEnrollment().getCourse().getCourseName();
+        }
+        
         return ReservationResponse.builder()
                 .id(reservation.getId())
                 .studentId(reservation.getStudent().getId())
                 .studentName(reservation.getStudent().getStudentName())
+                .studentEnglishLevel(reservation.getStudent().getEnglishLevel())
+                .courseName(courseName)
                 .reservationDate(reservation.getReservationDate())
                 .reservationTime(reservation.getReservationTime())
                 .enrollmentId(reservation.getEnrollment() != null ? reservation.getEnrollment().getId() : null)
