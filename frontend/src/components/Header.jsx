@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation, Link } from 'react-router-dom';
 import { authAPI, enrollmentAPI, reservationAPI } from '../services/api';
 import '../styles/Header.css';
 
 function Header() {
+  const queryClient = useQueryClient();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showEnrollments, setShowEnrollments] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -92,6 +93,8 @@ function Header() {
           const now = new Date().toISOString();
           setLastNotificationCheck(now);
           localStorage.setItem('lastNotificationCheck', now);
+          // 쿼리 즉시 무효화하여 새로고침
+          queryClient.invalidateQueries(['newReservations']);
         }
         setShowDropdown(false);
         setShowNotifications(false);
@@ -105,7 +108,7 @@ function Header() {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [showDropdown, showNotifications]);
+  }, [showDropdown, showNotifications, queryClient]);
 
   if (!profile) {
     return null;
@@ -203,6 +206,8 @@ function Header() {
                     const now = new Date().toISOString();
                     setLastNotificationCheck(now);
                     localStorage.setItem('lastNotificationCheck', now);
+                    // 쿼리 즉시 무효화하여 새로고침
+                    queryClient.invalidateQueries(['newReservations']);
                   }
                 }}
               >
@@ -248,6 +253,8 @@ function Header() {
                         setLastNotificationCheck(now);
                         localStorage.setItem('lastNotificationCheck', now);
                         setShowNotifications(false);
+                        // 쿼리 즉시 무효화하여 새로고침
+                        queryClient.invalidateQueries(['newReservations']);
                       }}>
                         모든 예약 보기
                       </Link>
