@@ -356,12 +356,15 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public List<ReservationResponse> getNewReservationsSince(String since) {
         try {
-            // 오늘 생성된 모든 예약을 반환 (간단한 구현)
-            LocalDate today = LocalDate.now();
+            LocalDateTime sinceTime = LocalDateTime.parse(since);
+            log.info("since 시간 이후 예약 조회: {}", sinceTime);
+            
             List<Reservation> reservations = reservationRepository.findAll().stream()
-                    .filter(r -> r.getCreatedAt().toLocalDate().equals(today))
+                    .filter(r -> r.getCreatedAt().isAfter(sinceTime))
                     .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                     .collect(Collectors.toList());
+            
+            log.info("since 이후 예약 개수: {}", reservations.size());
                     
             return reservations.stream()
                     .map(this::toResponse)
