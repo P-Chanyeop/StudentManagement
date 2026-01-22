@@ -521,6 +521,7 @@ function Enrollments() {
                   {getStatusBadge(enrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
                 </div>
                 <h3 className="enrollment-student-name">{enrollment.studentName || '학생 정보 없음'}</h3>
+                <div className="enrollment-course-name">{enrollment.courseName || '반 미지정'}</div>
 
                 <div className="enrollment-details">
                   <div className="detail-item">
@@ -750,6 +751,21 @@ function Enrollments() {
               <div className="form-group">
                 <label>학생</label>
                 <input type="text" value={selectedEnrollment.studentName} disabled />
+              </div>
+
+              <div className="form-group">
+                <label>반</label>
+                <select
+                  value={selectedEnrollment.courseId || ''}
+                  onChange={(e) => setSelectedEnrollment({ ...selectedEnrollment, courseId: e.target.value ? parseInt(e.target.value) : null })}
+                >
+                  <option value="">반 선택</option>
+                  {courses?.map(course => (
+                    <option key={course.id} value={course.id}>
+                      {course.courseName}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">

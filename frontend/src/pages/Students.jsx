@@ -212,29 +212,54 @@ function Students() {
     }
   };
 
-  const handleUpdateStudent = () => {
+  const handleUpdateStudent = async () => {
     if (!selectedStudent.studentName || !selectedStudent.studentPhone || !selectedStudent.parentName || !selectedStudent.parentPhone) {
       alert('필수 항목을 모두 입력해주세요.');
       return;
     }
 
-    updateMutation.mutate({
-      id: selectedStudent.id,
-      data: {
-        studentName: selectedStudent.studentName,
-        studentPhone: selectedStudent.studentPhone,
-        birthDate: selectedStudent.birthDate,
-        gender: selectedStudent.gender,
-        address: selectedStudent.address,
-        school: selectedStudent.school,
-        grade: selectedStudent.grade,
-        parentName: selectedStudent.parentName,
-        parentPhone: selectedStudent.parentPhone,
-        parentEmail: selectedStudent.parentEmail,
-        englishLevel: selectedStudent.englishLevel,
-        memo: selectedStudent.memo,
-      },
-    });
+    try {
+      // 학생 정보 업데이트
+      await updateMutation.mutateAsync({
+        id: selectedStudent.id,
+        data: {
+          studentName: selectedStudent.studentName,
+          studentPhone: selectedStudent.studentPhone,
+          birthDate: selectedStudent.birthDate,
+          gender: selectedStudent.gender,
+          address: selectedStudent.address,
+          school: selectedStudent.school,
+          grade: selectedStudent.grade,
+          parentName: selectedStudent.parentName,
+          parentPhone: selectedStudent.parentPhone,
+          parentEmail: selectedStudent.parentEmail,
+          englishLevel: selectedStudent.englishLevel,
+          memo: selectedStudent.memo,
+        },
+      });
+
+      // 반 정보가 변경되었으면 수강권도 업데이트
+      if (selectedStudent.selectedCourseId) {
+        const enrollmentsResponse = await enrollmentAPI.getByStudent(selectedStudent.id);
+        const activeEnrollments = enrollmentsResponse.data.filter(e => e.isActive);
+        
+        // 활성 수강권이 있으면 반 정보 업데이트
+        if (activeEnrollments.length > 0) {
+          for (const enrollment of activeEnrollments) {
+            await enrollmentAPI.update(enrollment.id, {
+              studentId: selectedStudent.id,
+              courseId: selectedStudent.selectedCourseId,
+              startDate: enrollment.startDate,
+              endDate: enrollment.endDate,
+              totalCount: enrollment.totalCount,
+              remainingCount: enrollment.remainingCount
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('학생 수정 실패:', error);
+    }
   };
 
   const openEditModal = (student) => {

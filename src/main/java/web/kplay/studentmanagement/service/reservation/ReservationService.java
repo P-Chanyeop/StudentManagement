@@ -44,6 +44,7 @@ public class ReservationService {
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
     private final AttendanceRepository attendanceRepository;
+    private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
 
     @Transactional
     public ReservationResponse createReservation(ReservationCreateRequest request) {
@@ -106,6 +107,13 @@ public class ReservationService {
                 student.getStudentName(),
                 request.getReservationDate(),
                 request.getReservationTime());
+
+        // 학부모에게 예약 확인 문자 발송
+        try {
+            automatedMessageService.sendReservationNotification(savedReservation);
+        } catch (Exception e) {
+            log.error("예약 알림 문자 발송 실패: {}", e.getMessage());
+        }
 
         return toResponse(savedReservation);
     }

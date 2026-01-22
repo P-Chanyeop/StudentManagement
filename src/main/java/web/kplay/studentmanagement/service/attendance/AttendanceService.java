@@ -96,6 +96,13 @@ public class AttendanceService {
                 savedAttendance.getStatus(),
                 expectedLeave);
 
+        // 학부모에게 등원 알림 문자 발송
+        try {
+            automatedMessageService.sendCheckInNotification(student, now, expectedLeave);
+        } catch (Exception e) {
+            log.error("등원 알림 문자 발송 실패: {}", e.getMessage());
+        }
+
         return toResponse(savedAttendance);
     }
 
@@ -138,6 +145,14 @@ public class AttendanceService {
             attendance.checkIn(now, expectedLeave);
             Attendance saved = attendanceRepository.save(attendance);
             log.info("Student attendance check-in: name={}, phone={}", student.getStudentName(), student.getParentPhone());
+            
+            // 학부모에게 등원 알림 문자 발송
+            try {
+                automatedMessageService.sendCheckInNotification(student, now, expectedLeave);
+            } catch (Exception e) {
+                log.error("등원 알림 문자 발송 실패: {}", e.getMessage());
+            }
+            
             return toResponse(saved);
         }
         

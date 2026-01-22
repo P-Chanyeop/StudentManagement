@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class NaverBookingCrawlerService {
 
     private final NaverBookingRepository naverBookingRepository;
+    private final web.kplay.studentmanagement.repository.AttendanceRepository attendanceRepository;
 
     private static final String NAVER_BOOKING_BASE_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view";
     private static final String NAVER_ID = "littlebearrc";
@@ -297,6 +298,11 @@ public class NaverBookingCrawlerService {
                 
                 naverBookingRepository.save(entity);
                 
+                // 신규 예약이고 확정 상태이면 출석 레코드 생성
+                if (isNew && "예약확정".equals(entity.getStatus())) {
+                    createAttendanceForNaverBooking(entity);
+                }
+                
                 if (isNew) {
                     savedCount++;
                 } else {
@@ -361,6 +367,52 @@ public class NaverBookingCrawlerService {
     
     public List<NaverBooking> getAllBookings() {
         return naverBookingRepository.findAll();
+    }
+    
+    /**
+     * 네이버 예약에 대한 출석 레코드 생성
+     */
+    private void createAttendanceForNaverBooking(NaverBooking naverBooking) {
+        try {
+            // bookingTime에서 날짜와 시간 파싱 (예: "2026-01-22 14:00")
+            String[] parts = naverBooking.getBookingTime().split(" ");
+            if (parts.length != 2) {
+                log.warn("잘못된 예약 시간 형식: {}", naverBooking.getBookingTime());
+                return;
+            }
+            
+            java.time.LocalDate bookingDate = java.time.LocalDate.parse(parts[0]);
+            java.time.LocalTime bookingTime = java.time.LocalTime.parse(parts[1]);
+            
+            // 이미 출석 레코드가 있는지 확인
+            boolean exists = attendanceRepository.findByDate(bookingDate).stream()
+                .anyMatch(a -> a.getNaverBooking() != null && 
+                              a.getNaverBooking().getId().equals(naverBooking.getId()));
+            
+            if (exists) {
+                log.debug("이미 출석 레코드가 존재함: {}", naverBooking.getBookingNumber());
+                return;
+            }
+            
+            // 출석 레코드 생성
+            web.kplay.studentmanagement.domain.attendance.Attendance attendance = 
+                web.kplay.studentmanagement.domain.attendance.Attendance.builder()
+                    .naverBooking(naverBooking)
+                    .attendanceDate(bookingDate)
+                    .attendanceTime(bookingTime)
+                    .durationMinutes(120) // 기본 2시간
+                    .expectedLeaveTime(bookingTime.plusHours(2))
+                    .originalExpectedLeaveTime(bookingTime.plusHours(2))
+                    .status(web.kplay.studentmanagement.domain.attendance.AttendanceStatus.NOTYET)
+                    .classCompleted(false)
+                    .build();
+            
+            attendanceRepository.save(attendance);
+            log.info("네이버 예약 출석 레코드 생성: {}, 날짜={}, 시간={}", 
+                    naverBooking.getName(), bookingDate, bookingTime);
+        } catch (Exception e) {
+            log.error("네이버 예약 출석 레코드 생성 실패: {}", e.getMessage());
+        }
     }
 }
 

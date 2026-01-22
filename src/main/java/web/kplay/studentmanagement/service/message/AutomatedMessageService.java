@@ -16,6 +16,7 @@ import web.kplay.studentmanagement.repository.MessageRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -33,6 +34,94 @@ public class AutomatedMessageService {
     private final MessageRepository messageRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LevelTestRepository levelTestRepository;
+
+    /**
+     * 예약 확인 알림 발송
+     */
+    @Transactional
+    public void sendReservationNotification(web.kplay.studentmanagement.domain.reservation.Reservation reservation) {
+        Student student = reservation.getStudent();
+        String reservationType = reservation.getConsultationType() != null ? "상담" : "수업";
+        
+        String content = String.format(
+                "[K-PLAY 학원] %s 학생의 %s 예약이 완료되었습니다.\n날짜: %s\n시간: %s",
+                student.getStudentName(),
+                reservationType,
+                reservation.getReservationDate(),
+                reservation.getReservationTime().toString().substring(0, 5)
+        );
+
+        Message message = Message.builder()
+                .student(student)
+                .recipientPhone(student.getParentPhone())
+                .recipientName(student.getParentName())
+                .messageType(MessageType.GENERAL)
+                .content(content)
+                .sendStatus("PENDING")
+                .build();
+
+        Message savedMessage = messageRepository.save(message);
+        savedMessage.markAsSent(LocalDateTime.now(), "AUTO-RESERVATION-" + savedMessage.getId());
+
+        log.info("예약 알림 발송: 학생={}, 날짜={}", student.getStudentName(), reservation.getReservationDate());
+    }
+
+    /**
+     * 상담 예약 확인 알림 발송
+     */
+    @Transactional
+    public void sendConsultationNotification(web.kplay.studentmanagement.domain.consultation.Consultation consultation) {
+        Student student = consultation.getStudent();
+        
+        String content = String.format(
+                "[K-PLAY 학원] %s 학생의 상담 예약이 완료되었습니다.\n날짜: %s\n시간: %s\n유형: %s",
+                student.getStudentName(),
+                consultation.getConsultationDate(),
+                consultation.getConsultationTime() != null ? consultation.getConsultationTime().toString().substring(0, 5) : "미정",
+                consultation.getTitle()
+        );
+
+        Message message = Message.builder()
+                .student(student)
+                .recipientPhone(student.getParentPhone())
+                .recipientName(student.getParentName())
+                .messageType(MessageType.GENERAL)
+                .content(content)
+                .sendStatus("PENDING")
+                .build();
+
+        Message savedMessage = messageRepository.save(message);
+        savedMessage.markAsSent(LocalDateTime.now(), "AUTO-CONSULTATION-" + savedMessage.getId());
+
+        log.info("상담 예약 알림 발송: 학생={}, 날짜={}", student.getStudentName(), consultation.getConsultationDate());
+    }
+
+    /**
+     * 등원 알림 발송
+     */
+    @Transactional
+    public void sendCheckInNotification(Student student, LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
+        String content = String.format(
+                "[K-PLAY 학원] %s 학생이 %s에 등원하였습니다. 예상 하원 시간은 %s입니다.",
+                student.getStudentName(),
+                checkInTime.toLocalTime().toString().substring(0, 5),
+                expectedLeaveTime.toString().substring(0, 5)
+        );
+
+        Message message = Message.builder()
+                .student(student)
+                .recipientPhone(student.getParentPhone())
+                .recipientName(student.getParentName())
+                .messageType(MessageType.GENERAL)
+                .content(content)
+                .sendStatus("PENDING")
+                .build();
+
+        Message savedMessage = messageRepository.save(message);
+        savedMessage.markAsSent(LocalDateTime.now(), "AUTO-CHECKIN-" + savedMessage.getId());
+
+        log.info("등원 알림 발송: 학생={}, 등원시간={}", student.getStudentName(), checkInTime.toLocalTime());
+    }
 
     /**
      * 지각 자동 알림 발송

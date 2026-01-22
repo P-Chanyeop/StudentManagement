@@ -774,3 +774,17 @@
   color: #007AFF;
   font-weight: 600;
 }
+
+
+.enrollment-course-name {
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: 700;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #03C75A 0%, #02b350 100%);
+  border-radius: 8px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(3, 199, 90, 0.3);
+}
