@@ -30,5 +30,7 @@ public class EnrollmentCreateRequest {
     @Min(value = 1, message = "총 횟수는 1회 이상이어야 합니다")
     private Integer totalCount;
 
+    private Integer remainingCount;
+
     private String memo;
 }

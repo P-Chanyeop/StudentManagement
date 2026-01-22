@@ -165,6 +165,15 @@ public class EnrollmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<EnrollmentResponse> updateEnrollment(
+            @PathVariable Long id,
+            @Valid @RequestBody EnrollmentCreateRequest request) {
+        EnrollmentResponse response = enrollmentService.updateEnrollment(id, request);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deactivateEnrollment(@PathVariable Long id) {

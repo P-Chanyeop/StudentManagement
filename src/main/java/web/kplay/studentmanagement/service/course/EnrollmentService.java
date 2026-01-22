@@ -88,6 +88,33 @@ public class EnrollmentService {
         return toResponse(savedEnrollment);
     }
 
+    @Transactional
+    public EnrollmentResponse updateEnrollment(Long id, EnrollmentCreateRequest request) {
+        Enrollment enrollment = enrollmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
+
+        Course course = null;
+        if (request.getCourseId() != null) {
+            course = courseRepository.findById(request.getCourseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+        }
+
+        enrollment.updateEnrollment(
+                course,
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getTotalCount(),
+                request.getRemainingCount()
+        );
+
+        log.info("Enrollment updated: id={}, course={}, period={} ~ {}, count={}/{}",
+                id, course != null ? course.getCourseName() : "없음",
+                request.getStartDate(), request.getEndDate(),
+                request.getRemainingCount(), request.getTotalCount());
+
+        return toResponse(enrollment);
+    }
+
     @Transactional(readOnly = true)
     public EnrollmentResponse getEnrollment(Long id) {
         Enrollment enrollment = enrollmentRepository.findById(id)

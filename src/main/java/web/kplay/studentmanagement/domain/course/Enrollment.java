@@ -104,6 +104,26 @@ public class Enrollment extends BaseEntity {
         this.endDate = LocalDate.now();
     }
 
+    // 수강권 정보 업데이트
+    public void updateEnrollment(Course course, LocalDate startDate, LocalDate endDate, Integer totalCount, Integer remainingCount) {
+        if (course != null) {
+            this.course = course;
+        }
+        if (startDate != null) {
+            this.startDate = startDate;
+        }
+        if (endDate != null) {
+            this.endDate = endDate;
+        }
+        if (totalCount != null) {
+            this.totalCount = totalCount;
+        }
+        if (remainingCount != null) {
+            this.remainingCount = remainingCount;
+            this.usedCount = totalCount - remainingCount;
+        }
+    }
+
     // 메모 업데이트
     public void updateMemo(String memo) {
         this.memo = memo;

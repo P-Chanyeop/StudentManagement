@@ -10,6 +10,7 @@ function Enrollments() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   
@@ -219,6 +220,20 @@ function Enrollments() {
     },
     onError: (error) => {
       alert(`등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  // 수강권 수정 mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => enrollmentAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      setShowEditModal(false);
+      setSelectedEnrollment(null);
+      alert('수강권이 수정되었습니다.');
+    },
+    onError: (error) => {
+      alert(`수정 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     },
   });
 
@@ -722,6 +737,83 @@ function Enrollments() {
         </div>
       )}
 
+      {/* 수강권 수정 모달 */}
+      {showEditModal && selectedEnrollment && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>수강권 수정</h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group">
+                <label>학생</label>
+                <input type="text" value={selectedEnrollment.studentName} disabled />
+              </div>
+
+              <div className="form-group">
+                <label>시작일</label>
+                <input
+                  type="date"
+                  value={selectedEnrollment.startDate}
+                  onChange={(e) => setSelectedEnrollment({ ...selectedEnrollment, startDate: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>종료일</label>
+                <input
+                  type="date"
+                  value={selectedEnrollment.endDate}
+                  onChange={(e) => setSelectedEnrollment({ ...selectedEnrollment, endDate: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>총 횟수</label>
+                <input
+                  type="number"
+                  value={selectedEnrollment.totalCount}
+                  onChange={(e) => setSelectedEnrollment({ ...selectedEnrollment, totalCount: parseInt(e.target.value) })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>잔여 횟수</label>
+                <input
+                  type="number"
+                  value={selectedEnrollment.remainingCount}
+                  onChange={(e) => setSelectedEnrollment({ ...selectedEnrollment, remainingCount: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowEditModal(false)}>취소</button>
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  updateMutation.mutate({
+                    id: selectedEnrollment.id,
+                    data: {
+                      studentId: selectedEnrollment.studentId,
+                      courseId: selectedEnrollment.courseId,
+                      startDate: selectedEnrollment.startDate,
+                      endDate: selectedEnrollment.endDate,
+                      totalCount: selectedEnrollment.totalCount,
+                      remainingCount: selectedEnrollment.remainingCount
+                    }
+                  });
+                }}
+              >
+                수정
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 수강권 상세 모달 */}
       {showDetailModal && selectedEnrollment && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
@@ -904,6 +996,18 @@ function Enrollments() {
                     삭제
                   </button>
                 </>
+              )}
+              
+              {isAdminOrTeacher && (
+                <button 
+                  className="btn-primary" 
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setShowEditModal(true);
+                  }}
+                >
+                  수정
+                </button>
               )}
               
               <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
