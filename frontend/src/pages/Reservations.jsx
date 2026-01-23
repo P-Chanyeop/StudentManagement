@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI, consultationAPI } from '../services/api';
 import '../styles/Reservations.css';
@@ -238,6 +239,38 @@ function Reservations() {
       alert(`동기화 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     },
   });
+
+  // 학생 목록 엑셀 업로드 mutation
+  const uploadStudentListMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post('/api/student-course/upload', formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return response;
+    },
+    onSuccess: (response) => {
+      alert(`학생 목록이 업데이트되었습니다. (${response.data.studentCount}명)`);
+    },
+    onError: (error) => {
+      alert(`업로드 실패: ${error.response?.data?.message || error.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  const handleStudentListUpload = (e) => {
+    const file = e.target.files[0];
+    console.log('파일 선택:', file);
+    if (file) {
+      console.log('업로드 시작:', file.name);
+      uploadStudentListMutation.mutate(file);
+    }
+    e.target.value = '';
+  };
 
   const handleSyncNaver = () => {
     syncNaverMutation.mutate();
@@ -497,6 +530,19 @@ function Reservations() {
                   <i className={`fas fa-sync-alt ${syncNaverMutation.isPending ? 'fa-spin' : ''}`}></i>
                   {syncNaverMutation.isPending ? '동기화 중...' : '네이버 예약 동기화'}
                 </button>
+
+                <label htmlFor="student-list-upload" className="sync-button" style={{ cursor: 'pointer' }}>
+                  <i className={`fas fa-file-excel ${uploadStudentListMutation.isPending ? 'fa-spin' : ''}`}></i>
+                  {uploadStudentListMutation.isPending ? '업로드 중...' : '기존 학생 목록 업데이트'}
+                </label>
+                <input
+                  id="student-list-upload"
+                  type="file"
+                  accept=".xlsx"
+                  onChange={handleStudentListUpload}
+                  disabled={uploadStudentListMutation.isPending}
+                  style={{ display: 'none' }}
+                />
               </div>
             )}
 

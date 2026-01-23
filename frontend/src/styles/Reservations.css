@@ -930,11 +930,14 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(3, 199, 90, 0.25);
+  line-height: 1;
+  box-sizing: border-box;
 }
 
 .sync-button:hover {
