@@ -1,11 +1,35 @@
--- 1월 23일 네이버 예약 bookingTime 형식 변경
+-- 모든 네이버 예약 bookingTime 형식 변경
 -- "26. 1. 23.(금) 오전 9:00" -> "2026-01-23 09:00"
 
--- 먼저 현재 데이터 확인
-SELECT id, name, booking_time FROM naver_bookings WHERE id BETWEEN 66 AND 73;
+-- 오전 시간 변경
+UPDATE naver_bookings SET booking_time = '2026-01-23 09:00' WHERE booking_time LIKE '%1. 23.%오전 9:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 10:00' WHERE booking_time LIKE '%1. 23.%오전 10:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 11:00' WHERE booking_time LIKE '%1. 23.%오전 11:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 12:00' WHERE booking_time LIKE '%1. 23.%오후 12:00%';
 
--- 오전 9시 데이터 일괄 변경
-UPDATE naver_bookings SET booking_time = '2026-01-23 09:00' WHERE id IN (66, 67, 68, 69, 70, 71, 72, 73);
+-- 오후 시간 변경
+UPDATE naver_bookings SET booking_time = '2026-01-23 13:00' WHERE booking_time LIKE '%1. 23.%오후 1:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 14:00' WHERE booking_time LIKE '%1. 23.%오후 2:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 15:00' WHERE booking_time LIKE '%1. 23.%오후 3:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 16:00' WHERE booking_time LIKE '%1. 23.%오후 4:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 17:00' WHERE booking_time LIKE '%1. 23.%오후 5:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 18:00' WHERE booking_time LIKE '%1. 23.%오후 6:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 19:00' WHERE booking_time LIKE '%1. 23.%오후 7:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-23 20:00' WHERE booking_time LIKE '%1. 23.%오후 8:00%';
+
+-- 다른 날짜도 필요하면 추가
+UPDATE naver_bookings SET booking_time = '2026-01-22 09:00' WHERE booking_time LIKE '%1. 22.%오전 9:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 10:00' WHERE booking_time LIKE '%1. 22.%오전 10:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 11:00' WHERE booking_time LIKE '%1. 22.%오전 11:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 12:00' WHERE booking_time LIKE '%1. 22.%오후 12:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 13:00' WHERE booking_time LIKE '%1. 22.%오후 1:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 14:00' WHERE booking_time LIKE '%1. 22.%오후 2:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 15:00' WHERE booking_time LIKE '%1. 22.%오후 3:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 16:00' WHERE booking_time LIKE '%1. 22.%오후 4:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 17:00' WHERE booking_time LIKE '%1. 22.%오후 5:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 18:00' WHERE booking_time LIKE '%1. 22.%오후 6:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 19:00' WHERE booking_time LIKE '%1. 22.%오후 7:00%';
+UPDATE naver_bookings SET booking_time = '2026-01-22 20:00' WHERE booking_time LIKE '%1. 22.%오후 8:00%';
 
 -- 변경 후 확인
-SELECT id, name, booking_time FROM naver_bookings WHERE id BETWEEN 66 AND 73;
+SELECT id, name, booking_time FROM naver_bookings ORDER BY booking_time;
