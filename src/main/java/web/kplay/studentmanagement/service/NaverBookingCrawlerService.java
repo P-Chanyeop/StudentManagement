@@ -374,15 +374,53 @@ public class NaverBookingCrawlerService {
      */
     private void createAttendanceForNaverBooking(NaverBooking naverBooking) {
         try {
-            // bookingTime에서 날짜와 시간 파싱 (예: "2026-01-22 14:00")
-            String[] parts = naverBooking.getBookingTime().split(" ");
-            if (parts.length != 2) {
-                log.warn("잘못된 예약 시간 형식: {}", naverBooking.getBookingTime());
+            // bookingTime 파싱: "26. 1. 20.(화) 오전 10:00" -> LocalDate, LocalTime
+            String bookingTimeStr = naverBooking.getBookingTime();
+            log.info("네이버 예약 시간 파싱 시작: {}", bookingTimeStr);
+            
+            // 날짜 부분 추출: "26. 1. 20.(화)" -> "2026-01-20"
+            String[] parts = bookingTimeStr.split("\\)");
+            if (parts.length < 2) {
+                log.warn("잘못된 예약 시간 형식: {}", bookingTimeStr);
                 return;
             }
             
-            java.time.LocalDate bookingDate = java.time.LocalDate.parse(parts[0]);
-            java.time.LocalTime bookingTime = java.time.LocalTime.parse(parts[1]);
+            String datePart = parts[0].replace("(", "").trim(); // "26. 1. 20.(화" -> "26. 1. 20."
+            String[] dateTokens = datePart.split("\\.");
+            if (dateTokens.length < 3) {
+                log.warn("날짜 파싱 실패: {}", datePart);
+                return;
+            }
+            
+            int year = 2000 + Integer.parseInt(dateTokens[0].trim());
+            int month = Integer.parseInt(dateTokens[1].trim());
+            int day = Integer.parseInt(dateTokens[2].trim());
+            java.time.LocalDate bookingDate = java.time.LocalDate.of(year, month, day);
+            
+            // 시간 부분 추출: "오전 10:00" or "오후 4:00"
+            String timePart = parts[1].trim(); // " 오전 10:00" or " 오후 4:00"
+            String[] timeTokens = timePart.split(" ");
+            if (timeTokens.length < 2) {
+                log.warn("시간 파싱 실패: {}", timePart);
+                return;
+            }
+            
+            String ampm = timeTokens[0].trim(); // "오전" or "오후"
+            String time = timeTokens[1].trim(); // "10:00" or "4:00"
+            String[] hourMin = time.split(":");
+            int hour = Integer.parseInt(hourMin[0]);
+            int minute = Integer.parseInt(hourMin[1]);
+            
+            // 오후면 12시간 추가 (12시는 제외)
+            if ("오후".equals(ampm) && hour != 12) {
+                hour += 12;
+            } else if ("오전".equals(ampm) && hour == 12) {
+                hour = 0;
+            }
+            
+            java.time.LocalTime bookingTime = java.time.LocalTime.of(hour, minute);
+            
+            log.info("파싱 결과: 날짜={}, 시간={}", bookingDate, bookingTime);
             
             // 이미 출석 레코드가 있는지 확인
             boolean exists = attendanceRepository.findByDate(bookingDate).stream()
@@ -411,7 +449,8 @@ public class NaverBookingCrawlerService {
             log.info("네이버 예약 출석 레코드 생성: {}, 날짜={}, 시간={}", 
                     naverBooking.getName(), bookingDate, bookingTime);
         } catch (Exception e) {
-            log.error("네이버 예약 출석 레코드 생성 실패: {}", e.getMessage());
+            log.error("네이버 예약 출석 레코드 생성 실패: {}, 원본 시간: {}", 
+                    e.getMessage(), naverBooking.getBookingTime(), e);
         }
     }
 }
