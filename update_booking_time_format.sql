@@ -1,3 +1,6 @@
+-- Safe update mode 해제
+SET SQL_SAFE_UPDATES = 0;
+
 -- 모든 네이버 예약 bookingTime 형식 변경
 -- "26. 1. 23.(금) 오전 9:00" -> "2026-01-23 09:00"
 
@@ -30,6 +33,9 @@ UPDATE naver_bookings SET booking_time = '2026-01-22 17:00' WHERE booking_time L
 UPDATE naver_bookings SET booking_time = '2026-01-22 18:00' WHERE booking_time LIKE '%1. 22.%오후 6:00%';
 UPDATE naver_bookings SET booking_time = '2026-01-22 19:00' WHERE booking_time LIKE '%1. 22.%오후 7:00%';
 UPDATE naver_bookings SET booking_time = '2026-01-22 20:00' WHERE booking_time LIKE '%1. 22.%오후 8:00%';
+
+-- Safe update mode 다시 활성화
+SET SQL_SAFE_UPDATES = 1;
 
 -- 변경 후 확인
 SELECT id, name, booking_time FROM naver_bookings ORDER BY booking_time;
