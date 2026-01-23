@@ -14,10 +14,10 @@ public class NaverBookingScheduler {
 
     private final NaverBookingCrawlerService crawlerService;
 
-    // 매일 오전 9시에 실행
-    @Scheduled(cron = "0 0 9 * * *")
+    // 매일 오전 11시에 실행
+    @Scheduled(cron = "0 0 11 * * *")
     public void scheduledCrawling() {
-        log.info("=== 네이버 예약 자동 크롤링 시작 (매일 오전 9시) ===");
+        log.info("=== 네이버 예약 자동 크롤링 시작 (매일 오전 11시) ===");
         try {
             crawlerService.crawlNaverBookings();
             log.info("=== 네이버 예약 자동 크롤링 완료 ===");
