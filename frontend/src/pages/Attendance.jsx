@@ -440,6 +440,23 @@ function Attendance() {
   const formatTime = (timeString) => {
     if (!timeString) return '-';
     
+    // DateTime 형식 처리 (2026-01-23T14:26:00)
+    if (typeof timeString === 'string' && timeString.includes('T')) {
+      try {
+        const date = new Date(timeString);
+        if (!isNaN(date.getTime())) {
+          const hour = date.getHours();
+          const minute = date.getMinutes();
+          const isPM = hour >= 12;
+          const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+          const period = isPM ? '오후' : '오전';
+          return `${period} ${displayHour}:${minute.toString().padStart(2, '0')}`;
+        }
+      } catch (error) {
+        console.error('DateTime format error:', timeString, error);
+      }
+    }
+    
     // LocalTime 형식 (HH:mm:ss 또는 HH:mm:ss.nnnnnnn) 처리
     if (typeof timeString === 'string' && timeString.includes(':')) {
       const parts = timeString.split(':');
@@ -447,7 +464,7 @@ function Attendance() {
         const hour = parseInt(parts[0]);
         const minute = parseInt(parts[1]);
         
-        if (!isNaN(hour) && !isNaN(minute)) {
+        if (!isNaN(hour) && !isNaN(minute) && hour >= 0 && hour <= 23) {
           const isPM = hour >= 12;
           const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
           const period = isPM ? '오후' : '오전';
@@ -455,20 +472,6 @@ function Attendance() {
           return `${period} ${displayHour}:${minute.toString().padStart(2, '0')}`;
         }
       }
-    }
-    
-    // DateTime 형식 처리
-    try {
-      const date = new Date(timeString);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString('ko-KR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
-      }
-    } catch (error) {
-      console.error('Time format error:', timeString, error);
     }
     
     return '-';

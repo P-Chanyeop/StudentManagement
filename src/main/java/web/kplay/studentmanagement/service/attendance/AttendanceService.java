@@ -45,6 +45,7 @@ public class AttendanceService {
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
     private final web.kplay.studentmanagement.repository.NaverBookingRepository naverBookingRepository;
     private final StudentCourseExcelService studentCourseExcelService;
+    private final web.kplay.studentmanagement.repository.CourseRepository courseRepository;
 
     /**
      * 출석 체크인 (부모님 핸드폰 뒷자리 4자리 검증 포함)
@@ -905,7 +906,14 @@ public class AttendanceService {
         // 기존 출석 기록이 있으면 체크인 처리
         if (!existingAttendances.isEmpty()) {
             Attendance attendance = existingAttendances.get(0);
-            attendance.checkIn(now, attendance.getExpectedLeaveTime());
+            
+            // 수업시간을 알면 하원예정시간 계산, 모르면 null
+            LocalTime newExpectedLeaveTime = null;
+            if (attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0) {
+                newExpectedLeaveTime = now.toLocalTime().plusMinutes(attendance.getDurationMinutes());
+            }
+            
+            attendance.checkIn(now, newExpectedLeaveTime);
             log.info("Student check-in: name={}", student.getStudentName());
             return toResponse(attendance);
         }
@@ -958,7 +966,21 @@ public class AttendanceService {
         // 기존 출석 기록이 있으면 체크인 처리
         if (!existingAttendances.isEmpty()) {
             Attendance attendance = existingAttendances.get(0);
-            attendance.checkIn(now, attendance.getExpectedLeaveTime());
+            
+            // 엑셀에서 반 이름 조회 후 DB Course에서 수업시간 가져오기
+            LocalTime newExpectedLeaveTime = null;
+            if (naverBooking.getStudentName() != null) {
+                String cleanName = naverBooking.getStudentName().trim().replaceAll("\\s+", "");
+                String courseName = studentCourseExcelService.getCourseName(cleanName);
+                if (courseName != null) {
+                    var course = courseRepository.findByCourseName(courseName);
+                    if (course.isPresent() && course.get().getDurationMinutes() != null) {
+                        newExpectedLeaveTime = now.toLocalTime().plusMinutes(course.get().getDurationMinutes());
+                    }
+                }
+            }
+            
+            attendance.checkIn(now, newExpectedLeaveTime);
             log.info("Naver booking check-in: name={}", naverBooking.getStudentName());
             return toResponse(attendance);
         }
