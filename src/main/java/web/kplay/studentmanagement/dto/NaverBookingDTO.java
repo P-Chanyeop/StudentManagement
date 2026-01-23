@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NaverBookingDTO {
     private String status;           // 상태 (확정, 취소 등)
-    private String name;             // 예약자
+    private String name;             // 예약자 (부모님)
+    private String studentName;      // 학생 이름
+    private String school;           // 학교
     private String phone;            // 전화번호
     private String bookingNumber;    // 예약번호
     private String bookingTime;      // 이용일시

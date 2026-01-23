@@ -25,4 +25,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByParentPhoneAndIsActive(String parentPhone, Boolean isActive);
     
     List<Student> findByParentUser(web.kplay.studentmanagement.domain.user.User parentUser);
+    
+    List<Student> findByStudentName(String studentName);
 }

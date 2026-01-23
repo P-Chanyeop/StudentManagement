@@ -98,4 +98,14 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByStudentIdInAndScheduleScheduleDateBetween(@Param("studentIds") List<Long> studentIds, 
                                                                      @Param("startDate") LocalDate startDate, 
                                                                      @Param("endDate") LocalDate endDate);
+
+    // 학생과 날짜로 출석 조회
+    @Query("SELECT a FROM Attendance a WHERE a.student = :student AND a.attendanceDate = :date")
+    List<Attendance> findByStudentAndDate(@Param("student") web.kplay.studentmanagement.domain.student.Student student, 
+                                          @Param("date") LocalDate date);
+
+    // 네이버 예약과 날짜로 출석 조회
+    @Query("SELECT a FROM Attendance a WHERE a.naverBooking = :naverBooking AND a.attendanceDate = :date")
+    List<Attendance> findByNaverBookingAndDate(@Param("naverBooking") web.kplay.studentmanagement.domain.reservation.NaverBooking naverBooking, 
+                                               @Param("date") LocalDate date);
 }

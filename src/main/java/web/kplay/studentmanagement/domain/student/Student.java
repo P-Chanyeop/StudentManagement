@@ -66,6 +66,10 @@ public class Student extends BaseEntity {
     @Builder.Default
     private Boolean isActive = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "default_course_id")
+    private web.kplay.studentmanagement.domain.course.Course defaultCourse; // 기본 수업 반
+
     @OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
     @Builder.Default
     private List<Enrollment> enrollments = new ArrayList<>();
@@ -112,5 +116,10 @@ public class Student extends BaseEntity {
     // 학생 활성화
     public void activate() {
         this.isActive = true;
+    }
+
+    // 기본 수업 반 설정
+    public void setDefaultCourse(web.kplay.studentmanagement.domain.course.Course course) {
+        this.defaultCourse = course;
     }
 }

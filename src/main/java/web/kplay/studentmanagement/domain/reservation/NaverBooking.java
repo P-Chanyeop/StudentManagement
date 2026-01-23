@@ -22,7 +22,9 @@ public class NaverBooking extends BaseEntity {
     private String bookingNumber;  // 예약번호 (중복 방지용)
 
     private String status;         // 상태
-    private String name;           // 예약자
+    private String name;           // 예약자 (부모님)
+    private String studentName;    // 학생 이름
+    private String school;         // 학교
     private String phone;          // 전화번호
     private String bookingTime;    // 이용일시
     private String product;        // 상품

@@ -8,6 +8,7 @@ import UserDashboard from './pages/UserDashboard';
 import Students from './pages/Students';
 import Courses from './pages/Courses';
 import Attendance from './pages/Attendance';
+import CheckIn from './pages/CheckIn';
 import Reservations from './pages/Reservations';
 import ParentReservation from './pages/ParentReservation';
 import ConsultationReservation from './pages/ConsultationReservation';
@@ -125,6 +126,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Attendance />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/check-in"
+        element={
+          <ProtectedRoute>
+            <CheckIn />
           </ProtectedRoute>
         }
       />

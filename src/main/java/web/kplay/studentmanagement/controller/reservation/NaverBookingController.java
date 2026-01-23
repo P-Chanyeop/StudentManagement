@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.domain.reservation.NaverBooking;
 import web.kplay.studentmanagement.dto.NaverBookingDTO;
+import web.kplay.studentmanagement.repository.NaverBookingRepository;
 import web.kplay.studentmanagement.service.NaverBookingCrawlerService;
 
 import java.util.List;
@@ -19,13 +20,15 @@ import java.util.Map;
 public class NaverBookingController {
 
     private final NaverBookingCrawlerService crawlerService;
+    private final web.kplay.studentmanagement.service.NaverBookingApiCrawlerService apiCrawlerService;
+    private final NaverBookingRepository naverBookingRepository;
 
     @PostMapping("/sync")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<NaverBookingDTO>> syncNaverBookings() {
         try {
-            log.info("네이버 예약 동기화 요청");
-            List<NaverBookingDTO> bookings = crawlerService.crawlNaverBookings();
+            log.info("네이버 예약 API 동기화 요청");
+            List<NaverBookingDTO> bookings = apiCrawlerService.crawlNaverBookings();
             log.info("네이버 예약 동기화 완료: {}건", bookings.size());
             return ResponseEntity.ok(bookings);
         } catch (Exception e) {
@@ -38,7 +41,7 @@ public class NaverBookingController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<NaverBookingDTO>> getTodayBookings() {
         try {
-            List<NaverBookingDTO> bookings = crawlerService.getTodayBookings();
+            List<NaverBookingDTO> bookings = apiCrawlerService.getTodayBookings();
             return ResponseEntity.ok(bookings);
         } catch (Exception e) {
             log.error("네이버 예약 조회 실패", e);
@@ -50,8 +53,27 @@ public class NaverBookingController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<NaverBookingDTO>> getBookingsByDate(@PathVariable String date) {
         try {
-            List<NaverBookingDTO> bookings = crawlerService.getBookingsByDate(date);
-            return ResponseEntity.ok(bookings);
+            // DB에서 해당 날짜의 예약만 조회
+            List<NaverBooking> bookings = naverBookingRepository.findAll().stream()
+                .filter(b -> date.equals(b.getBookingTime()))
+                .toList();
+            
+            List<NaverBookingDTO> dtos = bookings.stream()
+                .map(entity -> NaverBookingDTO.builder()
+                    .status(entity.getStatus())
+                    .name(entity.getName())
+                    .studentName(entity.getStudentName())
+                    .school(entity.getSchool())
+                    .phone(entity.getPhone())
+                    .bookingNumber(entity.getBookingNumber())
+                    .bookingTime(entity.getBookingTime())
+                    .product(entity.getProduct())
+                    .orderDate(entity.getOrderDate())
+                    .confirmDate(entity.getConfirmDate())
+                    .build())
+                .toList();
+            
+            return ResponseEntity.ok(dtos);
         } catch (Exception e) {
             log.error("네이버 예약 조회 실패", e);
             return ResponseEntity.internalServerError().build();

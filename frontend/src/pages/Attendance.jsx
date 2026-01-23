@@ -17,6 +17,8 @@ function Attendance() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [parentPhoneLast4, setParentPhoneLast4] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   
   // 테이블 헤더 정렬 상태
   const [tableSortBy, setTableSortBy] = useState('schedule');
@@ -73,27 +75,13 @@ function Attendance() {
 
   // 출석 상태 텍스트 반환
   const getAttendanceStatusText = (attendance) => {
-    // 출석 체크가 완료된 경우 실제 상태 표시
-    if (attendance.checkInTime) {
-      switch (attendance.status) {
-        case 'PRESENT':
-          return '출석';
-        case 'ABSENT':
-          return '결석';
-        case 'EXCUSED':
-          return '사유결석';
-        case 'EARLY_LEAVE':
-          return '조퇴';
-        default:
-          return '출석';
-      }
-    }
-    
     // 미래 시간대 체크
     if (isFutureTime(attendance)) return '대기';
     
-    if (!attendance.status) return '결석';
+    // 상태가 없으면 미출석
+    if (!attendance.status) return '미출석';
     
+    // 상태에 따라 표시
     switch (attendance.status) {
       case 'PRESENT':
         return '출석';
@@ -108,7 +96,7 @@ function Attendance() {
       case 'EARLY_LEAVE':
         return '조퇴';
       default:
-        return '결석';
+        return '미출석';
     }
   };
 
@@ -180,6 +168,21 @@ function Attendance() {
     }
   };
 
+  // 전화번호로 학생 검색
+  const searchStudentMutation = useMutation({
+    mutationFn: (phoneLast4) => attendanceAPI.searchByPhone({ phoneLast4 }),
+    onSuccess: (response) => {
+      setSearchResults(response.data);
+      if (response.data.length === 1) {
+        setSelectedStudent(response.data[0]);
+      }
+    },
+    onError: (error) => {
+      alert(error.response?.data?.error || '학생을 찾을 수 없습니다.');
+      setSearchResults([]);
+    }
+  });
+
   // 출석 체크인 mutation (전화번호로 통합)
   const checkInMutation = useMutation({
     mutationFn: ({ scheduleId, phoneLast4 }) => {
@@ -193,6 +196,8 @@ function Attendance() {
       alert('출석 체크가 완료되었습니다!');
       setShowPhoneModal(false);
       setParentPhoneLast4('');
+      setSearchResults([]);
+      setSelectedStudent(null);
       setSelectedAttendance(null);
     },
     onError: (error) => {
@@ -316,12 +321,23 @@ function Attendance() {
     setSelectedAttendance(attendance);
     setShowPhoneModal(true);
     setParentPhoneLast4('');
+    setSearchResults([]);
+    setSelectedStudent(null);
+  };
+
+  // 전화번호 검색
+  const handlePhoneSearch = () => {
+    if (!parentPhoneLast4 || parentPhoneLast4.length !== 4) {
+      alert('부모님 핸드폰 번호 뒷자리 4자리를 정확히 입력해주세요.');
+      return;
+    }
+    searchStudentMutation.mutate(parentPhoneLast4);
   };
 
   // 핸드폰 번호 확인 후 출석 체크
   const handlePhoneSubmit = () => {
-    if (!parentPhoneLast4 || parentPhoneLast4.length !== 4) {
-      alert('부모님 핸드폰 번호 뒷자리 4자리를 정확히 입력해주세요.');
+    if (!selectedStudent) {
+      alert('학생을 선택해주세요.');
       return;
     }
 
@@ -337,6 +353,8 @@ function Attendance() {
   const handleCloseModal = () => {
     setShowPhoneModal(false);
     setParentPhoneLast4('');
+    setSearchResults([]);
+    setSelectedStudent(null);
     setSelectedAttendance(null);
   };
 
@@ -422,27 +440,38 @@ function Attendance() {
   const formatTime = (timeString) => {
     if (!timeString) return '-';
     
-    let date;
-    
-    // LocalTime 형식 (HH:mm:ss.nnnnnnn) 처리
-    if (typeof timeString === 'string' && timeString.match(/^\d{1,2}:\d{2}:\d{2}/)) {
-      const timePart = timeString.substring(0, 8); // HH:mm:ss
-      date = new Date(`2000-01-01T${timePart}`);
-    } else {
-      // DateTime 형식 처리
-      try {
-        date = new Date(timeString);
-      } catch (error) {
-        console.error('Time format error:', timeString, error);
-        return '-';
+    // LocalTime 형식 (HH:mm:ss 또는 HH:mm:ss.nnnnnnn) 처리
+    if (typeof timeString === 'string' && timeString.includes(':')) {
+      const parts = timeString.split(':');
+      if (parts.length >= 2) {
+        const hour = parseInt(parts[0]);
+        const minute = parseInt(parts[1]);
+        
+        if (!isNaN(hour) && !isNaN(minute)) {
+          const isPM = hour >= 12;
+          const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+          const period = isPM ? '오후' : '오전';
+          
+          return `${period} ${displayHour}:${minute.toString().padStart(2, '0')}`;
+        }
       }
     }
     
-    return date.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    // DateTime 형식 처리
+    try {
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      }
+    } catch (error) {
+      console.error('Time format error:', timeString, error);
+    }
+    
+    return '-';
   };
 
   // 현재 시간이 예정 시간보다 이전인지 확인
@@ -628,7 +657,6 @@ function Attendance() {
                 <th>WR</th>
                 <th>추가수업</th>
                 <th>비고</th>
-                <th>출석 체크</th>
               </tr>
             </thead>
             <tbody>
@@ -654,7 +682,7 @@ function Attendance() {
                   <td className="class-time">
                     <div className="class-info">
                       <span className="course-name">{attendance.courseName}</span>
-                      <span className="time-range">{attendance.startTime} - {attendance.endTime}</span>
+                      <span className="time-range">{formatTime(attendance.startTime)} - {formatTime(attendance.endTime)}</span>
                     </div>
                   </td>
                   <td className="check-in-time">
@@ -750,27 +778,6 @@ function Attendance() {
                       onBlur={(e) => handleReasonBlur(attendance.id, e.target.value)}
                     />
                   </td>
-                  <td className="check-actions">
-                    {!attendance.checkInTime ? (
-                      <button
-                        onClick={() => handleStudentCheckIn(attendance)}
-                        className="checkin-btn"
-                        disabled={checkInMutation.isPending || isFutureDate(attendance)}
-                      >
-                        {isFutureDate(attendance) ? '대기' : '출석 체크'}
-                      </button>
-                    ) : (
-                      <div className="action-buttons">
-                        <button
-                          onClick={() => handleCancelAttendance(attendance)}
-                          className="attendance-cancel-btn"
-                          disabled={cancelAttendanceMutation.isPending}
-                        >
-                          출석 취소
-                        </button>
-                      </div>
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -796,27 +803,65 @@ function Attendance() {
               </button>
             </div>
             <div className="modal-body">
-              <p className="student-info">
-                <strong>{selectedAttendance?.studentName}</strong> 학생
-              </p>
               <div className="form-group">
                 <label htmlFor="parentPhone">부모님 핸드폰 번호 뒷자리 4자리</label>
-                <input
-                  type="text"
-                  id="parentPhone"
-                  value={parentPhoneLast4}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    id="parentPhone"
+                    value={parentPhoneLast4}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, '');
                     if (value.length <= 4) {
                       setParentPhoneLast4(value);
+                      setSearchResults([]);
+                      setSelectedStudent(null);
                     }
                   }}
                   placeholder="1234"
                   maxLength="4"
                   className="phone-input"
                   autoFocus
+                  style={{ flex: 1 }}
                 />
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handlePhoneSearch}
+                  disabled={searchStudentMutation.isPending || parentPhoneLast4.length !== 4}
+                >
+                  {searchStudentMutation.isPending ? '검색중...' : '검색'}
+                </button>
+                </div>
               </div>
+              
+              {/* 검색 결과 */}
+              {searchResults.length > 0 && (
+                <div className="search-results" style={{ marginTop: '20px' }}>
+                  <h4>검색 결과</h4>
+                  {searchResults.map((result, index) => (
+                    <div 
+                      key={index}
+                      className={`student-result ${selectedStudent === result ? 'selected' : ''}`}
+                      onClick={() => setSelectedStudent(result)}
+                      style={{
+                        padding: '15px',
+                        border: selectedStudent === result ? '2px solid #00c73c' : '1px solid #ddd',
+                        borderRadius: '8px',
+                        marginBottom: '10px',
+                        cursor: 'pointer',
+                        backgroundColor: selectedStudent === result ? '#f0fff4' : 'white'
+                      }}
+                    >
+                      <div><strong>학생:</strong> {result.studentName}</div>
+                      <div><strong>부모님:</strong> {result.parentName}</div>
+                      <div><strong>전화번호:</strong> {result.parentPhone}</div>
+                      {result.school && <div><strong>학교:</strong> {result.school}</div>}
+                      {result.courseName && <div><strong>반:</strong> {result.courseName}</div>}
+                      {result.isNaverBooking && <div style={{ color: '#00c73c' }}><strong>네이버 예약</strong></div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button 
@@ -829,7 +874,7 @@ function Attendance() {
               <button 
                 className="btn btn-primary" 
                 onClick={handlePhoneSubmit}
-                disabled={checkInMutation.isPending || parentPhoneLast4.length !== 4}
+                disabled={checkInMutation.isPending || !selectedStudent}
               >
                 {checkInMutation.isPending ? '처리중...' : '출석 체크'}
               </button>

@@ -6,11 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.attendance.Attendance;
 import web.kplay.studentmanagement.domain.attendance.AttendanceStatus;
+import web.kplay.studentmanagement.domain.course.Course;
 import web.kplay.studentmanagement.domain.course.CourseSchedule;
 import web.kplay.studentmanagement.domain.course.Enrollment;
+import web.kplay.studentmanagement.domain.reservation.NaverBooking;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.dto.attendance.AttendanceCheckInRequest;
 import web.kplay.studentmanagement.dto.attendance.AttendanceResponse;
+import web.kplay.studentmanagement.dto.attendance.StudentSearchResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
 import web.kplay.studentmanagement.exception.ResourceNotFoundException;
 import web.kplay.studentmanagement.repository.AttendanceRepository;
@@ -19,6 +22,7 @@ import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.domain.user.User;
+import web.kplay.studentmanagement.service.StudentCourseExcelService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +44,7 @@ public class AttendanceService {
     private final UserRepository userRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
     private final web.kplay.studentmanagement.repository.NaverBookingRepository naverBookingRepository;
+    private final StudentCourseExcelService studentCourseExcelService;
 
     /**
      * 출석 체크인 (부모님 핸드폰 뒷자리 4자리 검증 포함)
@@ -109,30 +114,160 @@ public class AttendanceService {
     /**
      * 전화번호 뒷 4자리로 출석 체크인 (회원 학생 + 네이버 예약 통합)
      */
+    /**
+     * 전화번호 뒷자리로 학생 검색 (출석 체크 전 확인용)
+     */
+    @Transactional(readOnly = true)
+    public List<StudentSearchResponse> searchStudentByPhone(String phoneLast4) {
+        // 입력값 검증
+        if (phoneLast4 == null || phoneLast4.length() != 4 || !phoneLast4.matches("\\d{4}")) {
+            throw new IllegalArgumentException("전화번호 뒷자리 4자리를 정확히 입력해주세요");
+        }
+        
+        List<StudentSearchResponse> results = new ArrayList<>();
+        
+        // 1. 회원 학생 찾기
+        List<Student> students = studentRepository.findAll().stream()
+                .filter(s -> {
+                    if (s.getParentPhone() == null) return false;
+                    String cleanPhone = s.getParentPhone().replaceAll("[^0-9]", "");
+                    return cleanPhone.length() >= 4 && cleanPhone.substring(cleanPhone.length() - 4).equals(phoneLast4);
+                })
+                .collect(Collectors.toList());
+        
+        for (Student student : students) {
+            String courseName = null;
+            List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+            if (!activeEnrollments.isEmpty()) {
+                courseName = activeEnrollments.get(0).getCourse().getCourseName();
+            }
+            
+            results.add(StudentSearchResponse.builder()
+                    .studentId(student.getId())
+                    .studentName(student.getStudentName())
+                    .parentName(student.getParentName())
+                    .parentPhone(student.getParentPhone())
+                    .school(student.getSchool())
+                    .courseName(courseName)
+                    .isNaverBooking(false)
+                    .build());
+        }
+        
+        // 2. 네이버 예약 찾기
+        var naverBookings = naverBookingRepository.findAll().stream()
+                .filter(nb -> {
+                    if (nb.getPhone() == null) return false;
+                    String cleanPhone = nb.getPhone().replaceAll("[^0-9]", "");
+                    return cleanPhone.length() >= 4 && cleanPhone.substring(cleanPhone.length() - 4).equals(phoneLast4);
+                })
+                .collect(Collectors.toList());
+        
+        for (var booking : naverBookings) {
+            // 엑셀에서 반 정보 조회
+            String courseName = null;
+            if (booking.getStudentName() != null) {
+                String cleanName = booking.getStudentName().trim().replaceAll("\\s+", "");
+                courseName = studentCourseExcelService.getCourseName(cleanName);
+            }
+            
+            results.add(StudentSearchResponse.builder()
+                    .naverBookingId(booking.getId())
+                    .studentName(booking.getStudentName() != null ? booking.getStudentName() : booking.getName())
+                    .parentName(booking.getName())
+                    .parentPhone(booking.getPhone())
+                    .school(booking.getSchool())
+                    .courseName(courseName)
+                    .isNaverBooking(true)
+                    .build());
+        }
+        
+        if (results.isEmpty()) {
+            throw new ResourceNotFoundException("전화번호 뒷자리 " + phoneLast4 + "로 등록된 학생이나 예약을 찾을 수 없습니다");
+        }
+        
+        return results;
+    }
+    
+    /**
+     * 출석 체크인 (학생 확인 후)
+     */
     @Transactional
     public AttendanceResponse checkInByPhone(String phoneLast4, LocalTime expectedLeaveTime) {
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
         
+        // 입력값 검증
+        if (phoneLast4 == null || phoneLast4.length() != 4 || !phoneLast4.matches("\\d{4}")) {
+            throw new IllegalArgumentException("전화번호 뒷자리 4자리를 정확히 입력해주세요");
+        }
+        
         // 1. 먼저 회원 학생 찾기 (부모 전화번호로)
         List<Student> students = studentRepository.findAll().stream()
-                .filter(s -> s.getParentPhone() != null && s.getParentPhone().endsWith(phoneLast4))
+                .filter(s -> s.getParentPhone() != null && 
+                            s.getParentPhone().replaceAll("[^0-9]", "").endsWith(phoneLast4))
                 .collect(Collectors.toList());
         
-        if (!students.isEmpty()) {
-            Student student = students.get(0);
+        if (students.isEmpty()) {
+            // 2. 네이버 예약 찾기
+            var naverBookings = naverBookingRepository.findAll().stream()
+                    .filter(nb -> nb.getPhone() != null && 
+                                 nb.getPhone().replaceAll("[^0-9]", "").endsWith(phoneLast4))
+                    .collect(Collectors.toList());
             
-            // 학생의 활성 수강권에서 Course 정보 가져오기
-            web.kplay.studentmanagement.domain.course.Course course = null;
-            List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
-            if (!activeEnrollments.isEmpty()) {
-                course = activeEnrollments.get(0).getCourse();
+            if (naverBookings.isEmpty()) {
+                throw new ResourceNotFoundException("전화번호 뒷자리 " + phoneLast4 + "로 등록된 학생이나 예약을 찾을 수 없습니다");
             }
             
-            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : 
-                (course != null ? now.toLocalTime().plusMinutes(course.getDurationMinutes()) : now.toLocalTime().plusHours(2));
+            // 네이버 예약 처리
+            return processNaverBookingCheckIn(naverBookings.get(0), now, expectedLeaveTime);
+        }
+        
+        // 회원 학생 처리
+        Student student = students.get(0);
+        
+        // 학생의 활성 수강권에서 Course 정보 가져오기
+        web.kplay.studentmanagement.domain.course.Course course = null;
+        List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+        if (!activeEnrollments.isEmpty()) {
+            course = activeEnrollments.get(0).getCourse();
+        }
+        
+        // 예상 하원 시간 계산: 원래 수업 시작 시간 + 수업 시간
+        LocalTime expectedLeave;
+        if (expectedLeaveTime != null) {
+            expectedLeave = expectedLeaveTime;
+        } else {
+            // 오늘 날짜에 이미 출석 레코드가 있으면 그 레코드의 원래 수업 시간 사용
+            List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
+                    .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
+                    .collect(Collectors.toList());
             
-            Attendance attendance = Attendance.builder()
+            if (!existingAttendances.isEmpty() && existingAttendances.get(0).getAttendanceTime() != null) {
+                // 기존 레코드의 원래 수업 시작 시간 기준으로 계산
+                LocalTime originalStartTime = existingAttendances.get(0).getAttendanceTime();
+                int duration = course != null ? course.getDurationMinutes() : 120;
+                expectedLeave = originalStartTime.plusMinutes(duration);
+            } else {
+                // 새 레코드면 현재 시간 기준
+                int duration = course != null ? course.getDurationMinutes() : 120;
+                expectedLeave = now.toLocalTime().plusMinutes(duration);
+            }
+        }
+        
+        // 오늘 날짜에 이미 출석 레코드가 있는지 확인
+        List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
+                .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
+                .collect(Collectors.toList());
+        
+        Attendance attendance;
+        if (!existingAttendances.isEmpty()) {
+            // 기존 레코드 업데이트
+            attendance = existingAttendances.get(0);
+            attendance.checkIn(now, expectedLeave);
+            log.info("Existing attendance updated: name={}, expectedLeave={}", student.getStudentName(), expectedLeave);
+        } else {
+            // 새 레코드 생성
+            attendance = Attendance.builder()
                     .student(student)
                     .course(course)
                     .attendanceDate(today)
@@ -141,31 +276,56 @@ public class AttendanceService {
                     .status(AttendanceStatus.PRESENT)
                     .classCompleted(false)
                     .build();
-            
             attendance.checkIn(now, expectedLeave);
-            Attendance saved = attendanceRepository.save(attendance);
-            log.info("Student attendance check-in: name={}, phone={}", student.getStudentName(), student.getParentPhone());
-            
-            // 학부모에게 등원 알림 문자 발송
-            try {
-                automatedMessageService.sendCheckInNotification(student, now, expectedLeave);
-            } catch (Exception e) {
-                log.error("등원 알림 문자 발송 실패: {}", e.getMessage());
-            }
-            
-            return toResponse(saved);
+            log.info("New attendance created: name={}, expectedLeave={}", student.getStudentName(), expectedLeave);
         }
         
-        // 2. 네이버 예약 찾기
-        var naverBookings = naverBookingRepository.findAll().stream()
-                .filter(nb -> nb.getPhone() != null && nb.getPhone().endsWith(phoneLast4))
+        Attendance saved = attendanceRepository.save(attendance);
+        log.info("Student attendance check-in: name={}, phone={}", student.getStudentName(), student.getParentPhone());
+        
+        // 학부모에게 등원 알림 문자 발송
+        try {
+            automatedMessageService.sendCheckInNotification(student, now, expectedLeave);
+        } catch (Exception e) {
+            log.error("등원 알림 문자 발송 실패: {}", e.getMessage());
+        }
+        
+        return toResponse(saved);
+    }
+    
+    private AttendanceResponse processNaverBookingCheckIn(web.kplay.studentmanagement.domain.reservation.NaverBooking naverBooking, 
+                                                           LocalDateTime now, LocalTime expectedLeaveTime) {
+        LocalDate today = now.toLocalDate();
+        
+        // 예상 하원 시간 계산
+        LocalTime expectedLeave;
+        if (expectedLeaveTime != null) {
+            expectedLeave = expectedLeaveTime;
+        } else {
+            List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
+                    .filter(a -> a.getNaverBooking() != null && a.getNaverBooking().getId().equals(naverBooking.getId()))
+                    .collect(Collectors.toList());
+            
+            if (!existingAttendances.isEmpty() && existingAttendances.get(0).getAttendanceTime() != null) {
+                LocalTime originalStartTime = existingAttendances.get(0).getAttendanceTime();
+                expectedLeave = originalStartTime.plusHours(2);
+            } else {
+                expectedLeave = now.toLocalTime().plusHours(2);
+            }
+        }
+        
+        // 오늘 날짜에 이미 출석 레코드가 있는지 확인
+        List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
+                .filter(a -> a.getNaverBooking() != null && a.getNaverBooking().getId().equals(naverBooking.getId()))
                 .collect(Collectors.toList());
         
-        if (!naverBookings.isEmpty()) {
-            var naverBooking = naverBookings.get(0);
-            LocalTime expectedLeave = expectedLeaveTime != null ? expectedLeaveTime : now.toLocalTime().plusHours(2);
-            
-            Attendance attendance = Attendance.builder()
+        Attendance attendance;
+        if (!existingAttendances.isEmpty()) {
+            attendance = existingAttendances.get(0);
+            attendance.checkIn(now, expectedLeave);
+            log.info("Existing naver booking attendance updated: name={}", naverBooking.getStudentName());
+        } else {
+            attendance = Attendance.builder()
                     .naverBooking(naverBooking)
                     .attendanceDate(today)
                     .attendanceTime(now.toLocalTime())
@@ -173,14 +333,13 @@ public class AttendanceService {
                     .status(AttendanceStatus.PRESENT)
                     .classCompleted(false)
                     .build();
-            
             attendance.checkIn(now, expectedLeave);
-            Attendance saved = attendanceRepository.save(attendance);
-            log.info("Naver booking attendance check-in: name={}, phone={}", naverBooking.getName(), naverBooking.getPhone());
-            return toResponse(saved);
+            log.info("New naver booking attendance created: name={}", naverBooking.getStudentName());
         }
         
-        throw new ResourceNotFoundException("전화번호 뒷 4자리(" + phoneLast4 + ")와 일치하는 학생 또는 예약을 찾을 수 없습니다");
+        Attendance saved = attendanceRepository.save(attendance);
+        log.info("Naver booking attendance check-in: name={}, phone={}", naverBooking.getStudentName(), naverBooking.getPhone());
+        return toResponse(saved);
     }
 
     @Transactional
@@ -526,14 +685,35 @@ public class AttendanceService {
             return null;
         }
         
+        // 네이버 예약인 경우 학생 이름과 반 정보 가져오기
+        String studentName;
+        String courseName = "없음";
+        
+        if (isNaver) {
+            NaverBooking naverBooking = attendance.getNaverBooking();
+            studentName = naverBooking.getStudentName() != null ? naverBooking.getStudentName() : naverBooking.getName();
+            
+            // 엑셀에서 반 정보 조회
+            if (naverBooking.getStudentName() != null) {
+                String cleanName = naverBooking.getStudentName().trim().replaceAll("\\s+", "");
+                String excelCourseName = studentCourseExcelService.getCourseName(cleanName);
+                if (excelCourseName != null) {
+                    courseName = excelCourseName;
+                }
+            }
+        } else {
+            studentName = student.getStudentName();
+            courseName = attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음";
+        }
+        
         return AttendanceResponse.builder()
                 .id(attendance.getId())
                 .studentId(isNaver ? null : student.getId())
-                .studentName(isNaver ? attendance.getNaverBooking().getName() : student.getStudentName())
+                .studentName(studentName)
                 .studentPhone(isNaver ? attendance.getNaverBooking().getPhone() : student.getParentPhone())
                 .className(isNaver ? "네이버 예약" : (attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음"))
                 .isNaverBooking(isNaver)
-                .courseName(attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음")
+                .courseName(courseName)
                 .startTime(attendance.getAttendanceTime().toString())
                 .endTime(attendance.getExpectedLeaveTime() != null ? attendance.getExpectedLeaveTime().toString() : null)
                 .status(attendance.getStatus())
@@ -701,5 +881,112 @@ public class AttendanceService {
                 attendance.getStudent().getStudentName(), attendance.getSpeakingClass());
 
         return toResponse(attendance);
+    }
+
+    /**
+     * 학생 ID로 출석 체크인
+     */
+    @Transactional
+    public AttendanceResponse checkInByStudentId(Long studentId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
+
+        // 오늘 이미 출석한 기록이 있는지 확인
+        List<Attendance> existingAttendances = attendanceRepository.findByStudentAndDate(student, today);
+        for (Attendance att : existingAttendances) {
+            if (att.getCheckInTime() != null) {
+                throw new IllegalStateException("이미 출석 체크가 완료되었습니다");
+            }
+        }
+
+        // 기존 출석 기록이 있으면 체크인 처리
+        if (!existingAttendances.isEmpty()) {
+            Attendance attendance = existingAttendances.get(0);
+            attendance.checkIn(now, attendance.getExpectedLeaveTime());
+            log.info("Student check-in: name={}", student.getStudentName());
+            return toResponse(attendance);
+        }
+
+        // 새 출석 기록 생성
+        Course course = null;
+        List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+        if (!activeEnrollments.isEmpty()) {
+            course = activeEnrollments.get(0).getCourse();
+        }
+
+        int durationMinutes = course != null ? course.getDurationMinutes() : 120;
+        LocalTime expectedLeaveTime = now.toLocalTime().plusMinutes(durationMinutes);
+
+        Attendance attendance = Attendance.builder()
+                .student(student)
+                .course(course)
+                .attendanceDate(today)
+                .attendanceTime(now.toLocalTime())
+                .durationMinutes(durationMinutes)
+                .status(AttendanceStatus.PRESENT)
+                .classCompleted(false)
+                .build();
+        attendance.checkIn(now, expectedLeaveTime);
+
+        Attendance saved = attendanceRepository.save(attendance);
+        log.info("New attendance created and checked in: student={}", student.getStudentName());
+        return toResponse(saved);
+    }
+
+    /**
+     * 네이버 예약 ID로 출석 체크인
+     */
+    @Transactional
+    public AttendanceResponse checkInByNaverBookingId(Long naverBookingId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        NaverBooking naverBooking = naverBookingRepository.findById(naverBookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("네이버 예약을 찾을 수 없습니다"));
+
+        // 오늘 이미 출석한 기록이 있는지 확인
+        List<Attendance> existingAttendances = attendanceRepository.findByNaverBookingAndDate(naverBooking, today);
+        for (Attendance att : existingAttendances) {
+            if (att.getCheckInTime() != null) {
+                throw new IllegalStateException("이미 출석 체크가 완료되었습니다");
+            }
+        }
+
+        // 기존 출석 기록이 있으면 체크인 처리
+        if (!existingAttendances.isEmpty()) {
+            Attendance attendance = existingAttendances.get(0);
+            attendance.checkIn(now, attendance.getExpectedLeaveTime());
+            log.info("Naver booking check-in: name={}", naverBooking.getStudentName());
+            return toResponse(attendance);
+        }
+
+        // 엑셀에서 수업 시간 조회
+        int durationMinutes = 120;
+        if (naverBooking.getStudentName() != null) {
+            String cleanName = naverBooking.getStudentName().trim().replaceAll("\\s+", "");
+            Integer duration = studentCourseExcelService.getDurationMinutes(cleanName);
+            if (duration != null) {
+                durationMinutes = duration;
+            }
+        }
+
+        LocalTime expectedLeaveTime = now.toLocalTime().plusMinutes(durationMinutes);
+
+        Attendance attendance = Attendance.builder()
+                .naverBooking(naverBooking)
+                .attendanceDate(today)
+                .attendanceTime(now.toLocalTime())
+                .durationMinutes(durationMinutes)
+                .status(AttendanceStatus.PRESENT)
+                .classCompleted(false)
+                .build();
+        attendance.checkIn(now, expectedLeaveTime);
+
+        Attendance saved = attendanceRepository.save(attendance);
+        log.info("New naver booking attendance created and checked in: name={}", naverBooking.getStudentName());
+        return toResponse(saved);
     }
 }

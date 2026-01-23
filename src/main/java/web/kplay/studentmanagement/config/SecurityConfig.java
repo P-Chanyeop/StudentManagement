@@ -86,9 +86,10 @@ public class SecurityConfig {
                         .requestMatchers("/dashboard", "/students", "/courses", "/attendance", "/reservations", 
                                         "/enrollments", "/consultations", "/leveltest", "/makeup-classes", 
                                         "/notices", "/sms", "/payment", "/mypage", "/login", "/register", "/class-info",
-                                        "/parent-reservation", "/consultation-reservation", "/enrollment-adjustment").permitAll() // React 라우팅 경로
+                                        "/parent-reservation", "/consultation-reservation", "/enrollment-adjustment", "/check-in").permitAll() // React 라우팅 경로
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/naver-booking/events").permitAll() // SSE 엔드포인트
+                        .requestMatchers("/api/attendances/search-by-phone", "/api/attendances/*/check-in", "/api/attendances/naver-booking/*/check-in").permitAll() // 출석체크 페이지
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll() // 개발 환경에서 H2 Console 접근 허용
                         .requestMatchers("/error").permitAll() // 에러 페이지 허용

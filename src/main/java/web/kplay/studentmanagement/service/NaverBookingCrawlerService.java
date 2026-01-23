@@ -29,6 +29,7 @@ public class NaverBookingCrawlerService {
 
     private final NaverBookingRepository naverBookingRepository;
     private final web.kplay.studentmanagement.repository.AttendanceRepository attendanceRepository;
+    private final StudentCourseExcelService studentCourseExcelService;
 
     private static final String NAVER_BOOKING_BASE_URL = "https://partner.booking.naver.com/bizes/1047988/booking-list-view";
     private static final String NAVER_ID = "littlebearrc";
@@ -301,10 +302,10 @@ public class NaverBookingCrawlerService {
                 // 신규 예약이고 확정 상태이면 출석 레코드 생성
                 if (isNew) {
                     log.info("신규 예약: {}, 상태: {}", entity.getName(), entity.getStatus());
-                    if ("예약확정".equals(entity.getStatus())) {
+                    if ("확정".equals(entity.getStatus().replace(" ", "")) || "예약확정".equals(entity.getStatus().replace(" ", ""))) {
                         createAttendanceForNaverBooking(entity);
                     } else {
-                        log.warn("예약 상태가 '예약확정'이 아님: {}", entity.getStatus());
+                        log.warn("예약 상태가 '확정'이 아님: {}", entity.getStatus());
                     }
                 }
                 
@@ -437,15 +438,30 @@ public class NaverBookingCrawlerService {
                 return;
             }
             
+            // 엑셀에서 학생 이름으로 반 정보 조회
+            String studentName = naverBooking.getName().trim().replaceAll("\\s+", "");
+            String courseName = studentCourseExcelService.getCourseName(studentName);
+            Integer durationMinutes = studentCourseExcelService.getDurationMinutes(studentName);
+            
+            java.time.LocalTime expectedLeaveTime = null;
+            
+            if (courseName != null && durationMinutes != null) {
+                expectedLeaveTime = bookingTime.plusMinutes(durationMinutes);
+                log.info("학생 [{}] 반: {}, 수업 시간: {}분, 예상 하원: {}", 
+                        studentName, courseName, durationMinutes, expectedLeaveTime);
+            } else {
+                log.warn("학생 [{}]의 반 정보 없음 - 예상 하원 시간 미설정", studentName);
+            }
+            
             // 출석 레코드 생성
             web.kplay.studentmanagement.domain.attendance.Attendance attendance = 
                 web.kplay.studentmanagement.domain.attendance.Attendance.builder()
                     .naverBooking(naverBooking)
                     .attendanceDate(bookingDate)
                     .attendanceTime(bookingTime)
-                    .durationMinutes(120) // 기본 2시간
-                    .expectedLeaveTime(bookingTime.plusHours(2))
-                    .originalExpectedLeaveTime(bookingTime.plusHours(2))
+                    .durationMinutes(durationMinutes)
+                    .expectedLeaveTime(expectedLeaveTime)
+                    .originalExpectedLeaveTime(expectedLeaveTime)
                     .status(web.kplay.studentmanagement.domain.attendance.AttendanceStatus.NOTYET)
                     .classCompleted(false)
                     .build();

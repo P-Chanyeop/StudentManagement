@@ -31,6 +31,17 @@ public class AttendanceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/search-by-phone")
+    public ResponseEntity<?> searchByPhone(@RequestBody Map<String, String> request) {
+        try {
+            String phoneLast4 = request.get("phoneLast4");
+            var results = attendanceService.searchStudentByPhone(phoneLast4);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/checkin-by-phone")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<AttendanceResponse> checkInByPhone(@RequestBody Map<String, Object> request) {
@@ -306,5 +317,23 @@ public class AttendanceController {
     public ResponseEntity<AttendanceResponse> toggleSpeakingClass(@PathVariable Long id) {
         AttendanceResponse response = attendanceService.toggleSpeakingClass(id);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 학생 ID로 출석 체크인
+     */
+    @PostMapping("/{studentId}/check-in")
+    public ResponseEntity<AttendanceResponse> checkInByStudentId(@PathVariable Long studentId) {
+        AttendanceResponse response = attendanceService.checkInByStudentId(studentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 네이버 예약 ID로 출석 체크인
+     */
+    @PostMapping("/naver-booking/{naverBookingId}/check-in")
+    public ResponseEntity<AttendanceResponse> checkInByNaverBookingId(@PathVariable Long naverBookingId) {
+        AttendanceResponse response = attendanceService.checkInByNaverBookingId(naverBookingId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

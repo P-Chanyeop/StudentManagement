@@ -688,14 +688,19 @@ function Reservations() {
                     <div key={index} className="reservation-card">
                       <div className="card-header">
                         <div className="student-info">
-                          <span className="student-name">{booking.name}</span>
-                          <span className={`status-badge ${booking.status === '확정' ? 'confirmed' : 'cancelled'}`}>
-                            {booking.status}
+                          <span className="student-name">{booking.studentName || booking.name}</span>
+                          {booking.school && <span className="school-badge">{booking.school}</span>}
+                          <span className={`status-badge ${booking.status === 'RC03' ? 'confirmed' : 'cancelled'}`}>
+                            {booking.status === 'RC03' ? '확정' : '취소'}
                           </span>
                         </div>
                         <span className="time">{booking.bookingTime}</span>
                       </div>
                       <div className="card-body">
+                        <div className="info-row">
+                          <i className="fas fa-user"></i>
+                          <span>예약자: {booking.name}</span>
+                        </div>
                         <div className="info-row">
                           <i className="fas fa-phone"></i>
                           <span>{booking.phone}</span>
@@ -703,10 +708,6 @@ function Reservations() {
                         <div className="info-row">
                           <i className="fas fa-tag"></i>
                           <span>{booking.product}</span>
-                        </div>
-                        <div className="info-row">
-                          <i className="fas fa-users"></i>
-                          <span>{booking.quantity}명</span>
                         </div>
                       </div>
                     </div>
@@ -926,19 +927,13 @@ function Reservations() {
                   <thead>
                     <tr>
                       <th>상태</th>
-                      <th>이름</th>
+                      <th>학생이름</th>
+                      <th>학교</th>
+                      <th>예약자</th>
                       <th>전화번호</th>
                       <th>예약번호</th>
                       <th>이용일시</th>
                       <th>상품</th>
-                      <th>인원</th>
-                      <th>옵션</th>
-                      <th>요청사항</th>
-                      <th>예약금</th>
-                      <th>결제금액</th>
-                      <th>신청일시</th>
-                      <th>확정일시</th>
-                      <th>취소일시</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -953,23 +948,17 @@ function Reservations() {
                       naverBookings.map((booking, index) => (
                         <tr key={index}>
                           <td>
-                            <span className={`status-label ${booking.status === '확정' ? 'confirmed' : 'cancelled'}`}>
-                              {booking.status}
+                            <span className={`status-label ${booking.status === 'RC03' ? 'confirmed' : 'cancelled'}`}>
+                              {booking.status === 'RC03' ? '확정' : '취소'}
                             </span>
                           </td>
+                          <td>{booking.studentName || booking.name}</td>
+                          <td>{booking.school || '-'}</td>
                           <td>{booking.name}</td>
                           <td>{booking.phone}</td>
                           <td>{booking.bookingNumber}</td>
                           <td>{booking.bookingTime}</td>
                           <td>{booking.product}</td>
-                          <td>{booking.quantity}</td>
-                          <td>{booking.option || '-'}</td>
-                          <td>{booking.comment || '-'}</td>
-                          <td>{booking.deposit || '-'}</td>
-                          <td>{booking.totalPrice}</td>
-                          <td>{booking.orderDate}</td>
-                          <td>{booking.confirmDate}</td>
-                          <td>{booking.cancelDate || '-'}</td>
                         </tr>
                       ))
                     )}
