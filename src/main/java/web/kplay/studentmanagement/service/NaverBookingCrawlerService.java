@@ -299,8 +299,13 @@ public class NaverBookingCrawlerService {
                 naverBookingRepository.save(entity);
                 
                 // 신규 예약이고 확정 상태이면 출석 레코드 생성
-                if (isNew && "예약확정".equals(entity.getStatus())) {
-                    createAttendanceForNaverBooking(entity);
+                if (isNew) {
+                    log.info("신규 예약: {}, 상태: {}", entity.getName(), entity.getStatus());
+                    if ("예약확정".equals(entity.getStatus())) {
+                        createAttendanceForNaverBooking(entity);
+                    } else {
+                        log.warn("예약 상태가 '예약확정'이 아님: {}", entity.getStatus());
+                    }
                 }
                 
                 if (isNew) {
