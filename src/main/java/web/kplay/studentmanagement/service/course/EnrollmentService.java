@@ -105,7 +105,7 @@ public class EnrollmentService {
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getTotalCount(),
-                reque.getRemainingCount()
+                request.getRemainingCount()
         );
 
         log.info("Enrollment updated: id={}, course={}, period={} ~ {}, count={}/{}",
