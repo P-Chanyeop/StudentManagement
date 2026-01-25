@@ -47,6 +47,12 @@
   margin: 0;
 }
 
+/* 헤더 버튼 그룹 */
+.header-buttons {
+  display: flex;
+  gap: 12px;
+}
+
 /* 버튼 스타일 */
 
 /* 빈 상태 메시지 - 수강권 페이지 전용 */
@@ -547,6 +553,32 @@
   font-size: 12px;
   color: var(--gray-500);
   margin-top: 4px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-large {
+  max-width: 700px;
+  width: 95%;
+}
+
+.form-group input.readonly {
+  background: var(--gray-100);
+  color: var(--gray-600);
 }
 
 .form-actions {

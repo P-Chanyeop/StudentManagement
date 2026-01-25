@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { messageAPI, studentAPI, smsAPI } from '../services/api';
@@ -51,20 +51,27 @@ function Messages() {
     setStudentSearchQuery('');
   };
 
-  // 선택된 학생 정보 가져오기
-  const getSelectedStudent = () => {
+  // 선택된 학생 정보 가져오기 (메모이제이션)
+  const selectedStudent = useMemo(() => {
     return students.find(student => student.id.toString() === newMessage.studentId);
-  };
+  }, [students, newMessage.studentId]);
 
-  // 필터링된 학생 목록
-  const getFilteredStudents = () => {
+  // 필터링된 학생 목록 (메모이제이션)
+  const filteredStudents = useMemo(() => {
     if (!studentSearchQuery) return students;
-    
     return students.filter(student => 
       student.studentName.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
       student.parentName?.toLowerCase().includes(studentSearchQuery.toLowerCase())
     );
-  };
+  }, [students, studentSearchQuery]);
+
+  // 통계 메모이제이션
+  const messageStats = useMemo(() => ({
+    total: messages.length,
+    sent: messages.filter(m => m.sendStatus === 'SENT').length,
+    pending: messages.filter(m => m.sendStatus === 'PENDING').length,
+    failed: messages.filter(m => m.sendStatus === 'FAILED').length
+  }), [messages]);
 
   // 문자 발송 mutation
   const sendMutation = useMutation({
@@ -211,7 +218,7 @@ function Messages() {
               <i className="fas fa-envelope"></i>
             </div>
             <div className="messages-stat-content">
-              <div className="messages-stat-value">{messages.length}</div>
+              <div className="messages-stat-value">{messageStats.total}</div>
               <div className="messages-stat-label">전체 발송</div>
             </div>
           </div>
@@ -220,9 +227,7 @@ function Messages() {
               <i className="fas fa-check-circle"></i>
             </div>
             <div className="messages-stat-content">
-              <div className="messages-stat-value">
-                {messages.filter((m) => m.sendStatus === 'SENT').length}
-              </div>
+              <div className="messages-stat-value">{messageStats.sent}</div>
               <div className="messages-stat-label">발송 완료</div>
             </div>
           </div>
@@ -231,9 +236,7 @@ function Messages() {
               <i className="fas fa-clock"></i>
             </div>
             <div className="messages-stat-content">
-              <div className="messages-stat-value">
-                {messages.filter((m) => m.sendStatus === 'PENDING').length}
-              </div>
+              <div className="messages-stat-value">{messageStats.pending}</div>
               <div className="messages-stat-label">발송 중</div>
             </div>
           </div>
@@ -242,9 +245,7 @@ function Messages() {
               <i className="fas fa-exclamation-triangle"></i>
             </div>
             <div className="messages-stat-content">
-              <div className="messages-stat-value">
-                {messages.filter((m) => m.sendStatus === 'FAILED').length}
-              </div>
+              <div className="messages-stat-value">{messageStats.failed}</div>
               <div className="messages-stat-label">발송 실패</div>
             </div>
           </div>
@@ -327,11 +328,11 @@ function Messages() {
                       className="student-select-input"
                       onClick={() => setShowStudentDropdown(!showStudentDropdown)}
                     >
-                      {getSelectedStudent() ? (
+                      {selectedStudent ? (
                         <div className="selected-student-info">
-                          <span className="student-name">{getSelectedStudent().studentName}</span>
+                          <span className="student-name">{selectedStudent.studentName}</span>
                           <span className="parent-info">
-                            {getSelectedStudent().parentName} · {getSelectedStudent().parentPhone || getSelectedStudent().studentPhone}
+                            {selectedStudent.parentName} · {selectedStudent.parentPhone || selectedStudent.studentPhone}
                           </span>
                         </div>
                       ) : (
@@ -352,7 +353,7 @@ function Messages() {
                           />
                         </div>
                         <div className="student-list">
-                          {getFilteredStudents().map(student => (
+                          {filteredStudents.map(student => (
                             <div
                               key={student.id}
                               className="student-option"
@@ -366,7 +367,7 @@ function Messages() {
                               </div>
                             </div>
                           ))}
-                          {getFilteredStudents().length === 0 && (
+                          {filteredStudents.length === 0 && (
                             <div className="no-students">검색 결과가 없습니다.</div>
                           )}
                         </div>

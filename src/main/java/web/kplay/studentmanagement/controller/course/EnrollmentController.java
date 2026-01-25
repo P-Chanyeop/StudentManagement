@@ -11,6 +11,7 @@ import web.kplay.studentmanagement.dto.course.EnrollmentAdjustRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentHoldRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
+import web.kplay.studentmanagement.dto.course.UnregisteredEnrollmentRequest;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.course.EnrollmentService;
 
@@ -28,6 +29,13 @@ public class EnrollmentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<EnrollmentResponse> createEnrollment(@Valid @RequestBody EnrollmentCreateRequest request) {
         EnrollmentResponse response = enrollmentService.createEnrollment(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/unregistered")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<EnrollmentResponse> createUnregisteredEnrollment(@Valid @RequestBody UnregisteredEnrollmentRequest request) {
+        EnrollmentResponse response = enrollmentService.createUnregisteredEnrollment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

@@ -2,6 +2,7 @@ package web.kplay.studentmanagement.service.message;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,18 +14,17 @@ import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.LevelTestRepository;
 import web.kplay.studentmanagement.repository.MessageRepository;
+import web.kplay.studentmanagement.service.message.sms.SmsService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
  * 자동화된 문자 메시지 발송 서비스
- * - 지각 자동 알림 (10분 지각 시)
- * - 수강권 만료 예정 알림 (4주 이내, 첫 수업 시작 시)
- * - 레벨테스트 전날 알림
  */
 @Slf4j
 @Service
@@ -34,6 +34,43 @@ public class AutomatedMessageService {
     private final MessageRepository messageRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LevelTestRepository levelTestRepository;
+    private final SmsService smsService;
+    
+    @Value("${app.homepage-url:https://littlebear.kplay.web}")
+    private String homepageUrl;
+
+    /**
+     * 1. 첫등록 후 기간안내 문자 발송
+     */
+    @Transactional
+    public void sendEnrollmentRegisterNotification(Enrollment enrollment) {
+        Student student = enrollment.getStudent();
+        LocalDate startDate = enrollment.getStartDate();
+        LocalDate endDate = enrollment.getEndDate();
+        int totalCount = enrollment.getTotalCount();
+        
+        // 레코딩 횟수 계산 (6회에 1회)
+        int recordingCount = totalCount / 6;
+        
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s학생의 수강 유효기한은\n%d회에 대해 %d/%d - %d/%d까지 유효합니다.\n\n" +
+                "아래 리틀베어 리딩클럽 학원 홈페이지를 통해서\n" +
+                "아이 출결 사항 및 레코딩 파일 들어보실 수 있습니다:)\n\n" +
+                "%s 통해 가입 진행 부탁드립니다.\n\n" +
+                "레코딩은 6회에 1회씩 진행되며\n이번 텀은 총 %d회 업로드 될 예정입니다.\n\n" +
+                "문의사항 있으시면 말씀해주세요! 감사합니다! :)",
+                student.getStudentName(),
+                totalCount,
+                startDate.getMonthValue(), startDate.getDayOfMonth(),
+                endDate.getMonthValue(), endDate.getDayOfMonth(),
+                homepageUrl,
+                recordingCount
+        );
+
+        sendAndSaveMessage(student, MessageType.ENROLLMENT_REGISTER, content);
+        log.info("첫등록 안내 문자 발송: 학생={}, 기간={} ~ {}", student.getStudentName(), startDate, endDate);
+    }
 
     /**
      * 예약 확인 알림 발송
@@ -300,5 +337,31 @@ public class AutomatedMessageService {
         List<Message> recentMessages = messageRepository.findByStudentAndMessageTypeAndSentAtAfter(
                 student, messageType, since);
         return !recentMessages.isEmpty();
+    }
+
+    /**
+     * 공통: 문자 저장 및 실제 발송
+     */
+    private void sendAndSaveMessage(Student student, MessageType messageType, String content) {
+        Message message = Message.builder()
+                .student(student)
+                .recipientPhone(student.getParentPhone())
+                .recipientName(student.getParentName())
+                .messageType(messageType)
+                .content(content)
+                .sendStatus("PENDING")
+                .build();
+
+        Message savedMessage = messageRepository.save(message);
+        
+        // 실제 SMS 발송
+        try {
+            String externalId = smsService.sendSms(student.getParentPhone(), content);
+            savedMessage.markAsSent(LocalDateTime.now(), externalId);
+            log.info("SMS 발송 성공: 수신자={}, 타입={}", student.getParentPhone(), messageType);
+        } catch (Exception e) {
+            savedMessage.markAsFailed(e.getMessage());
+            log.error("SMS 발송 실패: {}", e.getMessage());
+        }
     }
 }

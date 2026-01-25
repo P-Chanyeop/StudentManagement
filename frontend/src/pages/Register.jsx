@@ -382,11 +382,10 @@ function Register() {
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, '');
                     let formatted = value;
-                    if (value.length >= 3) {
-                      formatted = value.slice(0, 3) + '-' + value.slice(3);
-                    }
-                    if (value.length >= 7) {
+                    if (value.length > 7) {
                       formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                    } else if (value.length > 3) {
+                      formatted = value.slice(0, 3) + '-' + value.slice(3);
                     }
                     setFormData(prev => ({...prev, parentPhone: formatted}));
                   }}
@@ -458,11 +457,10 @@ function Register() {
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9]/g, '');
                         let formatted = value;
-                        if (value.length >= 3) {
-                          formatted = value.slice(0, 3) + '-' + value.slice(3);
-                        }
-                        if (value.length >= 7) {
+                        if (value.length > 7) {
                           formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                        } else if (value.length > 3) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3);
                         }
                         handleStudentChange(index, 'studentPhone', formatted);
                       }}

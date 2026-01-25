@@ -108,8 +108,17 @@ public class AuthService {
                 .agreedAt(java.time.LocalDateTime.now())
                 .build();
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
         log.info("New user registered: {}", user.getUsername());
+
+        // 학부모 가입 시 전화번호로 기존 학생 연결
+        if (savedUser.getRole() == UserRole.PARENT && savedUser.getPhoneNumber() != null) {
+            List<Student> unlinkedStudents = studentRepository.findByParentPhoneAndParentUserIsNull(savedUser.getPhoneNumber());
+            for (Student student : unlinkedStudents) {
+                student.setParentUser(savedUser);
+                log.info("기존 학생 연결: student={}, parent={}", student.getStudentName(), savedUser.getUsername());
+            }
+        }
     }
 
     @Transactional

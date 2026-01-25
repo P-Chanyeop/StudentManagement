@@ -13,6 +13,7 @@ import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.course.EnrollmentCreateRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentHoldRequest;
 import web.kplay.studentmanagement.dto.course.EnrollmentResponse;
+import web.kplay.studentmanagement.dto.course.UnregisteredEnrollmentRequest;
 import web.kplay.studentmanagement.dto.course.CourseResponse;
 import web.kplay.studentmanagement.dto.student.StudentResponse;
 import web.kplay.studentmanagement.exception.BusinessException;
@@ -23,6 +24,7 @@ import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.repository.enrollment.EnrollmentAdjustmentRepository;
 import web.kplay.studentmanagement.repository.ConsultationRepository;
+import web.kplay.studentmanagement.service.message.AutomatedMessageService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,6 +42,69 @@ public class EnrollmentService {
     private final EnrollmentAdjustmentRepository enrollmentAdjustmentRepository;
     private final ConsultationRepository consultationRepository;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
+    private final AutomatedMessageService automatedMessageService;
+
+    /**
+     * 미가입자 학생 + 수강권 동시 등록
+     */
+    @Transactional
+    public EnrollmentResponse createUnregisteredEnrollment(UnregisteredEnrollmentRequest request) {
+        // 1. 학생 생성 (parentUser 없이)
+        Student student = Student.builder()
+                .studentName(request.getStudentName())
+                .studentPhone(request.getStudentPhone())
+                .parentName(request.getParentName())
+                .parentPhone(request.getParentPhone())
+                .school(request.getSchool())
+                .grade(request.getGrade())
+                .memo(request.getMemo())
+                .build();
+        
+        Student savedStudent = studentRepository.save(student);
+        log.info("미가입자 학생 등록: name={}, parentPhone={}", 
+                savedStudent.getStudentName(), savedStudent.getParentPhone());
+
+        // 2. 수업 조회 (선택사항)
+        Course course = null;
+        if (request.getCourseId() != null) {
+            course = courseRepository.findById(request.getCourseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
+        }
+
+        // 3. 종료일 계산
+        LocalDate endDate;
+        if (request.getEndDate() != null) {
+            endDate = request.getEndDate();
+        } else {
+            endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
+        }
+
+        // 4. 수강권 생성
+        Enrollment enrollment = Enrollment.builder()
+                .student(savedStudent)
+                .course(course)
+                .startDate(request.getStartDate())
+                .endDate(endDate)
+                .totalCount(request.getTotalCount())
+                .usedCount(0)
+                .remainingCount(request.getTotalCount())
+                .isActive(true)
+                .memo(request.getEnrollmentMemo())
+                .build();
+
+        Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
+        log.info("미가입자 수강권 등록: student={}, period={} ~ {}, count={}",
+                savedStudent.getStudentName(), request.getStartDate(), endDate, request.getTotalCount());
+
+        // 5. 가입 안내 문자 발송
+        try {
+            automatedMessageService.sendEnrollmentRegisterNotification(savedEnrollment);
+        } catch (Exception e) {
+            log.error("수강권 등록 문자 발송 실패: {}", e.getMessage());
+        }
+
+        return toResponse(savedEnrollment);
+    }
 
     @Transactional
     public EnrollmentResponse createEnrollment(EnrollmentCreateRequest request) {
@@ -81,10 +146,17 @@ public class EnrollmentService {
                 .build();
 
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
-        log.info("New enrollment registered: student={}, course={}, period={} ~ {}, count={}/{}",
-                student.getStudentName(), course.getCourseName(),
+        log.info("New enrollment registered: student={}, period={} ~ {}, count={}/{}",
+                student.getStudentName(),
                 request.getStartDate(), endDate,
                 request.getTotalCount(), request.getTotalCount());
+
+        // 첫등록 후 기간안내 문자 발송
+        try {
+            automatedMessageService.sendEnrollmentRegisterNotification(savedEnrollment);
+        } catch (Exception e) {
+            log.error("수강권 등록 문자 발송 실패: {}", e.getMessage());
+        }
 
         return toResponse(savedEnrollment);
     }
@@ -304,12 +376,13 @@ public class EnrollmentService {
         
         String recordingStatus = actualRecordings + "/" + expectedRecordings;
         
+        Course course = enrollment.getCourse();
         return EnrollmentResponse.builder()
                 .id(enrollment.getId())
                 .studentId(enrollment.getStudent().getId())
                 .studentName(enrollment.getStudent().getStudentName())
-                .courseId(enrollment.getCourse().getId())
-                .courseName(enrollment.getCourse().getCourseName())
+                .courseId(course != null ? course.getId() : null)
+                .courseName(course != null ? course.getCourseName() : "미배정")
                 .startDate(enrollment.getStartDate())
                 .endDate(enrollment.getEndDate())
                 .totalCount(enrollment.getTotalCount())

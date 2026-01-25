@@ -85,28 +85,54 @@
   opacity: 0.6;
 }
 
-.date-selector, .sort-selector {
+.date-selector {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.date-selector label, .sort-selector label {
-  font-weight: 600;
-  color: #374151;
-}
-
-.date-selector input, .sort-selector select {
-  padding: 0.75rem;
+.date-selector input[type="date"] {
+  padding: 0.5rem 1rem;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  cursor: pointer;
 }
 
-.date-selector input:focus, .sort-selector select:focus {
+.date-selector input[type="date"]:focus {
   outline: none;
   border-color: #03C75A;
+}
+
+.date-nav-btn {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.date-nav-btn:hover {
+  background: #f3f4f6;
+  border-color: #03C75A;
+}
+
+.today-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #03C75A;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.today-btn:hover {
+  background: #02a34a;
 }
 
 .attendance-summary {
@@ -574,33 +600,7 @@
   transform: none !important;
   box-shadow: none !important;
 }
-/* 날짜 선택 스타일 */
-.date-inputs {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
 
-.date-inputs select {
-  padding: 8px 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
-  height: 36px;
-  min-height: 36px;
-}
-
-.date-inputs select:hover {
-  border-color: #03c75a;
-}
-
-.date-inputs select:focus {
-  outline: none;
-  border-color: #03c75a;
-}
 /* 정렬 가능한 테이블 헤더 스타일 */
 .attendance-table th.sortable {
   cursor: pointer;

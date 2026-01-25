@@ -37,7 +37,7 @@ public class SMSConfig extends BaseEntity {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean testMode = false;
+    private Boolean testMode = true;
 
     // 자동 발송 설정
     @Column(nullable = false)

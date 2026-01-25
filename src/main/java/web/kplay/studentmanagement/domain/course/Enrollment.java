@@ -24,7 +24,7 @@ public class Enrollment extends BaseEntity {
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
+    @JoinColumn(name = "course_id")
     private Course course;
 
     // 모든 수강권은 기간 + 횟수를 모두 가짐
@@ -151,7 +151,10 @@ public class Enrollment extends BaseEntity {
 
     // 실제 수업 시간 반환 (개별 설정이 있으면 개별 시간, 없으면 코스 기본 시간)
     public Integer getActualDurationMinutes() {
-        return customDurationMinutes != null ? customDurationMinutes : course.getDurationMinutes();
+        if (customDurationMinutes != null) {
+            return customDurationMinutes;
+        }
+        return course != null ? course.getDurationMinutes() : null;
     }
 
     // 기간 연장 (입력 검증 추가)

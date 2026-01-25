@@ -110,6 +110,24 @@ function Enrollments() {
     notes: '',
   });
 
+  // 미가입자 등록 모달 상태
+  const [showUnregisteredModal, setShowUnregisteredModal] = useState(false);
+  const [unregisteredData, setUnregisteredData] = useState({
+    parentName: '',
+    parentPhone: '',
+    studentName: '',
+    studentPhone: '',
+    school: '',
+    grade: '',
+    memo: '',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+    totalCount: 24,
+    weeks: 12,
+    courseId: '',
+    enrollmentMemo: '',
+  });
+
   // 시작일이나 주 수가 변경될 때 자동으로 종료일 계산
   useEffect(() => {
     if (newEnrollment.startDate && newEnrollment.weeks && holidaysLoaded) {
@@ -222,6 +240,35 @@ function Enrollments() {
         notes: '',
       });
       alert('수강권이 등록되었습니다.');
+    },
+    onError: (error) => {
+      alert(`등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
+  // 미가입자 수강권 등록 mutation
+  const createUnregisteredMutation = useMutation({
+    mutationFn: (data) => enrollmentAPI.createUnregistered(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['enrollments']);
+      queryClient.invalidateQueries(['students']);
+      setShowUnregisteredModal(false);
+      setUnregisteredData({
+        parentName: '',
+        parentPhone: '',
+        studentName: '',
+        studentPhone: '',
+        school: '',
+        grade: '',
+        memo: '',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        totalCount: 24,
+        weeks: 12,
+        courseId: '',
+        enrollmentMemo: '',
+      });
+      alert('미가입자 수강권이 등록되었습니다. 가입 안내 문자가 발송됩니다.');
     },
     onError: (error) => {
       alert(`등록 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
@@ -361,6 +408,43 @@ function Enrollments() {
     createMutation.mutate(newEnrollment);
   };
 
+  // 미가입자 종료일 계산
+  useEffect(() => {
+    if (unregisteredData.startDate && unregisteredData.weeks && holidaysLoaded) {
+      try {
+        const businessDays = parseInt(unregisteredData.weeks) * 5;
+        const endDate = holidayService.calculateEndDateWithCache(
+          unregisteredData.startDate, 
+          businessDays,
+          holidays
+        );
+        setUnregisteredData(prev => ({
+          ...prev,
+          endDate: endDate.toISOString().split('T')[0]
+        }));
+      } catch (error) {
+        console.error('종료일 계산 실패:', error);
+      }
+    }
+  }, [unregisteredData.startDate, unregisteredData.weeks, holidaysLoaded, holidays]);
+
+  const handleCreateUnregisteredEnrollment = () => {
+    if (!unregisteredData.parentName || !unregisteredData.parentPhone) {
+      alert('학부모 이름과 전화번호는 필수입니다.');
+      return;
+    }
+    if (!unregisteredData.studentName) {
+      alert('학생 이름은 필수입니다.');
+      return;
+    }
+    if (!unregisteredData.totalCount || unregisteredData.totalCount <= 0) {
+      alert('총 횟수를 선택해주세요.');
+      return;
+    }
+
+    createUnregisteredMutation.mutate(unregisteredData);
+  };
+
   const handleCancelEnrollment = (id) => {
     if (window.confirm('수강권을 취소하시겠습니까?')) {
       cancelMutation.mutate(id);
@@ -483,9 +567,14 @@ function Enrollments() {
             <p className="page-subtitle">학생들의 수강권 등록 및 관리</p>
           </div>
           {isAdminOrTeacher && (
-            <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-              <i className="fas fa-plus"></i> 수강권 등록
-            </button>
+            <div className="header-buttons">
+              <button className="btn-secondary" onClick={() => setShowUnregisteredModal(true)}>
+                <i className="fas fa-user-plus"></i> 미가입자 등록
+              </button>
+              <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+                <i className="fas fa-plus"></i> 수강권 등록
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -584,7 +673,7 @@ function Enrollments() {
                   <div className="detail-item">
                     <span className="label">수업 시간</span>
                     <span className="value">
-                      {enrollment.actualDurationMinutes || enrollment.course.durationMinutes}분
+                      {enrollment.actualDurationMinutes || enrollment.course?.durationMinutes || '-'}분
                       {enrollment.customDurationMinutes && (
                         <span className="custom-duration"> (개별설정)</span>
                       )}
@@ -950,7 +1039,7 @@ function Enrollments() {
                   <div className="detail-info-item">
                     <span className="info-label">수업 시간</span>
                     <span className="info-value">
-                      {selectedEnrollment.actualDurationMinutes || selectedEnrollment.course.durationMinutes}분
+                      {selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || '-'}분
                       {selectedEnrollment.customDurationMinutes && (
                         <span className="custom-duration"> (개별설정)</span>
                       )}
@@ -996,7 +1085,7 @@ function Enrollments() {
                     className="btn-set-duration"
                     onClick={() => handleSetCustomDuration(
                       selectedEnrollment.id, 
-                      selectedEnrollment.actualDurationMinutes || selectedEnrollment.course.durationMinutes
+                      selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || 50
                     )}
                   >
                     수업시간 설정
@@ -1153,6 +1242,182 @@ function Enrollments() {
                 홀딩 시작
               </button>
               <button className="btn-secondary" onClick={() => setShowHoldModal(false)}>
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 미가입자 등록 모달 */}
+      {showUnregisteredModal && (
+        <div className="modal-overlay" onClick={() => setShowUnregisteredModal(false)}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>미가입자 수강권 등록</h2>
+              <button className="modal-close" onClick={() => setShowUnregisteredModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-section">
+                <h3>학부모 정보</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>학부모 이름 *</label>
+                    <input
+                      type="text"
+                      value={unregisteredData.parentName}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, parentName: e.target.value })}
+                      placeholder="학부모 이름"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>학부모 전화번호 *</label>
+                    <input
+                      type="tel"
+                      value={unregisteredData.parentPhone}
+                      onChange={(e) => {
+                        const input = e.target.value;
+                        const value = input.replace(/[^0-9]/g, '');
+                        let formatted = value;
+                        if (value.length > 7) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                        } else if (value.length > 3) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3);
+                        }
+                        setUnregisteredData({ ...unregisteredData, parentPhone: formatted });
+                      }}
+                      placeholder="010-0000-0000"
+                      maxLength="13"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>학생 정보</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>학생 이름 *</label>
+                    <input
+                      type="text"
+                      value={unregisteredData.studentName}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, studentName: e.target.value })}
+                      placeholder="학생 이름"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>학생 전화번호</label>
+                    <input
+                      type="tel"
+                      value={unregisteredData.studentPhone}
+                      onChange={(e) => {
+                        const input = e.target.value;
+                        const value = input.replace(/[^0-9]/g, '');
+                        let formatted = value;
+                        if (value.length > 7) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
+                        } else if (value.length > 3) {
+                          formatted = value.slice(0, 3) + '-' + value.slice(3);
+                        }
+                        setUnregisteredData({ ...unregisteredData, studentPhone: formatted });
+                      }}
+                      placeholder="010-0000-0000"
+                      maxLength="13"
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>학교</label>
+                    <input
+                      type="text"
+                      value={unregisteredData.school}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, school: e.target.value })}
+                      placeholder="학교명"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>학년</label>
+                    <input
+                      type="text"
+                      value={unregisteredData.grade}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, grade: e.target.value })}
+                      placeholder="예: 초3, 중1"
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>메모</label>
+                  <textarea
+                    value={unregisteredData.memo}
+                    onChange={(e) => setUnregisteredData({ ...unregisteredData, memo: e.target.value })}
+                    placeholder="학생 관련 메모"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>수강권 정보</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>시작일 *</label>
+                    <input
+                      type="date"
+                      value={unregisteredData.startDate}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>수강 기간 (주)</label>
+                    <select
+                      value={unregisteredData.weeks}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, weeks: parseInt(e.target.value) })}
+                    >
+                      {[4, 8, 12, 16, 20, 24].map(w => (
+                        <option key={w} value={w}>{w}주</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>총 횟수 *</label>
+                    <select
+                      value={unregisteredData.totalCount}
+                      onChange={(e) => setUnregisteredData({ ...unregisteredData, totalCount: parseInt(e.target.value) })}
+                    >
+                      {[12, 24, 36, 48, 60].map(c => (
+                        <option key={c} value={c}>{c}회</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>종료일 (자동계산)</label>
+                    <input
+                      type="date"
+                      value={unregisteredData.endDate}
+                      readOnly
+                      className="readonly"
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>수강권 메모</label>
+                  <textarea
+                    value={unregisteredData.enrollmentMemo}
+                    onChange={(e) => setUnregisteredData({ ...unregisteredData, enrollmentMemo: e.target.value })}
+                    placeholder="수강권 관련 메모"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-primary" onClick={handleCreateUnregisteredEnrollment}>
+                등록
+              </button>
+              <button className="btn-secondary" onClick={() => setShowUnregisteredModal(false)}>
                 취소
               </button>
             </div>

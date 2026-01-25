@@ -102,6 +102,7 @@ export const enrollmentAPI = {
   getExpiring: (days = 7) => api.get(`/enrollments/expiring?days=${days}`),
   getLowCount: (threshold = 3) => api.get(`/enrollments/low-count?threshold=${threshold}`),
   create: (data) => api.post('/enrollments', data),
+  createUnregistered: (data) => api.post('/enrollments/unregistered', data),
   extendPeriod: (id, newEndDate) => api.patch(`/enrollments/${id}/extend?newEndDate=${newEndDate}`),
   addCount: (id, additionalCount) => api.patch(`/enrollments/${id}/add-count?additionalCount=${additionalCount}`),
   manualAdjustCount: (id, data) => api.patch(`/enrollments/${id}/manual-adjust`, data),

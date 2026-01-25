@@ -9,7 +9,6 @@ function Attendance() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [sortBy, setSortBy] = useState('schedule'); // 기본값을 수업 시간순으로 변경
   const [searchName, setSearchName] = useState('');
   const [tableSearchName, setTableSearchName] = useState('');
   
@@ -134,21 +133,6 @@ function Attendance() {
       return response.data;
     },
   });
-
-  // 날짜 컴포넌트 변경 핸들러
-  const handleDateComponentChange = (component, value) => {
-    const newDateComponents = {
-      ...dateComponents,
-      [component]: value
-    };
-    setDateComponents(newDateComponents);
-    
-    // 모든 컴포넌트가 선택되면 selectedDate 업데이트
-    if (newDateComponents.year && newDateComponents.month && newDateComponents.day) {
-      const formattedDate = `${newDateComponents.year}-${newDateComponents.month.padStart(2, '0')}-${newDateComponents.day.padStart(2, '0')}`;
-      setSelectedDate(formattedDate);
-    }
-  };
 
   // 전화번호로 학생 검색
   const searchStudentMutation = useMutation({
@@ -490,55 +474,57 @@ function Attendance() {
       <div className="page-content">
         <div className="attendance-controls">
           <div className="date-selector">
-            <label>날짜 선택:</label>
-            <div className="date-inputs">
-              <select
-                value={dateComponents.year}
-                onChange={(e) => handleDateComponentChange('year', e.target.value)}
-              >
-                <option value="">년도</option>
-                {Array.from({length: 3}, (_, i) => {
-                  const year = new Date().getFullYear() - 1 + i;
-                  return <option key={year} value={year}>{year}년</option>;
-                })}
-              </select>
-              
-              <select
-                value={dateComponents.month}
-                onChange={(e) => handleDateComponentChange('month', e.target.value)}
-              >
-                <option value="">월</option>
-                {Array.from({length: 12}, (_, i) => {
-                  const month = i + 1;
-                  return <option key={month} value={month}>{month}월</option>;
-                })}
-              </select>
-              
-              <select
-                value={dateComponents.day}
-                onChange={(e) => handleDateComponentChange('day', e.target.value)}
-              >
-                <option value="">일</option>
-                {Array.from({length: 31}, (_, i) => {
-                  const day = i + 1;
-                  return <option key={day} value={day}>{day}일</option>;
-                })}
-              </select>
-            </div>
-          </div>
-
-          <div className="sort-selector">
-            <label htmlFor="sort">정렬 기준:</label>
-            <select
-              id="sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="schedule">수업 시간순</option>
-              <option value="name">이름순</option>
-              <option value="arrival">등원순</option>
-              <option value="departure">하원순</option>
-            </select>
+            <button 
+              className="date-nav-btn"
+              onClick={() => {
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() - 1);
+                setSelectedDate(d.toISOString().split('T')[0]);
+                setDateComponents({
+                  year: d.getFullYear().toString(),
+                  month: (d.getMonth() + 1).toString(),
+                  day: d.getDate().toString()
+                });
+              }}
+            >◀</button>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                const d = new Date(e.target.value);
+                setDateComponents({
+                  year: d.getFullYear().toString(),
+                  month: (d.getMonth() + 1).toString(),
+                  day: d.getDate().toString()
+                });
+              }}
+            />
+            <button 
+              className="date-nav-btn"
+              onClick={() => {
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() + 1);
+                setSelectedDate(d.toISOString().split('T')[0]);
+                setDateComponents({
+                  year: d.getFullYear().toString(),
+                  month: (d.getMonth() + 1).toString(),
+                  day: d.getDate().toString()
+                });
+              }}
+            >▶</button>
+            <button 
+              className="today-btn"
+              onClick={() => {
+                const today = new Date();
+                setSelectedDate(today.toISOString().split('T')[0]);
+                setDateComponents({
+                  year: today.getFullYear().toString(),
+                  month: (today.getMonth() + 1).toString(),
+                  day: today.getDate().toString()
+                });
+              }}
+            >오늘</button>
           </div>
         </div>
 
