@@ -42,4 +42,8 @@ public class AttendanceResponse {
     private Boolean phonicsClass; // P - Phonics 수업
     private Boolean speakingClass; // S - Speaking 수업
     private LocalTime additionalClassEndTime; // 추가 수업 종료 시간
+    
+    // 할당된 추가수업 정보
+    private String assignedClassInitials; // 할당된 추가수업 이니셜 (VSGP)
+    private LocalTime additionalClassTime; // 추가수업 시간 (등원시간 + 30분)
 }

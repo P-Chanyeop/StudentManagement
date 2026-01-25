@@ -119,17 +119,26 @@ public class StudentCourseExcelService {
     }
 
     /**
-     * 학생 이름으로 반 이름 조회
+     * 학생 이름으로 반 이름 조회 (부분 매칭)
      */
     public String getCourseName(String studentName) {
-        return studentCourseMap.get(studentName);
+        // 정확히 일치하면 바로 반환
+        if (studentCourseMap.containsKey(studentName)) {
+            return studentCourseMap.get(studentName);
+        }
+        // 부분 매칭: 엑셀의 이름이 입력된 이름에 포함되어 있는지 확인
+        return studentCourseMap.entrySet().stream()
+                .filter(e -> studentName.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     /**
      * 학생 이름으로 수업 시간(분) 조회
      */
     public Integer getDurationMinutes(String studentName) {
-        String courseName = studentCourseMap.get(studentName);
+        String courseName = getCourseName(studentName);
         if (courseName == null) return null;
         return courseDurationMap.get(courseName);
     }

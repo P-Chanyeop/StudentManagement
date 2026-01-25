@@ -33,9 +33,15 @@ public class QEnrollment extends EntityPathBase<Enrollment> {
 
     public final DatePath<java.time.LocalDate> endDate = createDate("endDate", java.time.LocalDate.class);
 
+    public final DatePath<java.time.LocalDate> holdEndDate = createDate("holdEndDate", java.time.LocalDate.class);
+
+    public final DatePath<java.time.LocalDate> holdStartDate = createDate("holdStartDate", java.time.LocalDate.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final BooleanPath isActive = createBoolean("isActive");
+
+    public final BooleanPath isOnHold = createBoolean("isOnHold");
 
     public final StringPath memo = createString("memo");
 
@@ -46,6 +52,8 @@ public class QEnrollment extends EntityPathBase<Enrollment> {
     public final web.kplay.studentmanagement.domain.student.QStudent student;
 
     public final NumberPath<Integer> totalCount = createNumber("totalCount", Integer.class);
+
+    public final NumberPath<Integer> totalHoldDays = createNumber("totalHoldDays", Integer.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;

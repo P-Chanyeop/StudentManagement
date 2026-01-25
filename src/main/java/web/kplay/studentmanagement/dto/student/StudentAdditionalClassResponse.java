@@ -1,0 +1,21 @@
+package web.kplay.studentmanagement.dto.student;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class StudentAdditionalClassResponse {
+    private Long id;
+    private String studentName;
+    private String className;
+    private Boolean assignedVocabulary;
+    private Boolean assignedSightword;
+    private Boolean assignedGrammar;
+    private Boolean assignedPhonics;
+    private String assignedClassInitials;
+}

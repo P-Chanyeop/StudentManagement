@@ -74,6 +74,23 @@ public class Student extends BaseEntity {
     @Builder.Default
     private List<Enrollment> enrollments = new ArrayList<>();
 
+    // VGPS 추가수업 할당
+    @Column
+    @Builder.Default
+    private Boolean assignedVocabulary = false;
+
+    @Column
+    @Builder.Default
+    private Boolean assignedSightword = false;
+
+    @Column
+    @Builder.Default
+    private Boolean assignedGrammar = false;
+
+    @Column
+    @Builder.Default
+    private Boolean assignedPhonics = false;
+
     // 학생 정보 업데이트
     public void updateInfo(String studentName, String studentPhone, LocalDate birthDate,
                            String gender, String address, String school, String grade) {
@@ -121,5 +138,28 @@ public class Student extends BaseEntity {
     // 기본 수업 반 설정
     public void setDefaultCourse(web.kplay.studentmanagement.domain.course.Course course) {
         this.defaultCourse = course;
+    }
+
+    // VGPS 추가수업 할당 업데이트
+    public void updateAssignedClasses(Boolean vocabulary, Boolean sightword, Boolean grammar, Boolean phonics) {
+        this.assignedVocabulary = vocabulary != null ? vocabulary : false;
+        this.assignedSightword = sightword != null ? sightword : false;
+        this.assignedGrammar = grammar != null ? grammar : false;
+        this.assignedPhonics = phonics != null ? phonics : false;
+    }
+
+    // VGPS 이니셜 문자열 반환
+    public String getAssignedClassInitials() {
+        StringBuilder sb = new StringBuilder();
+        if (Boolean.TRUE.equals(assignedVocabulary)) sb.append("V");
+        if (Boolean.TRUE.equals(assignedSightword)) sb.append("S");
+        if (Boolean.TRUE.equals(assignedGrammar)) sb.append("G");
+        if (Boolean.TRUE.equals(assignedPhonics)) sb.append("P");
+        return sb.length() > 0 ? sb.toString() : null;
+    }
+
+    public boolean hasAnyAssignedClass() {
+        return Boolean.TRUE.equals(assignedVocabulary) || Boolean.TRUE.equals(assignedSightword) 
+            || Boolean.TRUE.equals(assignedGrammar) || Boolean.TRUE.equals(assignedPhonics);
     }
 }

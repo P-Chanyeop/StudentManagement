@@ -21,6 +21,10 @@ public class QUser extends EntityPathBase<User> {
 
     public final web.kplay.studentmanagement.domain.QBaseEntity _super = new web.kplay.studentmanagement.domain.QBaseEntity(this);
 
+    public final StringPath address = createString("address");
+
+    public final DateTimePath<java.time.LocalDateTime> agreedAt = createDateTime("agreedAt", java.time.LocalDateTime.class);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
@@ -30,15 +34,25 @@ public class QUser extends EntityPathBase<User> {
 
     public final BooleanPath isActive = createBoolean("isActive");
 
+    public final BooleanPath marketingAgreed = createBoolean("marketingAgreed");
+
     public final StringPath name = createString("name");
+
+    public final StringPath nickname = createString("nickname");
 
     public final StringPath password = createString("password");
 
     public final StringPath phoneNumber = createString("phoneNumber");
 
+    public final BooleanPath privacyAgreed = createBoolean("privacyAgreed");
+
     public final StringPath refreshToken = createString("refreshToken");
 
     public final EnumPath<UserRole> role = createEnum("role", UserRole.class);
+
+    public final BooleanPath smsAgreed = createBoolean("smsAgreed");
+
+    public final BooleanPath termsAgreed = createBoolean("termsAgreed");
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;

@@ -649,10 +649,27 @@
   text-align: center;
   padding: 8px 4px;
 }
-/* 추가 수업 버튼들 */
+/* 추가 수업 */
 .additional-classes {
   text-align: center;
   padding: 8px 4px;
+}
+
+.class-initials {
+  color: var(--naver-green);
+  font-size: 12px;
+}
+
+/* 등원시간 + 하원예정 */
+.check-in-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.expected-leave-hint {
+  font-size: 11px;
+  color: var(--gray-500);
 }
 
 .class-buttons {

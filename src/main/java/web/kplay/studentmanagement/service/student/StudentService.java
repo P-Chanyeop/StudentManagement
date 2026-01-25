@@ -219,4 +219,68 @@ public class StudentService {
                 .isActive(enrollment.getIsActive())
                 .build();
     }
+
+    // 추가수업 할당 학생 목록 조회
+    @Transactional(readOnly = true)
+    public List<web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse> getAllStudentsWithAdditionalClass() {
+        return studentRepository.findByIsActiveTrue().stream()
+                .map(s -> {
+                    String className = null;
+                    if (s.getDefaultCourse() != null) {
+                        className = s.getDefaultCourse().getCourseName();
+                    } else if (!s.getEnrollments().isEmpty()) {
+                        className = s.getEnrollments().stream()
+                                .filter(e -> e.getIsActive() && e.getCourse() != null)
+                                .map(e -> e.getCourse().getCourseName())
+                                .findFirst().orElse(null);
+                    }
+                    return web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse.builder()
+                            .id(s.getId())
+                            .studentName(s.getStudentName())
+                            .className(className)
+                            .assignedVocabulary(s.getAssignedVocabulary())
+                            .assignedSightword(s.getAssignedSightword())
+                            .assignedGrammar(s.getAssignedGrammar())
+                            .assignedPhonics(s.getAssignedPhonics())
+                            .assignedClassInitials(s.getAssignedClassInitials())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 추가수업 할당 업데이트
+    @Transactional
+    public web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse updateAdditionalClass(
+            Long studentId, web.kplay.studentmanagement.dto.student.StudentAdditionalClassRequest request) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new web.kplay.studentmanagement.exception.ResourceNotFoundException("학생을 찾을 수 없습니다."));
+        
+        student.updateAssignedClasses(
+                request.getAssignedVocabulary(),
+                request.getAssignedSightword(),
+                request.getAssignedGrammar(),
+                request.getAssignedPhonics()
+        );
+        
+        String className = null;
+        if (student.getDefaultCourse() != null) {
+            className = student.getDefaultCourse().getCourseName();
+        } else if (!student.getEnrollments().isEmpty()) {
+            className = student.getEnrollments().stream()
+                    .filter(e -> e.getIsActive() && e.getCourse() != null)
+                    .map(e -> e.getCourse().getCourseName())
+                    .findFirst().orElse(null);
+        }
+        
+        return web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse.builder()
+                .id(student.getId())
+                .studentName(student.getStudentName())
+                .className(className)
+                .assignedVocabulary(student.getAssignedVocabulary())
+                .assignedSightword(student.getAssignedSightword())
+                .assignedGrammar(student.getAssignedGrammar())
+                .assignedPhonics(student.getAssignedPhonics())
+                .assignedClassInitials(student.getAssignedClassInitials())
+                .build();
+    }
 }

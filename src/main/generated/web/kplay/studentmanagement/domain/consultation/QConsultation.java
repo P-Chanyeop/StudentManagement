@@ -24,15 +24,13 @@ public class QConsultation extends EntityPathBase<Consultation> {
 
     public final web.kplay.studentmanagement.domain.QBaseEntity _super = new web.kplay.studentmanagement.domain.QBaseEntity(this);
 
-    public final StringPath actionItems = createString("actionItems");
-
     public final StringPath attachmentFileUrl = createString("attachmentFileUrl");
 
     public final web.kplay.studentmanagement.domain.user.QUser consultant;
 
     public final DatePath<java.time.LocalDate> consultationDate = createDate("consultationDate", java.time.LocalDate.class);
 
-    public final StringPath consultationType = createString("consultationType");
+    public final TimePath<java.time.LocalTime> consultationTime = createTime("consultationTime", java.time.LocalTime.class);
 
     public final StringPath content = createString("content");
 
@@ -40,8 +38,6 @@ public class QConsultation extends EntityPathBase<Consultation> {
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
-
-    public final DatePath<java.time.LocalDate> nextConsultationDate = createDate("nextConsultationDate", java.time.LocalDate.class);
 
     public final StringPath recordingFileUrl = createString("recordingFileUrl");
 

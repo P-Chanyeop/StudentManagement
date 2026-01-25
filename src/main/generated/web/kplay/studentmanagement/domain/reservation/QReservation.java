@@ -28,6 +28,8 @@ public class QReservation extends EntityPathBase<Reservation> {
 
     public final StringPath cancelReason = createString("cancelReason");
 
+    public final StringPath consultationType = createString("consultationType");
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
@@ -37,9 +39,11 @@ public class QReservation extends EntityPathBase<Reservation> {
 
     public final StringPath memo = createString("memo");
 
+    public final DatePath<java.time.LocalDate> reservationDate = createDate("reservationDate", java.time.LocalDate.class);
+
     public final StringPath reservationSource = createString("reservationSource");
 
-    public final web.kplay.studentmanagement.domain.course.QCourseSchedule schedule;
+    public final TimePath<java.time.LocalTime> reservationTime = createTime("reservationTime", java.time.LocalTime.class);
 
     public final EnumPath<ReservationStatus> status = createEnum("status", ReservationStatus.class);
 
@@ -67,7 +71,6 @@ public class QReservation extends EntityPathBase<Reservation> {
     public QReservation(Class<? extends Reservation> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.enrollment = inits.isInitialized("enrollment") ? new web.kplay.studentmanagement.domain.course.QEnrollment(forProperty("enrollment"), inits.get("enrollment")) : null;
-        this.schedule = inits.isInitialized("schedule") ? new web.kplay.studentmanagement.domain.course.QCourseSchedule(forProperty("schedule"), inits.get("schedule")) : null;
         this.student = inits.isInitialized("student") ? new web.kplay.studentmanagement.domain.student.QStudent(forProperty("student"), inits.get("student")) : null;
     }
 

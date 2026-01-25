@@ -21,6 +21,7 @@ import MakeupClasses from './pages/MakeupClasses';
 import Notices from './pages/Notices';
 import MyPage from './pages/MyPage';
 import ParentMyPage from './pages/ParentMyPage';
+import AdditionalClass from './pages/AdditionalClass';
 import { useQuery } from '@tanstack/react-query';
 import { authAPI } from './services/api';
 
@@ -214,6 +215,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Notices />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/additional-class"
+        element={
+          <ProtectedRoute>
+            <AdditionalClass />
           </ProtectedRoute>
         }
       />

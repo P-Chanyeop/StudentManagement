@@ -75,6 +75,9 @@ export const studentAPI = {
   create: (data) => api.post('/students', data),
   update: (id, data) => api.put(`/students/${id}`, data),
   deactivate: (id) => api.delete(`/students/${id}`),
+  // 추가수업 관리
+  getAdditionalClass: () => api.get('/students/additional-class'),
+  updateAdditionalClass: (id, data) => api.put(`/students/${id}/additional-class`, data),
 };
 
 // 수업 API

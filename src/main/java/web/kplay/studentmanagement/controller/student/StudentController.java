@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.dto.student.StudentCreateRequest;
 import web.kplay.studentmanagement.dto.student.StudentResponse;
+import web.kplay.studentmanagement.dto.student.StudentAdditionalClassRequest;
+import web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse;
 import web.kplay.studentmanagement.service.student.StudentService;
 
 import java.util.List;
@@ -78,5 +80,21 @@ public class StudentController {
     public ResponseEntity<Void> deactivateStudent(@PathVariable Long id) {
         studentService.deactivateStudent(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // 추가수업 할당 학생 목록 조회
+    @GetMapping("/additional-class")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<StudentAdditionalClassResponse>> getStudentsWithAdditionalClass() {
+        return ResponseEntity.ok(studentService.getAllStudentsWithAdditionalClass());
+    }
+
+    // 추가수업 할당 업데이트
+    @PutMapping("/{id}/additional-class")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<StudentAdditionalClassResponse> updateAdditionalClass(
+            @PathVariable Long id,
+            @RequestBody StudentAdditionalClassRequest request) {
+        return ResponseEntity.ok(studentService.updateAdditionalClass(id, request));
     }
 }

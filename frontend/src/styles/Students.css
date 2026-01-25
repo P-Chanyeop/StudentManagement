@@ -687,3 +687,45 @@
   color: #333;
   flex: 1;
 }
+
+/* VGSP 추가수업 버튼 */
+.vgsp-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--gray-300);
+  border-radius: 8px;
+  background: white;
+  color: var(--gray-400);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vgsp-btn:hover {
+  border-color: var(--naver-green);
+  color: var(--naver-green);
+  background: rgba(3, 199, 90, 0.05);
+}
+
+.vgsp-btn.active {
+  background: var(--naver-green);
+  border-color: var(--naver-green);
+  color: white;
+  box-shadow: 0 2px 8px rgba(3, 199, 90, 0.3);
+}
+
+.assigned-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  background: var(--gray-100);
+  color: var(--gray-400);
+}
+
+.assigned-badge.has-class {
+  background: rgba(3, 199, 90, 0.1);
+  color: var(--naver-green);
+}

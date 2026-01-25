@@ -26,12 +26,24 @@ public class QStudent extends EntityPathBase<Student> {
 
     public final StringPath address = createString("address");
 
+    public final BooleanPath assignedGrammar = createBoolean("assignedGrammar");
+
+    public final BooleanPath assignedPhonics = createBoolean("assignedPhonics");
+
+    public final BooleanPath assignedSightword = createBoolean("assignedSightword");
+
+    public final BooleanPath assignedVocabulary = createBoolean("assignedVocabulary");
+
     public final DatePath<java.time.LocalDate> birthDate = createDate("birthDate", java.time.LocalDate.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
+    public final web.kplay.studentmanagement.domain.course.QCourse defaultCourse;
+
     public final StringPath englishLevel = createString("englishLevel");
+
+    public final ListPath<web.kplay.studentmanagement.domain.course.Enrollment, web.kplay.studentmanagement.domain.course.QEnrollment> enrollments = this.<web.kplay.studentmanagement.domain.course.Enrollment, web.kplay.studentmanagement.domain.course.QEnrollment>createList("enrollments", web.kplay.studentmanagement.domain.course.Enrollment.class, web.kplay.studentmanagement.domain.course.QEnrollment.class, PathInits.DIRECT2);
 
     public final StringPath gender = createString("gender");
 
@@ -78,6 +90,7 @@ public class QStudent extends EntityPathBase<Student> {
 
     public QStudent(Class<? extends Student> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
+        this.defaultCourse = inits.isInitialized("defaultCourse") ? new web.kplay.studentmanagement.domain.course.QCourse(forProperty("defaultCourse"), inits.get("defaultCourse")) : null;
         this.parentUser = inits.isInitialized("parentUser") ? new web.kplay.studentmanagement.domain.user.QUser(forProperty("parentUser")) : null;
     }
 

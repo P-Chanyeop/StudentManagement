@@ -23,6 +23,7 @@ import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.domain.user.User;
 import web.kplay.studentmanagement.service.StudentCourseExcelService;
+import web.kplay.studentmanagement.service.AdditionalClassExcelService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,6 +46,7 @@ public class AttendanceService {
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
     private final web.kplay.studentmanagement.repository.NaverBookingRepository naverBookingRepository;
     private final StudentCourseExcelService studentCourseExcelService;
+    private final AdditionalClassExcelService additionalClassExcelService;
     private final web.kplay.studentmanagement.repository.CourseRepository courseRepository;
 
     /**
@@ -689,6 +691,7 @@ public class AttendanceService {
         // 네이버 예약인 경우 학생 이름과 반 정보 가져오기
         String studentName;
         String courseName = "없음";
+        String assignedClassInitials = null;
         
         if (isNaver) {
             NaverBooking naverBooking = attendance.getNaverBooking();
@@ -701,10 +704,20 @@ public class AttendanceService {
                 if (excelCourseName != null) {
                     courseName = excelCourseName;
                 }
+                // 네이버 예약: 엑셀에서 추가수업 정보 조회
+                assignedClassInitials = additionalClassExcelService.getAssignedClassInitials(cleanName);
             }
         } else {
             studentName = student.getStudentName();
             courseName = attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음";
+            // 시스템 예약: Student 엔티티에서 추가수업 정보 조회
+            assignedClassInitials = student.getAssignedClassInitials();
+        }
+        
+        // 추가수업 시간 계산 (출석체크 시간 + 30분, 출석체크 했을 때만)
+        LocalTime additionalClassTime = null;
+        if (assignedClassInitials != null && attendance.getCheckInTime() != null) {
+            additionalClassTime = attendance.getCheckInTime().toLocalTime().plusMinutes(30);
         }
         
         return AttendanceResponse.builder()
@@ -734,6 +747,8 @@ public class AttendanceService {
                 .phonicsClass(attendance.getPhonicsClass())
                 .speakingClass(attendance.getSpeakingClass())
                 .additionalClassEndTime(attendance.getAdditionalClassEndTime())
+                .assignedClassInitials(assignedClassInitials)
+                .additionalClassTime(additionalClassTime)
                 .build();
     }
 

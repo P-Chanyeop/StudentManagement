@@ -395,24 +395,23 @@ function Attendance() {
             result = (a.startTime || '').localeCompare(b.startTime || '');
           }
         } else if (tableSortBy === 'departure') {
-          // 하원 시간 정렬
-          if (a.checkOutTime && b.checkOutTime) {
+          // 하원 시간 정렬: 출석한 학생 먼저, 실제 하원시간 기준
+          const aCheckedIn = !!a.checkInTime;
+          const bCheckedIn = !!b.checkInTime;
+          
+          if (aCheckedIn && !bCheckedIn) {
+            result = -1;
+          } else if (!aCheckedIn && bCheckedIn) {
+            result = 1;
+          } else if (a.checkOutTime && b.checkOutTime) {
             result = new Date(a.checkOutTime) - new Date(b.checkOutTime);
           } else if (a.checkOutTime && !b.checkOutTime) {
             result = -1;
           } else if (!a.checkOutTime && b.checkOutTime) {
             result = 1;
           } else {
-            // 둘 다 미하원이면 등원시간순 또는 예약시간순
-            if (a.checkInTime && b.checkInTime) {
-              result = new Date(a.checkInTime) - new Date(b.checkInTime);
-            } else if (a.checkInTime && !b.checkInTime) {
-              result = -1;
-            } else if (!a.checkInTime && b.checkInTime) {
-              result = 1;
-            } else {
-              result = (a.startTime || '').localeCompare(b.startTime || '');
-            }
+            // 둘 다 미하원이면 예약시간순
+            result = (a.startTime || '').localeCompare(b.startTime || '');
           }
         } else {
           // 기본: 수업 시간순
@@ -646,6 +645,7 @@ function Attendance() {
                     <i className={`fas fa-sort-${tableSortOrder === 'asc' ? 'up' : 'down'}`}></i>
                   )}
                 </th>
+                <th>추가수업</th>
                 <th 
                   className={`sortable ${tableSortBy === 'departure' ? 'active' : ''}`}
                   onClick={() => handleTableSort('departure')}
@@ -658,7 +658,6 @@ function Attendance() {
                 <th>수업 완료</th>
                 <th>D/C</th>
                 <th>WR</th>
-                <th>추가수업</th>
                 <th>비고</th>
               </tr>
             </thead>
@@ -689,19 +688,30 @@ function Attendance() {
                     </div>
                   </td>
                   <td className="check-in-time">
-                    {formatTime(attendance.checkInTime)}
+                    {attendance.checkInTime ? (
+                      <div className="check-in-info">
+                        <span>{formatTime(attendance.checkInTime)}</span>
+                        {attendance.expectedLeaveTime && !attendance.checkOutTime && (
+                          <span className="expected-leave-hint">
+                            {formatTime(attendance.expectedLeaveTime)} 하원예정
+                          </span>
+                        )}
+                      </div>
+                    ) : '-'}
                   </td>
-                  <td className="check-out-time">
-                    {attendance.checkOutTime ? (
-                      formatTime(attendance.checkOutTime)
-                    ) : attendance.checkInTime ? (
-                      <span className="expected-time">
-                        {formatTime(attendance.expectedLeaveTime)}
-                        {isTimeBeforeExpected(attendance.expectedLeaveTime) && ' (예정)'}
+                  <td className="additional-classes">
+                    {attendance.checkInTime && attendance.assignedClassInitials && 
+                     attendance.status !== 'ABSENT' && attendance.status !== 'EXCUSED' ? (
+                      <span>
+                        {formatTime(attendance.additionalClassTime)}
+                        <span className="class-initials"> ({attendance.assignedClassInitials})</span>
                       </span>
                     ) : (
                       '-'
                     )}
+                  </td>
+                  <td className="check-out-time">
+                    {attendance.checkOutTime ? formatTime(attendance.checkOutTime) : '-'}
                   </td>
                   <td className="class-complete">
                     <label className="checkbox-container">
@@ -734,43 +744,6 @@ function Attendance() {
                       maxLength="10"
                       onBlur={(e) => handleWrCheckUpdate(attendance.id, e.target.value)}
                     />
-                  </td>
-                  <td className="additional-classes">
-                    <div className="class-buttons">
-                      <button
-                        className={`class-btn ${attendance.vocabularyClass ? 'active' : ''}`}
-                        onClick={() => handleToggleClass(attendance.id, 'vocabulary')}
-                        title="Vocabulary Class"
-                      >
-                        V
-                      </button>
-                      <button
-                        className={`class-btn ${attendance.grammarClass ? 'active' : ''}`}
-                        onClick={() => handleToggleClass(attendance.id, 'grammar')}
-                        title="Grammar Class"
-                      >
-                        G
-                      </button>
-                      <button
-                        className={`class-btn ${attendance.phonicsClass ? 'active' : ''}`}
-                        onClick={() => handleToggleClass(attendance.id, 'phonics')}
-                        title="Phonics Class"
-                      >
-                        P
-                      </button>
-                      <button
-                        className={`class-btn ${attendance.speakingClass ? 'active' : ''}`}
-                        onClick={() => handleToggleClass(attendance.id, 'speaking')}
-                        title="Speaking Class"
-                      >
-                        S
-                      </button>
-                    </div>
-                    {attendance.additionalClassEndTime && (
-                      <div className="end-time">
-                        종료: {attendance.additionalClassEndTime}
-                      </div>
-                    )}
                   </td>
                   <td className="notes">
                     <input
