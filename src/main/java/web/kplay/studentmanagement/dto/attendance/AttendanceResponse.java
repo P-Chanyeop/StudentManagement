@@ -17,7 +17,7 @@ public class AttendanceResponse {
     private Long id;
     private Long studentId;
     private String studentName;
-    private String studentPhone;
+    private String parentPhone; // 부모님 전화번호 (마스킹됨)
     private String className; // 반 이름 (네이버 예약인 경우 "네이버 예약")
     private Boolean isNaverBooking; // 네이버 예약 여부
     private Long scheduleId;

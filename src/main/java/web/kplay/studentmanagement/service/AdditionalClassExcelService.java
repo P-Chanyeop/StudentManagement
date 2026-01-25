@@ -61,7 +61,11 @@ public class AdditionalClassExcelService {
     private void addStudentToClass(String classType, Cell cell) {
         String name = getCellValue(cell);
         if (name != null && !name.isEmpty()) {
-            classAssignments.get(classType).add(name.trim());
+            // 한글만 추출 (영어, 숫자, 공백 제거)
+            String koreanOnly = name.replaceAll("[^가-힣]", "").trim();
+            if (!koreanOnly.isEmpty()) {
+                classAssignments.get(classType).add(koreanOnly);
+            }
         }
     }
 
@@ -76,12 +80,15 @@ public class AdditionalClassExcelService {
 
     public String getAssignedClassInitials(String studentName) {
         if (studentName == null) return null;
-        String name = studentName.trim();
+        // 입력된 이름에서도 한글만 추출
+        String koreanName = studentName.replaceAll("[^가-힣]", "").trim();
+        if (koreanName.isEmpty()) return null;
+        
         StringBuilder sb = new StringBuilder();
-        if (containsStudent("V", name)) sb.append("V");
-        if (containsStudent("S", name)) sb.append("S");
-        if (containsStudent("G", name)) sb.append("G");
-        if (containsStudent("P", name)) sb.append("P");
+        if (containsStudent("V", koreanName)) sb.append("V");
+        if (containsStudent("S", koreanName)) sb.append("S");
+        if (containsStudent("G", koreanName)) sb.append("G");
+        if (containsStudent("P", koreanName)) sb.append("P");
         return sb.length() > 0 ? sb.toString() : null;
     }
 

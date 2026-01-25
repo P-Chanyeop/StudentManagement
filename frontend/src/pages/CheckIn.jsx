@@ -8,6 +8,7 @@ const CheckIn = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [mode, setMode] = useState('checkIn'); // 'checkIn' or 'checkOut'
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -21,7 +22,15 @@ const CheckIn = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      setSearchResults(data);
+      // 하원 모드일 때는 출석체크 완료된 학생만 필터링
+      if (mode === 'checkOut') {
+        const checkedIn = data.filter(s => s.checkInTime && !s.checkOutTime);
+        setSearchResults(checkedIn);
+      } else {
+        // 등원 모드일 때는 아직 출석 안 한 학생만
+        const notCheckedIn = data.filter(s => !s.checkInTime);
+        setSearchResults(notCheckedIn);
+      }
       setSelectedStudent(null);
     },
     onError: () => {
@@ -31,7 +40,6 @@ const CheckIn = () => {
 
   const checkInMutation = useMutation({
     mutationFn: async (studentData) => {
-      // isNaverBooking 또는 naverBooking 둘 다 체크 (Java boolean getter 직렬화 이슈)
       const isNaver = studentData.isNaverBooking || studentData.naverBooking;
       if (isNaver) {
         return axios.post(`/api/attendances/naver-booking/${studentData.naverBookingId}/check-in`);
@@ -41,18 +49,35 @@ const CheckIn = () => {
     },
     onSuccess: () => {
       alert('출석 체크가 완료되었습니다.');
-      setPhoneNumber('');
-      setSearchResults([]);
-      setSelectedStudent(null);
+      resetState();
       queryClient.invalidateQueries(['attendances']);
     },
     onError: (error) => {
       alert(error.response?.data?.message || '출석 체크 중 오류가 발생했습니다.');
-      setPhoneNumber('');
-      setSearchResults([]);
-      setSelectedStudent(null);
+      resetState();
     }
   });
+
+  const checkOutMutation = useMutation({
+    mutationFn: async (studentData) => {
+      return axios.post(`/api/attendances/${studentData.attendanceId}/checkout`);
+    },
+    onSuccess: () => {
+      alert('하원 체크가 완료되었습니다.');
+      resetState();
+      queryClient.invalidateQueries(['attendances']);
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || '하원 체크 중 오류가 발생했습니다.');
+      resetState();
+    }
+  });
+
+  const resetState = () => {
+    setPhoneNumber('');
+    setSearchResults([]);
+    setSelectedStudent(null);
+  };
 
   const handleNumberClick = (num) => {
     if (phoneNumber.length < 4) {
@@ -71,14 +96,21 @@ const CheckIn = () => {
   };
 
   const handleClear = () => {
-    setPhoneNumber('');
-    setSearchResults([]);
-    setSelectedStudent(null);
+    resetState();
   };
 
-  const handleCheckIn = () => {
+  const handleAction = () => {
     if (!selectedStudent) return;
-    checkInMutation.mutate(selectedStudent);
+    if (mode === 'checkIn') {
+      checkInMutation.mutate(selectedStudent);
+    } else {
+      checkOutMutation.mutate(selectedStudent);
+    }
+  };
+
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    resetState();
   };
 
   const days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -90,6 +122,22 @@ const CheckIn = () => {
       {/* 왼쪽: 입력 영역 */}
       <div className="checkin-left">
         <h1 className="academy-name">리딩베어 리딩클럽</h1>
+        
+        {/* 모드 선택 탭 */}
+        <div className="mode-tabs">
+          <button 
+            className={`mode-tab ${mode === 'checkIn' ? 'active' : ''}`}
+            onClick={() => handleModeChange('checkIn')}
+          >
+            등원
+          </button>
+          <button 
+            className={`mode-tab ${mode === 'checkOut' ? 'active' : ''}`}
+            onClick={() => handleModeChange('checkOut')}
+          >
+            하원
+          </button>
+        </div>
         
         <div className="left-content">
           <p className="checkin-instruction">
@@ -119,13 +167,19 @@ const CheckIn = () => {
               ))}
               {selectedStudent && (
                 <button
-                  className="checkin-confirm-btn"
-                  onClick={handleCheckIn}
-                  disabled={checkInMutation.isPending}
+                  className={`checkin-confirm-btn ${mode === 'checkOut' ? 'checkout' : ''}`}
+                  onClick={handleAction}
+                  disabled={checkInMutation.isPending || checkOutMutation.isPending}
                 >
-                  출석 체크
+                  {mode === 'checkIn' ? '출석 체크' : '하원 체크'}
                 </button>
               )}
+            </div>
+          )}
+
+          {searchResults.length === 0 && phoneNumber.length === 4 && !searchMutation.isPending && (
+            <div className="no-results">
+              {mode === 'checkIn' ? '출석 가능한 학생이 없습니다.' : '하원 가능한 학생이 없습니다.'}
             </div>
           )}
         </div>

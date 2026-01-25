@@ -25,6 +25,35 @@
   margin-bottom: 20px;
 }
 
+/* 모드 선택 탭 */
+.mode-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 15px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mode-tab.active {
+  background: #fff;
+  color: #4CAF50;
+}
+
+.mode-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .left-content {
   flex: 1;
   display: flex;
@@ -182,4 +211,25 @@
 .number-btn.func-btn {
   font-size: 24px;
   color: #666;
+}
+
+
+/* 하원 버튼 스타일 */
+.checkin-confirm-btn.checkout {
+  background: #FF9800;
+}
+
+.checkin-confirm-btn.checkout:hover {
+  background: #F57C00;
+}
+
+/* 결과 없음 메시지 */
+.no-results {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  font-size: 16px;
 }

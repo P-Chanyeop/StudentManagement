@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { attendanceAPI, studentAPI, scheduleAPI, reservationAPI } from '../services/api';
+import { attendanceAPI, studentAPI } from '../services/api';
 import '../styles/Attendance.css';
 
 function Attendance() {
@@ -131,24 +131,6 @@ function Attendance() {
     queryKey: ['students'],
     queryFn: async () => {
       const response = await studentAPI.getAll();
-      return response.data;
-    },
-  });
-
-  // 해당 날짜의 스케줄 조회
-  const { data: todaySchedules } = useQuery({
-    queryKey: ['schedules', selectedDate],
-    queryFn: async () => {
-      const response = await scheduleAPI.getByDate(selectedDate);
-      return response.data;
-    },
-  });
-
-  // 해당 날짜의 예약 조회
-  const { data: todayReservations } = useQuery({
-    queryKey: ['reservations', selectedDate],
-    queryFn: async () => {
-      const response = await reservationAPI.getByDate(selectedDate);
       return response.data;
     },
   });
@@ -370,12 +352,11 @@ function Attendance() {
     }
   };
 
-  // 출석 목록 정렬 및 하원한 학생 제외
+  // 출석 목록 정렬
   const sortedAttendances = (() => {
     const attendanceList = attendances ? [...attendances] : [];
     
     return attendanceList
-      .filter(attendance => !attendance.checkOutTime) // 하원한 학생 제외
       .sort((a, b) => {
         let result = 0;
         

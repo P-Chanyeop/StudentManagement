@@ -99,13 +99,17 @@ public class Attendance extends BaseEntity {
     // 출석 체크
     public void checkIn(LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         this.checkInTime = checkInTime;
-        // course의 수업 시간을 사용하거나, durationMinutes 사용
-        if (this.course != null) {
-            this.expectedLeaveTime = this.attendanceTime.plusMinutes(this.course.getDurationMinutes());
+        LocalTime checkInLocalTime = checkInTime.toLocalTime();
+        
+        // 실제 체크인 시간 기준으로 하원 예정 시간 계산
+        if (this.course != null && this.course.getDurationMinutes() != null) {
+            this.expectedLeaveTime = checkInLocalTime.plusMinutes(this.course.getDurationMinutes());
         } else if (this.durationMinutes != null) {
-            this.expectedLeaveTime = this.attendanceTime.plusMinutes(this.durationMinutes);
+            this.expectedLeaveTime = checkInLocalTime.plusMinutes(this.durationMinutes);
+        } else if (expectedLeaveTime != null) {
+            this.expectedLeaveTime = expectedLeaveTime;
         } else {
-            this.expectedLeaveTime = expectedLeaveTime != null ? expectedLeaveTime : this.attendanceTime.plusHours(2);
+            this.expectedLeaveTime = checkInLocalTime.plusHours(2);
         }
         this.originalExpectedLeaveTime = this.expectedLeaveTime;
         this.status = AttendanceStatus.PRESENT;

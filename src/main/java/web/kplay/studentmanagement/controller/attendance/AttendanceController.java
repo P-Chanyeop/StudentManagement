@@ -54,7 +54,6 @@ public class AttendanceController {
     }
 
     @PostMapping("/{id}/checkout")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<AttendanceResponse> checkOut(@PathVariable Long id) {
         AttendanceResponse response = attendanceService.checkOut(id);
         return ResponseEntity.ok(response);

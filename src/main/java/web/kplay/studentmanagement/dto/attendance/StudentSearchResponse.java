@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,4 +20,7 @@ public class StudentSearchResponse {
     private String courseName;
     private boolean isNaverBooking;
     private Long naverBookingId;
+    private Long attendanceId;
+    private LocalDateTime checkInTime;
+    private LocalDateTime checkOutTime;
 }
