@@ -838,3 +838,52 @@
   display: inline-block;
   box-shadow: 0 2px 8px rgba(3, 199, 90, 0.3);
 }
+
+/* 횟수 조정 버튼 */
+.count-adjust-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.count-adjust-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-count-adjust {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-count-adjust:hover {
+  background: var(--gray-100);
+}
+
+.btn-count-adjust.minus {
+  color: #FF3B30;
+}
+
+.btn-count-adjust.minus:hover {
+  background: #FFF0F0;
+  border-color: #FF3B30;
+}
+
+.btn-count-adjust.plus {
+  color: var(--naver-green);
+}
+
+.btn-count-adjust.plus:hover {
+  background: #E8F8EE;
+  border-color: var(--naver-green);
+}

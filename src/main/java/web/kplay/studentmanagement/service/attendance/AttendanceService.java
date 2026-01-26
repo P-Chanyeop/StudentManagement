@@ -98,6 +98,15 @@ public class AttendanceService {
         attendance.checkIn(now, expectedLeave);
 
         Attendance savedAttendance = attendanceRepository.save(attendance);
+        
+        // 체크인 시 수강권 1회 차감
+        if (!activeEnrollments.isEmpty()) {
+            Enrollment enrollment = activeEnrollments.get(0);
+            enrollment.useCount();
+            log.info("체크인 횟수 차감: student={}, remaining={}/{}", 
+                    student.getStudentName(), enrollment.getRemainingCount(), enrollment.getTotalCount());
+        }
+        
         log.info("Attendance check-in: student={}, course={}, status={}, expected leave={}",
                 student.getStudentName(),
                 course != null ? course.getCourseName() : "없음",

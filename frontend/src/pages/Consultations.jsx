@@ -131,6 +131,7 @@ function Consultations() {
       ...prev,
       studentId: student.id.toString()
     }));
+    setSelectedStudentsForConsultation([student.id]);
     setShowStudentDropdown(false);
     setStudentSearchQuery('');
   };
@@ -308,6 +309,7 @@ function Consultations() {
 
     const consultationData = {
       ...newConsultation,
+      consultationDate: selectedConsultation.consultationDate,
       recordingFileUrl,
       attachmentFileUrl
     };
@@ -324,7 +326,9 @@ function Consultations() {
   const handleFileDownload = async (filePath, fileName) => {
     try {
       const response = await fileAPI.download(filePath);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      // 서버에서 보낸 Content-Type 사용
+      const contentType = response.headers['content-type'] || 'application/octet-stream';
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', fileName);
@@ -613,12 +617,12 @@ function Consultations() {
         </div>
       </div>
 
-      {/* 상담 등록 모달 */}
+      {/* 학습 기록 등록 모달 */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>상담 등록</h2>
+              <h2>학습 기록 등록</h2>
               <button className="modal-close" onClick={() => {
                 setShowCreateModal(false);
                 resetForm();
@@ -692,7 +696,7 @@ function Consultations() {
                 </div>
 
                 <div className="form-group">
-                  <label>상담 내용 *</label>
+                  <label>학습 기록 내용 *</label>
                   <textarea 
                     value={newConsultation.content}
                     onChange={(e) => setNewConsultation({...newConsultation, content: e.target.value})}
@@ -828,41 +832,28 @@ function Consultations() {
         </div>
       )}
 
-      {/* 상담 수정 모달 */}
+      {/* 학습 기록 수정 모달 */}
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>상담 수정</h2>
+              <h2>학습 기록 수정</h2>
               <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
             </div>
             <form onSubmit={handleUpdate}>
               <div className="modal-body">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>제목 *</label>
-                    <input 
-                      type="text" 
-                      value={newConsultation.title}
-                      onChange={(e) => setNewConsultation({...newConsultation, title: e.target.value})}
-                      required 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>상담 유형</label>
-                    <select 
-                      value={newConsultation.consultationType}
-                      onChange={(e) => setNewConsultation({...newConsultation, consultationType: e.target.value})}
-                    >
-                      <option value="재원생상담">재원생 예약 시스템</option>
-                      <option value="레벨테스트">(평일) 레벨테스트 & 1회 체험 수업 예약</option>
-                      <option value="입학상담">(토요일) 레벨테스트 및 상담 예약</option>
-                    </select>
-                  </div>
+                <div className="form-group">
+                  <label>제목 *</label>
+                  <input 
+                    type="text" 
+                    value={newConsultation.title}
+                    onChange={(e) => setNewConsultation({...newConsultation, title: e.target.value})}
+                    required 
+                  />
                 </div>
 
                 <div className="form-group">
-                  <label>상담 내용 *</label>
+                  <label>학습 기록 내용 *</label>
                   <textarea 
                     value={newConsultation.content}
                     onChange={(e) => setNewConsultation({...newConsultation, content: e.target.value})}
@@ -872,24 +863,6 @@ function Consultations() {
                 </div>
 
                 <div className="form-group">
-                  <label>후속 조치 사항</label>
-                  <textarea 
-                    value={newConsultation.actionItems}
-                    onChange={(e) => setNewConsultation({...newConsultation, actionItems: e.target.value})}
-                    rows="3"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>다음 상담 예정일</label>
-                  <input 
-                    type="date" min={new Date().toISOString().split('T')[0]} 
-                    value={newConsultation.nextConsultationDate}
-                    onChange={(e) => setNewConsultation({...newConsultation, nextConsultationDate: e.target.value})}
-                  />
-                </div>
-
-                <div className="form-row">
                   <div className="form-group">
                     <label>녹음 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">

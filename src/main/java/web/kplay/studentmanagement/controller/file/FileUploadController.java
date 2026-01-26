@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import web.kplay.studentmanagement.service.file.FileStorageService;
 
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -177,21 +178,29 @@ public class FileUploadController {
                 throw new RuntimeException("파일을 찾을 수 없거나 읽을 수 없습니다: " + filePath);
             }
 
-            // 파일명 추출 및 안전한 파일명 생성 (XSS 방지)
+            // 파일명 추출
             String fileName = file.getFileName().toString();
-            String safeFileName = fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+            
+            // Content-Type 결정
+            String contentType = Files.probeContentType(file);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
 
-            log.info("File download: {}", safeFileName);
+            // 파일명 URL 인코딩 (한글 등 지원)
+            String encodedFileName = java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20");
+
+            log.info("File download: {}, contentType: {}", fileName, contentType);
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + safeFileName + "\"")
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
                     .body(resource);
 
         } catch (SecurityException | IllegalArgumentException ex) {
             log.error("Security validation failed: {}", ex.getMessage());
             throw ex;
-        } catch (MalformedURLException ex) {
+        } catch (java.io.IOException ex) {
             log.error("File path error: {}", filePath, ex);
             throw new RuntimeException("파일을 읽을 수 없습니다: " + filePath, ex);
         }

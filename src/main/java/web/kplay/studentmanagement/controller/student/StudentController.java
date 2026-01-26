@@ -7,13 +7,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import web.kplay.studentmanagement.dto.student.StudentCreateRequest;
 import web.kplay.studentmanagement.dto.student.StudentResponse;
 import web.kplay.studentmanagement.dto.student.StudentAdditionalClassRequest;
 import web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse;
+import web.kplay.studentmanagement.service.AdditionalClassExcelService;
 import web.kplay.studentmanagement.service.student.StudentService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
@@ -21,6 +24,7 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
+    private final AdditionalClassExcelService additionalClassExcelService;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
@@ -96,5 +100,17 @@ public class StudentController {
             @PathVariable Long id,
             @RequestBody StudentAdditionalClassRequest request) {
         return ResponseEntity.ok(studentService.updateAdditionalClass(id, request));
+    }
+
+    // 추가수업 엑셀 업로드
+    @PostMapping("/additional-class/upload")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<Map<String, Object>> uploadAdditionalClassExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            int count = additionalClassExcelService.uploadAndReload(file);
+            return ResponseEntity.ok(Map.of("updatedCount", count, "message", "업로드 완료"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

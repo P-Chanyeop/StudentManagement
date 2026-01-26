@@ -43,6 +43,29 @@ public class StudentCourseExcelService {
      * 엑셀 파일 업로드 및 데이터 갱신
      */
     public int uploadAndReload(MultipartFile file) throws Exception {
+        // 헤더 검증
+        try (InputStream is = file.getInputStream();
+             Workbook workbook = WorkbookFactory.create(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+            
+            if (headerRow == null) {
+                throw new IllegalArgumentException("엑셀 파일에 헤더가 없습니다.");
+            }
+            
+            String col0 = getCellValueSafe(headerRow.getCell(0));
+            String col1 = getCellValueSafe(headerRow.getCell(1));
+            
+            // 학생목록 엑셀: 헤더가 "학생명", "클래스명" 이어야 함
+            boolean validHeader = 
+                (col0 != null && col0.contains("학생명")) &&
+                (col1 != null && col1.contains("클래스명"));
+            
+            if (!validHeader) {
+                throw new IllegalArgumentException("학생목록 엑셀 양식이 아닙니다. (학생명, 클래스명 헤더 필요)");
+            }
+        }
+        
         // 파일 저장
         Path path = Paths.get(EXCEL_DIR + EXCEL_FILENAME);
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
@@ -53,6 +76,15 @@ public class StudentCourseExcelService {
         loadExcelData();
         
         return studentCourseMap.size();
+    }
+    
+    private String getCellValueSafe(Cell cell) {
+        if (cell == null) return null;
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> String.valueOf((int) cell.getNumericCellValue());
+            default -> null;
+        };
     }
 
     private void loadExcelData() {
@@ -126,9 +158,9 @@ public class StudentCourseExcelService {
         if (studentCourseMap.containsKey(studentName)) {
             return studentCourseMap.get(studentName);
         }
-        // 부분 매칭: 엑셀의 이름이 입력된 이름에 포함되어 있는지 확인
+        // 부분 매칭: 엑셀의 이름이 입력된 이름을 포함하는지 확인 (김도윤B가 김도윤을 포함)
         return studentCourseMap.entrySet().stream()
-                .filter(e -> studentName.contains(e.getKey()))
+                .filter(e -> e.getKey().contains(studentName) || studentName.contains(e.getKey()))
                 .map(Map.Entry::getValue)
                 .findFirst()
                 .orElse(null);

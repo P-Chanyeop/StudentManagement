@@ -3,11 +3,15 @@ package web.kplay.studentmanagement.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @Slf4j
@@ -15,10 +19,56 @@ import java.util.*;
 public class AdditionalClassExcelService {
 
     private Map<String, Set<String>> classAssignments = new HashMap<>();
+    private static final String EXCEL_DIR = System.getProperty("user.home") + "/student-management/";
+    private static final String EXCEL_FILENAME = "추가수업 리스트.xlsx";
 
     @PostConstruct
     public void init() {
+        new java.io.File(EXCEL_DIR).mkdirs();
         loadExcelData();
+    }
+
+    /**
+     * 엑셀 파일 업로드 및 데이터 갱신
+     */
+    public int uploadAndReload(MultipartFile file) throws Exception {
+        // 헤더 검증
+        try (InputStream is = file.getInputStream();
+             Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+            
+            if (headerRow == null) {
+                throw new IllegalArgumentException("엑셀 파일에 헤더가 없습니다.");
+            }
+            
+            String col0 = getCellValue(headerRow.getCell(0));
+            String col1 = getCellValue(headerRow.getCell(1));
+            String col2 = getCellValue(headerRow.getCell(2));
+            String col3 = getCellValue(headerRow.getCell(3));
+            
+            boolean validHeader = 
+                (col0 != null && col0.contains("Vocabulary")) ||
+                (col1 != null && col1.contains("Sightword")) ||
+                (col2 != null && col2.contains("Grammar")) ||
+                (col3 != null && col3.contains("Phonics"));
+            
+            if (!validHeader) {
+                throw new IllegalArgumentException("추가수업 리스트 엑셀 양식이 아닙니다. (Vocabulary, Sightword, Grammar, Phonics 헤더 필요)");
+            }
+        }
+        
+        // 파일 저장
+        Path targetPath = Paths.get(EXCEL_DIR + EXCEL_FILENAME);
+        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        log.info("추가수업 엑셀 파일 업로드: {}", targetPath);
+        
+        loadExcelData();
+        
+        int totalCount = classAssignments.values().stream()
+                .mapToInt(Set::size)
+                .sum();
+        return totalCount;
     }
 
     public void loadExcelData() {
@@ -28,31 +78,34 @@ public class AdditionalClassExcelService {
         classAssignments.put("G", new HashSet<>());
         classAssignments.put("P", new HashSet<>());
 
-        try {
-            ClassPathResource resource = new ClassPathResource("static/images/추가수업 리스트.xlsx");
-            try (InputStream is = resource.getInputStream();
-                 Workbook workbook = new XSSFWorkbook(is)) {
-                
-                Sheet sheet = workbook.getSheetAt(0);
-                for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                    Row row = sheet.getRow(i);
-                    if (row == null) continue;
-                    
-                    // 헤더 행 스킵 (Vocabulary, Sightword 등이 있는 행)
-                    Cell firstCell = row.getCell(0);
-                    if (firstCell != null && "Vocabulary".equals(getCellValue(firstCell))) continue;
+        Path filePath = Paths.get(EXCEL_DIR + EXCEL_FILENAME);
+        if (!Files.exists(filePath)) {
+            log.warn("추가수업 엑셀 파일 없음: {}", filePath);
+            return;
+        }
 
-                    addStudentToClass("V", row.getCell(0));
-                    addStudentToClass("S", row.getCell(1));
-                    addStudentToClass("G", row.getCell(2));
-                    addStudentToClass("P", row.getCell(3));
-                }
-                log.info("추가수업 엑셀 로드 완료 - V:{}, S:{}, G:{}, P:{}", 
-                    classAssignments.get("V").size(),
-                    classAssignments.get("S").size(),
-                    classAssignments.get("G").size(),
-                    classAssignments.get("P").size());
+        try (InputStream is = Files.newInputStream(filePath);
+             Workbook workbook = new XSSFWorkbook(is)) {
+                
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                
+                // 헤더 행 스킵 (Vocabulary, Sightword 등이 있는 행)
+                Cell firstCell = row.getCell(0);
+                if (firstCell != null && "Vocabulary".equals(getCellValue(firstCell))) continue;
+
+                addStudentToClass("V", row.getCell(0));
+                addStudentToClass("S", row.getCell(1));
+                addStudentToClass("G", row.getCell(2));
+                addStudentToClass("P", row.getCell(3));
             }
+            log.info("추가수업 엑셀 로드 완료 - V:{}, S:{}, G:{}, P:{}", 
+                classAssignments.get("V").size(),
+                classAssignments.get("S").size(),
+                classAssignments.get("G").size(),
+                classAssignments.get("P").size());
         } catch (Exception e) {
             log.error("추가수업 엑셀 로드 실패", e);
         }

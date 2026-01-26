@@ -9,6 +9,11 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.openqa.selenium.Cookie;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import web.kplay.studentmanagement.domain.reservation.NaverBooking;
@@ -21,6 +26,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -32,9 +38,88 @@ public class NaverBookingApiCrawlerService {
     private final StudentCourseExcelService studentCourseExcelService;
 
     private static final String API_BASE_URL = "https://partner.booking.naver.com/api/businesses/1047988/bookings";
-    // 실제 쿠키는 환경변수나 설정 파일에서 가져와야 함
-    private static final String COOKIE_NID_AUT = "gC8Fo10+3VVLsJm0MNdFACCqeuNvgnz1aUdsk+gTUYmMe+HeBTEEn+IjRAJCACYd";
-    private static final String COOKIE_NID_SES = "AAABkV5ysLPB07gWsahp2arIw4570dBQUioLi/OeC1EB4wW5Zn6QzwNBnx5sBNbeAkkcdE79wh5uzIPwfCx7hd3YLjX4efi4KCWbyQPkfURZX0zBjkc+cNrQ/w0YDFxCLjOgNC0Y4Nx52SGZWlZUsQhwe/z2wu15+tDo2zQnkq6Y/FTFrkiHxNhwE+wEONscqDpHI2IVCdLJ2cDCGrd9ruXRUK7bV9nLDMp0sOCldYqEUJyw4mB2sEfDAdmdYTnxu5OLFyJoKXWxwTLLCKGUA/Go4f9d0hycxUT3wP3cTePle6aVzPZOjs9VgBctvbFF1RfSQk3LuNcE4G+tiTwn/OSqO19HhbNgz8ycbD6mDWZXqznTPQSJ7zkttPM3u2mZbT52euzVoe9W5Tn23pxcF13YCQ1hz5gXqH2vkBA4SEw9TbflImgcFZvY0eg71wSJKXqvZOSwFZKGw+Min5J33UDmsc4ytYbCGiIxSHg3LFvy42YmVC/tmFiXpir0X2U8lJn1ygnfjTSdGsU48O4qpDPYg7LRG3a6Gn6bs6R9Im8FSBMn";
+    
+    @Value("${naver.id:}")
+    private String naverId;
+    
+    @Value("${naver.pw:}")
+    private String naverPw;
+    
+    // 캐시된 쿠키
+    private String cachedNidAut = null;
+    private String cachedNidSes = null;
+    private long cookieExpireTime = 0;
+
+    /**
+     * Selenium으로 네이버 로그인 후 쿠키 획득
+     */
+    private void refreshCookiesWithSelenium() {
+        log.info("Selenium으로 네이버 로그인 시작");
+        
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--window-size=1920,1080");
+        
+        WebDriver driver = null;
+        try {
+            driver = new ChromeDriver(options);
+            
+            // 네이버 로그인 페이지
+            driver.get("https://nid.naver.com/nidlogin.login");
+            Thread.sleep(2000);
+            
+            // 자바스크립트로 아이디/비밀번호 입력 (복사붙여넣기 방식)
+            org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) driver;
+            js.executeScript("document.getElementById('id').value = arguments[0]", naverId);
+            js.executeScript("document.getElementById('pw').value = arguments[0]", naverPw);
+            
+            Thread.sleep(500);
+            
+            // 로그인 버튼 클릭
+            driver.findElement(org.openqa.selenium.By.id("log.login")).click();
+            Thread.sleep(3000);
+            
+            // 파트너센터로 이동
+            driver.get("https://partner.booking.naver.com/");
+            Thread.sleep(3000);
+            
+            // 쿠키 추출
+            Set<Cookie> cookies = driver.manage().getCookies();
+            for (Cookie cookie : cookies) {
+                if ("NID_AUT".equals(cookie.getName())) {
+                    cachedNidAut = cookie.getValue();
+                } else if ("NID_SES".equals(cookie.getName())) {
+                    cachedNidSes = cookie.getValue();
+                }
+            }
+            
+            if (cachedNidAut != null && cachedNidSes != null) {
+                // 쿠키 유효시간 1시간 설정
+                cookieExpireTime = System.currentTimeMillis() + (60 * 60 * 1000);
+                log.info("네이버 쿠키 획득 성공");
+            } else {
+                log.error("네이버 쿠키 획득 실패");
+            }
+            
+        } catch (Exception e) {
+            log.error("Selenium 로그인 실패", e);
+        } finally {
+            if (driver != null) {
+                driver.quit();
+            }
+        }
+    }
+    
+    private String getCookieString() {
+        // 쿠키가 없거나 만료되었으면 갱신
+        if (cachedNidAut == null || cachedNidSes == null || System.currentTimeMillis() > cookieExpireTime) {
+            refreshCookiesWithSelenium();
+        }
+        return String.format("NID_AUT=%s; NID_SES=%s", cachedNidAut, cachedNidSes);
+    }
 
     @Transactional
     public List<NaverBookingDTO> crawlNaverBookings() {
@@ -96,13 +181,23 @@ public class NaverBookingApiCrawlerService {
             request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
             request.setHeader("Accept", "application/json");
             request.setHeader("Referer", "https://partner.booking.naver.com/");
-            request.setHeader("Cookie", String.format("NID_AUT=%s; NID_SES=%s", COOKIE_NID_AUT, COOKIE_NID_SES));
+            request.setHeader("Cookie", getCookieString());
             
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                 String jsonResponse = EntityUtils.toString(response.getEntity());
                 
+                // 응답 로그 추가
+                log.debug("API 응답: {}", jsonResponse.length() > 500 ? jsonResponse.substring(0, 500) + "..." : jsonResponse);
+                
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode rootArray = mapper.readTree(jsonResponse);
+                
+                // 응답이 배열이 아닌 경우 (에러 응답 등) - 쿠키 갱신 후 재시도
+                if (!rootArray.isArray()) {
+                    log.warn("API 응답이 배열이 아님, 쿠키 갱신 시도");
+                    refreshCookiesWithSelenium();
+                    return bookings;
+                }
                 
                 if (rootArray.isArray()) {
                     for (JsonNode bookingNode : rootArray) {

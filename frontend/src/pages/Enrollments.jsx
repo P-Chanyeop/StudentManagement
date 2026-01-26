@@ -315,6 +315,22 @@ function Enrollments() {
     },
   });
 
+  // 횟수 조정 mutation
+  const adjustCountMutation = useMutation({
+    mutationFn: ({ id, data }) => enrollmentAPI.manualAdjustCount(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['enrollments']);
+      // selectedEnrollment 업데이트
+      setSelectedEnrollment(prev => ({
+        ...prev,
+        remainingCount: prev.remainingCount + variables.data.adjustment
+      }));
+    },
+    onError: (error) => {
+      alert(`횟수 조정 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    },
+  });
+
   // 개별 수업 시간 설정 mutation
   const setDurationMutation = useMutation({
     mutationFn: ({ id, durationMinutes }) => enrollmentAPI.setCustomDuration(id, durationMinutes),
@@ -449,6 +465,18 @@ function Enrollments() {
     if (window.confirm('수강권을 취소하시겠습니까?')) {
       cancelMutation.mutate(id);
     }
+  };
+
+  const handleAdjustCount = (id, change) => {
+    const reason = change > 0 ? '관리자 수동 추가' : '관리자 수동 차감';
+    
+    adjustCountMutation.mutate({
+      id,
+      data: {
+        adjustment: change,
+        reason
+      }
+    });
   };
 
   const handleExtendEnrollment = (id) => {
@@ -1029,15 +1057,35 @@ function Enrollments() {
                       </div>
                       <div className="detail-info-item">
                         <span className="info-label">남은 횟수</span>
-                        <span
-                          className="info-value"
-                          style={{
-                            color: selectedEnrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          {selectedEnrollment.remainingCount}회
-                        </span>
+                        <div className="count-adjust-wrapper">
+                          <span
+                            className="info-value"
+                            style={{
+                              color: selectedEnrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {selectedEnrollment.remainingCount}회
+                          </span>
+                          {isAdminOrTeacher && (
+                            <div className="count-adjust-buttons">
+                              <button 
+                                className="btn-count-adjust minus"
+                                onClick={() => handleAdjustCount(selectedEnrollment.id, -1)}
+                                title="1회 차감"
+                              >
+                                -
+                              </button>
+                              <button 
+                                className="btn-count-adjust plus"
+                                onClick={() => handleAdjustCount(selectedEnrollment.id, 1)}
+                                title="1회 추가"
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </>
                   )}

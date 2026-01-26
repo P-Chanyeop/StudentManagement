@@ -38,6 +38,8 @@ holiday:
 
 # 네이버 예약 크롤링 설정
 naver:
+  id: ${NAVER_ID:littlebearrc}
+  pw: ${NAVER_PW:littlebear!}
   booking:
     url: ${NAVER_BOOKING_URL:https://booking.naver.com/your-booking-page}
     cron: "0 0 2 * * ?"  # 매일 새벽 2시에 실행

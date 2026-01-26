@@ -78,6 +78,13 @@ export const studentAPI = {
   // 추가수업 관리
   getAdditionalClass: () => api.get('/students/additional-class'),
   updateAdditionalClass: (id, data) => api.put(`/students/${id}/additional-class`, data),
+  uploadAdditionalClassExcel: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/students/additional-class/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 };
 
 // 수업 API

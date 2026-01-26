@@ -24,9 +24,9 @@ public class SMSTemplateInitializer implements CommandLineRunner {
     private void initializeTemplates() {
         // 단어책/교재 안내
         smsTemplateRepository.save(SMSTemplate.builder()
-                .name("단어책/교재 안내")
+                .name("단어책 안내")
                 .category("textbook")
-                .content("안녕하세요.\n리틀베어 리딩클럽입니다.\n\n{studentName} 학생 필요한 교재 안내드립니다.\n\n{textbookName} 교재\n다음 등원할 때 아이 편으로 보내주세요\n\n감사합니다! :)")
+                .content("안녕하세요.\n리틀베어 리딩클럽입니다.\n\n{studentName} 학생 필요한 교재 안내드립니다.\n\n________________ 교재\n다음 등원할 때 아이 편으로 보내주세요\n\n감사합니다! :)")
                 .description("교재 구매 안내 시 사용")
                 .isActive(true)
                 .build());

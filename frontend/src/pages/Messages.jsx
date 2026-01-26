@@ -7,6 +7,8 @@ import '../styles/Messages.css';
 function Messages() {
   const queryClient = useQueryClient();
   const [showSendModal, setShowSendModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
   // const [testPhone, setTestPhone] = useState('');
   // const [testMessage, setTestMessage] = useState('테스트 메시지입니다.');
   const [newMessage, setNewMessage] = useState({
@@ -58,7 +60,7 @@ function Messages() {
         let content = template.content;
         // 학생 이름 치환
         if (selectedStudent) {
-          content = content.replace('{studentName}', selectedStudent.studentName);
+          content = content.replace(/{studentName}/g, selectedStudent.studentName);
         }
         setNewMessage(prev => ({ ...prev, content }));
       }
@@ -67,12 +69,20 @@ function Messages() {
 
   // 학생 선택 핸들러
   const handleStudentSelect = (student) => {
-    setNewMessage(prev => ({
-      ...prev,
-      studentId: student.id.toString(),
-      recipientPhone: student.parentPhone || student.studentPhone,
-      recipientName: student.parentName || student.studentName
-    }));
+    setNewMessage(prev => {
+      let content = prev.content;
+      // 현재 내용에서 학생 이름 치환
+      if (content) {
+        content = content.replace(/{studentName}/g, student.studentName);
+      }
+      return {
+        ...prev,
+        studentId: student.id.toString(),
+        recipientPhone: student.parentPhone || student.studentPhone,
+        recipientName: student.parentName || student.studentName,
+        content
+      };
+    });
     setShowStudentDropdown(false);
     setStudentSearchQuery('');
   };
@@ -110,6 +120,44 @@ function Messages() {
     },
     onError: (error) => {
       alert(`발송 실패: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  // 템플릿 수정 mutation
+  const updateTemplateMutation = useMutation({
+    mutationFn: ({ id, data }) => smsTemplateAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['smsTemplates']);
+      setEditingTemplate(null);
+      alert('템플릿이 수정되었습니다.');
+    },
+    onError: (error) => {
+      alert(`수정 실패: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  // 템플릿 삭제 mutation
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id) => smsTemplateAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['smsTemplates']);
+      alert('템플릿이 삭제되었습니다.');
+    },
+    onError: (error) => {
+      alert(`삭제 실패: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  // 템플릿 생성 mutation
+  const createTemplateMutation = useMutation({
+    mutationFn: (data) => smsTemplateAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['smsTemplates']);
+      setEditingTemplate(null);
+      alert('템플릿이 생성되었습니다.');
+    },
+    onError: (error) => {
+      alert(`생성 실패: ${error.response?.data?.message || error.message}`);
     },
   });
 
@@ -181,6 +229,11 @@ function Messages() {
       PAYMENT: { text: '결제', className: 'messages-type-payment' },
       RESERVATION: { text: '예약', className: 'messages-type-reservation' },
       EMERGENCY: { text: '긴급', className: 'messages-type-emergency' },
+      ENROLLMENT_REGISTER: { text: '수강등록', className: 'messages-type-enrollment' },
+      ENROLLMENT_EXPIRY: { text: '수강만료', className: 'messages-type-enrollment' },
+      ENROLLMENT_COUNT_EXPIRED: { text: '횟수소진', className: 'messages-type-enrollment' },
+      ENROLLMENT_PERIOD_EXPIRED: { text: '기간만료', className: 'messages-type-enrollment' },
+      TEXTBOOK: { text: '교재안내', className: 'messages-type-general' },
     };
     return badges[type] || { text: type, className: 'messages-type-default' };
   };
@@ -204,9 +257,14 @@ function Messages() {
             </h1>
             <p className="page-subtitle">학생 및 학부모에게 문자를 발송합니다</p>
           </div>
-          <button className="btn-primary" onClick={() => setShowSendModal(true)}>
-            <i className="fas fa-paper-plane"></i> 문자 발송
-          </button>
+          <div className="header-buttons">
+            <button className="btn-secondary" onClick={() => setShowTemplateModal(true)}>
+              <i className="fas fa-file-alt"></i> 템플릿 관리
+            </button>
+            <button className="btn-primary" onClick={() => setShowSendModal(true)}>
+              <i className="fas fa-paper-plane"></i> 문자 발송
+            </button>
+          </div>
         </div>
       </div>
 
@@ -494,6 +552,117 @@ function Messages() {
               >
                 취소
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 템플릿 관리 모달 */}
+      {showTemplateModal && (
+        <div className="modal-overlay" onClick={() => { setShowTemplateModal(false); setEditingTemplate(null); }}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>템플릿 관리</h2>
+              <button className="modal-close" onClick={() => { setShowTemplateModal(false); setEditingTemplate(null); }}>×</button>
+            </div>
+            <div className="modal-body">
+              {editingTemplate ? (
+                <div className="template-edit-form">
+                  <div className="form-group">
+                    <label>템플릿 이름 *</label>
+                    <input
+                      type="text"
+                      value={editingTemplate.name}
+                      onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>카테고리</label>
+                    <select
+                      value={editingTemplate.category || ''}
+                      onChange={(e) => setEditingTemplate({ ...editingTemplate, category: e.target.value })}
+                    >
+                      <option value="general">일반</option>
+                      <option value="textbook">교재</option>
+                      <option value="enrollment">수강</option>
+                      <option value="notice">공지</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>내용 *</label>
+                    <textarea
+                      value={editingTemplate.content}
+                      onChange={(e) => setEditingTemplate({ ...editingTemplate, content: e.target.value })}
+                      rows="8"
+                      placeholder="변수: {studentName} - 학생 이름"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>설명</label>
+                    <input
+                      type="text"
+                      value={editingTemplate.description || ''}
+                      onChange={(e) => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="template-edit-actions">
+                    <button
+                      className="btn-primary"
+                      onClick={() => {
+                        if (editingTemplate.id) {
+                          updateTemplateMutation.mutate({ id: editingTemplate.id, data: editingTemplate });
+                        } else {
+                          createTemplateMutation.mutate({ ...editingTemplate, isActive: true });
+                        }
+                      }}
+                    >
+                      {editingTemplate.id ? '수정' : '생성'}
+                    </button>
+                    <button className="btn-secondary" onClick={() => setEditingTemplate(null)}>
+                      취소
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="template-list-header">
+                    <button
+                      className="btn-primary btn-sm"
+                      onClick={() => setEditingTemplate({ name: '', content: '', category: 'general', description: '' })}
+                    >
+                      <i className="fas fa-plus"></i> 새 템플릿
+                    </button>
+                  </div>
+                  <div className="template-list">
+                    {templates.map((template) => (
+                      <div key={template.id} className="template-item">
+                        <div className="template-info">
+                          <div className="template-name">{template.name}</div>
+                          <div className="template-preview">{template.content.substring(0, 50)}...</div>
+                        </div>
+                        <div className="template-actions">
+                          <button
+                            className="btn-edit"
+                            onClick={() => setEditingTemplate(template)}
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="btn-delete"
+                            onClick={() => {
+                              if (window.confirm('템플릿을 삭제하시겠습니까?')) {
+                                deleteTemplateMutation.mutate(template.id);
+                              }
+                            }}
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

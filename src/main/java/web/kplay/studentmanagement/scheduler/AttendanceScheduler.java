@@ -74,14 +74,14 @@ public class AttendanceScheduler {
     }
 
     /**
-     * 10분마다 실행: 수업 시작 후 30분 지난 미출석자를 결석 처리
+     * 5분마다 실행: 수업 시작 후 15분 지난 미출석자를 결석 처리 + 횟수 차감
      */
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     @Transactional
     public void checkAbsentStudents() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-        LocalTime thirtyMinutesAgo = now.minusMinutes(30);
+        LocalTime fifteenMinutesAgo = now.minusMinutes(15);
 
         List<Attendance> attendances = attendanceRepository.findByDate(today);
 
@@ -89,16 +89,28 @@ public class AttendanceScheduler {
         for (Attendance attendance : attendances) {
             if (attendance.getCheckInTime() == null 
                 && attendance.getAttendanceTime() != null
-                && attendance.getAttendanceTime().isBefore(thirtyMinutesAgo)
+                && attendance.getAttendanceTime().isBefore(fifteenMinutesAgo)
                 && attendance.getStatus() != AttendanceStatus.ABSENT
                 && attendance.getStatus() != AttendanceStatus.EXCUSED) {
                 
-                attendance.updateStatus(AttendanceStatus.ABSENT, "자동 결석 처리 (30분 미출석)");
+                attendance.updateStatus(AttendanceStatus.ABSENT, "자동 결석 처리 (15분 미출석)");
                 attendanceRepository.save(attendance);
                 absentCount++;
                 
+                // 결석 시 수강권 1회 차감
+                Student student = attendance.getStudent();
+                if (student != null) {
+                    List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+                    if (!activeEnrollments.isEmpty()) {
+                        Enrollment enrollment = activeEnrollments.get(0);
+                        enrollment.useCount();
+                        log.info("결석 횟수 차감: student={}, remaining={}/{}", 
+                                student.getStudentName(), enrollment.getRemainingCount(), enrollment.getTotalCount());
+                    }
+                }
+                
                 log.info("Auto absent: student={}, time={}", 
-                    attendance.getStudent() != null ? attendance.getStudent().getStudentName() : 
+                    student != null ? student.getStudentName() : 
                     attendance.getNaverBooking() != null ? attendance.getNaverBooking().getStudentName() : "Unknown",
                     attendance.getAttendanceTime());
             }

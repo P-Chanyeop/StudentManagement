@@ -203,6 +203,11 @@
   color: var(--error-dark);
 }
 
+.messages-type-enrollment {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
 .messages-type-default {
   background: var(--gray-100);
   color: var(--gray-600);
@@ -258,4 +263,106 @@
   .messages-stats-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 헤더 버튼 그룹 */
+.header-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* 템플릿 관리 모달 */
+.modal-large {
+  max-width: 700px;
+  width: 95%;
+}
+
+.template-list-header {
+  margin-bottom: 16px;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+.template-info {
+  flex: 1;
+}
+
+.template-name {
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.template-preview {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.template-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit, .btn-delete {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.btn-edit:hover {
+  background: var(--naver-green);
+  color: white;
+}
+
+.btn-delete {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.btn-delete:hover {
+  background: #FF3B30;
+  color: white;
+}
+
+.template-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.template-edit-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { studentAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -7,6 +7,7 @@ import '../styles/Students.css';
 function AdditionalClass() {
   const queryClient = useQueryClient();
   const [searchKeyword, setSearchKeyword] = useState('');
+  const fileInputRef = useRef(null);
 
   const { data: students, isLoading } = useQuery({
     queryKey: ['students-additional-class'],
@@ -17,6 +18,25 @@ function AdditionalClass() {
     mutationFn: ({ id, data }) => studentAPI.updateAdditionalClass(id, data),
     onSuccess: () => queryClient.invalidateQueries(['students-additional-class']),
   });
+
+  const uploadMutation = useMutation({
+    mutationFn: (file) => studentAPI.uploadAdditionalClassExcel(file),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries(['students-additional-class']);
+      alert(`업로드 완료: ${response.data.updatedCount || 0}명 업데이트`);
+    },
+    onError: (error) => {
+      alert(`업로드 실패: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      uploadMutation.mutate(file);
+      e.target.value = '';
+    }
+  };
 
   const handleToggle = (student, field) => {
     // 하나만 선택 가능: 선택하면 나머지는 false
@@ -75,6 +95,21 @@ function AdditionalClass() {
               className="search-input"
             />
           </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept=".xlsx,.xls"
+            style={{ display: 'none' }}
+          />
+          <button 
+            className="btn-secondary" 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadMutation.isLoading}
+          >
+            <i className="fas fa-upload"></i> 
+            {uploadMutation.isLoading ? '업로드 중...' : '네이버예약 학생 추가수업 리스트 업로드'}
+          </button>
           <div className="result-count">
             <i className="fas fa-users"></i>
             총 <strong>{filteredStudents.length}</strong>명
