@@ -139,24 +139,16 @@ public class AutomatedMessageService {
     @Transactional
     public void sendCheckInNotification(Student student, LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         String content = String.format(
-                "[K-PLAY 학원] %s 학생이 %s에 등원하였습니다. 예상 하원 시간은 %s입니다.",
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d %d:%02d 등원했습니다.\n\n감사합니다! :)",
                 student.getStudentName(),
-                checkInTime.toLocalTime().toString().substring(0, 5),
-                expectedLeaveTime.toString().substring(0, 5)
+                checkInTime.getMonthValue(),
+                checkInTime.getDayOfMonth(),
+                checkInTime.getHour(),
+                checkInTime.getMinute()
         );
 
-        Message message = Message.builder()
-                .student(student)
-                .recipientPhone(student.getParentPhone())
-                .recipientName(student.getParentName())
-                .messageType(MessageType.GENERAL)
-                .content(content)
-                .sendStatus("PENDING")
-                .build();
-
-        Message savedMessage = messageRepository.save(message);
-        savedMessage.markAsSent(LocalDateTime.now(), "AUTO-CHECKIN-" + savedMessage.getId());
-
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
         log.info("등원 알림 발송: 학생={}, 등원시간={}", student.getStudentName(), checkInTime.toLocalTime());
     }
 
