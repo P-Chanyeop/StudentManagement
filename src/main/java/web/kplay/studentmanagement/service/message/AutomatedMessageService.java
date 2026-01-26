@@ -172,6 +172,23 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 레코딩 업로드 완료 알림 발송
+     */
+    @Transactional
+    public void sendRecordingUploadNotification(Student student, Integer sessionNumber) {
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생의 %d회차 레코딩 파일 업로드되었습니다.\n" +
+                "학습현황 탭에서 확인 가능합니다.\n감사합니다! :)",
+                student.getStudentName(),
+                sessionNumber
+        );
+
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
+        log.info("레코딩 업로드 알림 발송: 학생={}, 회차={}", student.getStudentName(), sessionNumber);
+    }
+
+    /**
      * 지각 자동 알림 발송
      * Attendance check-in 시 지각(10분 이상) 판정된 경우 자동 호출
      */
