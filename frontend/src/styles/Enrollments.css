@@ -319,6 +319,15 @@
   color: #C62828;
 }
 
+.badge-hold {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #FFF3E0;
+  color: #E65100;
+}
+
 .status-suspended {
   background: #FFF3E0;
   color: #F57C00;

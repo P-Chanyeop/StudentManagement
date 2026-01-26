@@ -639,6 +639,9 @@ function Enrollments() {
                   {console.log('Full enrollment:', enrollment)}
                   {getTypeBadge(enrollment.enrollmentType || 'COUNT_BASED')}
                   {getStatusBadge(enrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
+                  {enrollment.isOnHold && (
+                    <span className="badge badge-hold">홀딩중</span>
+                  )}
                 </div>
                 <h3 className="enrollment-student-name">{enrollment.studentName || '학생 정보 없음'}</h3>
                 <div className="enrollment-course-name">{enrollment.courseName || '반 미지정'}</div>
@@ -966,6 +969,9 @@ function Enrollments() {
                 <div className="badges">
                   {getTypeBadge(selectedEnrollment.enrollmentType || 'COUNT_BASED')}
                   {getStatusBadge(selectedEnrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
+                  {selectedEnrollment.isOnHold && (
+                    <span className="badge badge-hold">홀딩중</span>
+                  )}
                 </div>
 
                 <div className="detail-info-grid">
