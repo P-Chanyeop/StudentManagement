@@ -386,4 +386,29 @@ public class AutomatedMessageService {
         sendAndSaveMessage(student, MessageType.ENROLLMENT_EXPIRY, content);
         log.info("수강 횟수 소진 알림 발송: 학생={}", student.getStudentName());
     }
+
+    /**
+     * 수강 기간 완료 알림 (매일 오후 8시 실행)
+     */
+    @Scheduled(cron = "0 0 20 * * *")
+    @Transactional
+    public void sendEnrollmentCompletedNotifications() {
+        LocalDate today = LocalDate.now();
+        List<Enrollment> completedEnrollments = enrollmentRepository.findByEndDateAndIsActiveTrue(today);
+
+        for (Enrollment enrollment : completedEnrollments) {
+            String content = String.format(
+                    "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                    "%s 학생의 수강 기간이 완료되었습니다.\n\n" +
+                    "재등록을 원하신다면 결제 부탁드립니다.\n감사합니다! :)",
+                    enrollment.getStudent().getStudentName()
+            );
+
+            sendAndSaveMessage(enrollment.getStudent(), MessageType.ENROLLMENT_EXPIRY, content);
+            log.info("수강 기간 완료 알림 발송: 학생={}, 종료일={}", 
+                    enrollment.getStudent().getStudentName(), enrollment.getEndDate());
+        }
+
+        log.info("수강 기간 완료 알림 발송 완료: 총 {}건", completedEnrollments.size());
+    }
 }

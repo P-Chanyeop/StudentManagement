@@ -85,4 +85,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      */
     @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.endDate BETWEEN :startDate AND :endDate AND e.isActive = :isActive AND e.course.teacher.id = :teacherId")
     int countByEndDateBetweenAndIsActiveAndCourseTeacherId(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("isActive") Boolean isActive, @Param("teacherId") Long teacherId);
+
+    // 오늘 기간 완료되는 활성 수강권
+    List<Enrollment> findByEndDateAndIsActiveTrue(LocalDate endDate);
 }
