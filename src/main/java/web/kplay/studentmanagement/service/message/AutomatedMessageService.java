@@ -82,25 +82,15 @@ public class AutomatedMessageService {
         String reservationType = reservation.getConsultationType() != null ? "상담" : "수업";
         
         String content = String.format(
-                "[K-PLAY 학원] %s 학생의 %s 예약이 완료되었습니다.\n날짜: %s\n시간: %s",
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생의 %s 예약이 완료되었습니다.\n날짜: %s\n시간: %s\n\n감사합니다! :)",
                 student.getStudentName(),
                 reservationType,
                 reservation.getReservationDate(),
                 reservation.getReservationTime().toString().substring(0, 5)
         );
 
-        Message message = Message.builder()
-                .student(student)
-                .recipientPhone(student.getParentPhone())
-                .recipientName(student.getParentName())
-                .messageType(MessageType.GENERAL)
-                .content(content)
-                .sendStatus("PENDING")
-                .build();
-
-        Message savedMessage = messageRepository.save(message);
-        savedMessage.markAsSent(LocalDateTime.now(), "AUTO-RESERVATION-" + savedMessage.getId());
-
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
         log.info("예약 알림 발송: 학생={}, 날짜={}", student.getStudentName(), reservation.getReservationDate());
     }
 
@@ -112,25 +102,14 @@ public class AutomatedMessageService {
         Student student = consultation.getStudent();
         
         String content = String.format(
-                "[K-PLAY 학원] %s 학생의 상담 예약이 완료되었습니다.\n날짜: %s\n시간: %s\n유형: %s",
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생의 상담 예약이 완료되었습니다.\n날짜: %s\n시간: %s\n\n감사합니다! :)",
                 student.getStudentName(),
                 consultation.getConsultationDate(),
-                consultation.getConsultationTime() != null ? consultation.getConsultationTime().toString().substring(0, 5) : "미정",
-                consultation.getTitle()
+                consultation.getConsultationTime() != null ? consultation.getConsultationTime().toString().substring(0, 5) : "미정"
         );
 
-        Message message = Message.builder()
-                .student(student)
-                .recipientPhone(student.getParentPhone())
-                .recipientName(student.getParentName())
-                .messageType(MessageType.GENERAL)
-                .content(content)
-                .sendStatus("PENDING")
-                .build();
-
-        Message savedMessage = messageRepository.save(message);
-        savedMessage.markAsSent(LocalDateTime.now(), "AUTO-CONSULTATION-" + savedMessage.getId());
-
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
         log.info("상담 예약 알림 발송: 학생={}, 날짜={}", student.getStudentName(), consultation.getConsultationDate());
     }
 
