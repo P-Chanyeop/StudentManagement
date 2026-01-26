@@ -51,22 +51,9 @@ public class TeacherAttendanceController {
 
         LocalDate today = LocalDate.now();
         
-        // 이미 출근했으면 퇴근 처리
-        var existing = teacherAttendanceRepository.findByTeacherAndAttendanceDate(teacher, today);
-        if (existing.isPresent()) {
-            TeacherAttendance attendance = existing.get();
-            if (attendance.getCheckOutTime() == null) {
-                attendance.checkOut(LocalDateTime.now());
-                teacherAttendanceRepository.save(attendance);
-                log.info("선생님 퇴근: {}", teacher.getName());
-                return ResponseEntity.ok(Map.of(
-                        "type", "checkout",
-                        "message", teacher.getName() + " 선생님 퇴근 완료",
-                        "time", attendance.getCheckOutTime()
-                ));
-            } else {
-                return ResponseEntity.badRequest().body(Map.of("message", "이미 퇴근 처리되었습니다"));
-            }
+        // 이미 출근했는지 확인
+        if (teacherAttendanceRepository.findByTeacherAndAttendanceDate(teacher, today).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "이미 출근 체크되었습니다"));
         }
 
         // 출근 처리
@@ -80,9 +67,35 @@ public class TeacherAttendanceController {
         log.info("선생님 출근: {}", teacher.getName());
 
         return ResponseEntity.ok(Map.of(
-                "type", "checkin",
                 "message", teacher.getName() + " 선생님 출근 완료",
                 "time", attendance.getCheckInTime()
+        ));
+    }
+
+    // 전화번호 뒷자리로 퇴근 체크
+    @PostMapping("/check-out")
+    public ResponseEntity<?> checkOut(@RequestBody Map<String, Object> request) {
+        Long teacherId = Long.valueOf(request.get("teacherId").toString());
+        
+        User teacher = userRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("선생님을 찾을 수 없습니다"));
+
+        LocalDate today = LocalDate.now();
+        
+        TeacherAttendance attendance = teacherAttendanceRepository.findByTeacherAndAttendanceDate(teacher, today)
+                .orElseThrow(() -> new RuntimeException("출근 기록이 없습니다. 먼저 출근 체크해주세요."));
+
+        if (attendance.getCheckOutTime() != null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "이미 퇴근 체크되었습니다"));
+        }
+
+        attendance.checkOut(LocalDateTime.now());
+        teacherAttendanceRepository.save(attendance);
+        log.info("선생님 퇴근: {}", teacher.getName());
+
+        return ResponseEntity.ok(Map.of(
+                "message", teacher.getName() + " 선생님 퇴근 완료",
+                "time", attendance.getCheckOutTime()
         ));
     }
 

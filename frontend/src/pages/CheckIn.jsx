@@ -31,13 +31,13 @@ const CheckIn = () => {
     onSuccess: (data) => {
       let results = [];
       
-      // 선생님 결과 추가
+      // 선생님 결과 추가 (모드에 따라 필터링)
       data.teachers.forEach(t => {
         results.push({
           ...t,
           isTeacher: true,
           studentName: t.name + ' 선생님',
-          courseName: '선생님 출퇴근'
+          courseName: '선생님'
         });
       });
       
@@ -93,8 +93,8 @@ const CheckIn = () => {
     }
   });
 
-  // 선생님 출퇴근 mutation
-  const teacherCheckMutation = useMutation({
+  // 선생님 출근 mutation
+  const teacherCheckInMutation = useMutation({
     mutationFn: async (teacherData) => {
       return axios.post('/api/teacher-attendance/check-in', { teacherId: teacherData.id });
     },
@@ -103,7 +103,22 @@ const CheckIn = () => {
       resetState();
     },
     onError: (error) => {
-      alert(error.response?.data?.message || '출퇴근 체크 중 오류가 발생했습니다.');
+      alert(error.response?.data?.message || '출근 체크 중 오류가 발생했습니다.');
+      resetState();
+    }
+  });
+
+  // 선생님 퇴근 mutation
+  const teacherCheckOutMutation = useMutation({
+    mutationFn: async (teacherData) => {
+      return axios.post('/api/teacher-attendance/check-out', { teacherId: teacherData.id });
+    },
+    onSuccess: (response) => {
+      alert(response.data.message);
+      resetState();
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || '퇴근 체크 중 오류가 발생했습니다.');
       resetState();
     }
   });
@@ -139,7 +154,11 @@ const CheckIn = () => {
     
     // 선생님인 경우
     if (selectedStudent.isTeacher) {
-      teacherCheckMutation.mutate(selectedStudent);
+      if (mode === 'checkIn') {
+        teacherCheckInMutation.mutate(selectedStudent);
+      } else {
+        teacherCheckOutMutation.mutate(selectedStudent);
+      }
       return;
     }
     
@@ -212,9 +231,11 @@ const CheckIn = () => {
                 <button
                   className={`checkin-confirm-btn ${mode === 'checkOut' ? 'checkout' : ''} ${selectedStudent.isTeacher ? 'teacher' : ''}`}
                   onClick={handleAction}
-                  disabled={checkInMutation.isPending || checkOutMutation.isPending || teacherCheckMutation.isPending}
+                  disabled={checkInMutation.isPending || checkOutMutation.isPending || teacherCheckInMutation.isPending || teacherCheckOutMutation.isPending}
                 >
-                  {selectedStudent.isTeacher ? '출퇴근 체크' : (mode === 'checkIn' ? '출석 체크' : '하원 체크')}
+                  {selectedStudent.isTeacher 
+                    ? (mode === 'checkIn' ? '출근 체크' : '퇴근 체크')
+                    : (mode === 'checkIn' ? '출석 체크' : '하원 체크')}
                 </button>
               )}
             </div>
