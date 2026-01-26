@@ -206,6 +206,31 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 홀딩 적용 알림 발송
+     */
+    @Transactional
+    public void sendHoldNotification(Student student, LocalDate holdStart, LocalDate holdEnd, 
+                                      LocalDate enrollStart, LocalDate enrollEnd) {
+        // 홀딩 종료 다음날부터 등원 가능
+        LocalDate resumeDate = holdEnd.plusDays(1);
+        
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d - %d/%d 동안 홀딩 적용하여 수강 유효 기간은 %d/%d - %d/%d 까지로 변경 되었습니다. " +
+                "출석일은 %d/%d 부터 등원 가능한점 안내드립니다.\n\n감사합니다! :)",
+                student.getStudentName(),
+                holdStart.getMonthValue(), holdStart.getDayOfMonth(),
+                holdEnd.getMonthValue(), holdEnd.getDayOfMonth(),
+                enrollStart.getMonthValue(), enrollStart.getDayOfMonth(),
+                enrollEnd.getMonthValue(), enrollEnd.getDayOfMonth(),
+                resumeDate.getMonthValue(), resumeDate.getDayOfMonth()
+        );
+
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
+        log.info("홀딩 알림 발송: 학생={}, 홀딩기간={} ~ {}", student.getStudentName(), holdStart, holdEnd);
+    }
+
+    /**
      * 지각 자동 알림 발송
      * Attendance check-in 시 지각(10분 이상) 판정된 경우 자동 호출
      */

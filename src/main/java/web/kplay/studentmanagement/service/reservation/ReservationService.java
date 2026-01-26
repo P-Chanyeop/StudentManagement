@@ -66,6 +66,15 @@ public class ReservationService {
                 throw new BusinessException("유효하지 않은 수강권입니다");
             }
 
+            // 홀딩 기간 체크
+            if (enrollment.getIsOnHold() != null && enrollment.getIsOnHold()) {
+                LocalDate holdEnd = enrollment.getHoldEndDate();
+                if (holdEnd != null && !request.getReservationDate().isAfter(holdEnd)) {
+                    throw new BusinessException("홀딩 기간 중에는 예약할 수 없습니다. " + 
+                            (holdEnd.getMonthValue()) + "/" + holdEnd.getDayOfMonth() + " 이후부터 예약 가능합니다.");
+                }
+            }
+
             // 수강권 횟수 차감
             enrollment.useCount();
         } else {
@@ -74,6 +83,15 @@ public class ReservationService {
             if (!activeEnrollments.isEmpty()) {
                 enrollment = activeEnrollments.get(0); // 첫 번째 활성 수강권 사용
                 log.info("Auto-selected enrollment: {}", enrollment.getId());
+                
+                // 홀딩 기간 체크
+                if (enrollment.getIsOnHold() != null && enrollment.getIsOnHold()) {
+                    LocalDate holdEnd = enrollment.getHoldEndDate();
+                    if (holdEnd != null && !request.getReservationDate().isAfter(holdEnd)) {
+                        throw new BusinessException("홀딩 기간 중에는 예약할 수 없습니다. " + 
+                                (holdEnd.getMonthValue()) + "/" + holdEnd.getDayOfMonth() + " 이후부터 예약 가능합니다.");
+                    }
+                }
                 
                 // 수강권 횟수 차감
                 enrollment.useCount();
