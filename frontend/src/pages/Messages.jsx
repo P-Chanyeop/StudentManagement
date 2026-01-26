@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { messageAPI, studentAPI, smsAPI, smsTemplateAPI } from '../services/api';
+import { messageAPI, studentAPI, smsTemplateAPI } from '../services/api';
 import '../styles/Messages.css';
 
 function Messages() {
   const queryClient = useQueryClient();
   const [showSendModal, setShowSendModal] = useState(false);
-  const [testPhone, setTestPhone] = useState('');
-  const [testMessage, setTestMessage] = useState('테스트 메시지입니다.');
+  // const [testPhone, setTestPhone] = useState('');
+  // const [testMessage, setTestMessage] = useState('테스트 메시지입니다.');
   const [newMessage, setNewMessage] = useState({
     studentId: '',
     recipientPhone: '',
@@ -124,7 +124,7 @@ function Messages() {
     setSelectedTemplateId('');
   };
 
-  // SMS 테스트 발송
+  /* SMS 테스트 발송 - 주석 처리
   const testSmsMutation = useMutation({
     mutationFn: (data) => smsAPI.send(data),
     onSuccess: (response) => {
@@ -158,6 +158,7 @@ function Messages() {
       message: testMessage,
     });
   };
+  */
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -210,7 +211,7 @@ function Messages() {
       </div>
 
       <div className="page-content">
-        {/* SMS 테스트 발송 */}
+        {/* SMS 테스트 발송 - 주석 처리
         <div className="sms-test-section">
           <h2>SMS 테스트 발송</h2>
           <div className="sms-test-form">
@@ -237,6 +238,7 @@ function Messages() {
             </button>
           </div>
         </div>
+        */}
 
         {/* 통계 카드 */}
         <div className="messages-stats-grid">
