@@ -199,6 +199,7 @@ public class AuthService {
                         .findByStudentIdAndIsActiveTrue(firstChild.getId());
 
                 List<UserProfileResponse.EnrollmentSummary> summaries = activeEnrollments.stream()
+                        .filter(e -> e.getCourse() != null)
                         .map(this::toEnrollmentSummary)
                         .collect(Collectors.toList());
 
