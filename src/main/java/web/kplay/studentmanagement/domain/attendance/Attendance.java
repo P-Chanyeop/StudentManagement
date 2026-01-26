@@ -96,6 +96,10 @@ public class Attendance extends BaseEntity {
     @Column
     private LocalTime additionalClassEndTime; // 추가 수업 종료 시간
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean lateNotificationSent = false; // 미출석 알림 발송 여부
+
     // 출석 체크
     public void checkIn(LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
         this.checkInTime = checkInTime;
@@ -216,5 +220,14 @@ public class Attendance extends BaseEntity {
     // 추가 수업이 있는지 확인
     public boolean hasAnyAdditionalClass() {
         return vocabularyClass || grammarClass || phonicsClass || speakingClass;
+    }
+
+    // 미출석 알림 발송 표시
+    public void markLateNotificationSent() {
+        this.lateNotificationSent = true;
+    }
+
+    public boolean isLateNotificationSent() {
+        return this.lateNotificationSent != null && this.lateNotificationSent;
     }
 }

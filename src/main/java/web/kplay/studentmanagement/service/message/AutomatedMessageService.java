@@ -189,6 +189,23 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 미출석 알림 발송 (15분 경과)
+     */
+    @Transactional
+    public void sendNoShowNotification(Student student, LocalTime scheduledTime) {
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 오늘 %d시 예약되어있는데 아직 등원하지 않아 연락드립니다.\n" +
+                "당일 결석의 경우 횟수 차감인점 안내드리며 확인 부탁드립니다.\n\n감사합니다! :)",
+                student.getStudentName(),
+                scheduledTime.getHour()
+        );
+
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
+        log.info("미출석 알림 발송: 학생={}, 예약시간={}", student.getStudentName(), scheduledTime);
+    }
+
+    /**
      * 지각 자동 알림 발송
      * Attendance check-in 시 지각(10분 이상) 판정된 경우 자동 호출
      */
