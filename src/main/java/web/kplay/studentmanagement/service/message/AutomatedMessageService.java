@@ -153,6 +153,25 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 하원 알림 발송
+     */
+    @Transactional
+    public void sendCheckOutNotification(Student student, LocalDateTime checkOutTime) {
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d %d:%02d 하원했습니다.\n\n감사합니다! :)",
+                student.getStudentName(),
+                checkOutTime.getMonthValue(),
+                checkOutTime.getDayOfMonth(),
+                checkOutTime.getHour(),
+                checkOutTime.getMinute()
+        );
+
+        sendAndSaveMessage(student, MessageType.GENERAL, content);
+        log.info("하원 알림 발송: 학생={}, 하원시간={}", student.getStudentName(), checkOutTime.toLocalTime());
+    }
+
+    /**
      * 지각 자동 알림 발송
      * Attendance check-in 시 지각(10분 이상) 판정된 경우 자동 호출
      */

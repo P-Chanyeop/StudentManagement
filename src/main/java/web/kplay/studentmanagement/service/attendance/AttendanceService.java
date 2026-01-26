@@ -368,6 +368,12 @@ public class AttendanceService {
         LocalDateTime now = LocalDateTime.now();
         attendance.checkOut(now);
 
+        // 하원 알림 발송
+        Student student = attendance.getStudent();
+        if (student != null) {
+            automatedMessageService.sendCheckOutNotification(student, now);
+        }
+
         log.info("Leave check-out: student={}, time={}",
                 getStudentName(attendance), now);
 
