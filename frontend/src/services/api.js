@@ -157,6 +157,16 @@ export const attendanceAPI = {
     api.put(`/attendances/${attendanceId}/speaking`),
 };
 
+// 선생님 출퇴근 API
+export const teacherAttendanceAPI = {
+  getToday: () => api.get('/teacher-attendance/today'),
+  getByDate: (date) => api.get(`/teacher-attendance/date/${date}`),
+  checkIn: () => api.post('/teacher-attendance/check-in'),
+  checkOut: () => api.post('/teacher-attendance/check-out'),
+  getMy: () => api.get('/teacher-attendance/my'),
+  getTeachers: () => api.get('/teacher-attendance/teachers'),
+};
+
 // 예약 API
 export const reservationAPI = {
   create: (data) => api.post('/reservations', data),

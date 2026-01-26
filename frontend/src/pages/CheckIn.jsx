@@ -18,19 +18,39 @@ const CheckIn = () => {
 
   const searchMutation = useMutation({
     mutationFn: async (phone) => {
-      const response = await axios.post('/api/attendances/search-by-phone', { phoneLast4: phone });
-      return response.data;
+      // 학생 검색
+      const studentRes = await axios.post('/api/attendances/search-by-phone', { phoneLast4: phone });
+      // 선생님 검색
+      const teacherRes = await axios.post('/api/teacher-attendance/search', { phoneLast4: phone });
+      
+      return {
+        students: studentRes.data,
+        teachers: teacherRes.data
+      };
     },
     onSuccess: (data) => {
-      // 하원 모드일 때는 출석체크 완료된 학생만 필터링
+      let results = [];
+      
+      // 선생님 결과 추가
+      data.teachers.forEach(t => {
+        results.push({
+          ...t,
+          isTeacher: true,
+          studentName: t.name + ' 선생님',
+          courseName: '선생님 출퇴근'
+        });
+      });
+      
+      // 학생 결과 추가
       if (mode === 'checkOut') {
-        const checkedIn = data.filter(s => s.checkInTime && !s.checkOutTime);
-        setSearchResults(checkedIn);
+        const checkedIn = data.students.filter(s => s.checkInTime && !s.checkOutTime);
+        results = [...results, ...checkedIn];
       } else {
-        // 등원 모드일 때는 아직 출석 안 한 학생만
-        const notCheckedIn = data.filter(s => !s.checkInTime);
-        setSearchResults(notCheckedIn);
+        const notCheckedIn = data.students.filter(s => !s.checkInTime);
+        results = [...results, ...notCheckedIn];
       }
+      
+      setSearchResults(results);
       setSelectedStudent(null);
     },
     onError: () => {
@@ -73,6 +93,21 @@ const CheckIn = () => {
     }
   });
 
+  // 선생님 출퇴근 mutation
+  const teacherCheckMutation = useMutation({
+    mutationFn: async (teacherData) => {
+      return axios.post('/api/teacher-attendance/check-in', { teacherId: teacherData.id });
+    },
+    onSuccess: (response) => {
+      alert(response.data.message);
+      resetState();
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || '출퇴근 체크 중 오류가 발생했습니다.');
+      resetState();
+    }
+  });
+
   const resetState = () => {
     setPhoneNumber('');
     setSearchResults([]);
@@ -101,6 +136,14 @@ const CheckIn = () => {
 
   const handleAction = () => {
     if (!selectedStudent) return;
+    
+    // 선생님인 경우
+    if (selectedStudent.isTeacher) {
+      teacherCheckMutation.mutate(selectedStudent);
+      return;
+    }
+    
+    // 학생인 경우
     if (mode === 'checkIn') {
       checkInMutation.mutate(selectedStudent);
     } else {
@@ -167,11 +210,11 @@ const CheckIn = () => {
               ))}
               {selectedStudent && (
                 <button
-                  className={`checkin-confirm-btn ${mode === 'checkOut' ? 'checkout' : ''}`}
+                  className={`checkin-confirm-btn ${mode === 'checkOut' ? 'checkout' : ''} ${selectedStudent.isTeacher ? 'teacher' : ''}`}
                   onClick={handleAction}
-                  disabled={checkInMutation.isPending || checkOutMutation.isPending}
+                  disabled={checkInMutation.isPending || checkOutMutation.isPending || teacherCheckMutation.isPending}
                 >
-                  {mode === 'checkIn' ? '출석 체크' : '하원 체크'}
+                  {selectedStudent.isTeacher ? '출퇴근 체크' : (mode === 'checkIn' ? '출석 체크' : '하원 체크')}
                 </button>
               )}
             </div>

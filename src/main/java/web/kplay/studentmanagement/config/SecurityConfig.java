@@ -90,6 +90,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/naver-booking/events").permitAll() // SSE 엔드포인트
                         .requestMatchers("/api/attendances/search-by-phone", "/api/attendances/*/check-in", "/api/attendances/naver-booking/*/check-in", "/api/attendances/*/checkout").permitAll() // 출석체크 페이지
+                        .requestMatchers("/api/teacher-attendance/**").permitAll() // 선생님 출퇴근 체크
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll() // 개발 환경에서 H2 Console 접근 허용
                         .requestMatchers("/error").permitAll() // 에러 페이지 허용
