@@ -30,6 +30,8 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final NoticeViewRepository noticeViewRepository;
     private final UserRepository userRepository;
+    private final web.kplay.studentmanagement.repository.StudentRepository studentRepository;
+    private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
 
     /**
      * 공지사항 생성 (XSS 방지)
@@ -70,6 +72,9 @@ public class NoticeService {
 
         Notice saved = noticeRepository.save(notice);
         log.info("공지사항 생성: 제목={}, 작성자={}", sanitizedTitle, author.getUsername());
+
+        // 모든 학생(학부모)에게 공지 알림 문자 발송
+        automatedMessageService.sendNoticeNotificationToAll(studentRepository.findAll());
 
         return toResponse(saved);
     }

@@ -231,6 +231,25 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 공지사항 등록 알림 발송 (전체 학생)
+     */
+    @Transactional
+    public void sendNoticeNotificationToAll(List<Student> students) {
+        String content = "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "리틀베어 홈페이지에 새로운 공지가 등록되었습니다.\n" +
+                "공지사항을 확인해 주세요.\n\n감사합니다! :)";
+
+        int count = 0;
+        for (Student student : students) {
+            if (student.getParentPhone() != null && !student.getParentPhone().isEmpty()) {
+                sendAndSaveMessage(student, MessageType.GENERAL, content);
+                count++;
+            }
+        }
+        log.info("공지 알림 발송 완료: {}명", count);
+    }
+
+    /**
      * 지각 자동 알림 발송
      * Attendance check-in 시 지각(10분 이상) 판정된 경우 자동 호출
      */
