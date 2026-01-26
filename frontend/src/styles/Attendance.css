@@ -874,39 +874,3 @@
   transform: none !important;
   box-shadow: none !important;
 }
-
-
-/* 출석체크 버튼 */
-.check-action {
-  text-align: center;
-  width: 60px;
-}
-
-.btn-check-in {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  background-color: #4CAF50;
-  color: white;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-check-in:hover:not(:disabled) {
-  background-color: #45a049;
-  transform: scale(1.1);
-}
-
-.btn-check-in:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.checked-icon {
-  color: #4CAF50;
-  font-size: 1.2rem;
-}
