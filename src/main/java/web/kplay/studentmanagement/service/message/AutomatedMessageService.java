@@ -279,9 +279,9 @@ public class AutomatedMessageService {
     }
 
     /**
-     * 레벨테스트 전날 알림 (매일 오후 5시 실행)
+     * 레벨테스트 전날 알림 (매일 오후 7시 실행)
      */
-    @Scheduled(cron = "0 0 17 * * *") // 매일 오후 5시
+    @Scheduled(cron = "0 0 19 * * *") // 매일 오후 7시
     @Transactional
     public void sendLevelTestReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
@@ -300,18 +300,24 @@ public class AutomatedMessageService {
                 continue;
             }
 
+            // 시간 포맷팅
+            String timeStr = test.getTestTime() != null ? 
+                    test.getTestTime().getHour() + "시" : "예정";
+
             String content = String.format(
-                    "[K-PLAY 학원] 안녕하세요. %s 학생의 레벨테스트가 내일(%s) %s에 예정되어 있습니다. 시간 맞춰 방문 부탁드립니다.",
+                    "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                    "%s학생\n%d/%d %s에 레벨테스트 예정되어있습니다.\n\n" +
+                    "스케줄 변동 있으시면 편하게 말씀해주세요.\n감사합니다 :)",
                     test.getStudent().getStudentName(),
-                    test.getTestDate(),
-                    test.getTestTime()
+                    tomorrow.getMonthValue(), tomorrow.getDayOfMonth(),
+                    timeStr
             );
 
             Message message = Message.builder()
                     .student(test.getStudent())
                     .recipientPhone(test.getStudent().getParentPhone())
                     .recipientName(test.getStudent().getParentName())
-                    .messageType(MessageType.LEVEL_TEST)
+                    .messageType(MessageType.LEVEL_TEST_REMINDER)
                     .content(content)
                     .sendStatus("PENDING")
                     .build();

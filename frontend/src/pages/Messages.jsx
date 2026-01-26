@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { messageAPI, studentAPI, smsAPI } from '../services/api';
+import { messageAPI, studentAPI, smsAPI, smsTemplateAPI } from '../services/api';
 import '../styles/Messages.css';
 
 function Messages() {
@@ -20,6 +20,7 @@ function Messages() {
   // 학생 선택 드롭다운 상태
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
   // 전체 문자 내역 조회
   const { data: messages = [], isLoading } = useQuery({
@@ -38,6 +39,31 @@ function Messages() {
       return response.data;
     },
   });
+
+  // 템플릿 목록 조회
+  const { data: templates = [] } = useQuery({
+    queryKey: ['smsTemplates'],
+    queryFn: async () => {
+      const response = await smsTemplateAPI.getAll();
+      return response.data;
+    },
+  });
+
+  // 템플릿 선택 핸들러
+  const handleTemplateSelect = (templateId) => {
+    setSelectedTemplateId(templateId);
+    if (templateId) {
+      const template = templates.find(t => t.id.toString() === templateId);
+      if (template) {
+        let content = template.content;
+        // 학생 이름 치환
+        if (selectedStudent) {
+          content = content.replace('{studentName}', selectedStudent.studentName);
+        }
+        setNewMessage(prev => ({ ...prev, content }));
+      }
+    }
+  };
 
   // 학생 선택 핸들러
   const handleStudentSelect = (student) => {
@@ -95,6 +121,7 @@ function Messages() {
       messageType: 'GENERAL',
       content: '',
     });
+    setSelectedTemplateId('');
   };
 
   // SMS 테스트 발송
@@ -416,17 +443,31 @@ function Messages() {
                 </div>
 
                 <div className="form-group">
+                  <label>템플릿 선택</label>
+                  <select
+                    value={selectedTemplateId}
+                    onChange={(e) => handleTemplateSelect(e.target.value)}
+                  >
+                    <option value="">직접 입력</option>
+                    {templates.map(template => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label>메시지 내용 *</label>
                   <textarea
                     value={newMessage.content}
                     onChange={(e) => setNewMessage({ ...newMessage, content: e.target.value })}
-                    placeholder="메시지 내용을 입력하세요"
-                    rows="4"
-                    maxLength="90"
+                    placeholder="메시지 내용을 입력하세요&#10;&#10;변수: {studentName}, {textbookName}, {content}, {date}, {reason}"
+                    rows="6"
                     required
                   />
                   <div className="messages-char-count">
-                    {newMessage.content.length}/90자
+                    {newMessage.content.length}자 (90자 초과 시 LMS로 발송)
                   </div>
                 </div>
               </form>

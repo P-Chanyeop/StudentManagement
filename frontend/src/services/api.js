@@ -270,6 +270,14 @@ export const smsAPI = {
   getRemain: () => api.get('/sms/remain'),
 };
 
+// SMS 템플릿 API
+export const smsTemplateAPI = {
+  getAll: () => api.get('/sms-templates'),
+  create: (data) => api.post('/sms-templates', data),
+  update: (id, data) => api.put(`/sms-templates/${id}`, data),
+  delete: (id) => api.delete(`/sms-templates/${id}`),
+};
+
 // 마이페이지 API
 export const mypageAPI = {
   getMyPage: () => api.get('/mypage/me'),
