@@ -536,8 +536,8 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
 
-        LocalDate originalEndDate = enrollment.getEndDate();
         enrollment.startHold(request.getHoldStartDate(), request.getHoldEndDate());
+        enrollmentRepository.save(enrollment);
         
         // 홀딩 알림 문자 발송
         automatedMessageService.sendHoldNotification(
@@ -563,6 +563,7 @@ public class EnrollmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
 
         enrollment.endHold();
+        enrollmentRepository.save(enrollment);
         log.info("수강권 홀딩 종료: enrollmentId={}", id);
 
         return toResponse(enrollment);
