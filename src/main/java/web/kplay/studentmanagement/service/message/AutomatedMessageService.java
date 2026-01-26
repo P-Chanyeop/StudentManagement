@@ -35,6 +35,7 @@ public class AutomatedMessageService {
     private final EnrollmentRepository enrollmentRepository;
     private final LevelTestRepository levelTestRepository;
     private final SmsService smsService;
+    private final web.kplay.studentmanagement.repository.StudentRepository studentRepository;
     
     @Value("${app.homepage-url:https://littlebear.kplay.web}")
     private String homepageUrl;
@@ -247,6 +248,43 @@ public class AutomatedMessageService {
             }
         }
         log.info("공지 알림 발송 완료: {}명", count);
+    }
+
+    /**
+     * 재원생 예약 시작 알림 (격주 일요일 오전 8시 30분)
+     */
+    @Scheduled(cron = "0 30 8 * * SUN")
+    @Transactional
+    public void sendReservationOpenNotification() {
+        // 격주 확인
+        LocalDate now = LocalDate.now();
+        LocalDate baseDate = LocalDate.of(2024, 1, 7);
+        long weeksBetween = ChronoUnit.WEEKS.between(baseDate, now);
+        
+        if (weeksBetween % 2 != 0) {
+            log.info("격주가 아니므로 예약 알림을 발송하지 않습니다.");
+            return;
+        }
+
+        String content = "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "30분 뒤 2주간 재원생 수업 예약창이 열립니다.\n" +
+                "수업 예약 진행 부탁드립니다.\n\n감사합니다! :)";
+
+        // 활성 수강권이 있는 학생들에게만 발송
+        List<Student> activeStudents = enrollmentRepository.findAll().stream()
+                .filter(e -> e.getIsActive() != null && e.getIsActive())
+                .map(e -> e.getStudent())
+                .distinct()
+                .toList();
+
+        int count = 0;
+        for (Student student : activeStudents) {
+            if (student.getParentPhone() != null && !student.getParentPhone().isEmpty()) {
+                sendAndSaveMessage(student, MessageType.GENERAL, content);
+                count++;
+            }
+        }
+        log.info("재원생 예약 알림 발송 완료: {}명", count);
     }
 
     /**
