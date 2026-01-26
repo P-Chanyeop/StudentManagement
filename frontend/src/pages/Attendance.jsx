@@ -172,6 +172,25 @@ function Attendance() {
     },
   });
 
+  // 선생님 직접 출석 체크인 mutation
+  const directCheckInMutation = useMutation({
+    mutationFn: (attendanceId) => attendanceAPI.checkIn({ attendanceId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances', selectedDate]);
+    },
+    onError: (error) => {
+      alert(`출석 체크 실패: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  // 선생님 직접 출석 체크
+  const handleDirectCheckIn = (attendance) => {
+    if (attendance.checkInTime) return;
+    if (window.confirm(`${attendance.studentName} 학생을 출석 체크하시겠습니까?`)) {
+      directCheckInMutation.mutate(attendance.id);
+    }
+  };
+
   // 출석 취소 mutation
   const cancelAttendanceMutation = useMutation({
     mutationFn: (attendanceId) => attendanceAPI.cancelAttendance(attendanceId),
@@ -626,6 +645,7 @@ function Attendance() {
                 <th>D/C</th>
                 <th>WR</th>
                 <th>비고</th>
+                <th>출석체크</th>
               </tr>
             </thead>
             <tbody>
@@ -720,6 +740,21 @@ function Attendance() {
                       className="notes-input"
                       onBlur={(e) => handleReasonBlur(attendance.id, e.target.value)}
                     />
+                  </td>
+                  <td className="check-action">
+                    {!attendance.checkInTime ? (
+                      <button
+                        className="btn-check-in"
+                        onClick={() => handleDirectCheckIn(attendance)}
+                        disabled={directCheckInMutation.isPending}
+                      >
+                        <i className="fas fa-check"></i>
+                      </button>
+                    ) : (
+                      <span className="checked-icon">
+                        <i className="fas fa-check-circle"></i>
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}
