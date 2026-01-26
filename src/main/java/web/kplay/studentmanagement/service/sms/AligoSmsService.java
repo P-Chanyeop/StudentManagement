@@ -19,13 +19,13 @@ public class AligoSmsService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${aligo.api.key}")
+    @Value("${sms.aligo.api-key}")
     private String apiKey;
 
-    @Value("${aligo.api.user-id}")
+    @Value("${sms.aligo.user-id}")
     private String userId;
 
-    @Value("${aligo.api.sender}")
+    @Value("${sms.aligo.sender}")
     private String sender;
 
     private static final String BASE_URL = "https://apis.aligo.in";
