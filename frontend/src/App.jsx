@@ -14,7 +14,7 @@ import ParentReservation from './pages/ParentReservation';
 import ConsultationReservation from './pages/ConsultationReservation';
 import ClassInfo from './pages/ClassInfo';
 import Enrollments from './pages/Enrollments';
-import EnrollmentAdjustment from './pages/EnrollmentAdjustment';
+// import EnrollmentAdjustment from './pages/EnrollmentAdjustment';
 import Consultations from './pages/Consultations';
 import Messages from './pages/Messages';
 import MakeupClasses from './pages/MakeupClasses';
@@ -178,6 +178,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      {/* 횟수 조정 페이지 주석 처리
       <Route
         path="/enrollment-adjustment"
         element={
@@ -186,6 +187,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      */}
       <Route
         path="/consultations"
         element={
