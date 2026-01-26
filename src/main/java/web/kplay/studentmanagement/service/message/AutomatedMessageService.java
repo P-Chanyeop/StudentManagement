@@ -370,4 +370,20 @@ public class AutomatedMessageService {
             log.error("SMS 발송 실패: {}", e.getMessage());
         }
     }
+
+    /**
+     * 수강 횟수 소진 알림 발송
+     */
+    @Transactional
+    public void sendEnrollmentDepletedNotification(Student student) {
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생의 횟수가 모두 소진되었습니다.\n\n" +
+                "재등록을 원하신다면 결제 부탁드립니다.\n감사합니다! :)",
+                student.getStudentName()
+        );
+
+        sendAndSaveMessage(student, MessageType.ENROLLMENT_EXPIRY, content);
+        log.info("수강 횟수 소진 알림 발송: 학생={}", student.getStudentName());
+    }
 }

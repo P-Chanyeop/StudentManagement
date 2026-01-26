@@ -49,6 +49,15 @@ public class SMSTemplateInitializer implements CommandLineRunner {
                 .isActive(true)
                 .build());
 
+        // 수강 횟수 소진 안내
+        smsTemplateRepository.save(SMSTemplate.builder()
+                .name("수강 횟수 소진 안내")
+                .category("enrollment")
+                .content("안녕하세요.\n리틀베어 리딩클럽입니다.\n\n{studentName} 학생의 횟수가 모두 소진되었습니다.\n\n재등록을 원하신다면 결제 부탁드립니다.\n감사합니다! :)")
+                .description("수강 횟수 소진 시 자동 발송")
+                .isActive(true)
+                .build());
+
         log.info("SMS 템플릿 초기화 완료");
     }
 }

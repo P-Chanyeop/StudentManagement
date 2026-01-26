@@ -448,6 +448,10 @@ public class EnrollmentService {
                 for (int i = 0; i < countChange; i++) {
                     enrollment.useCount();
                 }
+                // 횟수 소진 시 자동 알림 발송
+                if (enrollment.getRemainingCount() == 0) {
+                    automatedMessageService.sendEnrollmentDepletedNotification(enrollment.getStudent());
+                }
                 break;
             case ADD:
                 enrollment.addCount(countChange);
