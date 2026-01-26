@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { courseAPI, scheduleAPI, reservationAPI } from '../services/api';
+import { getTodayString } from '../utils/dateUtils';
 import '../styles/Courses.css';
 
 function Courses() {
@@ -639,7 +640,7 @@ function CoursesTab({ courses, searchQuery, setSearchQuery, setShowCreateModal, 
 
 // 스케줄 관리 탭 컴포넌트
 function SchedulesTab() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [selectedCourse, setSelectedCourse] = useState('');
   const [showCreateSchedule, setShowCreateSchedule] = useState(false);
   const [newSchedule, setNewSchedule] = useState({

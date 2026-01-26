@@ -206,7 +206,7 @@ public class FileUploadController {
         }
     }
 
-    /**
+    /**서
      * 파일 삭제 (관리자/선생님만 가능)
      * @param filePath 삭제할 파일 경로
      * @return 삭제 결과 메시지

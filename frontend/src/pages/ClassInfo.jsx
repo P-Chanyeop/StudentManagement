@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { attendanceAPI, authAPI, scheduleAPI, reservationAPI, enrollmentAPI } from '../services/api';
+import { getTodayString } from '../utils/dateUtils';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/ClassInfo.css';
 
 function ClassInfo() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const navigate = useNavigate();
 
@@ -83,7 +84,7 @@ function ClassInfo() {
       console.log('Fetching class data for:', { selectedDate, role: profile.role, studentId: profile.studentId });
       
       if (profile.role === 'PARENT') {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayString();
         const isToday = selectedDate === today;
         const isFuture = selectedDate > today;
         
@@ -339,7 +340,7 @@ function ClassInfo() {
       // 학부모용 출석 상태 확인 (학부모 계정에서만, 오늘 이전 날짜만)
       let attendanceStatus = null;
       if (isParent && attendanceData.length > 0) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayString();
         
         // 오늘 이전 날짜만 출석 상태 표시
         if (dateStr <= today) {

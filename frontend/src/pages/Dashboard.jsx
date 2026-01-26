@@ -9,6 +9,7 @@ import {
   authAPI,
   dashboardAPI
 } from '../services/api';
+import { getTodayString } from '../utils/dateUtils';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -23,7 +24,7 @@ function Dashboard() {
   const [showAllReservations, setShowAllReservations] = useState(false);
 
   // 오늘 날짜
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayString();
 
   // 사용자 프로필 조회
   const { data: profile } = useQuery({

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { studentAPI, authAPI, courseAPI, enrollmentAPI } from '../services/api';
+import { getTodayString, getDateAfterDays } from '../utils/dateUtils';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/Students.css';
 
@@ -179,8 +180,8 @@ function Students() {
         await enrollmentAPI.create({
           studentId: createdStudent.id,
           courseId: newStudent.selectedCourseId,
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          startDate: getTodayString(),
+          endDate: getDateAfterDays(90),
           totalCount: 24,
           usedCount: 0,
           remainingCount: 24,
@@ -836,8 +837,8 @@ function Students() {
                                     await enrollmentAPI.create({
                                       studentId: selectedStudent.id,
                                       courseId: course.id,
-                                      startDate: new Date().toISOString().split('T')[0],
-                                      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                                      startDate: getTodayString(),
+                                      endDate: getDateAfterDays(90),
                                       totalCount: 24,
                                       usedCount: 0,
                                       remainingCount: 24,

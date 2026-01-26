@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { consultationAPI, studentAPI, fileAPI, authAPI } from '../services/api';
+import { getTodayString, getLocalDateString } from '../utils/dateUtils';
 import '../styles/Consultations.css';
 
 function Consultations() {
@@ -44,7 +45,7 @@ function Consultations() {
     const minDate = new Date();
     minDate.setDate(minDate.getDate() + daysToAdd);
     
-    return minDate.toISOString().split('T')[0];
+    return getLocalDateString(minDate);
   };
 
   // 사용자 프로필 조회
@@ -246,7 +247,7 @@ function Consultations() {
       const consultationData = {
         ...newConsultation,
         studentId,
-        consultationDate: new Date().toISOString().split('T')[0],
+        consultationDate: getTodayString(),
         recordingFileUrl,
         attachmentFileUrl
       };
@@ -366,7 +367,7 @@ function Consultations() {
       console.log('Calling exportAll API...');
       const response = await consultationAPI.exportAll();
       console.log('Export All Response:', response);
-      const fileName = `전체_상담이력_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `전체_상담이력_${getTodayString()}.xlsx`;
       downloadExcelFile(response.data, fileName);
       alert('전체 상담 이력이 다운로드되었습니다.');
       console.log('=== Export All Success ===');
@@ -399,7 +400,7 @@ function Consultations() {
       console.log('Response data size:', response.data?.size || 'unknown');
       
       const studentName = students.find(s => s.id == selectedStudent)?.studentName || '학생';
-      const fileName = `${studentName}_상담이력_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `${studentName}_상담이력_${getTodayString()}.xlsx`;
       
       console.log('Student name:', studentName);
       console.log('File name:', fileName);

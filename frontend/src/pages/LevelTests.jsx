@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { levelTestAPI, studentAPI, reservationAPI, authAPI } from '../services/api';
+import { getTodayString, getDateAfterDays } from '../utils/dateUtils';
 import '../styles/LevelTests.css';
 
 function LevelTests() {
@@ -18,13 +19,13 @@ function LevelTests() {
 
   const isParent = currentUser?.role === 'PARENT';
   const [dateRange, setDateRange] = useState({
-    start: new Date().toISOString().split('T')[0],
-    end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    start: getTodayString(),
+    end: getDateAfterDays(30),
   });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTest, setNewTest] = useState({
     studentId: '',
-    testDate: new Date().toISOString().split('T')[0],
+    testDate: getTodayString(),
     testTime: '10:00',
     memo: '',
   });
@@ -34,8 +35,8 @@ function LevelTests() {
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   const [searchParams, setSearchParams] = useState({
-    start: new Date().toISOString().split('T')[0],
-    end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30일 후
+    start: getTodayString(),
+    end: getDateAfterDays(30)
   });
 
   // 날짜 범위로 레벨 테스트 조회 (수동 트리거)

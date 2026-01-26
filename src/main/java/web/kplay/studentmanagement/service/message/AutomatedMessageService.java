@@ -36,6 +36,7 @@ public class AutomatedMessageService {
     private final LevelTestRepository levelTestRepository;
     private final SmsService smsService;
     private final web.kplay.studentmanagement.repository.StudentRepository studentRepository;
+    private final web.kplay.studentmanagement.repository.ConsultationRepository consultationRepository;
     
     @Value("${app.homepage-url:https://littlebear.kplay.web}")
     private String homepageUrl;
@@ -99,18 +100,26 @@ public class AutomatedMessageService {
      */
     @Transactional
     public void sendConsultationNotification(web.kplay.studentmanagement.domain.consultation.Consultation consultation) {
+        // 녹음파일이 없으면 문자 발송 안함
+        if (consultation.getRecordingFileUrl() == null || consultation.getRecordingFileUrl().isEmpty()) {
+            return;
+        }
+        
         Student student = consultation.getStudent();
+        
+        // 해당 학생의 녹음파일 있는 학습기록 개수 (회차)
+        int recordingCount = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(student.getId());
         
         String content = String.format(
                 "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
-                "%s 학생의 상담 예약이 완료되었습니다.\n날짜: %s\n시간: %s\n\n감사합니다! :)",
+                "%s 학생의 %d회차 레코딩 파일 업로드되었습니다.\n" +
+                "학습현황 탭에서 확인 가능합니다.\n감사합니다! :)",
                 student.getStudentName(),
-                consultation.getConsultationDate(),
-                consultation.getConsultationTime() != null ? consultation.getConsultationTime().toString().substring(0, 5) : "미정"
+                recordingCount
         );
 
         sendAndSaveMessage(student, MessageType.GENERAL, content);
-        log.info("상담 예약 알림 발송: 학생={}, 날짜={}", student.getStudentName(), consultation.getConsultationDate());
+        log.info("레코딩 업로드 알림 발송: 학생={}, 회차={}", student.getStudentName(), recordingCount);
     }
 
     /**

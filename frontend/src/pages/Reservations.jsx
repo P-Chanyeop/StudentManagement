@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI, consultationAPI } from '../services/api';
+import { getTodayString } from '../utils/dateUtils';
 import '../styles/Reservations.css';
 
 function Reservations() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNaverDetailModal, setShowNaverDetailModal] = useState(false);

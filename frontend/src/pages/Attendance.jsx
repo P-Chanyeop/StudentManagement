@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { attendanceAPI, studentAPI } from '../services/api';
+import { getLocalDateString, getTodayString } from '../utils/dateUtils';
 import '../styles/Attendance.css';
 
 function Attendance() {
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [searchName, setSearchName] = useState('');
   const [tableSearchName, setTableSearchName] = useState('');
   
@@ -35,11 +34,13 @@ function Attendance() {
 
   // 출석 상태에 따른 행 클래스 반환
   const getAttendanceRowClass = (attendance) => {
-    // 출석 체크가 완료된 경우 실제 상태 표시
-    if (attendance.checkInTime) {
+    // 상태가 있으면 상태에 따라 클래스 반환
+    if (attendance.status) {
       switch (attendance.status) {
         case 'PRESENT':
           return 'present';
+        case 'LATE':
+          return 'late';
         case 'ABSENT':
           return 'absent';
         case 'EXCUSED':
@@ -47,62 +48,48 @@ function Attendance() {
         case 'EARLY_LEAVE':
           return 'early-leave';
         default:
-          return 'present';
+          return 'absent';
       }
     }
     
-    // 미래 시간대 체크
+    // 상태가 없으면 미래 시간대 체크
     if (isFutureTime(attendance)) return 'waiting';
     
-    if (!attendance.status) return 'absent';
-    
-    switch (attendance.status) {
-      case 'PRESENT':
-        return 'present';
-      case 'LATE':
-        return 'late';
-      case 'ABSENT':
-        return 'absent';
-      case 'EXCUSED':
-        return 'excused';
-      case 'EARLY_LEAVE':
-        return 'early-leave';
-      default:
-        return 'absent';
-    }
+    return 'absent';
   };
 
   // 출석 상태 텍스트 반환
   const getAttendanceStatusText = (attendance) => {
-    // 미래 시간대 체크
+    // 상태가 있으면 상태에 따라 표시
+    if (attendance.status) {
+      switch (attendance.status) {
+        case 'PRESENT':
+          return '출석';
+        case 'LATE':
+          return '지각';
+        case 'NOTYET':
+          return '미출석';
+        case 'ABSENT':
+          return '결석';
+        case 'EXCUSED':
+          return '사유결석';
+        case 'EARLY_LEAVE':
+          return '조퇴';
+        default:
+          return '미출석';
+      }
+    }
+    
+    // 상태가 없으면 미래 시간대 체크
     if (isFutureTime(attendance)) return '대기';
     
-    // 상태가 없으면 미출석
-    if (!attendance.status) return '미출석';
-    
-    // 상태에 따라 표시
-    switch (attendance.status) {
-      case 'PRESENT':
-        return '출석';
-      case 'LATE':
-        return '지각';
-      case 'NOTYET':
-        return '미출석';
-      case 'ABSENT':
-        return '결석';
-      case 'EXCUSED':
-        return '사유결석';
-      case 'EARLY_LEAVE':
-        return '조퇴';
-      default:
-        return '미출석';
-    }
+    return '미출석';
   };
 
   // 미래 시간대인지 확인하는 함수
   const isFutureTime = (attendance) => {
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const today = getLocalDateString(now);
     
     // 오늘이 아닌 미래 날짜면 대기
     if (selectedDate > today) return true;
@@ -272,8 +259,7 @@ function Attendance() {
 
   // 미래 날짜인지 확인하는 함수 (버튼 비활성화용)
   const isFutureDate = (attendance) => {
-    const today = new Date().toISOString().split('T')[0];
-    return selectedDate > today;
+    return selectedDate > getTodayString();
   };
 
   // 학생 출석 체크인 - 항상 모달 열기
@@ -479,7 +465,7 @@ function Attendance() {
               onClick={() => {
                 const d = new Date(selectedDate);
                 d.setDate(d.getDate() - 1);
-                setSelectedDate(d.toISOString().split('T')[0]);
+                setSelectedDate(getLocalDateString(d));
                 setDateComponents({
                   year: d.getFullYear().toString(),
                   month: (d.getMonth() + 1).toString(),
@@ -505,7 +491,7 @@ function Attendance() {
               onClick={() => {
                 const d = new Date(selectedDate);
                 d.setDate(d.getDate() + 1);
-                setSelectedDate(d.toISOString().split('T')[0]);
+                setSelectedDate(getLocalDateString(d));
                 setDateComponents({
                   year: d.getFullYear().toString(),
                   month: (d.getMonth() + 1).toString(),
@@ -517,7 +503,7 @@ function Attendance() {
               className="today-btn"
               onClick={() => {
                 const today = new Date();
-                setSelectedDate(today.toISOString().split('T')[0]);
+                setSelectedDate(getLocalDateString(today));
                 setDateComponents({
                   year: today.getFullYear().toString(),
                   month: (today.getMonth() + 1).toString(),

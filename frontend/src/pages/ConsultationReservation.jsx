@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { consultationAPI, authAPI, studentAPI } from '../services/api';
+import { getLocalDateString } from '../utils/dateUtils';
 import '../styles/ConsultationReservation.css';
 
 function ConsultationReservation() {
@@ -441,7 +442,7 @@ function ConsultationReservation() {
                       
                       // 오늘 날짜이고 과거 시간이면 비활성화
                       const now = new Date();
-                      const today = now.toISOString().split('T')[0];
+                      const today = getLocalDateString(now);
                       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
                       const isPastTime = formData.consultationDate === today && time < currentTime;
                       

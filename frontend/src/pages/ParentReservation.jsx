@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { reservationAPI, scheduleAPI, authAPI, studentAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
+import { getLocalDateString } from '../utils/dateUtils';
 import '../styles/ParentReservation.css';
 
 function ParentReservation() {
@@ -152,7 +153,7 @@ function ParentReservation() {
   // 상담 유형에 따른 예약 가능 날짜 체크
   const isDateAvailable = (date, consultationType) => {
     const dayOfWeek = date.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = getLocalDateString(date);
     const year = date.getFullYear();
     const isHoliday = holidays[year] && holidays[year][dateString];
 

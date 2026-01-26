@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { enrollmentAPI, studentAPI, courseAPI, authAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
+import { getTodayString, getDateAfterDays, getLocalDateString } from '../utils/dateUtils';
 import '../styles/Enrollments.css';
 
 function Enrollments() {
@@ -102,7 +103,7 @@ function Enrollments() {
   };
   const [newEnrollment, setNewEnrollment] = useState({
     studentId: '',
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: getTodayString(),
     endDate: '',
     totalCount: 24, // 기본 24회
     weeks: 12, // 기본 12주
@@ -120,7 +121,7 @@ function Enrollments() {
     school: '',
     grade: '',
     memo: '',
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: getTodayString(),
     endDate: '',
     totalCount: 24,
     weeks: 12,
@@ -151,7 +152,7 @@ function Enrollments() {
       
       setNewEnrollment(prev => ({
         ...prev,
-        endDate: endDate.toISOString().split('T')[0]
+        endDate: getLocalDateString(endDate)
       }));
     } catch (error) {
       console.error('종료일 계산 실패:', error);
@@ -232,7 +233,7 @@ function Enrollments() {
       setShowCreateModal(false);
       setNewEnrollment({
         studentId: '',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getTodayString(),
         endDate: '',
         totalCount: 24,
         weeks: 12,
@@ -261,7 +262,7 @@ function Enrollments() {
         school: '',
         grade: '',
         memo: '',
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getTodayString(),
         endDate: '',
         totalCount: 24,
         weeks: 12,
@@ -436,7 +437,7 @@ function Enrollments() {
         );
         setUnregisteredData(prev => ({
           ...prev,
-          endDate: endDate.toISOString().split('T')[0]
+          endDate: getLocalDateString(endDate)
         }));
       } catch (error) {
         console.error('종료일 계산 실패:', error);
@@ -485,7 +486,7 @@ function Enrollments() {
       // 현재 날짜에서 days만큼 더한 새로운 종료일 계산
       const newEndDate = new Date();
       newEndDate.setDate(newEndDate.getDate() + parseInt(days));
-      const formattedDate = newEndDate.toISOString().split('T')[0];
+      const formattedDate = getLocalDateString(newEndDate);
       extendMutation.mutate({ id, newEndDate: formattedDate });
     }
   };
@@ -802,7 +803,7 @@ function Enrollments() {
                   onChange={(e) =>
                     setNewEnrollment({ ...newEnrollment, startDate: e.target.value })
                   }
-                  min={new Date().toISOString().split('T')[0]}
+                  min={getTodayString()}
                 />
               </div>
               
@@ -1274,7 +1275,7 @@ function Enrollments() {
               {holdData.holdStartDate && holdData.holdEndDate && (
                 <div className="info-box">
                   <p>홀딩 기간: {Math.ceil((new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate)) / (1000 * 60 * 60 * 24)) + 1}일</p>
-                  <p>연장될 종료일: {new Date(new Date(selectedEnrollment.endDate).getTime() + (new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate) + 86400000)).toISOString().split('T')[0]}</p>
+                  <p>연장될 종료일: {getLocalDateString(new Date(new Date(selectedEnrollment.endDate).getTime() + (new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate) + 86400000)))}</p>
                 </div>
               )}
             </div>

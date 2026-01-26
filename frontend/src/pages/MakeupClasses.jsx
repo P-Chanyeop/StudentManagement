@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { makeupClassAPI, studentAPI, courseAPI, authAPI } from '../services/api';
+import { getTodayString } from '../utils/dateUtils';
 import '../styles/MakeupClasses.css';
 
 function MakeupClasses() {
@@ -438,7 +439,7 @@ function MakeupClasses() {
                       type="date"
                       value={formData.makeupDate}
                       onChange={(e) => setFormData({ ...formData, makeupDate: e.target.value })}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={getTodayString()}
                       required
                     />
                   </div>
