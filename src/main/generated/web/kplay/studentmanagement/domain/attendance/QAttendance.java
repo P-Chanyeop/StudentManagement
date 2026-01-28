@@ -51,6 +51,8 @@ public class QAttendance extends EntityPathBase<Attendance> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
+    public final BooleanPath lateNotificationSent = createBoolean("lateNotificationSent");
+
     public final StringPath memo = createString("memo");
 
     public final web.kplay.studentmanagement.domain.reservation.QNaverBooking naverBooking;

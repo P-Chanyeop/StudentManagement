@@ -62,6 +62,7 @@ public class NaverBookingApiCrawlerService {
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--disable-gpu");
         options.addArguments("--window-size=1920,1080");
+        options.setBinary("/usr/bin/google-chrome-stable");
         
         WebDriver driver = null;
         try {
