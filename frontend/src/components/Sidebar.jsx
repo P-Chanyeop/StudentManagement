@@ -142,6 +142,7 @@ function Sidebar() {
       { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '수업 예약' },
       { path: '/consultation-reservation', icon: <i className="fas fa-user-md"></i>, label: '상담 예약' },
       { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 내역' },
+      { path: '/my-quiz', icon: <i className="fas fa-book-reader"></i>, label: '영어 퀴즈' },
       { path: '/consultations', icon: <i className="fas fa-chart-line"></i>, label: '학습 현황' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
@@ -234,7 +235,7 @@ function Sidebar() {
       <div className="sidebar-header">
         <div className="logo">
           <span className="logo-icon">🎓</span>
-          {!isCollapsed && <h2>학원 관리 시스템</h2>}
+          {!isCollapsed && <h2>{profile?.role === 'PARENT' ? '자녀 관리 시스템' : '학원 관리 시스템'}</h2>}
         </div>
         {!isCollapsed && (
           <div className="menu-edit-controls">
