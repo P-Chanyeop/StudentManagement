@@ -22,6 +22,7 @@ import Notices from './pages/Notices';
 import MyPage from './pages/MyPage';
 import ParentMyPage from './pages/ParentMyPage';
 import AdditionalClass from './pages/AdditionalClass';
+import MyQuizScores from './pages/MyQuizScores';
 import { useQuery } from '@tanstack/react-query';
 import { authAPI } from './services/api';
 
@@ -225,6 +226,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AdditionalClass />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-quiz"
+        element={
+          <ProtectedRoute>
+            <MyQuizScores />
           </ProtectedRoute>
         }
       />
