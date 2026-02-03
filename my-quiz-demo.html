@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 영어 퀴즈 기록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #00c73c 0%, #00b33c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 199, 60, 0.3);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .student-name {
+            font-size: 20px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00c73c;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #00c73c 0%, #00b33c 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8fff9;
+        }
+
+        td {
+            padding: 15px;
+        }
+
+        .score-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .score-excellent {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .score-good {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .score-fair {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+
+        .score-poor {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📚 나의 영어 퀴즈 기록</h1>
+            <p class="student-name" id="studentName">Loading...</p>
+        </header>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-label">총 활동</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">평균 점수</div>
+                <div class="stat-value" id="avgScore">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">최고 점수</div>
+                <div class="stat-value" id="maxScore">0%</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('date')">날짜 ▼</th>
+                        <th onclick="sortTable('book')">책 제목 ▼</th>
+                        <th onclick="sortTable('difficulty')">난이도 ▼</th>
+                        <th onclick="sortTable('score')">점수 ▼</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // ruru3677 계정 = "Leveltest, Leveltest" 학생
+        const STUDENT_NAME = "Leveltest, Leveltest";
+
+        const allData = [
+            { grade: "Grade 1", name: "Park, Jea", date: "2026-02-02", book: "Splat the Cat and the Hotshot", difficulty: 2.3, score: 60 },
+            { grade: "Kinder", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 1", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 2", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 3", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 4", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 5", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 6", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 },
+            { grade: "Grade 7", name: "Leveltest, Leveltest", date: "2026-02-02", book: "How to Steal a Dog", difficulty: 4.0, score: 100 }
+        ];
+
+        let myData = allData.filter(row => row.name === STUDENT_NAME);
+        let sortColumn = 'date';
+        let sortAsc = false;
+
+        function getScoreBadgeClass(score) {
+            if (score >= 90) return 'score-excellent';
+            if (score >= 70) return 'score-good';
+            if (score >= 50) return 'score-fair';
+            return 'score-poor';
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = column;
+                sortAsc = true;
+            }
+
+            myData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                if (aVal < bVal) return sortAsc ? -1 : 1;
+                if (aVal > bVal) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            
+            if (myData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">아직 퀴즈 기록이 없습니다.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = myData.map(row => `
+                <tr>
+                    <td>${row.date}</td>
+                    <td>${row.book}</td>
+                    <td><span class="difficulty-badge">${row.difficulty}</span></td>
+                    <td><span class="score-badge ${getScoreBadgeClass(row.score)}">${row.score}%</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('studentName').textContent = STUDENT_NAME;
+            document.getElementById('totalCount').textContent = myData.length + '개';
+            
+            if (myData.length > 0) {
+                const avg = (myData.reduce((sum, item) => sum + item.score, 0) / myData.length).toFixed(1);
+                const max = Math.max(...myData.map(d => d.score));
+                document.getElementById('avgScore').textContent = avg + '%';
+                document.getElementById('maxScore').textContent = max + '%';
+            } else {
+                document.getElementById('avgScore').textContent = '0%';
+                document.getElementById('maxScore').textContent = '0%';
+            }
+        }
+
+        // 초기 렌더링
+        sortTable('date');
+        updateStats();
+    </script>
+</body>
+</html>

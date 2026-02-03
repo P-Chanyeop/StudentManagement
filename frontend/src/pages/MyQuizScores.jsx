@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/MyQuizScores.css';
 
-// ruru3677 계정 = "kim, doyoon" 학생 (Grade 3)
-const STUDENT_NAME = "kim, doyoon";
+// TODO: 실제로는 백엔드 API에서 현재 로그인한 학생의 데이터를 가져와야 함
+const STUDENT_NAME = ""; // 백엔드에서 가져올 예정
 
 const allQuizData = [
-  { grade: "Grade 3", name: "kim, doyoon", date: "2026-01-26", book: "Night of the Bats!", difficulty: 4.2, score: 80 },
-  { grade: "Grade 1", name: "kim, doyoon", date: "2026-01-24", book: "Dirty Bertie: Fangs!", difficulty: 3.1, score: 90 }
+  // 백엔드 API에서 데이터를 가져올 예정
 ];
 
 const MyQuizScores = () => {

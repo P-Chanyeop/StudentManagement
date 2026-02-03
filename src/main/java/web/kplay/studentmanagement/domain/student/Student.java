@@ -79,6 +79,9 @@ public class Student extends BaseEntity {
     @Builder.Default
     private Boolean assignedVocabulary = false;
 
+    @Column(length = 100)
+    private String renaissanceUsername; // 르네상스 아이디
+
     @Column
     @Builder.Default
     private Boolean assignedSightword = false;
@@ -161,5 +164,10 @@ public class Student extends BaseEntity {
     public boolean hasAnyAssignedClass() {
         return Boolean.TRUE.equals(assignedVocabulary) || Boolean.TRUE.equals(assignedSightword) 
             || Boolean.TRUE.equals(assignedGrammar) || Boolean.TRUE.equals(assignedPhonics);
+    }
+
+    // 르네상스 아이디 업데이트
+    public void updateRenaissanceUsername(String renaissanceUsername) {
+        this.renaissanceUsername = renaissanceUsername;
     }
 }

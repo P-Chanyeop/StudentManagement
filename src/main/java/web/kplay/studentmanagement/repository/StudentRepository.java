@@ -30,5 +30,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     
     List<Student> findByStudentName(String studentName);
     
+    List<Student> findByStudentNameAndParentPhone(String studentName, String parentPhone);
+    
     List<Student> findByIsActiveTrue();
 }

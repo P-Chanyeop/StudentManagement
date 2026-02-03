@@ -113,6 +113,7 @@ function Sidebar() {
       { path: '/enrollments', icon: <i className="fas fa-ticket-alt"></i>, label: '수강권 관리' },
       // { path: '/enrollment-adjustment', icon: <i className="fas fa-edit"></i>, label: '횟수 조정' },
       { path: '/consultations', icon: <i className="fas fa-chart-line"></i>, label: '학습 현황' },
+      { path: '/quiz-management', icon: <i className="fas fa-book-reader"></i>, label: '퀴즈 관리' },
       { path: '/messages', icon: <i className="fas fa-envelope"></i>, label: '문자 발송' },
       { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
