@@ -198,6 +198,7 @@ public class StudentService {
                 .parentPhone(student.getParentPhone())
                 .parentEmail(student.getParentEmail())
                 .isActive(student.getIsActive())
+                .renaissanceUsername(student.getRenaissanceUsername())
                 .enrollments(student.getEnrollments().stream()
                         .map(this::toEnrollmentResponse)
                         .collect(Collectors.toList()))

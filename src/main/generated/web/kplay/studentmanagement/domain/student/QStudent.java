@@ -63,6 +63,8 @@ public class QStudent extends EntityPathBase<Student> {
 
     public final web.kplay.studentmanagement.domain.user.QUser parentUser;
 
+    public final StringPath renaissanceUsername = createString("renaissanceUsername");
+
     public final StringPath school = createString("school");
 
     public final StringPath studentName = createString("studentName");

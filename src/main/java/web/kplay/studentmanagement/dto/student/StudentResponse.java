@@ -28,5 +28,6 @@ public class StudentResponse {
     private String parentPhone;
     private String parentEmail;
     private Boolean isActive;
+    private String renaissanceUsername;
     private List<EnrollmentResponse> enrollments;
 }

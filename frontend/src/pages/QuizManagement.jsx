@@ -11,20 +11,28 @@ function QuizManagement() {
     mutationFn: async (file) => {
       const formData = new FormData();
       formData.append('file', file);
-      // TODO: API 연동
-      // const response = await fetch('/api/quiz/upload-renaissance-ids', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // return response.json();
-      return { success: true, matched: 120, unmatched: 23 };
+      
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('/api/quiz/upload-renaissance-ids', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('업로드 실패');
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
-      alert(`업로드 완료!\n매칭: ${data.matched}명\n미매칭: ${data.unmatched}명`);
+      alert(`업로드 완료!\n${data.updatedCount}명의 학생 정보가 업데이트되었습니다.`);
       setExcelFile(null);
     },
-    onError: () => {
-      alert('업로드 실패');
+    onError: (error) => {
+      alert('업로드 실패: ' + error.message);
     }
   });
 

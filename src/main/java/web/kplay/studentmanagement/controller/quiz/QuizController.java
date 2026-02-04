@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import web.kplay.studentmanagement.service.QuizService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -37,6 +38,23 @@ public class QuizController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "업로드 실패: " + e.getMessage());
+            
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/student/{studentId}")
+    @PreAuthorize("hasAnyRole('PARENT', 'ADMIN')")
+    public ResponseEntity<?> getStudentQuizData(@PathVariable Long studentId) {
+        try {
+            List<Map<String, Object>> quizData = quizService.fetchStudentQuizData(studentId);
+            return ResponseEntity.ok(quizData);
+        } catch (Exception e) {
+            log.error("퀴즈 데이터 조회 실패", e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "퀴즈 데이터 조회 실패: " + e.getMessage());
             
             return ResponseEntity.badRequest().body(response);
         }
