@@ -8,6 +8,8 @@ const MyQuizScores = () => {
   const [quizData, setQuizData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Axios 인터셉터로 토큰 자동 추가
   axios.interceptors.request.use(
@@ -43,6 +45,7 @@ const MyQuizScores = () => {
     try {
       const response = await axios.get(`/api/quiz/student/${studentId}`);
       setQuizData(response.data);
+      setCurrentPage(1);
     } catch (err) {
       console.error('퀴즈 데이터 조회 실패:', err);
       setError(err.response?.data?.message || '퀴즈 데이터를 불러올 수 없습니다.');
@@ -64,6 +67,9 @@ const MyQuizScores = () => {
     avg: (quizData.reduce((sum, q) => sum + (parseInt(q.percentCorrect) || 0), 0) / quizData.length).toFixed(1),
     max: Math.max(...quizData.map(q => parseInt(q.percentCorrect) || 0))
   } : { total: 0, avg: 0, max: 0 };
+
+  const totalPages = Math.ceil(quizData.length / itemsPerPage);
+  const paginatedQuizData = quizData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="my-quiz-scores">
@@ -186,7 +192,7 @@ const MyQuizScores = () => {
             </div>
           </div>
 
-          {quizData.map((quiz, index) => (
+          {paginatedQuizData.map((quiz, index) => (
             <div key={index} className="quiz-detail-card">
               <div className="quiz-card-header">
                 <div className="quiz-title-section">
@@ -251,6 +257,26 @@ const MyQuizScores = () => {
               </div>
             </div>
           ))}
+
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                className="page-btn" 
+                onClick={() => setCurrentPage(p => p - 1)} 
+                disabled={currentPage === 1}
+              >
+                <i className="fas fa-chevron-left"></i> 이전
+              </button>
+              <span className="page-info">{currentPage} / {totalPages}</span>
+              <button 
+                className="page-btn" 
+                onClick={() => setCurrentPage(p => p + 1)} 
+                disabled={currentPage === totalPages}
+              >
+                다음 <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          )}
         </>
       )}
 
