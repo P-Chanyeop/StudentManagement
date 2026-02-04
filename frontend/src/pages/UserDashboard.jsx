@@ -68,7 +68,7 @@ function UserDashboard() {
       </section>
 
       {/* 메인 컨텐츠 */}
-      <div className="dashboard-container">
+      <div className="parent-content">
         {myEnrollments.length === 0 ? (
           <div className="empty-state">
             <i className="fas fa-graduation-cap"></i>
@@ -81,152 +81,53 @@ function UserDashboard() {
             );
             
             return (
-              <div key={enrollment.id} className="student-info-section">
-                <h3 className="student-name-header">{enrollment.studentName}</h3>
+              <div key={enrollment.id} className="student-section">
+                <div className="student-header">
+                  <h2>{enrollment.studentName}</h2>
+                  <span className={`days-badge ${daysLeft <= 7 ? 'urgent' : ''}`}>
+                    {daysLeft > 0 ? `D-${daysLeft}` : '만료'}
+                  </span>
+                </div>
                 
-                {/* 통계 카드 그리드 */}
-                <div className="stats-grid">
-                  {/* 반 카드 */}
-                  <div className="stat-card">
-                    <div className="stat-card-header">
-                      <div className="stat-icon">
-                        <i className="fas fa-chalkboard-teacher"></i>
-                      </div>
-                      <div className="stat-trend success">
-                        <i className="fas fa-check"></i>
-                        수강중
-                      </div>
-                    </div>
-                    <div className="stat-card-body">
-                      <div className="stat-number">{enrollment.courseName}</div>
-                      <div className="stat-label">반</div>
-                    </div>
-                    <div className="stat-footer">
-                      <i className="fas fa-info-circle"></i> 
-                      현재 수강 중인 반
-                    </div>
+                <div className="info-table">
+                  <div className="info-row">
+                    <span className="info-label">반</span>
+                    <span className="info-value">{enrollment.courseName}</span>
                   </div>
-
-                  {/* 수업 시간 카드 */}
-                  <div className="stat-card">
-                    <div className="stat-card-header">
-                      <div className="stat-icon">
-                        <i className="fas fa-clock"></i>
-                      </div>
-                      <div className="stat-trend info">
-                        <i className="fas fa-calendar"></i>
-                        일정
-                      </div>
-                    </div>
-                    <div className="stat-card-body">
-                      <div className="stat-number schedule-time">
-                        {enrollment.courseSchedules?.map(schedule => 
-                          `${schedule.dayOfWeek}`
-                        ).join(', ') || '미정'}
-                      </div>
-                      <div className="stat-label">수업 시간</div>
-                    </div>
-                    <div className="stat-footer">
-                      <i className="fas fa-clock"></i> 
+                  <div className="info-row">
+                    <span className="info-label">수업 시간</span>
+                    <span className="info-value">
                       {enrollment.courseSchedules?.map(schedule => 
-                        `${schedule.startTime}-${schedule.endTime}`
-                      ).join(', ') || '시간 미정'}
-                    </div>
+                        `${schedule.dayOfWeek} ${schedule.startTime}-${schedule.endTime}`
+                      ).join(', ') || '미정'}
+                    </span>
                   </div>
-
-                  {/* 잔여 횟수 카드 */}
-                  <div className="stat-card">
-                    <div className="stat-card-header">
-                      <div className="stat-icon">
-                        <i className="fas fa-ticket-alt"></i>
-                      </div>
-                      <div className="stat-trend success">
-                        <i className="fas fa-check"></i>
-                        이용가능
-                      </div>
-                    </div>
-                    <div className="stat-card-body">
-                      <div className="stat-number">
-                        {enrollment.enrollmentType === 'COUNT' 
-                          ? enrollment.remainingCount 
-                          : '∞'}
-                      </div>
-                      <div className="stat-label">잔여 횟수</div>
-                    </div>
-                    <div className="stat-footer">
-                      <i className="fas fa-calculator"></i> 
+                  <div className="info-row">
+                    <span className="info-label">잔여 횟수</span>
+                    <span className="info-value highlight">
                       {enrollment.enrollmentType === 'COUNT' 
-                        ? `총 ${enrollment.totalCount}회 중 ${enrollment.usedCount}회 사용`
-                        : '무제한 이용'}
-                    </div>
+                        ? `${enrollment.remainingCount}회 / ${enrollment.totalCount}회` 
+                        : '무제한'}
+                    </span>
                   </div>
-
-                  {/* 수강 기간 카드 */}
-                  <div className="stat-card">
-                    <div className="stat-card-header">
-                      <div className="stat-icon">
-                        <i className="fas fa-calendar-alt"></i>
-                      </div>
-                      <div className="stat-trend info">
-                        <i className="fas fa-info"></i>
-                        기간
-                      </div>
-                    </div>
-                    <div className="stat-card-body">
-                      <div className="stat-number period-dates">
-                        {new Date(enrollment.startDate).toLocaleDateString('ko-KR', {month: 'short', day: 'numeric'})} ~ 
-                        {new Date(enrollment.endDate).toLocaleDateString('ko-KR', {month: 'short', day: 'numeric'})}
-                      </div>
-                      <div className="stat-label">수강 기간</div>
-                    </div>
-                    <div className="stat-footer">
-                      <i className="fas fa-calendar-check"></i> 
-                      {new Date(enrollment.startDate).getFullYear()}년 수강
-                    </div>
+                  <div className="info-row">
+                    <span className="info-label">수강 기간</span>
+                    <span className="info-value">
+                      {new Date(enrollment.startDate).toLocaleDateString('ko-KR')} ~ {new Date(enrollment.endDate).toLocaleDateString('ko-KR')}
+                    </span>
                   </div>
-
-                  {/* 남은 일수 카드 */}
-                  <div className="stat-card">
-                    <div className="stat-card-header">
-                      <div className="stat-icon">
-                        <i className="fas fa-hourglass-half"></i>
-                      </div>
-                      <div className={`stat-trend ${daysLeft <= 7 ? 'warning' : 'success'}`}>
-                        <i className={`fas ${daysLeft <= 7 ? 'fa-exclamation-triangle' : 'fa-check'}`}></i>
-                        {daysLeft <= 7 ? '주의' : '정상'}
-                      </div>
-                    </div>
-                    <div className="stat-card-body">
-                      <div className="stat-number">{daysLeft > 0 ? daysLeft : 0}</div>
-                      <div className="stat-label">남은 일수</div>
-                    </div>
-                    <div className="stat-footer">
-                      <i className="fas fa-calendar-times"></i> 
-                      {daysLeft > 0 ? `${daysLeft}일 후 만료` : '만료됨'}
-                    </div>
+                  <div className="info-row">
+                    <span className="info-label">남은 일수</span>
+                    <span className={`info-value ${daysLeft <= 7 ? 'urgent' : ''}`}>
+                      {daysLeft > 0 ? `${daysLeft}일` : '만료'}
+                    </span>
                   </div>
-
-                  {/* 레코딩 파일 카드 */}
-                  <div className="stat-card clickable" onClick={() => handleRecordingClick(enrollment)}>
-                    <div className="stat-card-header">
-                      <div className="stat-icon">
-                        <i className="fas fa-video"></i>
-                      </div>
-                      <div className="stat-trend info">
-                        <i className="fas fa-upload"></i>
-                        업로드
-                      </div>
-                    </div>
-                    <div className="stat-card-body">
-                      <div className="stat-number">
-                        {enrollment.actualRecordings || 0}/{enrollment.expectedRecordings || 0}
-                      </div>
-                      <div className="stat-label">레코딩 파일</div>
-                    </div>
-                    <div className="stat-footer">
-                      <i className="fas fa-file-video"></i> 
-                      클릭하여 파일 목록 보기
-                    </div>
+                  <div className="info-row clickable" onClick={() => handleRecordingClick(enrollment)}>
+                    <span className="info-label">레코딩 파일</span>
+                    <span className="info-value">
+                      {enrollment.actualRecordings || 0} / {enrollment.expectedRecordings || 0}
+                      <i className="fas fa-chevron-right" style={{marginLeft: '8px', color: '#999'}}></i>
+                    </span>
                   </div>
                 </div>
               </div>

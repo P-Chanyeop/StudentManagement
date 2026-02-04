@@ -191,11 +191,10 @@ function Dashboard() {
         <div className="parent-dashboard">
           <div className="dashboard-header">
             <h1>안녕하세요, {profile?.nickname}님! 👋</h1>
-            <p>자녀의 수강 정보를 확인하세요</p>
+            <p>자녀의 학습 현황을 확인하세요</p>
           </div>
           
-          {/* 수강권 정보 카드 */}
-          <div className="enrollment-cards">
+          <div className="parent-content">
             {enrollments.length === 0 ? (
               <div className="empty-state">
                 <i className="fas fa-graduation-cap"></i>
@@ -208,65 +207,52 @@ function Dashboard() {
                 );
                 
                 return (
-                  <div key={enrollment.id} className="enrollment-card">
-                    <div className="card-header">
-                      <h3>{enrollment.studentName}</h3>
-                      <span className={`status-badge ${daysLeft <= 7 ? 'urgent' : 'active'}`}>
-                        {daysLeft > 0 ? `${daysLeft}일 남음` : '만료'}
+                  <div key={enrollment.id} className="student-section">
+                    <div className="student-header">
+                      <h2>{enrollment.studentName}</h2>
+                      <span className={`days-badge ${daysLeft <= 7 ? 'urgent' : ''}`}>
+                        {daysLeft > 0 ? `D-${daysLeft}` : '만료'}
                       </span>
                     </div>
                     
-                    <div className="card-content">
-                      <div className="info-grid">
-                        <div className="info-item">
-                          <div className="info-label">학생 이름</div>
-                          <div className="info-value">{enrollment.studentName}</div>
-                        </div>
-                        
-                        <div className="info-item">
-                          <div className="info-label">반</div>
-                          <div className="info-value">{enrollment.courseName}</div>
-                        </div>
-                        
-                        <div className="info-item">
-                          <div className="info-label">수업 시간</div>
-                          <div className="info-value">
-                            {enrollment.courseSchedules?.map(schedule => 
-                              `${schedule.dayOfWeek} ${schedule.startTime}-${schedule.endTime}`
-                            ).join(', ') || '미정'}
-                          </div>
-                        </div>
-                        
-                        <div className="info-item">
-                          <div className="info-label">잔여 횟수</div>
-                          <div className="info-value highlight">
-                            {enrollment.enrollmentType === 'COUNT' 
-                              ? `${enrollment.remainingCount}회` 
-                              : '무제한'}
-                          </div>
-                        </div>
-                        
-                        <div className="info-item">
-                          <div className="info-label">수강 기간</div>
-                          <div className="info-value">
-                            {new Date(enrollment.startDate).toLocaleDateString('ko-KR')} ~ 
-                            {new Date(enrollment.endDate).toLocaleDateString('ko-KR')}
-                          </div>
-                        </div>
-                        
-                        <div className="info-item">
-                          <div className="info-label">남은 일수</div>
-                          <div className={`info-value ${daysLeft <= 7 ? 'urgent' : ''}`}>
-                            {daysLeft > 0 ? `${daysLeft}일` : '만료'}
-                          </div>
-                        </div>
-                        
-                        <div className="info-item">
-                          <div className="info-label">레코딩 파일</div>
-                          <div className="info-value">
-                            {enrollment.actualRecordings || 0}/{enrollment.expectedRecordings || 0}
-                          </div>
-                        </div>
+                    <div className="info-table">
+                      <div className="info-row">
+                        <span className="info-label">반</span>
+                        <span className="info-value">{enrollment.courseName}</span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">수업 시간</span>
+                        <span className="info-value">
+                          {enrollment.courseSchedules?.map(schedule => 
+                            `${schedule.dayOfWeek} ${schedule.startTime}-${schedule.endTime}`
+                          ).join(', ') || '미정'}
+                        </span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">잔여 횟수</span>
+                        <span className="info-value highlight">
+                          {enrollment.enrollmentType === 'COUNT' 
+                            ? `${enrollment.remainingCount}회` 
+                            : '무제한'}
+                        </span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">수강 기간</span>
+                        <span className="info-value">
+                          {new Date(enrollment.startDate).toLocaleDateString('ko-KR')} ~ {new Date(enrollment.endDate).toLocaleDateString('ko-KR')}
+                        </span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">남은 일수</span>
+                        <span className={`info-value ${daysLeft <= 7 ? 'urgent' : ''}`}>
+                          {daysLeft > 0 ? `${daysLeft}일` : '만료'}
+                        </span>
+                      </div>
+                      <div className="info-row">
+                        <span className="info-label">레코딩 파일</span>
+                        <span className="info-value">
+                          {enrollment.actualRecordings || 0} / {enrollment.expectedRecordings || 0}
+                        </span>
                       </div>
                     </div>
                   </div>

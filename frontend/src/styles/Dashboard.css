@@ -56,7 +56,7 @@
 /* 통계 카드 그리드 */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-bottom: 48px;
 }
@@ -70,6 +70,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  min-width: 0;
 }
 
 .stat-card::before {
@@ -99,19 +100,21 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
+  gap: 12px;
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 22px;
   color: white;
   background: linear-gradient(135deg, var(--naver-green) 0%, var(--naver-green-dark) 100%);
   box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
+  flex-shrink: 0;
 }
 
 .stat-trend {
@@ -137,21 +140,23 @@
 }
 
 .stat-content h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--gray-600);
   margin-bottom: 8px;
+  white-space: nowrap;
 }
 
 .stat-value {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--gray-900);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .stat-unit {
-  font-size: 20px;
+  font-size: 18px;
   color: var(--gray-500);
   margin-left: 4px;
 }
@@ -160,8 +165,11 @@
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--gray-100);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat-footer i {
@@ -371,6 +379,12 @@
 }
 
 /* 반응형 */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -445,9 +459,9 @@
   }
 
   .stat-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 22px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
   }
 
   .stat-value {
@@ -753,146 +767,156 @@
 }
 /* 학부모 대시보드 스타일 */
 .parent-dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  min-height: 100vh;
+  background: var(--gray-50);
 }
 
 .parent-dashboard .dashboard-header {
-  text-align: center;
-  margin-bottom: 3rem;
+  background: linear-gradient(135deg, var(--naver-green) 0%, var(--naver-green-dark) 100%);
+  color: white;
+  padding: 48px 32px;
 }
 
 .parent-dashboard .dashboard-header h1 {
-  font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  color: white;
+  margin: 0 0 8px 0;
+  font-weight: 700;
 }
 
 .parent-dashboard .dashboard-header p {
-  font-size: 1.1rem;
-  color: #666;
-}
-
-.enrollment-cards {
-  display: grid;
-  gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-}
-
-.enrollment-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-}
-
-.enrollment-card .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.enrollment-card .card-header h3 {
-  font-size: 1.5rem;
-  color: #333;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.9);
   margin: 0;
 }
 
-.status-badge {
-  padding: 0.5rem 1rem;
+.parent-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 48px 40px;
+}
+
+.student-section {
+  background: white;
   border-radius: 20px;
-  font-size: 0.9rem;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 40px;
+  background: var(--gray-50);
+  border-bottom: 4px solid var(--naver-green);
+}
+
+.student-header h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.days-badge {
+  background: var(--naver-green);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 28px;
+  font-size: 16px;
   font-weight: 600;
 }
 
-.status-badge.active {
-  background: #dcfce7;
-  color: #166534;
+.days-badge.urgent {
+  background: #dc2626;
 }
 
-.status-badge.urgent {
-  background: #fee2e2;
-  color: #dc2626;
+.info-table {
+  padding: 16px 0;
 }
 
-.card-content {
+.info-row {
   display: flex;
-  flex-direction: column;
+  padding: 16px 40px;
+  border-bottom: 1px solid var(--gray-100);
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+.info-row:last-child {
+  border-bottom: none;
 }
 
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.info-label {
+.info-row .info-label {
+  width: 160px;
+  flex-shrink: 0;
+  font-size: 16px;
   font-weight: 600;
-  color: #374151;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--gray-500);
 }
 
-.info-value {
-  color: #1f2937;
-  font-size: 1rem;
+.info-row .info-value {
+  flex: 1;
+  font-size: 18px;
   font-weight: 500;
+  color: var(--gray-900);
 }
 
-.info-value.highlight {
-  color: #059669;
+.info-row .info-value.highlight {
+  color: var(--naver-green);
   font-weight: 700;
 }
 
-.info-value.urgent {
+.info-row .info-value.urgent {
   color: #dc2626;
   font-weight: 700;
+}
+
+.info-row.clickable {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.info-row.clickable:hover {
+  background: var(--gray-100);
 }
 
 .parent-dashboard .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
-  color: #9ca3af;
+  padding: 60px 20px;
+  color: var(--gray-400);
 }
 
 .parent-dashboard .empty-state i {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  color: #d1d5db;
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
 .parent-dashboard .empty-state p {
-  font-size: 1.1rem;
+  font-size: 15px;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
-  .parent-dashboard {
-    padding: 1rem;
+  .parent-content {
+    padding: 16px;
   }
   
-  .enrollment-cards {
-    grid-template-columns: 1fr;
+  .student-header {
+    padding: 16px 20px;
   }
   
-  .enrollment-card {
-    padding: 1.5rem;
+  .info-row {
+    padding: 12px 20px;
   }
   
-  .info-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .info-row .info-label {
+    width: 100px;
+    font-size: 13px;
+  }
+  
+  .info-row .info-value {
+    font-size: 14px;
   }
 }
 /* 학부모 대시보드 학생별 섹션 */
