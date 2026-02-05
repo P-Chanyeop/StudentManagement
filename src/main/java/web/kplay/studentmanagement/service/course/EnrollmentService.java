@@ -49,20 +49,31 @@ public class EnrollmentService {
      */
     @Transactional
     public EnrollmentResponse createUnregisteredEnrollment(UnregisteredEnrollmentRequest request) {
-        // 1. 학생 생성 (parentUser 없이)
-        Student student = Student.builder()
-                .studentName(request.getStudentName())
-                .studentPhone(request.getStudentPhone())
-                .parentName(request.getParentName())
-                .parentPhone(request.getParentPhone())
-                .school(request.getSchool())
-                .grade(request.getGrade())
-                .memo(request.getMemo())
-                .build();
+        // 1. 기존 학생 조회 (이름 + 부모 전화번호로 매칭)
+        String phoneWithoutHyphen = request.getParentPhone().replaceAll("-", "");
+        List<Student> existingStudents = studentRepository.findByStudentName(request.getStudentName());
+        Student savedStudent = existingStudents.stream()
+                .filter(s -> s.getParentPhone() != null && 
+                            s.getParentPhone().replaceAll("-", "").equals(phoneWithoutHyphen))
+                .findFirst()
+                .orElse(null);
         
-        Student savedStudent = studentRepository.save(student);
-        log.info("미가입자 학생 등록: name={}, parentPhone={}", 
-                savedStudent.getStudentName(), savedStudent.getParentPhone());
+        if (savedStudent != null) {
+            log.info("기존 학생 사용: name={}, parentPhone={}", savedStudent.getStudentName(), savedStudent.getParentPhone());
+        } else {
+            // 새 학생 생성
+            Student student = Student.builder()
+                    .studentName(request.getStudentName())
+                    .studentPhone(request.getStudentPhone())
+                    .parentName(request.getParentName())
+                    .parentPhone(request.getParentPhone())
+                    .school(request.getSchool())
+                    .grade(request.getGrade())
+                    .memo(request.getMemo())
+                    .build();
+            savedStudent = studentRepository.save(student);
+            log.info("신규 학생 등록: name={}, parentPhone={}", savedStudent.getStudentName(), savedStudent.getParentPhone());
+        }
 
         // 2. 수업 조회 (선택사항)
         Course course = null;

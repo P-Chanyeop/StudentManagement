@@ -79,9 +79,16 @@ public class QuizService {
             throw new IllegalStateException("학생의 르네상스 아이디가 등록되지 않았습니다.");
         }
 
-        // Python 스크립트 절대 경로
-        String projectRoot = System.getProperty("user.dir");
-        String scriptPath = projectRoot + "/src/main/resources/static/images/get_student_quiz.py";
+        // Python 스크립트 경로 (배포 환경에서는 외부 경로 사용)
+        String scriptPath;
+        String externalPath = "/home/ubuntu/reading/scripts/get_student_quiz_v2.py";
+        if (new java.io.File(externalPath).exists()) {
+            scriptPath = externalPath;
+        } else {
+            // 개발 환경
+            String projectRoot = System.getProperty("user.dir");
+            scriptPath = projectRoot + "/src/main/resources/static/images/get_student_quiz_v2.py";
+        }
         String password = "0000";
 
         log.info("Python 스크립트 실행: {} {} {}", scriptPath, student.getRenaissanceUsername(), password);
