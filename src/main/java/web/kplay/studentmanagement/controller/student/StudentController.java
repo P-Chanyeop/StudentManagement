@@ -113,4 +113,11 @@ public class StudentController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+    // 추가수업 엑셀 학생 목록 조회 (추가수업 관리 페이지 전용)
+    @GetMapping("/additional-class/excel-list")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<Map<String, Object>>> getExcelStudentList() {
+        return ResponseEntity.ok(additionalClassExcelService.getExcelStudentList());
+    }
 }

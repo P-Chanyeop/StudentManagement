@@ -77,6 +77,7 @@ export const studentAPI = {
   deactivate: (id) => api.delete(`/students/${id}`),
   // 추가수업 관리
   getAdditionalClass: () => api.get('/students/additional-class'),
+  getAdditionalClassExcelList: () => api.get('/students/additional-class/excel-list'),
   updateAdditionalClass: (id, data) => api.put(`/students/${id}/additional-class`, data),
   uploadAdditionalClassExcel: (file) => {
     const formData = new FormData();

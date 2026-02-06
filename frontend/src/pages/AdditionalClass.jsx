@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { studentAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -9,10 +9,26 @@ function AdditionalClass() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const fileInputRef = useRef(null);
 
-  const { data: students, isLoading } = useQuery({
+  // 기존 시스템 학생 목록
+  const { data: systemStudents = [], isLoading: isLoadingSystem } = useQuery({
     queryKey: ['students-additional-class'],
     queryFn: () => studentAPI.getAdditionalClass().then(res => res.data),
   });
+
+  // 엑셀에서 읽은 학생 목록
+  const { data: excelStudents = [], isLoading: isLoadingExcel } = useQuery({
+    queryKey: ['students-additional-class-excel'],
+    queryFn: () => studentAPI.getAdditionalClassExcelList().then(res => res.data),
+  });
+
+  // 두 목록 합치기 (중복 제거)
+  const students = useMemo(() => {
+    const systemNames = new Set(systemStudents.map(s => s.studentName));
+    const excelOnly = excelStudents.filter(s => !systemNames.has(s.studentName));
+    return [...systemStudents, ...excelOnly];
+  }, [systemStudents, excelStudents]);
+
+  const isLoading = isLoadingSystem || isLoadingExcel;
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => studentAPI.updateAdditionalClass(id, data),
@@ -23,6 +39,7 @@ function AdditionalClass() {
     mutationFn: (file) => studentAPI.uploadAdditionalClassExcel(file),
     onSuccess: (response) => {
       queryClient.invalidateQueries(['students-additional-class']);
+      queryClient.invalidateQueries(['students-additional-class-excel']);
       alert(`업로드 완료: ${response.data.updatedCount || 0}명 업데이트`);
     },
     onError: (error) => {

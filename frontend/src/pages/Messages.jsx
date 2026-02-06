@@ -24,6 +24,12 @@ function Messages() {
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
 
+  // 페이지네이션 및 필터 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const itemsPerPage = 20;
+
   // 전체 문자 내역 조회
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages'],
@@ -108,6 +114,32 @@ function Messages() {
     pending: messages.filter(m => m.sendStatus === 'PENDING').length,
     failed: messages.filter(m => m.sendStatus === 'FAILED').length
   }), [messages]);
+
+  // 날짜 필터링된 메시지
+  const filteredMessages = useMemo(() => {
+    let filtered = [...messages];
+    if (startDate) {
+      filtered = filtered.filter(m => new Date(m.sentAt) >= new Date(startDate));
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(m => new Date(m.sentAt) <= end);
+    }
+    return filtered.sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+  }, [messages, startDate, endDate]);
+
+  // 페이지네이션
+  const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+  const paginatedMessages = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredMessages.slice(start, start + itemsPerPage);
+  }, [filteredMessages, currentPage]);
+
+  // 페이지 변경 시 1페이지로 리셋
+  const handleDateFilter = () => {
+    setCurrentPage(1);
+  };
 
   // 문자 발송 mutation
   const sendMutation = useMutation({
@@ -340,46 +372,133 @@ function Messages() {
 
         {/* 문자 발송 내역 */}
         <div className="messages-list-container">
-          <h3 className="messages-list-title">발송 내역</h3>
-          {messages.length > 0 ? (
-            <div className="table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>발송일시</th>
-                    <th>수신자</th>
-                    <th>전화번호</th>
-                    <th>유형</th>
-                    <th>내용</th>
-                    <th>상태</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {messages.map((message) => (
-                    <tr key={message.id}>
-                      <td>{new Date(message.sentAt).toLocaleString('ko-KR')}</td>
-                      <td>{message.recipientName}</td>
-                      <td>{message.recipientPhone}</td>
-                      <td>
-                        <span className={`messages-type-badge ${getTypeBadge(message.messageType).className}`}>
-                          {getTypeBadge(message.messageType).text}
-                        </span>
-                      </td>
-                      <td className="messages-content-cell">
-                        {message.content.length > 30 
-                          ? `${message.content.substring(0, 30)}...` 
-                          : message.content}
-                      </td>
-                      <td>
-                        <span className={`messages-status-badge ${getStatusBadge(message.sendStatus).className}`}>
-                          {getStatusBadge(message.sendStatus).text}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="messages-list-header">
+            <h3 className="messages-list-title">발송 내역</h3>
+            <div className="messages-filter">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                className="date-input"
+              />
+              <span>~</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                className="date-input"
+              />
+              <button 
+                className="btn-reset"
+                onClick={() => { setStartDate(''); setEndDate(''); setCurrentPage(1); }}
+              >
+                초기화
+              </button>
             </div>
+          </div>
+          
+          <div className="messages-filter-info">
+            총 {filteredMessages.length}건
+          </div>
+
+          {paginatedMessages.length > 0 ? (
+            <>
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>발송일시</th>
+                      <th>수신자</th>
+                      <th>전화번호</th>
+                      <th>유형</th>
+                      <th>내용</th>
+                      <th>상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedMessages.map((message) => (
+                      <tr key={message.id}>
+                        <td>{new Date(message.sentAt).toLocaleString('ko-KR')}</td>
+                        <td>{message.recipientName}</td>
+                        <td>{message.recipientPhone}</td>
+                        <td>
+                          <span className={`messages-type-badge ${getTypeBadge(message.messageType).className}`}>
+                            {getTypeBadge(message.messageType).text}
+                          </span>
+                        </td>
+                        <td className="messages-content-cell">
+                          {message.content.length > 30 
+                            ? `${message.content.substring(0, 30)}...` 
+                            : message.content}
+                        </td>
+                        <td>
+                          <span className={`messages-status-badge ${getStatusBadge(message.sendStatus).className}`}>
+                            {getStatusBadge(message.sendStatus).text}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => setCurrentPage(1)} 
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    &lt;
+                  </button>
+                  
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 2 && page <= currentPage + 2)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (page === currentPage - 3 || page === currentPage + 3) {
+                      return <span key={page} className="pagination-ellipsis">...</span>;
+                    }
+                    return null;
+                  })}
+                  
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    &gt;
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(totalPages)} 
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="empty-state">
               <i className="fas fa-envelope-open"></i>

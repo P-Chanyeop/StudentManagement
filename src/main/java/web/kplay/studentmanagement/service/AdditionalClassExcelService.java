@@ -154,4 +154,27 @@ public class AdditionalClassExcelService {
     public boolean hasAnyAssignedClass(String studentName) {
         return getAssignedClassInitials(studentName) != null;
     }
+
+    /**
+     * 엑셀에서 읽은 모든 학생 목록 (추가수업 관리 페이지 전용)
+     */
+    public List<Map<String, Object>> getExcelStudentList() {
+        Set<String> allNames = new HashSet<>();
+        for (Set<String> names : classAssignments.values()) {
+            allNames.addAll(names);
+        }
+        
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (String name : allNames) {
+            Map<String, Object> student = new HashMap<>();
+            student.put("studentName", name);
+            student.put("assignedVocabulary", classAssignments.get("V").contains(name));
+            student.put("assignedSightword", classAssignments.get("S").contains(name));
+            student.put("assignedGrammar", classAssignments.get("G").contains(name));
+            student.put("assignedPhonics", classAssignments.get("P").contains(name));
+            student.put("assignedClassInitials", getAssignedClassInitials(name));
+            result.add(student);
+        }
+        return result;
+    }
 }
