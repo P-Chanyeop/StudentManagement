@@ -173,10 +173,12 @@ public class AttendanceService {
                     .build());
         }
         
-        // 2. 네이버 예약 찾기 (오늘 예약만)
+        // 2. 네이버 예약 찾기 (오늘 예약만, 취소 제외)
         var naverBookings = naverBookingRepository.findAll().stream()
                 .filter(nb -> {
                     if (nb.getPhone() == null) return false;
+                    // 취소된 예약 제외 (취소, RC04)
+                    if (nb.getStatus() != null && (nb.getStatus().contains("취소") || nb.getStatus().equals("RC04"))) return false;
                     // 오늘 예약만 (bookingTime에서 날짜 추출)
                     if (nb.getBookingTime() == null) return false;
                     try {
@@ -378,6 +380,14 @@ public class AttendanceService {
         
         Attendance saved = attendanceRepository.save(attendance);
         log.info("Naver booking attendance check-in: name={}, phone={}", naverBooking.getStudentName(), naverBooking.getPhone());
+        
+        // 학부모에게 등원 알림 문자 발송 (네이버 예약)
+        try {
+            automatedMessageService.sendNaverCheckInNotification(naverBooking, now, expectedLeave);
+        } catch (Exception e) {
+            log.error("네이버 예약 등원 알림 문자 발송 실패: {}", e.getMessage());
+        }
+        
         return toResponse(saved);
     }
 
@@ -393,6 +403,12 @@ public class AttendanceService {
         Student student = attendance.getStudent();
         if (student != null) {
             automatedMessageService.sendCheckOutNotification(student, now);
+        } else if (attendance.getNaverBooking() != null) {
+            try {
+                automatedMessageService.sendNaverCheckOutNotification(attendance.getNaverBooking(), now);
+            } catch (Exception e) {
+                log.error("네이버 예약 하원 알림 문자 발송 실패: {}", e.getMessage());
+            }
         }
 
         log.info("Leave check-out: student={}, time={}",
@@ -1049,6 +1065,14 @@ public class AttendanceService {
         
         attendance.checkIn(now, newExpectedLeaveTime);
         log.info("Naver booking check-in: name={}", naverBooking.getStudentName());
+        
+        // 학부모에게 등원 알림 문자 발송
+        try {
+            automatedMessageService.sendNaverCheckInNotification(naverBooking, now, newExpectedLeaveTime);
+        } catch (Exception e) {
+            log.error("네이버 예약 등원 알림 문자 발송 실패: {}", e.getMessage());
+        }
+        
         return toResponse(attendance);
     }
 

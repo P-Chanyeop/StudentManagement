@@ -10,6 +10,7 @@ import web.kplay.studentmanagement.domain.course.Enrollment;
 import web.kplay.studentmanagement.domain.leveltest.LevelTest;
 import web.kplay.studentmanagement.domain.message.Message;
 import web.kplay.studentmanagement.domain.message.MessageType;
+import web.kplay.studentmanagement.domain.reservation.NaverBooking;
 import web.kplay.studentmanagement.domain.student.Student;
 import web.kplay.studentmanagement.repository.EnrollmentRepository;
 import web.kplay.studentmanagement.repository.LevelTestRepository;
@@ -158,6 +159,52 @@ public class AutomatedMessageService {
 
         sendAndSaveMessage(student, MessageType.GENERAL, content);
         log.info("하원 알림 발송: 학생={}, 하원시간={}", student.getStudentName(), checkOutTime.toLocalTime());
+    }
+
+    /**
+     * 네이버 예약 등원 알림 발송
+     */
+    @Transactional
+    public void sendNaverCheckInNotification(NaverBooking booking, LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
+        String studentName = booking.getStudentName() != null ? booking.getStudentName() : booking.getName();
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d %d:%02d 등원했습니다.\n\n감사합니다! :)",
+                studentName,
+                checkInTime.getMonthValue(),
+                checkInTime.getDayOfMonth(),
+                checkInTime.getHour(),
+                checkInTime.getMinute()
+        );
+
+        String phone = booking.getPhone();
+        if (phone != null && !phone.isEmpty()) {
+            sendAndSaveNaverMessage(booking, MessageType.GENERAL, content);
+            log.info("네이버 예약 등원 알림 발송: 학생={}, 전화={}", studentName, phone);
+        }
+    }
+
+    /**
+     * 네이버 예약 하원 알림 발송
+     */
+    @Transactional
+    public void sendNaverCheckOutNotification(NaverBooking booking, LocalDateTime checkOutTime) {
+        String studentName = booking.getStudentName() != null ? booking.getStudentName() : booking.getName();
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d %d:%02d 하원했습니다.\n\n감사합니다! :)",
+                studentName,
+                checkOutTime.getMonthValue(),
+                checkOutTime.getDayOfMonth(),
+                checkOutTime.getHour(),
+                checkOutTime.getMinute()
+        );
+
+        String phone = booking.getPhone();
+        if (phone != null && !phone.isEmpty()) {
+            sendAndSaveNaverMessage(booking, MessageType.GENERAL, content);
+            log.info("네이버 예약 하원 알림 발송: 학생={}, 전화={}", studentName, phone);
+        }
     }
 
     /**
@@ -483,6 +530,28 @@ public class AutomatedMessageService {
         } catch (Exception e) {
             savedMessage.markAsFailed(e.getMessage());
             log.error("SMS 발송 실패: {}", e.getMessage());
+        }
+    }
+
+    private void sendAndSaveNaverMessage(NaverBooking booking, MessageType messageType, String content) {
+        String studentName = booking.getStudentName() != null ? booking.getStudentName() : booking.getName();
+        Message message = Message.builder()
+                .recipientPhone(booking.getPhone())
+                .recipientName(studentName)
+                .messageType(messageType)
+                .content(content)
+                .sendStatus("PENDING")
+                .build();
+
+        Message savedMessage = messageRepository.save(message);
+        
+        try {
+            String externalId = smsService.sendSms(booking.getPhone(), content);
+            savedMessage.markAsSent(LocalDateTime.now(), externalId);
+            log.info("네이버 SMS 발송 성공: 수신자={}", booking.getPhone());
+        } catch (Exception e) {
+            savedMessage.markAsFailed(e.getMessage());
+            log.error("네이버 SMS 발송 실패: {}", e.getMessage());
         }
     }
 

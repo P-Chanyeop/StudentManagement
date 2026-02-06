@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import web.kplay.studentmanagement.controller.reservation.NaverBookingSseController;
 import web.kplay.studentmanagement.service.NaverBookingApiCrawlerService;
-import web.kplay.studentmanagement.service.message.SmsService;
+import web.kplay.studentmanagement.service.message.sms.SmsService;
 
 @Slf4j
 @Component

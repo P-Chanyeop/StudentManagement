@@ -200,6 +200,11 @@ const CheckIn = () => {
             하원
           </button>
         </div>
+
+        <div className="datetime-center">
+          <div className="date">{dateStr}</div>
+          <div className="time">{timeStr}</div>
+        </div>
         
         <div className="left-content">
           <p className="checkin-instruction">
@@ -227,18 +232,19 @@ const CheckIn = () => {
                   <span className="student-info">{result.courseName || result.school}</span>
                 </div>
               ))}
-              {selectedStudent && (
-                <button
-                  className={`checkin-confirm-btn ${mode === 'checkOut' ? 'checkout' : ''} ${selectedStudent.isTeacher ? 'teacher' : ''}`}
-                  onClick={handleAction}
-                  disabled={checkInMutation.isPending || checkOutMutation.isPending || teacherCheckInMutation.isPending || teacherCheckOutMutation.isPending}
-                >
-                  {selectedStudent.isTeacher 
-                    ? (mode === 'checkIn' ? '출근 체크' : '퇴근 체크')
-                    : (mode === 'checkIn' ? '출석 체크' : '하원 체크')}
-                </button>
-              )}
             </div>
+          )}
+
+          {selectedStudent && (
+            <button
+              className={`checkin-confirm-btn ${mode === 'checkOut' ? 'checkout' : ''} ${selectedStudent.isTeacher ? 'teacher' : ''}`}
+              onClick={handleAction}
+              disabled={checkInMutation.isPending || checkOutMutation.isPending || teacherCheckInMutation.isPending || teacherCheckOutMutation.isPending}
+            >
+              {selectedStudent.isTeacher 
+                ? (mode === 'checkIn' ? '출근 체크' : '퇴근 체크')
+                : (mode === 'checkIn' ? '출석 체크' : '하원 체크')}
+            </button>
           )}
 
           {searchResults.length === 0 && phoneNumber.length === 4 && !searchMutation.isPending && (
@@ -246,11 +252,6 @@ const CheckIn = () => {
               {mode === 'checkIn' ? '출석 가능한 학생이 없습니다.' : '하원 가능한 학생이 없습니다.'}
             </div>
           )}
-        </div>
-
-        <div className="datetime">
-          <div className="date">{dateStr}</div>
-          <div className="time">{timeStr}</div>
         </div>
       </div>
 
