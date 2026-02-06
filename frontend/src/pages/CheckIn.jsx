@@ -208,9 +208,8 @@ const CheckIn = () => {
         
         <div className="left-content">
           <p className="checkin-instruction">
-            <span className="highlight">휴대폰번호 뒤 4자리</span>를 입력해주세요.
+            <span className="highlight">부모님 휴대폰번호 뒤 4자리</span>를 입력해주세요.
           </p>
-          <p className="checkin-sub">휴대폰이 없는 경우 부모님 휴대폰번호를 입력해주세요.</p>
 
           <div className="digit-boxes">
             {[0, 1, 2, 3].map((i) => (
