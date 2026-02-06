@@ -7,6 +7,8 @@ import '../styles/Students.css';
 function AdditionalClass() {
   const queryClient = useQueryClient();
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   const fileInputRef = useRef(null);
 
   // 기존 시스템 학생 목록
@@ -75,6 +77,19 @@ function AdditionalClass() {
     s.studentName?.toLowerCase().includes(searchKeyword.toLowerCase())
   ) || [];
 
+  // 페이지네이션
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredStudents.slice(start, start + itemsPerPage);
+  }, [filteredStudents, currentPage]);
+
+  // 검색 시 1페이지로 리셋
+  const handleSearch = (e) => {
+    setSearchKeyword(e.target.value);
+    setCurrentPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="page-wrapper">
@@ -108,7 +123,7 @@ function AdditionalClass() {
               type="text"
               placeholder="학생 이름으로 검색..."
               value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
+              onChange={handleSearch}
               className="search-input"
             />
           </div>
@@ -141,74 +156,137 @@ function AdditionalClass() {
               <p>{searchKeyword ? '검색 결과가 없습니다.' : '등록된 학생이 없습니다.'}</p>
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>번호</th>
-                  <th>학생명</th>
-                  <th>반</th>
-                  <th style={{textAlign: 'center', width: '80px'}}>V</th>
-                  <th style={{textAlign: 'center', width: '80px'}}>S</th>
-                  <th style={{textAlign: 'center', width: '80px'}}>G</th>
-                  <th style={{textAlign: 'center', width: '80px'}}>P</th>
-                  <th style={{textAlign: 'center', width: '100px'}}>할당</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStudents.map((student, index) => (
-                  <tr key={student.id}>
-                    <td>{index + 1}</td>
-                    <td>
-                      <div className="student-info">
-                        <strong>{student.studentName}</strong>
-                      </div>
-                    </td>
-                    <td>{student.className || '-'}</td>
-                    <td style={{textAlign: 'center'}}>
-                      <button
-                        className={`vgsp-btn ${student.assignedVocabulary ? 'active' : ''}`}
-                        onClick={() => handleToggle(student, 'assignedVocabulary')}
-                        title="Vocabulary"
-                      >
-                        V
-                      </button>
-                    </td>
-                    <td style={{textAlign: 'center'}}>
-                      <button
-                        className={`vgsp-btn ${student.assignedSightword ? 'active' : ''}`}
-                        onClick={() => handleToggle(student, 'assignedSightword')}
-                        title="Sightword"
-                      >
-                        S
-                      </button>
-                    </td>
-                    <td style={{textAlign: 'center'}}>
-                      <button
-                        className={`vgsp-btn ${student.assignedGrammar ? 'active' : ''}`}
-                        onClick={() => handleToggle(student, 'assignedGrammar')}
-                        title="Grammar"
-                      >
-                        G
-                      </button>
-                    </td>
-                    <td style={{textAlign: 'center'}}>
-                      <button
-                        className={`vgsp-btn ${student.assignedPhonics ? 'active' : ''}`}
-                        onClick={() => handleToggle(student, 'assignedPhonics')}
-                        title="Phonics"
-                      >
-                        P
-                      </button>
-                    </td>
-                    <td style={{textAlign: 'center'}}>
-                      <span className={`assigned-badge ${student.assignedClassInitials ? 'has-class' : ''}`}>
-                        {student.assignedClassInitials || '-'}
-                      </span>
-                    </td>
+            <>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>번호</th>
+                    <th>학생명</th>
+                    <th>반</th>
+                    <th style={{textAlign: 'center', width: '80px'}}>V</th>
+                    <th style={{textAlign: 'center', width: '80px'}}>S</th>
+                    <th style={{textAlign: 'center', width: '80px'}}>G</th>
+                    <th style={{textAlign: 'center', width: '80px'}}>P</th>
+                    <th style={{textAlign: 'center', width: '100px'}}>할당</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedStudents.map((student, index) => (
+                    <tr key={student.id || student.studentName}>
+                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                      <td>
+                        <div className="student-info">
+                          <strong>{student.studentName}</strong>
+                        </div>
+                      </td>
+                      <td>{student.className || '-'}</td>
+                      <td style={{textAlign: 'center'}}>
+                        <button
+                          className={`vgsp-btn ${student.assignedVocabulary ? 'active' : ''}`}
+                          onClick={() => student.id && handleToggle(student, 'assignedVocabulary')}
+                          title="Vocabulary"
+                          disabled={!student.id}
+                        >
+                          V
+                        </button>
+                      </td>
+                      <td style={{textAlign: 'center'}}>
+                        <button
+                          className={`vgsp-btn ${student.assignedSightword ? 'active' : ''}`}
+                          onClick={() => student.id && handleToggle(student, 'assignedSightword')}
+                          title="Sightword"
+                          disabled={!student.id}
+                        >
+                          S
+                        </button>
+                      </td>
+                      <td style={{textAlign: 'center'}}>
+                        <button
+                          className={`vgsp-btn ${student.assignedGrammar ? 'active' : ''}`}
+                          onClick={() => student.id && handleToggle(student, 'assignedGrammar')}
+                          title="Grammar"
+                          disabled={!student.id}
+                        >
+                          G
+                        </button>
+                      </td>
+                      <td style={{textAlign: 'center'}}>
+                        <button
+                          className={`vgsp-btn ${student.assignedPhonics ? 'active' : ''}`}
+                          onClick={() => student.id && handleToggle(student, 'assignedPhonics')}
+                          title="Phonics"
+                          disabled={!student.id}
+                        >
+                          P
+                        </button>
+                      </td>
+                      <td style={{textAlign: 'center'}}>
+                        <span className={`assigned-badge ${student.assignedClassInitials ? 'has-class' : ''}`}>
+                          {student.assignedClassInitials || '-'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => setCurrentPage(1)} 
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    &laquo;
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    &lt;
+                  </button>
+                  
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 2 && page <= currentPage + 2)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (page === currentPage - 3 || page === currentPage + 3) {
+                      return <span key={page} className="pagination-ellipsis">...</span>;
+                    }
+                    return null;
+                  })}
+                  
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    &gt;
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(totalPages)} 
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
