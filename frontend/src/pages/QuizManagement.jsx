@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import '../styles/QuizManagement.css';
 
 function QuizManagement() {
@@ -36,22 +36,6 @@ function QuizManagement() {
     }
   });
 
-  // 퀴즈 데이터 동기화
-  const syncMutation = useMutation({
-    mutationFn: async () => {
-      // TODO: API 연동
-      // const response = await fetch('/api/quiz/sync', { method: 'POST' });
-      // return response.json();
-      return { success: true, newQuizzes: 15, updatedQuizzes: 3 };
-    },
-    onSuccess: (data) => {
-      alert(`동기화 완료!\n새 퀴즈: ${data.newQuizzes}개\n업데이트: ${data.updatedQuizzes}개`);
-    },
-    onError: () => {
-      alert('동기화 실패');
-    }
-  });
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.name.endsWith('.xlsx')) {
@@ -64,12 +48,6 @@ function QuizManagement() {
   const handleUpload = () => {
     if (excelFile) {
       uploadMutation.mutate(excelFile);
-    }
-  };
-
-  const handleSync = () => {
-    if (window.confirm('퀴즈 데이터를 동기화하시겠습니까?')) {
-      syncMutation.mutate();
     }
   };
 
@@ -115,40 +93,6 @@ function QuizManagement() {
             disabled={!excelFile || uploadMutation.isLoading}
           >
             {uploadMutation.isLoading ? '업로드 중...' : '업로드 및 매칭'}
-          </button>
-        </div>
-
-        <div className="section-card">
-          <h2>🔄 퀴즈 데이터 동기화</h2>
-          <p className="section-desc">르네상스 API에서 최신 퀴즈 데이터를 가져옵니다.</p>
-          
-          <div className="sync-info">
-            <div className="info-item">
-              <i className="fas fa-info-circle"></i>
-              <span>매일 새벽 2시 자동 동기화됩니다</span>
-            </div>
-            <div className="info-item">
-              <i className="fas fa-clock"></i>
-              <span>수동 동기화는 언제든 가능합니다</span>
-            </div>
-          </div>
-
-          <button
-            className="btn-sync"
-            onClick={handleSync}
-            disabled={syncMutation.isLoading}
-          >
-            {syncMutation.isLoading ? (
-              <>
-                <i className="fas fa-spinner fa-spin"></i>
-                동기화 중...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-sync-alt"></i>
-                지금 동기화
-              </>
-            )}
           </button>
         </div>
       </div>
