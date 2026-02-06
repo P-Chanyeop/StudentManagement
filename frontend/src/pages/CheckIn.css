@@ -207,18 +207,18 @@
 .number-pad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 16px;
   width: 100%;
-  max-width: 320px;
+  max-width: 420px;
 }
 
 .number-btn {
   aspect-ratio: 1;
-  font-size: 32px;
+  font-size: 42px;
   font-weight: 500;
   background: #fff;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
   color: #333;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
@@ -235,7 +235,7 @@
 }
 
 .number-btn.func-btn {
-  font-size: 24px;
+  font-size: 32px;
   color: #666;
 }
 
