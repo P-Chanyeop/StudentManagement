@@ -313,19 +313,19 @@ function Students() {
   }
 
   return (
-    <div className="page-wrapper">
+    <div className="students-page">
       {/* 페이지 헤더 */}
-      <div className="page-header">
-        <div className="page-header-content">
-          <div className="page-title-section">
-            <h1 className="page-title">
+      <div className="students-header">
+        <div className="students-header-content">
+          <div className="students-title-section">
+            <h1 className="students-title">
               <i className="fas fa-user-graduate"></i>
               {isParent ? '자녀 관리' : '학생 관리'}
             </h1>
-            <p className="page-subtitle">{isParent ? '자녀 정보를 확인하고 관리합니다' : '학생 정보를 등록하고 관리합니다'}</p>
+            <p className="students-subtitle">{isParent ? '자녀 정보를 확인하고 관리합니다' : '학생 정보를 등록하고 관리합니다'}</p>
           </div>
           {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
-            <button className="btn-primary btn-with-icon" onClick={() => setShowCreateModal(true)}>
+            <button className="students-add-btn" onClick={() => setShowCreateModal(true)}>
               <i className="fas fa-plus"></i>
               학생 등록
             </button>
@@ -334,20 +334,20 @@ function Students() {
       </div>
 
       {/* 메인 컨텐츠 */}
-      <div className="page-content">
+      <div className="students-content">
         {/* 검색 및 필터 */}
-        <div className="search-section">
-          <div className="search-input-wrapper">
-            <i className="fas fa-search search-icon"></i>
+        <div className="students-search-section">
+          <div className="students-search-wrapper">
+            <i className="fas fa-search students-search-icon"></i>
             <input
               type="text"
               placeholder="학생 이름 또는 학부모 이름으로 검색..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              className="search-input"
+              className="students-search-input"
             />
           </div>
-          <div className="result-count">
+          <div className="students-result-count">
             <i className="fas fa-users"></i>
             총 <strong>{filteredStudents.length}</strong>명
           </div>

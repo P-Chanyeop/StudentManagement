@@ -32,16 +32,11 @@ public class QuizService {
     public int uploadRenaissanceIds(MultipartFile file) throws IOException {
         List<RenaissanceIdUploadDto> dataList = parseExcel(file);
         int updatedCount = 0;
-        int createdCount = 0;
 
         for (RenaissanceIdUploadDto dto : dataList) {
-            // 전화번호 하이픈 제거해서 비교
             String phoneWithoutHyphen = dto.getParentPhone().replaceAll("-", "");
-            
-            // 학생 이름으로 먼저 조회
             List<Student> students = studentRepository.findByStudentName(dto.getStudentName());
             
-            // 전화번호 매칭 (하이픈 제거 후 비교)
             Student matchedStudent = students.stream()
                 .filter(s -> s.getParentPhone() != null && 
                             s.getParentPhone().replaceAll("-", "").equals(phoneWithoutHyphen))
@@ -49,26 +44,16 @@ public class QuizService {
                 .orElse(null);
             
             if (matchedStudent != null) {
-                // 기존 학생 업데이트
                 matchedStudent.updateRenaissanceUsername(dto.getRenaissanceUsername());
                 updatedCount++;
-                log.info("업데이트: {} (전화번호: {})", dto.getStudentName(), dto.getParentPhone());
+                log.info("르네상스 ID 업데이트: {} -> {}", dto.getStudentName(), dto.getRenaissanceUsername());
             } else {
-                // 새 학생 추가
-                Student newStudent = Student.builder()
-                    .studentName(dto.getStudentName())
-                    .parentPhone(dto.getParentPhone())
-                    .renaissanceUsername(dto.getRenaissanceUsername())
-                    .isActive(true)
-                    .build();
-                studentRepository.save(newStudent);
-                createdCount++;
-                log.info("새 학생 추가: {} (전화번호: {})", dto.getStudentName(), dto.getParentPhone());
+                log.warn("매칭 실패 - 스킵: {} (전화번호: {})", dto.getStudentName(), dto.getParentPhone());
             }
         }
 
-        log.info("업데이트: {}명, 신규 추가: {}명", updatedCount, createdCount);
-        return updatedCount + createdCount;
+        log.info("르네상스 ID 업데이트 완료: {}명", updatedCount);
+        return updatedCount;
     }
 
     public List<Map<String, Object>> fetchStudentQuizData(Long studentId) throws Exception {

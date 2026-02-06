@@ -1,55 +1,53 @@
 /* Students Page - Modern Design */
 
-/* 페이지 래퍼 */
-.page-wrapper {
+/* 페이지 전체 */
+.students-page {
   min-height: 100vh;
-  background: var(--gray-50);
+  background: #f5f7fa;
 }
 
 /* 페이지 헤더 */
-.page-header {
+.students-header {
   background: white;
-  border-bottom: 1px solid var(--gray-200);
-  padding: 32px 0;
+  padding: 32px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.page-header-content {
+.students-header-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
-.page-title-section {
+.students-title-section {
+  display: block;
   flex: 1;
 }
 
-.page-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-title i {
-  color: var(--naver-green);
+.students-title {
   font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
 }
 
-.page-subtitle {
-  font-size: 15px;
-  color: var(--gray-600);
+.students-title i {
+  color: #00c73c;
+  margin-right: 12px;
+}
+
+.students-subtitle {
+  font-size: 14px;
+  color: #6b7280;
   margin: 0;
 }
 
 /* 버튼 스타일 */
-.btn-primary {
-  background: var(--naver-green);
+.students-add-btn {
+  background: #00c73c;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -57,14 +55,69 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(3, 199, 90, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.btn-primary:hover {
-  background: var(--naver-green-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(3, 199, 90, 0.3);
+.students-add-btn:hover {
+  background: #00a832;
+}
+
+/* 컨텐츠 영역 */
+.students-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* 검색 섹션 */
+.students-search-section {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.students-search-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.students-search-icon {
+  position: absolute;
+  left: 16px;
+  color: #9ca3af;
+}
+
+.students-search-input {
+  width: 100%;
+  padding: 12px 12px 12px 44px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.students-search-input:focus {
+  outline: none;
+  border-color: #00c73c;
+}
+
+.students-result-count {
+  font-size: 14px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.students-result-count strong {
+  color: #00c73c;
 }
 
 .btn-with-icon {

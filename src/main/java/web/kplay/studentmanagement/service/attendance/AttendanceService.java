@@ -173,22 +173,34 @@ public class AttendanceService {
                     .build());
         }
         
-        // 2. 네이버 예약 찾기
+        // 2. 네이버 예약 찾기 (오늘 예약만)
         var naverBookings = naverBookingRepository.findAll().stream()
                 .filter(nb -> {
                     if (nb.getPhone() == null) return false;
+                    // 오늘 예약만 (bookingTime에서 날짜 추출)
+                    if (nb.getBookingTime() == null) return false;
+                    try {
+                        String dateStr = nb.getBookingTime().split(" ")[0]; // "2026-02-06 14:00" -> "2026-02-06"
+                        LocalDate bookingDate = LocalDate.parse(dateStr);
+                        if (!bookingDate.equals(today)) return false;
+                    } catch (Exception e) {
+                        return false;
+                    }
                     String cleanPhone = nb.getPhone().replaceAll("[^0-9]", "");
                     return cleanPhone.length() >= 4 && cleanPhone.substring(cleanPhone.length() - 4).equals(phoneLast4);
                 })
                 .collect(Collectors.toList());
         
         for (var booking : naverBookings) {
+            // 학생명이 없으면 스킵 (예약자명만 있는 경우)
+            if (booking.getStudentName() == null || booking.getStudentName().trim().isEmpty()) {
+                continue;
+            }
+            
             // 엑셀에서 반 정보 조회
             String courseName = null;
-            if (booking.getStudentName() != null) {
-                String cleanName = booking.getStudentName().trim().replaceAll("\\s+", "");
-                courseName = studentCourseExcelService.getCourseName(cleanName);
-            }
+            String cleanName = booking.getStudentName().trim().replaceAll("\\s+", "");
+            courseName = studentCourseExcelService.getCourseName(cleanName);
             
             // 오늘 출석 기록 조회
             List<Attendance> todayAttendances = attendanceRepository.findByNaverBookingAndDate(booking, today);
@@ -196,7 +208,7 @@ public class AttendanceService {
             
             results.add(StudentSearchResponse.builder()
                     .naverBookingId(booking.getId())
-                    .studentName(booking.getStudentName() != null ? booking.getStudentName() : booking.getName())
+                    .studentName(booking.getStudentName())
                     .parentName(booking.getName())
                     .parentPhone(booking.getPhone())
                     .school(booking.getSchool())

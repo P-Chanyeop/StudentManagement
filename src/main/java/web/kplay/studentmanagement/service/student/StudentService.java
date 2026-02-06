@@ -63,6 +63,7 @@ public class StudentService {
     @Transactional(readOnly = true)
     public List<StudentResponse> getAllStudents() {
         return studentRepository.findAll().stream()
+                .filter(s -> s.getParentPhone() != null && !s.getParentPhone().isEmpty())
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -70,6 +71,7 @@ public class StudentService {
     @Transactional(readOnly = true)
     public List<StudentResponse> getActiveStudents() {
         return studentRepository.findByIsActive(true).stream()
+                .filter(s -> s.getParentPhone() != null && !s.getParentPhone().isEmpty())
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -225,6 +227,7 @@ public class StudentService {
     @Transactional(readOnly = true)
     public List<web.kplay.studentmanagement.dto.student.StudentAdditionalClassResponse> getAllStudentsWithAdditionalClass() {
         return studentRepository.findByIsActiveTrue().stream()
+                .filter(s -> s.getParentPhone() != null && !s.getParentPhone().isEmpty())
                 .map(s -> {
                     String className = null;
                     if (s.getDefaultCourse() != null) {
