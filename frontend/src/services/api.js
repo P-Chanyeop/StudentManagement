@@ -26,18 +26,28 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // 토큰 만료 시 리프레시 토큰으로 재발급 시도
+    const originalRequest = error.config;
+    
+    // refresh 요청 자체가 실패하면 바로 로그인으로
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      localStorage.clear();
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const response = await api.post('/api/auth/refresh', { refreshToken });
+          const response = await api.post('/auth/refresh', { refreshToken });
           const { accessToken } = response.data;
           localStorage.setItem('accessToken', accessToken);
 
           // 원래 요청 재시도
-          error.config.headers.Authorization = `Bearer ${accessToken}`;
-          return api(error.config);
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
         } catch (refreshError) {
           // 리프레시 토큰도 만료됨
           localStorage.clear();
@@ -197,7 +207,7 @@ export const reservationAPI = {
 
 // 네이버 예약 API
 export const naverBookingAPI = {
-  sync: () => api.post('/naver-booking/sync'),
+  sync: (date) => api.post(`/naver-booking/sync${date ? `?date=${date}` : ''}`),
   getToday: () => api.get('/naver-booking/today'),
   getByDate: (date) => api.get(`/naver-booking/date/${date}`),
 };

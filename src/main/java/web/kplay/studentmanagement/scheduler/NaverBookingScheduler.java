@@ -17,12 +17,12 @@ public class NaverBookingScheduler {
     private final SmsService smsService;
 
     // 매일 오전 9시 00분에 실행
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 30 8 * * *")
     public void scheduledCrawling() {
         log.info("=== 네이버 예약 자동 크롤링 시작 (매일 오전 9시) ===");
         String result = "FAIL";
         try {
-            crawlerService.crawlNaverBookings();
+            crawlerService.crawlNaverBookings(null);
             log.info("=== 네이버 예약 자동 크롤링 완료 ===");
             result = "OK";
 

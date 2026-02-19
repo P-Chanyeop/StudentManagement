@@ -226,7 +226,7 @@ function Reservations() {
 
   // 네이버 예약 동기화 mutation
   const syncNaverMutation = useMutation({
-    mutationFn: () => naverBookingAPI.sync(),
+    mutationFn: () => naverBookingAPI.sync(selectedDate),
     onSuccess: (response) => {
       console.log('네이버 예약 동기화 성공:', response);
       const data = response.data || response;

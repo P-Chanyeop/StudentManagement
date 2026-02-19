@@ -68,6 +68,12 @@ public class AttendanceScheduler {
                     
                     log.info("No-show notification sent: student={}, time={}", 
                         student.getStudentName(), attendance.getAttendanceTime());
+                } else if (attendance.getNaverBooking() != null) {
+                    // 네이버 예약 학생 미출석 알림 발송
+                    automatedMessageService.sendNaverNoShowNotification(attendance.getNaverBooking(), attendance.getAttendanceTime());
+                    attendance.markLateNotificationSent();
+                    log.info("No-show notification sent (Naver): student={}, time={}", 
+                        attendance.getNaverBooking().getStudentName(), attendance.getAttendanceTime());
                 }
             }
         }

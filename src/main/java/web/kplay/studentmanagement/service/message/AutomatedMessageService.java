@@ -38,6 +38,7 @@ public class AutomatedMessageService {
     private final SmsService smsService;
     private final web.kplay.studentmanagement.repository.StudentRepository studentRepository;
     private final web.kplay.studentmanagement.repository.ConsultationRepository consultationRepository;
+    private final web.kplay.studentmanagement.repository.NaverBookingRepository naverBookingRepository;
     
     @Value("${app.homepage-url:https://littlebear.kplay.web}")
     private String homepageUrl;
@@ -208,6 +209,27 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 네이버 예약 미출석 알림 발송 (15분 경과)
+     */
+    @Transactional
+    public void sendNaverNoShowNotification(NaverBooking booking, LocalTime scheduledTime) {
+        String studentName = booking.getStudentName() != null ? booking.getStudentName() : booking.getName();
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 오늘 %d시 예약되어있는데 아직 등원하지 않아 연락드립니다.\n" +
+                "당일 결석의 경우 횟수 차감인점 안내드리며 확인 부탁드립니다.\n\n감사합니다! :)",
+                studentName,
+                scheduledTime.getHour()
+        );
+
+        String phone = booking.getPhone();
+        if (phone != null && !phone.isEmpty()) {
+            sendAndSaveNaverMessage(booking, MessageType.GENERAL, content);
+            log.info("네이버 예약 미출석 알림 발송: 학생={}, 예약시간={}", studentName, scheduledTime);
+        }
+    }
+
+    /**
      * 레코딩 업로드 완료 알림 발송
      */
     @Transactional
@@ -267,22 +289,45 @@ public class AutomatedMessageService {
     }
 
     /**
-     * 공지사항 등록 알림 발송 (전체 학생)
+     * 공지사항 등록 알림 발송 (전체 학생 + 네이버 예약 학생)
      */
     @Transactional
-    public void sendNoticeNotificationToAll(List<Student> students) {
+    public void sendNoticeNotificationToAll(List<Student> students, List<NaverBooking> naverBookings) {
         String content = "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
                 "리틀베어 홈페이지에 새로운 공지가 등록되었습니다.\n" +
                 "공지사항을 확인해 주세요.\n\n감사합니다! :)";
 
         int count = 0;
+        // 시스템 학생
         for (Student student : students) {
             if (student.getParentPhone() != null && !student.getParentPhone().isEmpty()) {
                 sendAndSaveMessage(student, MessageType.GENERAL, content);
                 count++;
             }
         }
+        // 네이버 예약 학생 (중복 번호 제거)
+        java.util.Set<String> sentPhones = students.stream()
+                .map(Student::getParentPhone)
+                .filter(p -> p != null && !p.isEmpty())
+                .collect(java.util.stream.Collectors.toSet());
+        
+        for (NaverBooking booking : naverBookings) {
+            String phone = booking.getPhone();
+            if (phone != null && !phone.isEmpty() && !sentPhones.contains(phone)) {
+                sendAndSaveNaverMessage(booking, MessageType.GENERAL, content);
+                sentPhones.add(phone);
+                count++;
+            }
+        }
         log.info("공지 알림 발송 완료: {}명", count);
+    }
+
+    /**
+     * 공지사항 등록 알림 발송 (시스템 학생만 - 기존 호환)
+     */
+    @Transactional
+    public void sendNoticeNotificationToAll(List<Student> students) {
+        sendNoticeNotificationToAll(students, java.util.Collections.emptyList());
     }
 
     /**
@@ -447,22 +492,15 @@ public class AutomatedMessageService {
     @Transactional
     public void sendLevelTestReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
+        int count = 0;
 
-        // 내일 예정된 레벨테스트 조회
+        // 1. 시스템 레벨테스트 조회
         List<LevelTest> tomorrowTests = levelTestRepository.findByTestDate(tomorrow);
 
         for (LevelTest test : tomorrowTests) {
-            // 이미 취소된 테스트는 스킵
-            if ("CANCELLED".equals(test.getTestStatus())) {
-                continue;
-            }
+            if ("CANCELLED".equals(test.getTestStatus())) continue;
+            if (test.getMessageNotificationSent()) continue;
 
-            // 이미 알림을 보낸 경우 스킵
-            if (test.getMessageNotificationSent()) {
-                continue;
-            }
-
-            // 시간 포맷팅
             String timeStr = test.getTestTime() != null ? 
                     test.getTestTime().getHour() + "시" : "예정";
 
@@ -475,26 +513,47 @@ public class AutomatedMessageService {
                     timeStr
             );
 
-            Message message = Message.builder()
-                    .student(test.getStudent())
-                    .recipientPhone(test.getStudent().getParentPhone())
-                    .recipientName(test.getStudent().getParentName())
-                    .messageType(MessageType.LEVEL_TEST_REMINDER)
-                    .content(content)
-                    .sendStatus("PENDING")
-                    .build();
-
-            Message savedMessage = messageRepository.save(message);
-            savedMessage.markAsSent(LocalDateTime.now(), "AUTO-LEVELTEST-" + savedMessage.getId());
-
-            // 알림 발송 표시
+            sendAndSaveMessage(test.getStudent(), MessageType.LEVEL_TEST_REMINDER, content);
             test.markNotificationSent();
-
+            count++;
             log.info("레벨테스트 전날 알림 발송: 학생={}, 테스트일={}",
                     test.getStudent().getStudentName(), test.getTestDate());
         }
 
-        log.info("레벨테스트 전날 알림 발송 완료: 총 {}건", tomorrowTests.size());
+        // 2. 네이버 예약 레벨테스트 조회
+        String tomorrowStr = tomorrow.toString(); // "2026-02-20"
+        List<NaverBooking> naverBookings = naverBookingRepository.findAll().stream()
+                .filter(nb -> nb.getBookingTime() != null && nb.getBookingTime().startsWith(tomorrowStr))
+                .filter(nb -> nb.getProduct() != null && nb.getProduct().contains("레벨테스트"))
+                .filter(nb -> nb.getStatus() == null || !nb.getStatus().contains("취소"))
+                .toList();
+
+        for (NaverBooking booking : naverBookings) {
+            String studentName = booking.getStudentName() != null ? booking.getStudentName() : booking.getName();
+            String timeStr = "예정";
+            try {
+                String[] parts = booking.getBookingTime().split(" ");
+                if (parts.length > 1) {
+                    timeStr = parts[1].split(":")[0] + "시";
+                }
+            } catch (Exception ignored) {}
+
+            String content = String.format(
+                    "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                    "%s학생\n%d/%d %s에 레벨테스트 예정되어있습니다.\n\n" +
+                    "스케줄 변동 있으시면 편하게 말씀해주세요.\n감사합니다 :)",
+                    studentName,
+                    tomorrow.getMonthValue(), tomorrow.getDayOfMonth(),
+                    timeStr
+            );
+
+            sendAndSaveNaverMessage(booking, MessageType.LEVEL_TEST_REMINDER, content);
+            count++;
+            log.info("네이버 레벨테스트 전날 알림 발송: 학생={}, 테스트일={}",
+                    studentName, tomorrow);
+        }
+
+        log.info("레벨테스트 전날 알림 발송 완료: 총 {}건", count);
     }
 
     /**

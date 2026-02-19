@@ -25,10 +25,10 @@ public class NaverBookingController {
 
     @PostMapping("/sync")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
-    public ResponseEntity<List<NaverBookingDTO>> syncNaverBookings() {
+    public ResponseEntity<List<NaverBookingDTO>> syncNaverBookings(@RequestParam(required = false) String date) {
         try {
-            log.info("네이버 예약 API 동기화 요청");
-            List<NaverBookingDTO> bookings = apiCrawlerService.crawlNaverBookings();
+            log.info("네이버 예약 API 동기화 요청 - 날짜: {}", date);
+            List<NaverBookingDTO> bookings = apiCrawlerService.crawlNaverBookings(date);
             log.info("네이버 예약 동기화 완료: {}건", bookings.size());
             return ResponseEntity.ok(bookings);
         } catch (Exception e) {

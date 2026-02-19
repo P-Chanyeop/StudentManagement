@@ -123,18 +123,20 @@ public class NaverBookingApiCrawlerService {
     }
 
     @Transactional
-    public List<NaverBookingDTO> crawlNaverBookings() {
+    public List<NaverBookingDTO> crawlNaverBookings(String dateStr) {
         List<NaverBookingDTO> allBookings = new ArrayList<>();
         
         try {
             log.info("네이버 예약 API 크롤링 시작");
             
-            // 오늘 날짜 (한국 시간)
-            LocalDate today = LocalDate.now();
-            String todayStr = today.format(DateTimeFormatter.ISO_LOCAL_DATE);
-            String timestamp = todayStr + "T00:00:00.000Z";
+            // 날짜 파라미터 없으면 오늘
+            LocalDate targetDate = (dateStr != null && !dateStr.isEmpty()) 
+                ? LocalDate.parse(dateStr) 
+                : LocalDate.now();
+            String targetDateStr = targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            String timestamp = targetDateStr + "T00:00:00.000Z";
             
-            log.info("조회 날짜: {}", todayStr);
+            log.info("조회 날짜: {}", targetDateStr);
             
             int page = 0;
             while (true) {
