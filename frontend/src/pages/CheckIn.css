@@ -4,8 +4,74 @@
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
+  overflow: hidden;
   z-index: 9999;
+  background: #4CAF50;
+}
+
+/* 페이지 전환 */
+.checkin-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  opacity: 0;
+  transform: scale(1.08);
+  pointer-events: none;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.checkin-page.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.checkin-page.exit {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+/* 2페이지 카드 등장 애니메이션 */
+.checkin-page2.active .student-card {
+  animation: cardSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.checkin-page2.active .page2-title {
+  animation: fadeSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.checkin-page2.active .page2-sub {
+  animation: fadeSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.checkin-page2.active .page2-back-btn {
+  animation: fadeSlideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+@keyframes fadeSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* 왼쪽 영역 */
@@ -259,4 +325,138 @@
   color: #fff;
   text-align: center;
   font-size: 16px;
+}
+
+/* 페이지 2: 학생 선택 */
+.page2-left {
+  justify-content: center;
+  align-items: center;
+}
+
+.page2-guide {
+  text-align: center;
+}
+
+.page2-title {
+  font-size: 36px;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.page2-sub {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.page2-back-btn {
+  padding: 14px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page2-back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.page2-right {
+  align-items: stretch;
+  overflow-y: auto;
+  padding: 30px;
+}
+
+.student-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.student-card {
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 24px 28px;
+  cursor: default;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2);
+}
+
+.student-card.selected {
+  border-color: #4CAF50;
+  background: #f0fdf4;
+}
+
+.student-card-info {
+  flex: 1;
+}
+
+.student-card-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.student-card-class {
+  font-size: 15px;
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.student-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.card-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card-btn-checkin {
+  background: #4CAF50;
+  color: #fff;
+}
+
+.card-btn-checkin:hover:not(:disabled) {
+  background: #43a047;
+}
+
+.card-btn-checkout {
+  background: #ff9800;
+  color: #fff;
+}
+
+.card-btn-checkout:hover:not(:disabled) {
+  background: #f57c00;
 }

@@ -874,3 +874,48 @@
   transform: none !important;
   box-shadow: none !important;
 }
+
+/* 출석체크 탭 */
+.attendance-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #03C75A;
+}
+
+.tab-btn.active {
+  color: #03C75A;
+  border-bottom-color: #03C75A;
+}
+
+/* 출석체크 이미지 */
+.attendance-image-container {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.attendance-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}

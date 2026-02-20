@@ -118,6 +118,11 @@ public class Attendance extends BaseEntity {
         this.originalExpectedLeaveTime = this.expectedLeaveTime;
         this.status = AttendanceStatus.PRESENT;
         
+        // 자동 결석 사유 클리어 (수동 입력 사유는 유지)
+        if ("자동 결석 처리 (15분 미출석)".equals(this.reason)) {
+            this.reason = null;
+        }
+        
         updateAdditionalClassEndTime();
     }
 

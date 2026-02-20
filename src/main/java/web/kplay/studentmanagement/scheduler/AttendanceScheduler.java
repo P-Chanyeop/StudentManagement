@@ -87,7 +87,10 @@ public class AttendanceScheduler {
     public void checkAbsentStudents() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-        LocalTime fifteenMinutesAgo = now.minusMinutes(15);
+
+        // 현재 시간 기준 15분 전까지만 결석 대상
+        // 예: 지금 11:35이면 11:20 이전 수업만 결석 처리
+        LocalTime cutoff = now.minusMinutes(15);
 
         List<Attendance> attendances = attendanceRepository.findByDate(today);
 
@@ -95,7 +98,8 @@ public class AttendanceScheduler {
         for (Attendance attendance : attendances) {
             if (attendance.getCheckInTime() == null 
                 && attendance.getAttendanceTime() != null
-                && attendance.getAttendanceTime().isBefore(fifteenMinutesAgo)
+                && attendance.getAttendanceTime().isBefore(cutoff)
+                && attendance.getAttendanceTime().isBefore(now) // 미래 수업 제외
                 && attendance.getStatus() != AttendanceStatus.ABSENT
                 && attendance.getStatus() != AttendanceStatus.EXCUSED) {
                 
