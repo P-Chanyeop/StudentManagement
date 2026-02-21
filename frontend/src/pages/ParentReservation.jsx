@@ -527,16 +527,6 @@ function ParentReservation() {
       // 시간 형식 맞춰서 비교 (HH:MM vs HH:MM:SS)
       const selectedTime = formData.preferredTime + ":00"; // "14:00" -> "14:00:00"
       
-      // 매칭되는 스케줄 찾기
-      scheduleResponse.data.forEach((schedule, index) => {
-          id: schedule.id,
-          courseName: schedule.courseName,
-          startTime: schedule.startTime,
-          timeMatch: schedule.startTime === selectedTime,
-          courseMatch: schedule.courseName === formData.consultationType
-        });
-      });
-      
       // 09:00~18:00 사이 모든 시간대 예약 가능
       // 스케줄 체크 제거 - 시간대만 선택하면 예약 가능
       
