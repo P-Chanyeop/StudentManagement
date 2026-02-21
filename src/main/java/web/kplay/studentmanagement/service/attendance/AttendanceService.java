@@ -773,7 +773,11 @@ public class AttendanceService {
                 .isNaverBooking(isNaver)
                 .courseName(courseName)
                 .startTime(attendance.getAttendanceTime().toString())
-                .endTime(attendance.getExpectedLeaveTime() != null ? attendance.getExpectedLeaveTime().toString() : null)
+                .endTime(attendance.getDurationMinutes() != null 
+                    ? attendance.getAttendanceTime().plusMinutes(attendance.getDurationMinutes()).toString()
+                    : (attendance.getCourse() != null && attendance.getCourse().getDurationMinutes() != null
+                        ? attendance.getAttendanceTime().plusMinutes(attendance.getCourse().getDurationMinutes()).toString()
+                        : null))
                 .status(attendance.getStatus())
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())

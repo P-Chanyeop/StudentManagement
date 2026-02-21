@@ -328,51 +328,43 @@ function Attendance() {
     
     return attendanceList
       .sort((a, b) => {
+        // 출석한 학생 우선 (PRESENT, LATE → 나머지)
+        const aPresent = a.checkInTime ? 0 : 1;
+        const bPresent = b.checkInTime ? 0 : 1;
+        if (aPresent !== bPresent) return aPresent - bPresent;
+
         let result = 0;
         
         // 테이블 헤더 정렬이 우선
         if (tableSortBy === 'name') {
           result = a.studentName.localeCompare(b.studentName);
         } else if (tableSortBy === 'arrival') {
-          // 등원 시간 정렬
           if (a.checkInTime && b.checkInTime) {
             result = new Date(a.checkInTime) - new Date(b.checkInTime);
-          } else if (a.checkInTime && !b.checkInTime) {
-            result = -1;
-          } else if (!a.checkInTime && b.checkInTime) {
-            result = 1;
           } else {
-            // 둘 다 미출석이면 예약시간순
             result = (a.startTime || '').localeCompare(b.startTime || '');
           }
         } else if (tableSortBy === 'departure') {
-          // 하원 시간 정렬: 출석한 학생 먼저, 실제 하원시간 기준
-          const aCheckedIn = !!a.checkInTime;
-          const bCheckedIn = !!b.checkInTime;
-          
-          if (aCheckedIn && !bCheckedIn) {
-            result = -1;
-          } else if (!aCheckedIn && bCheckedIn) {
-            result = 1;
-          } else if (a.checkOutTime && b.checkOutTime) {
+          const aTime = a.expectedLeaveTime || '';
+          const bTime = b.expectedLeaveTime || '';
+          result = aTime.localeCompare(bTime);
+        } else if (tableSortBy === 'actualDeparture') {
+          if (a.checkOutTime && b.checkOutTime) {
             result = new Date(a.checkOutTime) - new Date(b.checkOutTime);
           } else if (a.checkOutTime && !b.checkOutTime) {
             result = -1;
           } else if (!a.checkOutTime && b.checkOutTime) {
             result = 1;
           } else {
-            // 둘 다 미하원이면 예약시간순
             result = (a.startTime || '').localeCompare(b.startTime || '');
           }
         } else {
           // 기본: 수업 시간순
           const timeA = a.startTime || '';
           const timeB = b.startTime || '';
-          
           if (timeA !== timeB) {
             result = timeA.localeCompare(timeB);
           } else {
-            // 같은 수업 시간이면 이름 가나다순
             result = a.studentName.localeCompare(b.studentName);
           }
         }
@@ -603,12 +595,20 @@ function Attendance() {
                   className={`sortable ${tableSortBy === 'departure' ? 'active' : ''}`}
                   onClick={() => handleTableSort('departure')}
                 >
-                  하원 시간
+                  하원 예정
                   {tableSortBy === 'departure' && (
                     <i className={`fas fa-sort-${tableSortOrder === 'asc' ? 'up' : 'down'}`}></i>
                   )}
                 </th>
-                <th>수업 완료</th>
+                <th
+                  className={`sortable ${tableSortBy === 'actualDeparture' ? 'active' : ''}`}
+                  onClick={() => handleTableSort('actualDeparture')}
+                >
+                  실제 하원
+                  {tableSortBy === 'actualDeparture' && (
+                    <i className={`fas fa-sort-${tableSortOrder === 'asc' ? 'up' : 'down'}`}></i>
+                  )}
+                </th>
                 <th>D/C</th>
                 <th>WR</th>
                 <th>비고</th>
@@ -644,11 +644,6 @@ function Attendance() {
                     {attendance.checkInTime ? (
                       <div className="check-in-info">
                         <span>{formatTime(attendance.checkInTime)}</span>
-                        {attendance.expectedLeaveTime && !attendance.checkOutTime && (
-                          <span className="expected-leave-hint">
-                            {formatTime(attendance.expectedLeaveTime)} 하원예정
-                          </span>
-                        )}
                       </div>
                     ) : '-'}
                   </td>
@@ -664,19 +659,10 @@ function Attendance() {
                     )}
                   </td>
                   <td className="check-out-time">
-                    {attendance.checkOutTime ? formatTime(attendance.checkOutTime) : '-'}
+                    {attendance.checkInTime && attendance.expectedLeaveTime ? formatTime(attendance.expectedLeaveTime) : '-'}
                   </td>
                   <td className="class-complete">
-                    <label className="checkbox-container">
-                      <input
-                        type="checkbox"
-                        checked={attendance.classCompleted || false}
-                        onChange={() => 
-                          updateClassComplete.mutate(attendance.id)
-                        }
-                      />
-                      <span className="checkmark"></span>
-                    </label>
+                    {attendance.checkOutTime ? formatTime(attendance.checkOutTime) : '-'}
                   </td>
                   <td className="dc-check">
                     <input
