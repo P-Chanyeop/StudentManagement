@@ -1013,6 +1013,14 @@ function Enrollments() {
                 )}
               </div>
 
+              {selectedEnrollment.isOnHold && selectedEnrollment.holdStartDate && (
+                <div style={{ padding: '10px 14px', background: '#FFF8E1', borderRadius: 8, marginBottom: 16, fontSize: 13, color: '#E65100' }}>
+                  <i className="fas fa-pause-circle" style={{ marginRight: 6 }}></i>
+                  홀딩 기간: {new Date(selectedEnrollment.holdStartDate).toLocaleDateString()} ~ {new Date(selectedEnrollment.holdEndDate).toLocaleDateString()}
+                  {selectedEnrollment.totalHoldDays > 0 && <span style={{ marginLeft: 8 }}>(총 {selectedEnrollment.totalHoldDays}일)</span>}
+                </div>
+              )}
+
               <div className="enr-detail-grid">
                 <div className="enr-detail-item">
                   <span className="enr-detail-label">학생</span>
