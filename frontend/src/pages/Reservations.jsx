@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI, consultationAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, enrollmentAPI, authAPI, naverBookingAPI, consultationAPI, blockedTimeSlotAPI } from '../services/api';
 import { getTodayString } from '../utils/dateUtils';
 import '../styles/Reservations.css';
 
@@ -14,6 +14,11 @@ function Reservations() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNaverDetailModal, setShowNaverDetailModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [blockForm, setBlockForm] = useState({
+    blockType: 'SINGLE', blockDate: '', startDate: '', endDate: '',
+    dayOfWeek: '', blockTime: '', reason: ''
+  });
   const [naverBookings, setNaverBookings] = useState([]);
   const [showAllNaverBookings, setShowAllNaverBookings] = useState(false);
   const [showAllSystemReservations, setShowAllSystemReservations] = useState(false);
@@ -174,6 +179,31 @@ function Reservations() {
     },
     enabled: !!newReservation.studentId,
   });
+
+  // 차단 시간 목록
+  const { data: blockedSlots = [] } = useQuery({
+    queryKey: ['blockedTimeSlots'],
+    queryFn: async () => (await blockedTimeSlotAPI.getAll()).data,
+    enabled: !isParent,
+  });
+
+  const createBlockMutation = useMutation({
+    mutationFn: (data) => blockedTimeSlotAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['blockedTimeSlots']);
+      setShowBlockModal(false);
+      setBlockForm({ blockType: 'SINGLE', blockDate: '', startDate: '', endDate: '', dayOfWeek: '', blockTime: '', reason: '' });
+    },
+    onError: (error) => alert(`차단 실패: ${error.response?.data?.message || '오류'}`),
+  });
+
+  const deleteBlockMutation = useMutation({
+    mutationFn: (id) => blockedTimeSlotAPI.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['blockedTimeSlots']),
+  });
+
+  const TIME_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+  const DAY_NAMES = { MONDAY:'월', TUESDAY:'화', WEDNESDAY:'수', THURSDAY:'목', FRIDAY:'금', SATURDAY:'토', SUNDAY:'일' };
 
   // 예약 생성 mutation
   const createMutation = useMutation({
@@ -536,6 +566,9 @@ function Reservations() {
                   <i className={`fas fa-file-excel ${uploadStudentListMutation.isPending ? 'fa-spin' : ''}`}></i>
                   {uploadStudentListMutation.isPending ? '업로드 중...' : '기존 학생 목록 업데이트'}
                 </label>
+                <button className="sync-button" onClick={() => setShowBlockModal(true)} style={{ background: '#FF6B6B', color: '#fff' }}>
+                  <i className="fas fa-ban"></i> 시간대 차단 관리
+                </button>
                 <input
                   id="student-list-upload"
                   type="file"
@@ -1012,6 +1045,106 @@ function Reservations() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 시간대 차단 관리 모달 */}
+      {showBlockModal && (
+        <div className="modal-overlay" onClick={() => setShowBlockModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>시간대 차단 관리</h2>
+              <button className="modal-close" onClick={() => setShowBlockModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {/* 새 차단 추가 */}
+              <div style={{ marginBottom: 24, padding: 16, background: '#f9f9f9', borderRadius: 8 }}>
+                <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>새 차단 추가</h3>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  {['SINGLE','RANGE','WEEKLY'].map(t => (
+                    <button key={t} type="button"
+                      style={{ padding: '6px 14px', borderRadius: 6, border: blockForm.blockType === t ? '2px solid #03C75A' : '1px solid #ddd', background: blockForm.blockType === t ? '#E8F8EE' : '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                      onClick={() => setBlockForm(f => ({ ...f, blockType: t }))}
+                    >
+                      {t === 'SINGLE' ? '특정 날짜' : t === 'RANGE' ? '기간' : '매주 반복'}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                  {blockForm.blockType === 'SINGLE' && (
+                    <div>
+                      <label style={{ fontSize: 12, color: '#888' }}>날짜</label>
+                      <input type="date" value={blockForm.blockDate} onChange={e => setBlockForm(f => ({ ...f, blockDate: e.target.value }))} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
+                    </div>
+                  )}
+                  {blockForm.blockType === 'RANGE' && (
+                    <>
+                      <div>
+                        <label style={{ fontSize: 12, color: '#888' }}>시작일</label>
+                        <input type="date" value={blockForm.startDate} onChange={e => setBlockForm(f => ({ ...f, startDate: e.target.value }))} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 12, color: '#888' }}>종료일</label>
+                        <input type="date" value={blockForm.endDate} onChange={e => setBlockForm(f => ({ ...f, endDate: e.target.value }))} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
+                      </div>
+                    </>
+                  )}
+                  {blockForm.blockType === 'WEEKLY' && (
+                    <div>
+                      <label style={{ fontSize: 12, color: '#888' }}>요일</label>
+                      <select value={blockForm.dayOfWeek} onChange={e => setBlockForm(f => ({ ...f, dayOfWeek: e.target.value }))} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6 }}>
+                        <option value="">선택</option>
+                        {Object.entries(DAY_NAMES).map(([k, v]) => <option key={k} value={k}>{v}요일</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div>
+                    <label style={{ fontSize: 12, color: '#888' }}>시간</label>
+                    <select value={blockForm.blockTime} onChange={e => setBlockForm(f => ({ ...f, blockTime: e.target.value }))} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6 }}>
+                      <option value="">선택</option>
+                      {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <input placeholder="차단 사유 (선택)" value={blockForm.reason} onChange={e => setBlockForm(f => ({ ...f, reason: e.target.value }))} style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6, marginBottom: 12 }} />
+                <button onClick={() => {
+                  if (!blockForm.blockTime) return alert('시간을 선택해주세요');
+                  if (blockForm.blockType === 'SINGLE' && !blockForm.blockDate) return alert('날짜를 선택해주세요');
+                  if (blockForm.blockType === 'RANGE' && (!blockForm.startDate || !blockForm.endDate)) return alert('기간을 선택해주세요');
+                  if (blockForm.blockType === 'WEEKLY' && !blockForm.dayOfWeek) return alert('요일을 선택해주세요');
+                  createBlockMutation.mutate(blockForm);
+                }} style={{ padding: '8px 20px', background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>
+                  차단 추가
+                </button>
+              </div>
+
+              {/* 차단 목록 */}
+              <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>현재 차단 목록 ({blockedSlots.length}건)</h3>
+              {blockedSlots.length === 0 ? (
+                <p style={{ color: '#999', textAlign: 'center', padding: 20 }}>차단된 시간이 없습니다</p>
+              ) : (
+                <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                  {blockedSlots.map(slot => (
+                    <div key={slot.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid #f0f0f0' }}>
+                      <div>
+                        <span style={{ fontWeight: 600, marginRight: 8 }}>{slot.blockTime}</span>
+                        <span style={{ fontSize: 13, color: '#666' }}>
+                          {slot.blockType === 'SINGLE' && slot.blockDate}
+                          {slot.blockType === 'RANGE' && `${slot.startDate} ~ ${slot.endDate}`}
+                          {slot.blockType === 'WEEKLY' && `매주 ${DAY_NAMES[slot.dayOfWeek]}요일`}
+                        </span>
+                        {slot.reason && <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>({slot.reason})</span>}
+                      </div>
+                      <button onClick={() => { if (window.confirm('차단을 해제하시겠습니까?')) deleteBlockMutation.mutate(slot.id); }}
+                        style={{ padding: '4px 10px', background: '#fff', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, cursor: 'pointer', color: '#FF3B30' }}>
+                        해제
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

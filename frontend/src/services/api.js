@@ -199,12 +199,22 @@ export const reservationAPI = {
     const params = consultationType ? { consultationType } : {};
     return api.get(`/reservations/reserved-times/${date}`, { params });
   },
+  getTimeSlotStatus: (date, consultationType) => {
+    const params = consultationType ? { consultationType } : {};
+    return api.get(`/reservations/time-slot-status/${date}`, { params });
+  },
   getBySchedule: (scheduleId) => api.get(`/reservations/schedule/${scheduleId}`),
   confirm: (id) => api.post(`/reservations/${id}/confirm`),
   cancel: (id, reason) => api.post(`/reservations/${id}/cancel`, { reason }),
   forceCancel: (id, reason) => api.post(`/reservations/${id}/force-cancel`, { reason }),
   checkAvailability: () => api.get('/reservations/availability'),
   getAvailableDates: () => api.get('/reservations/available-dates'),
+};
+
+export const blockedTimeSlotAPI = {
+  getAll: () => api.get('/blocked-time-slots'),
+  create: (data) => api.post('/blocked-time-slots', data),
+  delete: (id) => api.delete(`/blocked-time-slots/${id}`),
 };
 
 // 네이버 예약 API

@@ -84,16 +84,24 @@ function ParentReservation() {
   const [selectedDateForTime, setSelectedDateForTime] = useState(null);
   const [showTimeSelector, setShowTimeSelector] = useState(false);
   const [reservedTimes, setReservedTimes] = useState([]);
+  const [slotStatus, setSlotStatus] = useState({});
 
   // 선택된 날짜의 예약 현황 조회
   const fetchReservedTimes = async (date) => {
     try {
-      const response = await reservationAPI.getReservedTimes(date, formData.consultationType);
-      console.log('예약된 시간들:', response.data);
-      setReservedTimes(response.data);
+      const response = await reservationAPI.getTimeSlotStatus(date, formData.consultationType);
+      const statusMap = {};
+      const unavailable = [];
+      response.data.forEach(s => {
+        statusMap[s.time] = s;
+        if (s.status !== 'AVAILABLE') unavailable.push(s.time);
+      });
+      setSlotStatus(statusMap);
+      setReservedTimes(unavailable);
     } catch (error) {
       console.error('예약 현황 조회 실패:', error);
       setReservedTimes([]);
+      setSlotStatus({});
     }
   };
 
@@ -770,24 +778,30 @@ function ParentReservation() {
                   <h4>시간을 선택해주세요</h4>
                   <div className="time-grid">
                     {timeSlots.map(time => {
-                      const isReserved = reservedTimes.includes(time);
+                      const info = slotStatus[time];
+                      const isBlocked = info?.status === 'BLOCKED';
+                      const isFull = info?.status === 'FULL';
+                      const isUnavailable = isBlocked || isFull;
+                      const remaining = info?.remaining ?? 9;
                       return (
                         <button
                           key={time}
                           type="button"
-                          className={`time-slot ${formData.preferredTime === time ? 'selected' : ''} ${isReserved ? 'reserved' : ''}`}
+                          className={`time-slot ${formData.preferredTime === time ? 'selected' : ''} ${isUnavailable ? 'reserved' : ''}`}
                           onClick={() => {
-                            if (!isReserved) {
+                            if (!isUnavailable) {
                               setFormData(prev => ({ ...prev, preferredTime: time }));
                               if (errors.preferredTime) {
                                 setErrors(prev => ({ ...prev, preferredTime: '' }));
                               }
                             }
                           }}
-                          disabled={isReserved}
+                          disabled={isUnavailable}
                         >
                           {time}
-                          {isReserved && <span className="reserved-text">예약됨</span>}
+                          {isBlocked && <span className="reserved-text">예약 불가</span>}
+                          {isFull && <span className="reserved-text">마감</span>}
+                          {!isUnavailable && <span className="remaining-text">예약 가능 {remaining}명</span>}
                         </button>
                       );
                     })}

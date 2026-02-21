@@ -19,10 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
@@ -84,6 +80,14 @@ public class ReservationController {
             reservationService.getReservedTimesByDateAndType(date, consultationType) :
             reservationService.getReservedTimesByDate(date);
         return ResponseEntity.ok(reservedTimes);
+    }
+
+    @GetMapping("/time-slot-status/{date}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
+    public ResponseEntity<List<Map<String, Object>>> getTimeSlotStatus(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String consultationType) {
+        return ResponseEntity.ok(reservationService.getTimeSlotStatus(date, consultationType));
     }
 
     // getReservationsBySchedule 메서드 삭제 (schedule 제거로 인해 사용 안 함)

@@ -45,6 +45,9 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final AttendanceRepository attendanceRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
+    private final web.kplay.studentmanagement.repository.BlockedTimeSlotRepository blockedTimeSlotRepository;
+
+    private static final int MAX_RESERVATIONS_PER_SLOT = 9;
 
     @Transactional
     public ReservationResponse createReservation(ReservationCreateRequest request) {
@@ -98,10 +101,20 @@ public class ReservationService {
             }
         }
 
-        // 같은 날짜/시간 중복 체크
+        // 차단된 시간 체크
+        String timeStr = request.getReservationTime().toString().substring(0, 5);
+        List<String> unavailable = getUnavailableTimes(request.getReservationDate(), request.getConsultationType());
+        if (unavailable.contains(timeStr)) {
+            throw new BusinessException("해당 시간은 예약이 불가능합니다 (차단 또는 만석)");
+        }
+
+        // 같은 학생 같은 날짜/시간 중복 체크
         List<Reservation> existingReservations = reservationRepository
             .findByReservationDateAndReservationTime(request.getReservationDate(), request.getReservationTime());
-        if (!existingReservations.isEmpty()) {
+        boolean hasDuplicate = existingReservations.stream()
+            .anyMatch(r -> r.getStudent().getId().equals(request.getStudentId()) &&
+                    (r.getStatus() == ReservationStatus.CONFIRMED || r.getStatus() == ReservationStatus.PENDING));
+        if (hasDuplicate) {
             throw new BusinessException("해당 시간에 이미 예약이 있습니다");
         }
 
@@ -308,37 +321,81 @@ public class ReservationService {
      * 특정 날짜의 모든 예약된 시간 목록 조회
      */
     public List<String> getReservedTimesByDate(LocalDate date) {
-        List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
-            date, List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING));
-        
-        return reservations.stream()
-                .map(reservation -> reservation.getReservationTime().toString().substring(0, 5))
-                .distinct()
-                .collect(Collectors.toList());
+        return getUnavailableTimes(date, null);
     }
 
     /**
-     * 특정 날짜와 상담 유형의 예약된 시간 목록 조회
+     * 특정 날짜와 상담 유형의 예약 불가 시간 목록 조회
+     * (차단된 시간 + 9명 만석 시간)
      */
     public List<String> getReservedTimesByDateAndType(LocalDate date, String consultationType) {
-        log.info("예약된 시간 조회 - 날짜: {}, 유형: {}", date, consultationType);
+        return getUnavailableTimes(date, consultationType);
+    }
+
+    private List<String> getUnavailableTimes(LocalDate date, String consultationType) {
+        // 1. 차단된 시간
+        var blocks = blockedTimeSlotRepository.findActiveBlocksForDate(date, date.getDayOfWeek());
+        java.util.Set<String> unavailable = blocks.stream()
+                .map(b -> b.getBlockTime().toString().substring(0, 5))
+                .collect(java.util.stream.Collectors.toCollection(java.util.HashSet::new));
+
+        // 2. 9명 만석 시간
         List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
-            date, List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING));
-        
-        // 상담 유형 필터링
-        reservations = reservations.stream()
-            .filter(r -> consultationType.equals(r.getConsultationType()))
-            .collect(Collectors.toList());
-            
-        log.info("조회된 예약 수: {}", reservations.size());
-        
-        reservations.forEach(r -> log.info("예약 정보 - 시간: {}, 유형: {}", 
-            r.getReservationTime(), r.getConsultationType()));
-        
-        return reservations.stream()
-                .map(reservation -> reservation.getReservationTime().toString().substring(0, 5))
-                .distinct()
-                .collect(Collectors.toList());
+                date, List.of(web.kplay.studentmanagement.domain.reservation.ReservationStatus.CONFIRMED,
+                        web.kplay.studentmanagement.domain.reservation.ReservationStatus.PENDING));
+        if (consultationType != null) {
+            reservations = reservations.stream()
+                    .filter(r -> consultationType.equals(r.getConsultationType()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        reservations.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getReservationTime().toString().substring(0, 5),
+                        java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .filter(e -> e.getValue() >= MAX_RESERVATIONS_PER_SLOT)
+                .forEach(e -> unavailable.add(e.getKey()));
+
+        return new java.util.ArrayList<>(unavailable);
+    }
+
+    /**
+     * 시간대별 상태 정보 (차단/예약수/잔여석)
+     */
+    public List<java.util.Map<String, Object>> getTimeSlotStatus(LocalDate date, String consultationType) {
+        String[] slots = {"09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"};
+
+        // 차단된 시간
+        var blocks = blockedTimeSlotRepository.findActiveBlocksForDate(date, date.getDayOfWeek());
+        java.util.Set<String> blockedTimes = blocks.stream()
+                .map(b -> b.getBlockTime().toString().substring(0, 5))
+                .collect(java.util.stream.Collectors.toSet());
+
+        // 시간별 예약 수
+        List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
+                date, List.of(ReservationStatus.CONFIRMED, ReservationStatus.PENDING));
+        if (consultationType != null) {
+            reservations = reservations.stream()
+                    .filter(r -> consultationType.equals(r.getConsultationType()))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        var countMap = reservations.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        r -> r.getReservationTime().toString().substring(0, 5),
+                        java.util.stream.Collectors.counting()));
+
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (String slot : slots) {
+            java.util.Map<String, Object> info = new java.util.LinkedHashMap<>();
+            info.put("time", slot);
+            int count = countMap.getOrDefault(slot, 0L).intValue();
+            boolean blocked = blockedTimes.contains(slot);
+            info.put("reserved", count);
+            info.put("remaining", blocked ? 0 : MAX_RESERVATIONS_PER_SLOT - count);
+            info.put("status", blocked ? "BLOCKED" : count >= MAX_RESERVATIONS_PER_SLOT ? "FULL" : "AVAILABLE");
+            result.add(info);
+        }
+        return result;
     }
 
     /**

@@ -271,10 +271,16 @@
   display: block;
   font-size: 0.7rem;
   margin-top: 0.2rem;
+  color: #dc3545;
+  font-weight: 600;
 }
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+
+.remaining-text {
+  display: block;
+  font-size: 0.65rem;
+  margin-top: 0.2rem;
+  color: #03C75A;
+  font-weight: 500;
 }
 
 .form-section h2::before {
