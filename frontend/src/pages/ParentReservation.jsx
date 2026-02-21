@@ -614,7 +614,7 @@ function ParentReservation() {
   };
 
   const consultationTypes = [
-    { value: '레벨테스트', label: '레벨테스트 & 1회 체험 수업 예약' },
+    { value: '레벨테스트', label: '레벨테스트' },
     { value: '재원생상담', label: '재원생 예약 시스템' },
   ];
 
