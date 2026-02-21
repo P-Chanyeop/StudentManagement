@@ -12,4 +12,5 @@ import java.time.LocalDate;
 public class EnrollmentHoldRequest {
     private LocalDate holdStartDate;
     private LocalDate holdEndDate;
+    private LocalDate newEndDate; // 프론트에서 공휴일 반영하여 계산한 새 종료일
 }

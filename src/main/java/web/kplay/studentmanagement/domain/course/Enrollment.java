@@ -276,7 +276,7 @@ public class Enrollment extends BaseEntity {
     /**
      * 홀딩 시작
      */
-    public void startHold(LocalDate holdStartDate, LocalDate holdEndDate) {
+    public void startHold(LocalDate holdStartDate, LocalDate holdEndDate, LocalDate newEndDate) {
         if (holdStartDate.isAfter(holdEndDate)) {
             throw new IllegalArgumentException("홀딩 시작일은 종료일보다 이전이어야 합니다");
         }
@@ -284,10 +284,9 @@ public class Enrollment extends BaseEntity {
         this.holdEndDate = holdEndDate;
         this.isOnHold = true;
         
-        // 홀딩 일수 계산 및 수강권 종료일 연장
         int holdDays = (int) java.time.temporal.ChronoUnit.DAYS.between(holdStartDate, holdEndDate) + 1;
         this.totalHoldDays += holdDays;
-        this.endDate = this.endDate.plusDays(holdDays);
+        this.endDate = newEndDate != null ? newEndDate : this.endDate.plusDays(holdDays);
     }
 
     /**

@@ -472,12 +472,41 @@ function Enrollments() {
 
   const handleExtendEnrollment = (id) => {
     const enrollment = enrollments.find(e => e.id === id) || selectedEnrollment;
-    const days = prompt('연장할 일수를 입력하세요:', '30');
+    const days = prompt('연장할 영업일수를 입력하세요 (일요일/공휴일 제외):', '30');
     if (days && !isNaN(days) && parseInt(days) > 0) {
-      const currentEndDate = new Date(enrollment.endDate);
-      currentEndDate.setDate(currentEndDate.getDate() + parseInt(days));
-      const formattedDate = getLocalDateString(currentEndDate);
-      extendMutation.mutate({ id, newEndDate: formattedDate });
+      const newEndDate = holidayService.calculateEndDateWithCache(
+        enrollment.endDate, parseInt(days), holidays
+      );
+      const formatted = getLocalDateString(newEndDate);
+      const currentEnd = new Date(enrollment.endDate);
+      const totalDays = Math.ceil((newEndDate - currentEnd) / (1000 * 60 * 60 * 24));
+      const skippedDays = totalDays - parseInt(days);
+      
+      // 건너뛴 공휴일/일요일 목록
+      const skippedList = [];
+      const cursor = new Date(currentEnd);
+      cursor.setDate(cursor.getDate() + 1);
+      while (cursor <= newEndDate) {
+        if (cursor.getDay() === 0) {
+          skippedList.push(`${cursor.getMonth()+1}/${cursor.getDate()} (일요일)`);
+        } else if (holidayService.isHoliday(cursor, holidays)) {
+          const h = holidays.find(hol => hol.date === `${cursor.getFullYear()}${String(cursor.getMonth()+1).padStart(2,'0')}${String(cursor.getDate()).padStart(2,'0')}`);
+          skippedList.push(`${cursor.getMonth()+1}/${cursor.getDate()} (${h?.name || '공휴일'})`);
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      let msg = `기존 만료일: ${currentEnd.toLocaleDateString()}\n` +
+        `연장 영업일: ${days}일\n` +
+        `새 만료일: ${newEndDate.toLocaleDateString()}\n`;
+      if (skippedList.length > 0) {
+        msg += `\n제외된 ${skippedList.length}일: ${skippedList.join(', ')}\n`;
+      }
+      msg += `\n적용하시겠습니까?`;
+      
+      if (window.confirm(msg)) {
+        extendMutation.mutate({ id, newEndDate: formatted });
+      }
     }
   };
 
@@ -1258,13 +1287,36 @@ function Enrollments() {
               </div>
               {holdData.holdStartDate && holdData.holdEndDate && (
                 <div className="info-box">
-                  <p>홀딩 기간: {Math.ceil((new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate)) / (1000 * 60 * 60 * 24)) + 1}일</p>
-                  <p>연장될 종료일: {(() => {
-                    const holdDays = Math.ceil((new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate)) / (1000 * 60 * 60 * 24)) + 1;
+                  {(() => {
                     const businessDays = holidayService.calculateRemainingBusinessDaysWithCache(holdData.holdStartDate, holdData.holdEndDate, holidays);
                     const newEnd = holidayService.calculateEndDateWithCache(selectedEnrollment.endDate, businessDays, holidays);
-                    return getLocalDateString(newEnd);
-                  })()}</p>
+                    const currentEnd = new Date(selectedEnrollment.endDate);
+                    const totalDays = Math.ceil((newEnd - currentEnd) / (1000 * 60 * 60 * 24));
+                    
+                    const skippedList = [];
+                    const cursor = new Date(currentEnd);
+                    cursor.setDate(cursor.getDate() + 1);
+                    while (cursor <= newEnd) {
+                      if (cursor.getDay() === 0) {
+                        skippedList.push(`${cursor.getMonth()+1}/${cursor.getDate()} (일요일)`);
+                      } else if (holidayService.isHoliday(cursor, holidays)) {
+                        const h = holidays.find(hol => hol.date === `${cursor.getFullYear()}${String(cursor.getMonth()+1).padStart(2,'0')}${String(cursor.getDate()).padStart(2,'0')}`);
+                        skippedList.push(`${cursor.getMonth()+1}/${cursor.getDate()} (${h?.name || '공휴일'})`);
+                      }
+                      cursor.setDate(cursor.getDate() + 1);
+                    }
+                    
+                    return (
+                      <>
+                        <p>홀딩 영업일: {businessDays}일 (일요일/공휴일 제외)</p>
+                        <p>기존 만료일: {currentEnd.toLocaleDateString()}</p>
+                        <p>연장될 만료일: {newEnd.toLocaleDateString()}</p>
+                        {skippedList.length > 0 && (
+                          <p>제외된 {skippedList.length}일: {skippedList.join(', ')}</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -1280,7 +1332,9 @@ function Enrollments() {
                     alert('홀딩 시작일은 종료일보다 이전이어야 합니다.');
                     return;
                   }
-                  startHoldMutation.mutate({ id: selectedEnrollment.id, data: holdData });
+                  const businessDays = holidayService.calculateRemainingBusinessDaysWithCache(holdData.holdStartDate, holdData.holdEndDate, holidays);
+                  const newEnd = holidayService.calculateEndDateWithCache(selectedEnrollment.endDate, businessDays, holidays);
+                  startHoldMutation.mutate({ id: selectedEnrollment.id, data: { ...holdData, newEndDate: getLocalDateString(newEnd) } });
                 }}
               >
                 홀딩 시작

@@ -547,7 +547,7 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("수강권을 찾을 수 없습니다"));
 
-        enrollment.startHold(request.getHoldStartDate(), request.getHoldEndDate());
+        enrollment.startHold(request.getHoldStartDate(), request.getHoldEndDate(), request.getNewEndDate());
         enrollmentRepository.save(enrollment);
         
         // 홀딩 알림 문자 발송
