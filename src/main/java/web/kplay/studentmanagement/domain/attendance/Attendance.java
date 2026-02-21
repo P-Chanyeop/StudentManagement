@@ -118,11 +118,6 @@ public class Attendance extends BaseEntity {
         this.originalExpectedLeaveTime = this.expectedLeaveTime;
         this.status = AttendanceStatus.PRESENT;
         
-        // 자동 결석 사유 클리어 (수동 입력 사유는 유지)
-        if ("자동 결석 처리 (15분 미출석)".equals(this.reason)) {
-            this.reason = null;
-        }
-        
         updateAdditionalClassEndTime();
     }
 
@@ -202,13 +197,15 @@ public class Attendance extends BaseEntity {
 
     // 추가 수업 종료 시간 자동 계산
     private void updateAdditionalClassEndTime() {
-        LocalTime baseEndTime;
-        if (this.course != null) {
-            baseEndTime = this.attendanceTime.plusMinutes(this.course.getDurationMinutes());
-        } else if (this.durationMinutes != null) {
-            baseEndTime = this.attendanceTime.plusMinutes(this.durationMinutes);
-        } else {
-            baseEndTime = this.expectedLeaveTime;
+        LocalTime baseEndTime = this.originalExpectedLeaveTime;
+        if (baseEndTime == null) {
+            if (this.course != null) {
+                baseEndTime = this.attendanceTime.plusMinutes(this.course.getDurationMinutes());
+            } else if (this.durationMinutes != null) {
+                baseEndTime = this.attendanceTime.plusMinutes(this.durationMinutes);
+            } else {
+                baseEndTime = this.expectedLeaveTime;
+            }
         }
         
         if (hasAnyAdditionalClass()) {

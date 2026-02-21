@@ -34,11 +34,17 @@ public class TeacherAttendanceController {
                 .filter(u -> u.getPhoneNumber() != null && u.getPhoneNumber().endsWith(phoneLast4))
                 .toList();
 
-        return ResponseEntity.ok(teachers.stream().map(t -> Map.of(
-                "id", t.getId(),
-                "name", t.getName(),
-                "phoneNumber", t.getPhoneNumber()
-        )).toList());
+        LocalDate today = LocalDate.now();
+        return ResponseEntity.ok(teachers.stream().map(t -> {
+            var attendance = teacherAttendanceRepository.findByTeacherAndAttendanceDate(t, today).orElse(null);
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", t.getId());
+            map.put("name", t.getName());
+            map.put("phoneNumber", t.getPhoneNumber());
+            map.put("checkInTime", attendance != null ? attendance.getCheckInTime() : null);
+            map.put("checkOutTime", attendance != null ? attendance.getCheckOutTime() : null);
+            return map;
+        }).toList());
     }
 
     // 전화번호 뒷자리로 출근 체크

@@ -273,26 +273,13 @@ public class AttendanceService {
             course = activeEnrollments.get(0).getCourse();
         }
         
-        // 예상 하원 시간 계산: 원래 수업 시작 시간 + 수업 시간
+        // 예상 하원 시간 계산: 실제 등원 시간 + 수업 시간
         LocalTime expectedLeave;
         if (expectedLeaveTime != null) {
             expectedLeave = expectedLeaveTime;
         } else {
-            // 오늘 날짜에 이미 출석 레코드가 있으면 그 레코드의 원래 수업 시간 사용
-            List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
-                    .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
-                    .collect(Collectors.toList());
-            
-            if (!existingAttendances.isEmpty() && existingAttendances.get(0).getAttendanceTime() != null) {
-                // 기존 레코드의 원래 수업 시작 시간 기준으로 계산
-                LocalTime originalStartTime = existingAttendances.get(0).getAttendanceTime();
-                int duration = course != null ? course.getDurationMinutes() : 120;
-                expectedLeave = originalStartTime.plusMinutes(duration);
-            } else {
-                // 새 레코드면 현재 시간 기준
-                int duration = course != null ? course.getDurationMinutes() : 120;
-                expectedLeave = now.toLocalTime().plusMinutes(duration);
-            }
+            int duration = course != null ? course.getDurationMinutes() : 120;
+            expectedLeave = now.toLocalTime().plusMinutes(duration);
         }
         
         // 오늘 날짜에 이미 출석 레코드가 있는지 확인
@@ -338,27 +325,22 @@ public class AttendanceService {
                                                            LocalDateTime now, LocalTime expectedLeaveTime) {
         LocalDate today = now.toLocalDate();
         
-        // 예상 하원 시간 계산
-        LocalTime expectedLeave;
-        if (expectedLeaveTime != null) {
-            expectedLeave = expectedLeaveTime;
-        } else {
-            List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
-                    .filter(a -> a.getNaverBooking() != null && a.getNaverBooking().getId().equals(naverBooking.getId()))
-                    .collect(Collectors.toList());
-            
-            if (!existingAttendances.isEmpty() && existingAttendances.get(0).getAttendanceTime() != null) {
-                LocalTime originalStartTime = existingAttendances.get(0).getAttendanceTime();
-                expectedLeave = originalStartTime.plusHours(2);
-            } else {
-                expectedLeave = now.toLocalTime().plusHours(2);
-            }
-        }
-        
         // 오늘 날짜에 이미 출석 레코드가 있는지 확인
         List<Attendance> existingAttendances = attendanceRepository.findByDate(today).stream()
                 .filter(a -> a.getNaverBooking() != null && a.getNaverBooking().getId().equals(naverBooking.getId()))
                 .collect(Collectors.toList());
+        
+        // 예상 하원 시간: 실제 등원 시간 + 수업 시간으로 계산
+        LocalTime expectedLeave;
+        if (expectedLeaveTime != null) {
+            expectedLeave = expectedLeaveTime;
+        } else {
+            int duration = 120; // 기본 2시간
+            if (!existingAttendances.isEmpty() && existingAttendances.get(0).getDurationMinutes() != null) {
+                duration = existingAttendances.get(0).getDurationMinutes();
+            }
+            expectedLeave = now.toLocalTime().plusMinutes(duration);
+        }
         
         Attendance attendance;
         if (!existingAttendances.isEmpty()) {

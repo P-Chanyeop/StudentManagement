@@ -103,7 +103,7 @@ public class AttendanceScheduler {
                 && attendance.getStatus() != AttendanceStatus.ABSENT
                 && attendance.getStatus() != AttendanceStatus.EXCUSED) {
                 
-                attendance.updateStatus(AttendanceStatus.ABSENT, "자동 결석 처리 (15분 미출석)");
+                attendance.updateStatus(AttendanceStatus.ABSENT, null);
                 attendanceRepository.save(attendance);
                 absentCount++;
                 

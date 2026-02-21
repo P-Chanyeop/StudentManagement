@@ -309,6 +309,11 @@ public class NaverBookingApiCrawlerService {
                     createAttendanceForNaverBooking(entity);
                 }
 
+                // 기존 예약이 취소된 경우 출석 레코드 삭제
+                if (!isNew && !"RC03".equals(entity.getStatus())) {
+                    deleteAttendanceForCancelledBooking(entity);
+                }
+
                 if (isNew) {
                     savedCount++;
                 } else {
@@ -320,6 +325,21 @@ public class NaverBookingApiCrawlerService {
         }
 
         log.info("DB 저장 완료: 신규 {}건, 업데이트 {}건", savedCount, updatedCount);
+    }
+
+    private void deleteAttendanceForCancelledBooking(NaverBooking naverBooking) {
+        try {
+            LocalDate bookingDate = LocalDate.parse(naverBooking.getBookingTime());
+            attendanceRepository.findByDate(bookingDate).stream()
+                .filter(a -> a.getNaverBooking() != null && a.getNaverBooking().getId().equals(naverBooking.getId()))
+                .forEach(a -> {
+                    attendanceRepository.delete(a);
+                    log.info("취소된 예약 출석 레코드 삭제: 예약번호={}, 학생={}", 
+                            naverBooking.getBookingNumber(), naverBooking.getStudentName());
+                });
+        } catch (Exception e) {
+            log.error("취소된 예약 출석 삭제 실패: {}", naverBooking.getBookingNumber(), e);
+        }
     }
 
     private void createAttendanceForNaverBooking(NaverBooking naverBooking) {
