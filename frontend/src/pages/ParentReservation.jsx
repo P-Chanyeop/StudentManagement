@@ -166,9 +166,6 @@ function ParentReservation() {
       case '레벨테스트':
         // 평일(월-금, 공휴일 제외)만 예약 가능
         return dayOfWeek >= 1 && dayOfWeek <= 5 && !isHoliday;
-      case '입학상담':
-        // 토요일만(공휴일 제외) 예약 가능
-        return dayOfWeek === 6 && !isHoliday;
       default:
         return true;
     }
@@ -604,30 +601,6 @@ function ParentReservation() {
 주차비 무료
 건물 앞 뒤로 무료 주차 가능하십니다 ^^`
         };
-      case '입학상담':
-        return {
-          title: "(토요일) 레벨테스트 및 상담 예약",
-          content: `리틀베어 리딩클럽 레벨테스트 및 상담 예약창입니다:)
-
-* SR test, interview, essay writing 순으로 진행됩니다.
-* 약 1시간 소요 예정입니다.
-* 비용은 2만원 발생합니다.
-* 레벨테스트 후 커리큐럼 및 학습 방향에 대한 자세한 상담 도와드립니다.
-
-예약 시 확인해 주세요
-꼭 확인해 주세요!
->>이름, 학교 및 학년, SR 점수(있을 경우) 부탁 드립니다.
-
->> 자세한 수강료 상담은 상담 방문 시에만 가능합니다.
-
->>레벨테스트 비용은 2만원이며, 예약금은 1만원입니다.
-
->> 개인적인 사유로 인한 취소 시 반드시 하루 전에 취소 및 연락 부탁 드립니다. 당일 취소 시, 예약금 환불은 불가합니다.
-
-주차정보
-주차비 무료
-건물 앞 뒤로 무료 주차 가능하십니다 ^^`
-        };
       default:
         return {
           title: "상담 예약",
@@ -641,9 +614,8 @@ function ParentReservation() {
   };
 
   const consultationTypes = [
+    { value: '레벨테스트', label: '레벨테스트 & 1회 체험 수업 예약' },
     { value: '재원생상담', label: '재원생 예약 시스템' },
-    { value: '레벨테스트', label: '(평일) 레벨테스트 & 1회 체험 수업 예약' },
-    { value: '입학상담', label: '(토요일) 레벨테스트 및 상담 예약' }
   ];
 
   const timeSlots = [
