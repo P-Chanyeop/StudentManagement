@@ -20,6 +20,7 @@ function Students() {
     address: '',
     school: '',
     grade: '1',
+    parentId: null,
     parentName: '',
     parentPhone: '',
     parentEmail: '',
@@ -76,6 +77,17 @@ function Students() {
     },
   });
 
+  // 학부모 목록 조회
+  const { data: parentList = [] } = useQuery({
+    queryKey: ['parents'],
+    queryFn: async () => {
+      const response = await authAPI.getParents();
+      return response.data;
+    },
+    enabled: !isParent,
+  });
+  const [parentSearch, setParentSearch] = useState('');
+
   // 생년월일 컴포넌트 변경 핸들러 (신규 학생)
   const handleBirthDateComponentChange = (component, value) => {
     const newComponents = {
@@ -124,6 +136,7 @@ function Students() {
         address: '',
         school: '',
         grade: '1',
+        parentId: null,
         parentName: '',
         parentPhone: '',
         parentEmail: '',
@@ -131,6 +144,7 @@ function Students() {
         memo: '',
         selectedCourseId: null,
       });
+      setParentSearch('');
       alert('학생이 등록되었습니다.');
     },
     onError: (error) => {
@@ -166,7 +180,7 @@ function Students() {
 
   const handleCreateStudent = async () => {
     if (!newStudent.studentName || !newStudent.studentPhone || !newStudent.parentName || !newStudent.parentPhone) {
-      alert('필수 항목을 모두 입력해주세요. (학생명, 학생 연락처, 학부모명, 학부모 연락처)');
+      alert('필수 항목을 모두 입력해주세요. (학생명, 학생 연락처, 학부모 선택)');
       return;
     }
 
@@ -583,47 +597,41 @@ function Students() {
               </div>
 
               <div className="form-section">
-                <h3>학부모 정보</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>학부모명 *</label>
-                    <input
-                      type="text"
-                      value={newStudent.parentName}
-                      onChange={(e) => setNewStudent({ ...newStudent, parentName: e.target.value })}
-                      placeholder="홍길동"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>학부모 연락처 *</label>
-                    <input
-                      type="tel"
-                      value={newStudent.parentPhone}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, '');
-                        let formatted = value;
-                        if (value.length >= 3) {
-                          formatted = value.slice(0, 3) + '-' + value.slice(3);
-                        }
-                        if (value.length >= 7) {
-                          formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7, 11);
-                        }
-                        setNewStudent({ ...newStudent, parentPhone: formatted });
-                      }}
-                      placeholder="010-1234-5678"
-                      maxLength="13"
-                    />
-                  </div>
-                </div>
-
+                <h3>학부모 선택</h3>
                 <div className="form-group">
-                  <label>학부모 이메일</label>
+                  <label>학부모 검색 *</label>
                   <input
-                    type="email"
-                    value={newStudent.parentEmail}
-                    onChange={(e) => setNewStudent({ ...newStudent, parentEmail: e.target.value })}
-                    placeholder="email@example.com"
+                    type="text"
+                    value={parentSearch}
+                    onChange={(e) => setParentSearch(e.target.value)}
+                    placeholder="학부모 이름 또는 전화번호로 검색..."
                   />
+                  {parentSearch && (
+                    <div className="std-parent-list">
+                      {parentList.filter(p =>
+                        p.name?.includes(parentSearch) || p.phoneNumber?.includes(parentSearch)
+                      ).map(p => (
+                        <div key={p.id} className="std-parent-item" onClick={() => {
+                          setNewStudent({ ...newStudent, parentId: p.id, parentName: p.name, parentPhone: p.phoneNumber });
+                          setParentSearch('');
+                        }}>
+                          <span className="std-parent-name">{p.name}</span>
+                          <span className="std-parent-phone">{p.phoneNumber}</span>
+                        </div>
+                      ))}
+                      {parentList.filter(p =>
+                        p.name?.includes(parentSearch) || p.phoneNumber?.includes(parentSearch)
+                      ).length === 0 && (
+                        <div className="std-parent-empty">검색 결과가 없습니다</div>
+                      )}
+                    </div>
+                  )}
+                  {newStudent.parentId && (
+                    <div className="std-parent-selected">
+                      <span>✅ {newStudent.parentName} ({newStudent.parentPhone})</span>
+                      <button type="button" onClick={() => setNewStudent({ ...newStudent, parentId: null, parentName: '', parentPhone: '' })}>✕</button>
+                    </div>
+                  )}
                 </div>
               </div>
 

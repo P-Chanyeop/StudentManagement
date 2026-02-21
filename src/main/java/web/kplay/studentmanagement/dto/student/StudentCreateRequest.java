@@ -24,11 +24,11 @@ public class StudentCreateRequest {
     private String englishLevel;
     private String memo;
 
-    @NotBlank(message = "학부모 이름은 필수입니다")
     private String parentName;
 
-    @NotBlank(message = "학부모 전화번호는 필수입니다")
     private String parentPhone;
 
     private String parentEmail;
+
+    private Long parentId;
 }

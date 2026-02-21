@@ -30,7 +30,13 @@ public class StudentService {
 
     @Transactional
     public StudentResponse createStudent(StudentCreateRequest request) {
-        // Student 생성 (User 생성 없이)
+        // 학부모 User 조회
+        User parentUser = null;
+        if (request.getParentId() != null) {
+            parentUser = userRepository.findById(request.getParentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("학부모를 찾을 수 없습니다"));
+        }
+
         Student student = Student.builder()
                 .studentName(request.getStudentName())
                 .studentPhone(request.getStudentPhone())
@@ -41,6 +47,7 @@ public class StudentService {
                 .grade(request.getGrade())
                 .englishLevel(request.getEnglishLevel())
                 .memo(request.getMemo())
+                .parentUser(parentUser)
                 .parentName(request.getParentName())
                 .parentPhone(request.getParentPhone())
                 .parentEmail(request.getParentEmail())

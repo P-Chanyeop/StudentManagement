@@ -73,6 +73,7 @@ export const authAPI = {
   getCurrentUser: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data),
   checkUsername: (username) => api.get(`/auth/check-username?username=${username}`),
+  getParents: () => api.get('/auth/parents'),
 };
 
 // 학생 API

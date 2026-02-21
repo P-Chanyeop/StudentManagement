@@ -6,16 +6,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import web.kplay.studentmanagement.domain.user.UserRole;
 import web.kplay.studentmanagement.dto.auth.JwtResponse;
 import web.kplay.studentmanagement.dto.auth.LoginRequest;
 import web.kplay.studentmanagement.dto.auth.RefreshTokenRequest;
 import web.kplay.studentmanagement.dto.auth.RegisterRequest;
 import web.kplay.studentmanagement.dto.auth.SignupRequest;
 import web.kplay.studentmanagement.dto.user.UserProfileResponse;
+import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.security.UserDetailsImpl;
 import web.kplay.studentmanagement.service.auth.AuthService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -24,6 +27,7 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
@@ -91,5 +95,18 @@ public class AuthController {
         response.put("available", available);
         response.put("message", available ? "사용 가능한 아이디입니다" : "이미 사용 중인 아이디입니다");
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/parents")
+    public ResponseEntity<List<Map<String, Object>>> getParents() {
+        return ResponseEntity.ok(userRepository.findByRole(UserRole.PARENT).stream()
+                .filter(u -> u.getIsActive())
+                .map(u -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", u.getId());
+                    m.put("name", u.getName());
+                    m.put("phoneNumber", u.getPhoneNumber());
+                    return m;
+                }).toList());
     }
 }

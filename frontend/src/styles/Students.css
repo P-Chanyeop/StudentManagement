@@ -830,3 +830,52 @@
   padding: 0 8px;
   color: var(--gray-500);
 }
+
+/* ===== 학부모 선택 (std-parent-) ===== */
+.std-parent-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 6px;
+  background: #fff;
+}
+.std-parent-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f0f0f0;
+}
+.std-parent-item:last-child { border-bottom: none; }
+.std-parent-item:hover { background: #f0fdf4; }
+.std-parent-name { font-weight: 600; color: #333; }
+.std-parent-phone { color: #6b7280; font-size: 0.9rem; }
+.std-parent-empty {
+  padding: 16px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+}
+.std-parent-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #03C75A;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #166534;
+}
+.std-parent-selected button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.std-parent-selected button:hover { color: #ef4444; }
