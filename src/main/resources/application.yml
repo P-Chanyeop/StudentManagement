@@ -30,9 +30,9 @@ jwt:
 sms:
   provider: ${SMS_PROVIDER:aligo}
   aligo:
-    api-key: ${ALIGO_API_KEY:wh49m4c6p6k4xhjh8dn01zx6i92g1ycn}
+    api-key: ${ALIGO_API_KEY:3r91ijgybd265j3x9nwtmwoe1cly8r7l}
     user-id: ${ALIGO_USER_ID:qkrcksduq1gh}
-    sender: ${ALIGO_SENDER:0226435433}
+    sender: ${ALIGO_SENDER:01044147579}
     enabled: ${ALIGO_ENABLED:true}
 
 # 공휴일 API 설정 (공공데이터포털)
