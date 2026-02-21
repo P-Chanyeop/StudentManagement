@@ -456,3 +456,92 @@
   padding: 0 8px;
   color: var(--gray-500);
 }
+
+/* ===== 문자 상세보기 모달 (msg-detail-) ===== */
+.msg-detail-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.msg-detail-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 480px;
+  animation: modalSlideIn 0.3s ease-out;
+}
+.msg-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 12px 12px 0 0;
+}
+.msg-detail-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+.msg-detail-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.msg-detail-close:hover {
+  background: #f0f0f0;
+  color: #666;
+}
+.msg-detail-body {
+  padding: 20px;
+}
+.msg-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.msg-detail-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+.msg-detail-value {
+  font-size: 0.9rem;
+  color: #333;
+}
+.msg-detail-content-box {
+  margin-top: 14px;
+}
+.msg-detail-content {
+  margin-top: 8px;
+  padding: 14px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

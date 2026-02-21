@@ -9,6 +9,7 @@ function Messages() {
   const [showSendModal, setShowSendModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [selectedMessage, setSelectedMessage] = useState(null);
   // const [testPhone, setTestPhone] = useState('');
   // const [testMessage, setTestMessage] = useState('테스트 메시지입니다.');
   const [newMessage, setNewMessage] = useState({
@@ -417,7 +418,7 @@ function Messages() {
                   </thead>
                   <tbody>
                     {paginatedMessages.map((message) => (
-                      <tr key={message.id}>
+                      <tr key={message.id} onClick={() => setSelectedMessage(message)} style={{ cursor: 'pointer' }}>
                         <td>{new Date(message.sentAt).toLocaleString('ko-KR')}</td>
                         <td>{message.recipientName}</td>
                         <td>{message.recipientPhone}</td>
@@ -782,6 +783,52 @@ function Messages() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 문자 상세보기 모달 */}
+      {selectedMessage && (
+        <div className="msg-detail-overlay" onClick={() => setSelectedMessage(null)}>
+          <div className="msg-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="msg-detail-header">
+              <h3>문자 상세보기</h3>
+              <button className="msg-detail-close" onClick={() => setSelectedMessage(null)}><i className="fas fa-times"></i></button>
+            </div>
+            <div className="msg-detail-body">
+              <div className="msg-detail-row">
+                <span className="msg-detail-label">수신자</span>
+                <span className="msg-detail-value">{selectedMessage.recipientName}</span>
+              </div>
+              <div className="msg-detail-row">
+                <span className="msg-detail-label">전화번호</span>
+                <span className="msg-detail-value">{selectedMessage.recipientPhone}</span>
+              </div>
+              <div className="msg-detail-row">
+                <span className="msg-detail-label">발송일시</span>
+                <span className="msg-detail-value">{new Date(selectedMessage.sentAt).toLocaleString('ko-KR')}</span>
+              </div>
+              <div className="msg-detail-row">
+                <span className="msg-detail-label">유형</span>
+                <span className="msg-detail-value">
+                  <span className={`messages-type-badge ${getTypeBadge(selectedMessage.messageType).className}`}>
+                    {getTypeBadge(selectedMessage.messageType).text}
+                  </span>
+                </span>
+              </div>
+              <div className="msg-detail-row">
+                <span className="msg-detail-label">상태</span>
+                <span className="msg-detail-value">
+                  <span className={`messages-status-badge ${getStatusBadge(selectedMessage.sendStatus).className}`}>
+                    {getStatusBadge(selectedMessage.sendStatus).text}
+                  </span>
+                </span>
+              </div>
+              <div className="msg-detail-content-box">
+                <span className="msg-detail-label">내용</span>
+                <div className="msg-detail-content">{selectedMessage.content}</div>
+              </div>
             </div>
           </div>
         </div>

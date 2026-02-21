@@ -157,7 +157,8 @@ function Dashboard() {
   // 시간 포맷팅
   const formatTime = (timeString) => {
     if (!timeString) return '';
-    return timeString.substring(0, 5); // HH:MM
+    if (timeString.includes('T')) return timeString.split('T')[1].substring(0, 5);
+    return timeString.substring(0, 5);
   };
 
   // 대시보드 통계에서 값 추출 (기본값 설정)
