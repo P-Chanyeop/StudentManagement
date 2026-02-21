@@ -181,10 +181,12 @@ export const attendanceAPI = {
 export const teacherAttendanceAPI = {
   getToday: () => api.get('/teacher-attendance/today'),
   getByDate: (date) => api.get(`/teacher-attendance/date/${date}`),
+  getByRange: (startDate, endDate) => api.get(`/teacher-attendance/range?startDate=${startDate}&endDate=${endDate}`),
   checkIn: () => api.post('/teacher-attendance/check-in'),
   checkOut: () => api.post('/teacher-attendance/check-out'),
   getMy: () => api.get('/teacher-attendance/my'),
   getTeachers: () => api.get('/teacher-attendance/teachers'),
+  registerTeacher: (data) => api.post('/teacher-attendance/register', data),
 };
 
 // 예약 API

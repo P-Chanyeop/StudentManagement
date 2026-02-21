@@ -3,6 +3,8 @@ package web.kplay.studentmanagement.controller.teacher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import web.kplay.studentmanagement.domain.teacher.TeacherAttendance;
 import web.kplay.studentmanagement.domain.user.User;
@@ -23,6 +25,45 @@ public class TeacherAttendanceController {
 
     private final TeacherAttendanceRepository teacherAttendanceRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    // 관리자: 선생님 계정 생성
+    @PostMapping("/register")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> registerTeacher(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+        String name = request.get("name");
+        String phoneNumber = request.get("phoneNumber");
+
+        if (userRepository.findByUsername(username).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "이미 존재하는 아이디입니다"));
+        }
+
+        User teacher = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .name(name)
+                .nickname(name)
+                .phoneNumber(phoneNumber)
+                .role(UserRole.TEACHER)
+                .termsAgreed(true)
+                .privacyAgreed(true)
+                .build();
+        userRepository.save(teacher);
+        log.info("선생님 계정 생성: {}", name);
+        return ResponseEntity.ok(Map.of("message", name + " 선생님 계정이 생성되었습니다"));
+    }
+
+    // 관리자: 선생님 목록 조회
+    @GetMapping("/teachers")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<?> getTeachers() {
+        return ResponseEntity.ok(userRepository.findAll().stream()
+                .filter(u -> u.getRole() == UserRole.TEACHER)
+                .map(t -> Map.of("id", t.getId(), "name", t.getName(), "phoneNumber", (Object)(t.getPhoneNumber() != null ? t.getPhoneNumber() : "")))
+                .toList());
+    }
 
     // 전화번호 뒷자리로 선생님 검색
     @PostMapping("/search")
@@ -109,5 +150,39 @@ public class TeacherAttendanceController {
     @GetMapping("/today")
     public ResponseEntity<List<TeacherAttendance>> getTodayAttendances() {
         return ResponseEntity.ok(teacherAttendanceRepository.findByAttendanceDate(LocalDate.now()));
+    }
+
+    // 특정 날짜 선생님 출퇴근 현황
+    @GetMapping("/date/{date}")
+    public ResponseEntity<?> getByDate(@PathVariable @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(teacherAttendanceRepository.findByAttendanceDate(date).stream().map(a -> {
+            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("id", a.getId());
+            map.put("teacherName", a.getTeacher().getName());
+            map.put("teacherPhone", a.getTeacher().getPhoneNumber());
+            map.put("attendanceDate", a.getAttendanceDate());
+            map.put("checkInTime", a.getCheckInTime());
+            map.put("checkOutTime", a.getCheckOutTime());
+            map.put("memo", a.getMemo());
+            return map;
+        }).toList());
+    }
+
+    // 날짜 범위 선생님 출퇴근 현황
+    @GetMapping("/range")
+    public ResponseEntity<?> getByRange(
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(teacherAttendanceRepository.findByAttendanceDateBetween(startDate, endDate).stream().map(a -> {
+            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("id", a.getId());
+            map.put("teacherName", a.getTeacher().getName());
+            map.put("teacherPhone", a.getTeacher().getPhoneNumber());
+            map.put("attendanceDate", a.getAttendanceDate());
+            map.put("checkInTime", a.getCheckInTime());
+            map.put("checkOutTime", a.getCheckOutTime());
+            map.put("memo", a.getMemo());
+            return map;
+        }).toList());
     }
 }
