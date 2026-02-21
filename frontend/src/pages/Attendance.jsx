@@ -1013,11 +1013,15 @@ function Attendance() {
               const rows = teacherAttendances || [];
               if (rows.length === 0) return alert('데이터가 없습니다');
               const BOM = '\uFEFF';
-              const header = '이름,출근시간,퇴근시간,날짜\n';
+              const header = '이름,출근시간,퇴근시간,근무시간,날짜\n';
               const csv = rows.map(r => {
                 const inTime = r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
                 const outTime = r.checkOutTime ? new Date(r.checkOutTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-                return `${r.teacherName},${inTime},${outTime},${r.attendanceDate}`;
+                const inD = r.checkInTime ? new Date(r.checkInTime) : null;
+                const outD = r.checkOutTime ? new Date(r.checkOutTime) : null;
+                const mins = inD && outD ? Math.round((outD - inD) / 60000) : null;
+                const work = mins !== null ? `${Math.floor(mins / 60)}시간 ${mins % 60}분` : '';
+                return `${r.teacherName},${inTime},${outTime},${work},${r.attendanceDate}`;
               }).join('\n');
               const blob = new Blob([BOM + header + csv], { type: 'text/csv;charset=utf-8;' });
               const link = document.createElement('a');
