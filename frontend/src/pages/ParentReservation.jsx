@@ -23,7 +23,6 @@ function ParentReservation() {
     queryKey: ['availableDates'],
     queryFn: async () => {
       const response = await reservationAPI.getAvailableDates();
-      console.log('availableDates 응답:', response.data);
       return response.data;
     },
     refetchInterval: 60000, // 1분마다 확인
@@ -194,40 +193,33 @@ function ParentReservation() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    console.log('isDateSelectable 호출:', { year, month, day, consultationType: formData.consultationType });
     
     // 과거 날짜는 선택 불가
     if (date < today) {
-      console.log('과거 날짜로 선택 불가');
       return false;
     }
     
     // 재원생 예약(영어 수업)이 아니면 원래 로직 사용
     if (formData.consultationType !== '재원생상담') {
-      console.log('재원생 예약이 아니므로 제한 없음');
       return true; // 레벨테스트 등은 제한 없음
     }
     
-    console.log('재원생 예약 - 격주 제한 적용');
     
     // 재원생 예약만 격주 제한 적용
     // 주말은 선택 불가 (토요일=6, 일요일=0)
     const dayOfWeek = date.getDay();
     if (dayOfWeek === 0 || dayOfWeek === 6) {
-      console.log('주말로 선택 불가');
       return false;
     }
     
     // 예약 가능한 날짜 범위가 없으면 선택 불가
     if (!availableDates?.startDate || !availableDates?.endDate) {
-      console.log('예약 가능한 날짜 범위 없음');
       return false;
     }
     
     const startDate = new Date(availableDates.startDate);
     const endDate = new Date(availableDates.endDate);
     
-    console.log('날짜 범위 체크:', { startDate, endDate, date });
     
     // 예약 가능한 날짜 범위 내에서만 선택 가능
     return date >= startDate && date <= endDate;
@@ -360,7 +352,6 @@ function ParentReservation() {
   const createReservation = useMutation({
     mutationFn: (data) => reservationAPI.create(data),
     onSuccess: (response) => {
-      console.log('예약 성공:', response);
       alert('예약이 완료되었습니다!');
       navigate('/reservations', { replace: true });
     },
@@ -369,7 +360,6 @@ function ParentReservation() {
       alert(error.response?.data?.message || '예약에 실패했습니다.');
     },
     onSettled: () => {
-      console.log('예약 처리 완료');
     }
   });
 
@@ -521,7 +511,6 @@ function ParentReservation() {
     
     // 이미 제출 중이면 무시
     if (createReservation.isPending) {
-      console.log('이미 예약 처리 중입니다.');
       return;
     }
     
@@ -534,19 +523,12 @@ function ParentReservation() {
       const scheduleResponse = await scheduleAPI.getByDate(formData.preferredDate);
       
       // 디버깅용 로그
-      console.log('=== 예약 디버깅 ===');
-      console.log('선택한 날짜:', formData.preferredDate);
-      console.log('선택한 시간:', formData.preferredTime);
-      console.log('선택한 상담 유형:', formData.consultationType);
-      console.log('조회된 스케줄 수:', scheduleResponse.data.length);
       
       // 시간 형식 맞춰서 비교 (HH:MM vs HH:MM:SS)
       const selectedTime = formData.preferredTime + ":00"; // "14:00" -> "14:00:00"
-      console.log('변환된 시간:', selectedTime);
       
       // 매칭되는 스케줄 찾기
       scheduleResponse.data.forEach((schedule, index) => {
-        console.log(`스케줄 ${index + 1}:`, {
           id: schedule.id,
           courseName: schedule.courseName,
           startTime: schedule.startTime,
