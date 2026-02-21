@@ -29,11 +29,6 @@ function ParentReservation() {
     refetchInterval: 60000, // 1분마다 확인
   });
 
-  // 프로필 로딩 중이면 로딩 표시
-  if (profileLoading) {
-    return <div>로딩 중...</div>;
-  }
-
   // 학부모 자녀 목록 조회
   const { data: myStudents = [] } = useQuery({
     queryKey: ['myStudents'],
@@ -683,6 +678,10 @@ function ParentReservation() {
     '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
     '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ];
+
+  if (profileLoading) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="page-wrapper">
