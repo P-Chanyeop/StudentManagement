@@ -203,9 +203,9 @@ function ParentReservation() {
     
     
     // 재원생 예약만 격주 제한 적용
-    // 주말은 선택 불가 (토요일=6, 일요일=0)
+    // 일요일만 선택 불가
     const dayOfWeek = date.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
+    if (dayOfWeek === 0) {
       return false;
     }
     
