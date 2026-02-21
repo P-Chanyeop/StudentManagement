@@ -35,11 +35,6 @@ function Enrollments() {
 
   // 관리자 또는 선생님 권한 확인
   const isAdminOrTeacher = currentUser?.role === 'ADMIN' || currentUser?.role === 'TEACHER';
-  
-  // 디버깅용 로그
-  console.log('현재 사용자:', currentUser);
-  console.log('사용자 역할:', currentUser?.role);
-  console.log('관리자 또는 선생님 권한:', isAdminOrTeacher);
 
   // 공휴일 데이터 캐시
   const [holidays, setHolidays] = useState([]);
@@ -141,8 +136,8 @@ function Enrollments() {
     if (!holidaysLoaded) return; // 공휴일 데이터 로딩 완료 대기
     
     try {
-      // 주 단위를 영업일로 변환 (주 * 5일)
-      const businessDays = parseInt(newEnrollment.weeks) * 5;
+      // 주 단위를 영업일로 변환 (주 * 6일, 월~토)
+      const businessDays = parseInt(newEnrollment.weeks) * 6;
       
       const endDate = holidayService.calculateEndDateWithCache(
         newEnrollment.startDate, 
@@ -417,11 +412,6 @@ function Enrollments() {
       return;
     }
 
-    if (!newEnrollment.weeks || newEnrollment.weeks <= 0) {
-      alert('수강 기간을 선택해주세요.');
-      return;
-    }
-
     createMutation.mutate(newEnrollment);
   };
 
@@ -429,7 +419,7 @@ function Enrollments() {
   useEffect(() => {
     if (unregisteredData.startDate && unregisteredData.weeks && holidaysLoaded) {
       try {
-        const businessDays = parseInt(unregisteredData.weeks) * 5;
+        const businessDays = parseInt(unregisteredData.weeks) * 6;
         const endDate = holidayService.calculateEndDateWithCache(
           unregisteredData.startDate, 
           businessDays,
@@ -481,12 +471,12 @@ function Enrollments() {
   };
 
   const handleExtendEnrollment = (id) => {
+    const enrollment = enrollments.find(e => e.id === id) || selectedEnrollment;
     const days = prompt('연장할 일수를 입력하세요:', '30');
     if (days && !isNaN(days) && parseInt(days) > 0) {
-      // 현재 날짜에서 days만큼 더한 새로운 종료일 계산
-      const newEndDate = new Date();
-      newEndDate.setDate(newEndDate.getDate() + parseInt(days));
-      const formattedDate = getLocalDateString(newEndDate);
+      const currentEndDate = new Date(enrollment.endDate);
+      currentEndDate.setDate(currentEndDate.getDate() + parseInt(days));
+      const formattedDate = getLocalDateString(currentEndDate);
       extendMutation.mutate({ id, newEndDate: formattedDate });
     }
   };
@@ -534,8 +524,8 @@ function Enrollments() {
     const isExpired = endDate < today;
     
     const matchesStatus = statusFilter === 'ALL' || 
-      (statusFilter === 'ACTIVE' && enrollment.isActive && !isExpired) ||
-      (statusFilter === 'EXPIRED' && (!enrollment.isActive || isExpired)) ||
+      (statusFilter === 'ACTIVE' && enrollment.isActive && !isExpired && !enrollment.isCancelled) ||
+      (statusFilter === 'EXPIRED' && (isExpired || !enrollment.isActive) && !enrollment.isCancelled) ||
       (statusFilter === 'CANCELLED' && enrollment.isCancelled);
       
     const matchesSearch =
@@ -555,7 +545,6 @@ function Enrollments() {
 
   // 상태별 배지
   const getStatusBadge = (status) => {
-    console.log('Status value:', status); // 디버깅용
     const statusMap = {
       ACTIVE: { text: '활성', color: '#03C75A' },
       EXPIRED: { text: '만료', color: '#999' },
@@ -567,7 +556,6 @@ function Enrollments() {
 
   // 타입별 배지
   const getTypeBadge = (type) => {
-    console.log('Type value:', type); // 디버깅용
     const typeMap = {
       PERIOD_BASED: { text: '기간제', color: '#0066FF' },
       COUNT_BASED: { text: '횟수제', color: '#FF9800' },
@@ -624,12 +612,12 @@ function Enrollments() {
                       status === 'ACTIVE' ? enrollments.filter(e => {
                         const today = new Date();
                         const endDate = new Date(e.endDate);
-                        return e.isActive && endDate >= today;
+                        return e.isActive && endDate >= today && !e.isCancelled;
                       }).length :
                       status === 'EXPIRED' ? enrollments.filter(e => {
                         const today = new Date();
                         const endDate = new Date(e.endDate);
-                        return !e.isActive || endDate < today;
+                        return (endDate < today || !e.isActive) && !e.isCancelled;
                       }).length :
                       enrollments.filter(e => e.isCancelled).length})
                   </span>
@@ -665,9 +653,12 @@ function Enrollments() {
             >
               <div className="enrollment-body">
                 <div className="badges">
-                  {console.log('Full enrollment:', enrollment)}
                   {getTypeBadge(enrollment.enrollmentType || 'COUNT_BASED')}
-                  {getStatusBadge(enrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
+                  {getStatusBadge((() => {
+                    if (enrollment.isCancelled) return 'CANCELLED';
+                    const endDate = new Date(enrollment.endDate);
+                    return enrollment.isActive && endDate >= new Date() ? 'ACTIVE' : 'EXPIRED';
+                  })())}
                   {enrollment.isOnHold && (
                     <span className="badge badge-hold">홀딩중</span>
                   )}
@@ -809,18 +800,7 @@ function Enrollments() {
               
               <div className="form-group">
                 <label>수강 기간 (주) *</label>
-                <select
-                  value={newEnrollment.weeks}
-                  onChange={(e) =>
-                    setNewEnrollment({ ...newEnrollment, weeks: parseInt(e.target.value) })
-                  }
-                >
-                  <option value={4}>4주</option>
-                  <option value={8}>8주</option>
-                  <option value={12}>12주 (추천)</option>
-                  <option value={16}>16주</option>
-                  <option value={24}>24주</option>
-                </select>
+                <input type="text" value="12주" readOnly className="readonly-input" />
                 <small className="form-help">수강권 유효 기간입니다.</small>
               </div>
               
@@ -997,7 +977,11 @@ function Enrollments() {
               <div className="detail-section">
                 <div className="badges">
                   {getTypeBadge(selectedEnrollment.enrollmentType || 'COUNT_BASED')}
-                  {getStatusBadge(selectedEnrollment.isActive ? 'ACTIVE' : 'EXPIRED')}
+                  {getStatusBadge((() => {
+                    if (selectedEnrollment.isCancelled) return 'CANCELLED';
+                    const endDate = new Date(selectedEnrollment.endDate);
+                    return selectedEnrollment.isActive && endDate >= new Date() ? 'ACTIVE' : 'EXPIRED';
+                  })())}
                   {selectedEnrollment.isOnHold && (
                     <span className="badge badge-hold">홀딩중</span>
                   )}
@@ -1021,7 +1005,7 @@ function Enrollments() {
                     <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.englishLevel || '레벨 정보 없음'}</span>
                   </div>
 
-                  {selectedEnrollment.type === 'PERIOD_BASED' ? (
+                  {selectedEnrollment.enrollmentType === 'PERIOD_BASED' ? (
                     <>
                       <div className="detail-info-item">
                         <span className="info-label">시작일</span>
@@ -1035,7 +1019,7 @@ function Enrollments() {
                           {new Date(selectedEnrollment.endDate).toLocaleDateString()}
                         </span>
                       </div>
-                      {selectedEnrollment.status === 'ACTIVE' && (
+                      {selectedEnrollment.isActive && (
                         <div className="detail-info-item">
                           <span className="info-label">남은 일수</span>
                           <span
@@ -1126,9 +1110,9 @@ function Enrollments() {
             </div>
 
             <div className="modal-footer">
-              {isAdminOrTeacher && selectedEnrollment.status === 'ACTIVE' && (
+              {isAdminOrTeacher && selectedEnrollment.isActive && (
                 <>
-                  {selectedEnrollment.type === 'PERIOD_BASED' && (
+                  {selectedEnrollment.enrollmentType === 'PERIOD_BASED' && (
                     <button
                       className="btn-extend"
                       onClick={() => handleExtendEnrollment(selectedEnrollment.id)}
@@ -1275,7 +1259,12 @@ function Enrollments() {
               {holdData.holdStartDate && holdData.holdEndDate && (
                 <div className="info-box">
                   <p>홀딩 기간: {Math.ceil((new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate)) / (1000 * 60 * 60 * 24)) + 1}일</p>
-                  <p>연장될 종료일: {getLocalDateString(new Date(new Date(selectedEnrollment.endDate).getTime() + (new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate) + 86400000)))}</p>
+                  <p>연장될 종료일: {(() => {
+                    const holdDays = Math.ceil((new Date(holdData.holdEndDate) - new Date(holdData.holdStartDate)) / (1000 * 60 * 60 * 24)) + 1;
+                    const businessDays = holidayService.calculateRemainingBusinessDaysWithCache(holdData.holdStartDate, holdData.holdEndDate, holidays);
+                    const newEnd = holidayService.calculateEndDateWithCache(selectedEnrollment.endDate, businessDays, holidays);
+                    return getLocalDateString(newEnd);
+                  })()}</p>
                 </div>
               )}
             </div>
@@ -1425,14 +1414,7 @@ function Enrollments() {
                   </div>
                   <div className="form-group">
                     <label>수강 기간 (주)</label>
-                    <select
-                      value={unregisteredData.weeks}
-                      onChange={(e) => setUnregisteredData({ ...unregisteredData, weeks: parseInt(e.target.value) })}
-                    >
-                      {[4, 8, 12, 16, 20, 24].map(w => (
-                        <option key={w} value={w}>{w}주</option>
-                      ))}
-                    </select>
+                    <input type="text" value="12주" readOnly className="readonly-input" />
                   </div>
                 </div>
                 <div className="form-row">

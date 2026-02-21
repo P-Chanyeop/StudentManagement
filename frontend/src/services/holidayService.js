@@ -57,10 +57,9 @@ class HolidayService {
     return holidays.some(holiday => holiday.date === dateStr);
   }
 
-  // 주말인지 확인 (토요일: 6, 일요일: 0)
+  // 주말인지 확인 (일요일: 0만 제외)
   isWeekend(date) {
-    const day = date.getDay();
-    return day === 0 || day === 6;
+    return date.getDay() === 0;
   }
 
   // 영업일인지 확인 (주말, 공휴일 제외)
@@ -105,7 +104,7 @@ class HolidayService {
     
     let businessDaysCount = 0;
     let currentDate = new Date(start);
-    const targetBusinessDays = weeks * 5; // 주 5일 기준
+    const targetBusinessDays = weeks * 6; // 주 6일 기준 (월~토)
     
     while (businessDaysCount < targetBusinessDays) {
       if (this.isBusinessDay(currentDate, allHolidays)) {
