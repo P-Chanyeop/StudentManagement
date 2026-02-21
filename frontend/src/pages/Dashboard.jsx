@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   studentAPI,
   attendanceAPI,
@@ -10,6 +10,7 @@ import {
   dashboardAPI
 } from '../services/api';
 import { getTodayString } from '../utils/dateUtils';
+import { holidayService } from '../services/holidayService';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
@@ -22,6 +23,19 @@ function Dashboard() {
   const [showAllEnrollments, setShowAllEnrollments] = useState(false);
   const [showAllAttendance, setShowAllAttendance] = useState(false);
   const [showAllReservations, setShowAllReservations] = useState(false);
+
+  // 공휴일 데이터
+  const [holidays, setHolidays] = useState([]);
+  useEffect(() => {
+    const y = new Date().getFullYear();
+    Promise.all([holidayService.getHolidays(y), holidayService.getHolidays(y + 1)])
+      .then(([h1, h2]) => setHolidays([...h1, ...h2]))
+      .catch(() => {});
+  }, []);
+
+  const getBusinessDaysLeft = (startDate, endDate) => {
+    return holidayService.calculateRemainingBusinessDaysWithCache(startDate, endDate, holidays);
+  };
 
   // 오늘 날짜
   const today = getTodayString();
@@ -164,7 +178,7 @@ function Dashboard() {
       const activeEnrollments = enrollments.filter(e => e.isActive);
       const expiringEnrollments = enrollments.filter(e => {
         if (!e.isActive || !e.endDate) return false;
-        const daysLeft = Math.ceil((new Date(e.endDate) - new Date()) / (1000 * 60 * 60 * 24));
+        const daysLeft = getBusinessDaysLeft(e.startDate, e.endDate);
         return daysLeft <= 7 && daysLeft >= 0;
       });
       const lowCountEnrollments = enrollments.filter(e => 
@@ -202,9 +216,7 @@ function Dashboard() {
               </div>
             ) : (
               enrollments.map((enrollment) => {
-                const daysLeft = Math.ceil(
-                  (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
-                );
+                const daysLeft = getBusinessDaysLeft(enrollment.startDate, enrollment.endDate);
                 
                 return (
                   <div key={enrollment.id} className="student-section">
@@ -275,98 +287,53 @@ function Dashboard() {
           <div className="dashboard-container">
         {/* 통계 카드 - 관리자/선생님만 */}
         {!isParent && (
-          <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-card-header">
-              <div className="stat-icon">
-                <i className="fas fa-users"></i>
-              </div>
-              <div className="stat-trend">
-                <i className="fas fa-arrow-up"></i>
-                NEW
-              </div>
+          <div className="dash-stat-grid">
+          <div className="dash-stat-card">
+            <div className="dash-stat-header">
+              <div className="dash-stat-icon"><i className="fas fa-users"></i></div>
+              <div className="dash-stat-trend">NEW</div>
             </div>
-            <div className="stat-content">
-              <h3>전체 학생</h3>
-              <div className="stat-value">
-                {totalStudents}
-                <span className="stat-unit">명</span>
-              </div>
+            <div className="dash-stat-body">
+              <span className="dash-stat-title">전체 학생</span>
+              <span className="dash-stat-number">{totalStudents}<small>명</small></span>
             </div>
-            <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> {profile?.role === 'TEACHER' ? '전체 학생 수' : '등록된 전체 학생 수'}
-            </div>
+            <div className="dash-stat-foot">{profile?.role === 'TEACHER' ? '전체 학생 수' : '등록된 전체 학생 수'}</div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-card-header">
-              <div className="stat-icon">
-                <i className="fas fa-chalkboard-teacher"></i>
-              </div>
-              <div className="stat-trend">
-                <i className="fas fa-calendar-day"></i>
-                오늘
-              </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-header">
+              <div className="dash-stat-icon lesson"><i className="fas fa-chalkboard-teacher"></i></div>
+              <div className="dash-stat-trend">오늘</div>
             </div>
-            <div className="stat-content">
-              <h3>오늘의 수업</h3>
-              <div className="stat-value">
-                {todaySchedulesCount}
-                <span className="stat-unit">개</span>
-              </div>
+            <div className="dash-stat-body">
+              <span className="dash-stat-title">오늘의 수업</span>
+              <span className="dash-stat-number">{todaySchedulesCount}<small>개</small></span>
             </div>
-            <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> {profile?.role === 'TEACHER' ? '오늘 담당 수업' : '오늘 예정된 수업'}
-            </div>
+            <div className="dash-stat-foot">{profile?.role === 'TEACHER' ? '오늘 담당 수업' : '오늘 예정된 수업'}</div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-card-header">
-              <div className="stat-icon">
-                <i className="fas fa-check-circle"></i>
-              </div>
-              <div className="stat-trend success">
-                <i className="fas fa-check"></i>
-                {attendanceRate}%
-              </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-header">
+              <div className="dash-stat-icon attend"><i className="fas fa-check-circle"></i></div>
+              <div className="dash-stat-trend success">{attendanceRate}%</div>
             </div>
-            <div className="stat-content">
-              <h3>오늘 출석</h3>
-              <div className="stat-value">
-                {todayAttendanceCount}
-                <span className="stat-unit">명</span>
-              </div>
+            <div className="dash-stat-body">
+              <span className="dash-stat-title">오늘 출석</span>
+              <span className="dash-stat-number">{todayAttendanceCount}<small>명</small></span>
             </div>
-            <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> 출석률 {attendanceRate}%
-            </div>
+            <div className="dash-stat-foot">출석률 {attendanceRate}%</div>
           </div>
 
-          <div 
-            className={`stat-card ${isParent ? 'clickable' : ''}`}
-            onClick={isParent && enrollmentStats.count > 0 ? () => handleEnrollmentClick(enrollments[0]) : undefined}
-          >
-            <div className="stat-card-header">
-              <div className="stat-icon">
-                <i className={`fas ${isParent ? 'fa-ticket-alt' : 'fa-credit-card'}`}></i>
-              </div>
-              <div className={`stat-trend ${isParent ? '' : 'info'}`}>
-                <i className={`fas ${isParent ? 'fa-info' : 'fa-chart-line'}`}></i>
-                {isParent ? '정보' : '통계'}
-              </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-header">
+              <div className="dash-stat-icon enroll"><i className="fas fa-credit-card"></i></div>
+              <div className="dash-stat-trend info">통계</div>
             </div>
-            <div className="stat-content">
-              <h3>{enrollmentStats.label}</h3>
-              <div className="stat-value">
-                {enrollmentStats.count}
-                <span className="stat-unit">개</span>
-              </div>
+            <div className="dash-stat-body">
+              <span className="dash-stat-title">{enrollmentStats.label}</span>
+              <span className="dash-stat-number">{enrollmentStats.count}<small>개</small></span>
             </div>
-            <div className="stat-footer">
-              <i className="fas fa-info-circle"></i> 
-              {isParent ? '클릭하여 상세 정보 확인' : 
-               `전체 ${enrollmentStats.total}개 · 만료임박 ${enrollmentStats.expiring}개`}
-            </div>
+            <div className="dash-stat-foot">전체 {enrollmentStats.total}개 · 만료임박 {enrollmentStats.expiring}개</div>
           </div>
         </div>
         )}
@@ -475,9 +442,7 @@ function Dashboard() {
                       (isParent ? enrollments : enrollments.filter(e => e.isActive)) : 
                       (isParent ? enrollments : enrollments.filter(e => e.isActive)).slice(0, 5)
                     ).map((enrollment) => {
-                    const daysLeft = Math.ceil(
-                      (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
-                    );
+                    const daysLeft = getBusinessDaysLeft(enrollment.startDate, enrollment.endDate);
                     return (
                       <div 
                         key={enrollment.id} 

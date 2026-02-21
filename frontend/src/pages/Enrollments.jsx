@@ -566,10 +566,10 @@ function Enrollments() {
   // 남은 일수 계산
   const getRemainingDays = (endDate) => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
-    const diffTime = end - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    end.setHours(0, 0, 0, 0);
+    return Math.ceil((end - today) / (1000 * 60 * 60 * 24));
   };
 
   // 상태별 배지
@@ -993,254 +993,166 @@ function Enrollments() {
 
       {/* 수강권 상세 모달 */}
       {showDetailModal && selectedEnrollment && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="enr-detail-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="enr-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="enr-detail-header">
               <h2>수강권 상세</h2>
-              <button className="modal-close" onClick={() => setShowDetailModal(false)}>
-                ×
-              </button>
+              <button className="enr-detail-close" onClick={() => setShowDetailModal(false)}>×</button>
             </div>
 
-            <div className="modal-body">
-              <div className="detail-section">
-                <div className="badges">
-                  {getTypeBadge(selectedEnrollment.enrollmentType || 'COUNT_BASED')}
-                  {getStatusBadge((() => {
-                    if (selectedEnrollment.isCancelled) return 'CANCELLED';
-                    const endDate = new Date(selectedEnrollment.endDate);
-                    return selectedEnrollment.isActive && endDate >= new Date() ? 'ACTIVE' : 'EXPIRED';
-                  })())}
-                  {selectedEnrollment.isOnHold && (
-                    <span className="badge badge-hold">홀딩중</span>
-                  )}
+            <div className="enr-detail-body">
+              <div className="enr-detail-badges">
+                {getTypeBadge(selectedEnrollment.enrollmentType || 'COUNT_BASED')}
+                {getStatusBadge((() => {
+                  if (selectedEnrollment.isCancelled) return 'CANCELLED';
+                  const endDate = new Date(selectedEnrollment.endDate);
+                  return selectedEnrollment.isActive && endDate >= new Date() ? 'ACTIVE' : 'EXPIRED';
+                })())}
+                {selectedEnrollment.isOnHold && (
+                  <span className="status-badge" style={{ background: '#FFF3E0', color: '#E65100' }}>홀딩중</span>
+                )}
+              </div>
+
+              <div className="enr-detail-grid">
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">학생</span>
+                  <span className="enr-detail-value">{selectedEnrollment.studentName || '학생 정보 없음'}</span>
+                </div>
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">학생 연락처</span>
+                  <span className="enr-detail-value">{getStudentInfo(selectedEnrollment.studentId)?.studentPhone || '연락처 정보 없음'}</span>
+                </div>
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">부모님 연락처</span>
+                  <span className="enr-detail-value">{getStudentInfo(selectedEnrollment.studentId)?.parentPhone || '연락처 정보 없음'}</span>
+                </div>
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">레벨</span>
+                  <span className="enr-detail-value">{getStudentInfo(selectedEnrollment.studentId)?.englishLevel || '레벨 정보 없음'}</span>
+                </div>
+                <div className="enr-detail-item enr-detail-full">
+                  <span className="enr-detail-label">추가수업</span>
+                  <span className="enr-detail-value">
+                    {(() => {
+                      const s = getStudentInfo(selectedEnrollment.studentId);
+                      const classes = [
+                        s?.assignedVocabulary && 'Vocabulary',
+                        s?.assignedSightword && 'Sightword',
+                        s?.assignedGrammar && 'Grammar',
+                        s?.assignedPhonics && 'Phonics',
+                      ].filter(Boolean);
+                      return classes.length > 0 ? classes.join(', ') : '없음';
+                    })()}
+                  </span>
                 </div>
 
-                <div className="detail-info-grid">
-                  <div className="detail-info-item">
-                    <span className="info-label">학생</span>
-                    <span className="info-value">{selectedEnrollment.studentName || '학생 정보 없음'}</span>
-                  </div>
-                  <div className="detail-info-item">
-                    <span className="info-label">학생 연락처</span>
-                    <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.studentPhone || '연락처 정보 없음'}</span>
-                  </div>
-                  <div className="detail-info-item">
-                    <span className="info-label">부모님 연락처</span>
-                    <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.parentPhone || '연락처 정보 없음'}</span>
-                  </div>
-                  <div className="detail-info-item">
-                    <span className="info-label">레벨</span>
-                    <span className="info-value">{getStudentInfo(selectedEnrollment.studentId)?.englishLevel || '레벨 정보 없음'}</span>
-                  </div>
-
-                  {selectedEnrollment.enrollmentType === 'PERIOD_BASED' ? (
-                    <>
-                      <div className="detail-info-item">
-                        <span className="info-label">시작일</span>
-                        <span className="info-value">
-                          {new Date(selectedEnrollment.startDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="detail-info-item">
-                        <span className="info-label">종료일</span>
-                        <span className="info-value">
-                          {new Date(selectedEnrollment.endDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {selectedEnrollment.isActive && (
-                        <div className="detail-info-item">
-                          <span className="info-label">남은 일수</span>
-                          <span
-                            className="info-value"
-                            style={{
-                              color: getRemainingDays(selectedEnrollment.endDate) < 7 ? '#FF3B30' : '#03C75A',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {getRemainingDays(selectedEnrollment.endDate)}일
-                          </span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="detail-info-item">
-                        <span className="info-label">전체 횟수</span>
-                        <span className="info-value">{selectedEnrollment.totalCount}회</span>
-                      </div>
-                      <div className="detail-info-item">
-                        <span className="info-label">남은 횟수</span>
-                        <div className="count-adjust-wrapper">
-                          <span
-                            className="info-value"
-                            style={{
-                              color: selectedEnrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {selectedEnrollment.remainingCount}회
-                          </span>
-                          {isAdminOrTeacher && (
-                            <div className="count-adjust-buttons">
-                              <button 
-                                className="btn-count-adjust minus"
-                                onClick={() => handleAdjustCount(selectedEnrollment.id, -1)}
-                                title="1회 차감"
-                              >
-                                -
-                              </button>
-                              <button 
-                                className="btn-count-adjust plus"
-                                onClick={() => handleAdjustCount(selectedEnrollment.id, 1)}
-                                title="1회 추가"
-                              >
-                                +
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="detail-info-item">
-                    <span className="info-label">수업 시간</span>
-                    <span className="info-value">
-                      {selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || '-'}분
-                      {selectedEnrollment.customDurationMinutes && (
-                        <span className="custom-duration"> (개별설정)</span>
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="detail-info-item">
-                    <span className="info-label">레코딩 파일</span>
-                    <span className="info-value recording-status">
-                      {selectedEnrollment.recordingStatus || '0/0'}
-                    </span>
-                  </div>
-
-                  <div className="detail-info-item">
-                    <span className="info-label">가격</span>
-                    <span className="info-value price">
-                      {selectedEnrollment.price?.toLocaleString() || '0'}원
-                    </span>
-                  </div>
-
-                  {selectedEnrollment.notes && (
-                    <div className="detail-info-item full-width">
-                      <span className="info-label">메모</span>
-                      <span className="info-value">{selectedEnrollment.notes}</span>
+                {selectedEnrollment.enrollmentType === 'PERIOD_BASED' ? (
+                  <>
+                    <div className="enr-detail-item">
+                      <span className="enr-detail-label">시작일</span>
+                      <span className="enr-detail-value">{new Date(selectedEnrollment.startDate).toLocaleDateString()}</span>
                     </div>
-                  )}
+                    <div className="enr-detail-item">
+                      <span className="enr-detail-label">종료일</span>
+                      <span className="enr-detail-value">{new Date(selectedEnrollment.endDate).toLocaleDateString()}</span>
+                    </div>
+                    {selectedEnrollment.isActive && (
+                      <div className="enr-detail-item">
+                        <span className="enr-detail-label">남은 일수</span>
+                        <span className="enr-detail-value" style={{
+                          color: getRemainingDays(selectedEnrollment.endDate) < 7 ? '#FF3B30' : '#03C75A',
+                          fontWeight: 'bold',
+                        }}>
+                          {getRemainingDays(selectedEnrollment.endDate)}일
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="enr-detail-item">
+                      <span className="enr-detail-label">전체 횟수</span>
+                      <span className="enr-detail-value">{selectedEnrollment.totalCount}회</span>
+                    </div>
+                    <div className="enr-detail-item">
+                      <span className="enr-detail-label">남은 횟수</span>
+                      <div className="enr-detail-count-row">
+                        <span className="enr-detail-value" style={{
+                          color: selectedEnrollment.remainingCount < 3 ? '#FF3B30' : '#03C75A',
+                          fontWeight: 'bold',
+                        }}>
+                          {selectedEnrollment.remainingCount}회
+                        </span>
+                        {isAdminOrTeacher && (
+                          <div className="enr-detail-count-btns">
+                            <button className="enr-detail-count-btn minus" onClick={() => handleAdjustCount(selectedEnrollment.id, -1)} title="1회 차감">-</button>
+                            <button className="enr-detail-count-btn plus" onClick={() => handleAdjustCount(selectedEnrollment.id, 1)} title="1회 추가">+</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">수업 시간</span>
+                  <span className="enr-detail-value">
+                    {selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || '-'}분
+                    {selectedEnrollment.customDurationMinutes && <span style={{ color: '#999', fontSize: 12 }}> (개별설정)</span>}
+                  </span>
                 </div>
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">레코딩 파일</span>
+                  <span className="enr-detail-value" style={{ color: '#007AFF' }}>{selectedEnrollment.recordingStatus || '0/0'}</span>
+                </div>
+                <div className="enr-detail-item">
+                  <span className="enr-detail-label">가격</span>
+                  <span className="enr-detail-value" style={{ color: '#03C75A' }}>{selectedEnrollment.price?.toLocaleString() || '0'}원</span>
+                </div>
+
+                {selectedEnrollment.notes && (
+                  <div className="enr-detail-item enr-detail-full">
+                    <span className="enr-detail-label">메모</span>
+                    <span className="enr-detail-value">{selectedEnrollment.notes}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="enr-detail-footer">
               {isAdminOrTeacher && selectedEnrollment.isActive && (
                 <>
                   {selectedEnrollment.enrollmentType === 'PERIOD_BASED' && (
-                    <button
-                      className="btn-extend"
-                      onClick={() => handleExtendEnrollment(selectedEnrollment.id)}
-                    >
-                      기간 연장
-                    </button>
+                    <button className="enr-detail-btn extend" onClick={() => handleExtendEnrollment(selectedEnrollment.id)}>기간 연장</button>
                   )}
-                  <button
-                    className="btn-set-duration"
-                    onClick={() => handleSetCustomDuration(
-                      selectedEnrollment.id, 
-                      selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || 50
-                    )}
-                  >
-                    수업시간 설정
-                  </button>
-                  <button
-                    className="btn-cancel-enrollment"
-                    onClick={() => handleCancelEnrollment(selectedEnrollment.id)}
-                  >
-                    수강권 취소
-                  </button>
+                  <button className="enr-detail-btn duration" onClick={() => handleSetCustomDuration(selectedEnrollment.id, selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || 50)}>수업시간 설정</button>
+                  <button className="enr-detail-btn cancel" onClick={() => handleCancelEnrollment(selectedEnrollment.id)}>수강권 취소</button>
                 </>
               )}
-              
-              {/* 관리자 전용 기능 */}
               {currentUser?.role === 'ADMIN' && (
                 <>
                   {selectedEnrollment.isActive ? (
-                    <button
-                      className="btn-expire"
-                      onClick={() => handleExpireEnrollment(selectedEnrollment.id)}
-                    >
-                      만료 처리
-                    </button>
+                    <button className="enr-detail-btn expire" onClick={() => handleExpireEnrollment(selectedEnrollment.id)}>만료 처리</button>
                   ) : (
                     <>
-                      <button
-                        className="btn-activate"
-                        onClick={() => handleActivateEnrollment(selectedEnrollment.id)}
-                      >
-                        활성화
-                      </button>
-                      <button
-                        className="btn-extend"
-                        onClick={() => handleExtendEnrollment(selectedEnrollment.id)}
-                      >
-                        기간 연장
-                      </button>
+                      <button className="enr-detail-btn activate" onClick={() => handleActivateEnrollment(selectedEnrollment.id)}>활성화</button>
+                      <button className="enr-detail-btn extend" onClick={() => handleExtendEnrollment(selectedEnrollment.id)}>기간 연장</button>
                     </>
                   )}
-                  <button
-                    className="btn-delete"
-                    onClick={() => handleDeleteEnrollment(selectedEnrollment.id)}
-                  >
-                    삭제
-                  </button>
+                  <button className="enr-detail-btn delete" onClick={() => handleDeleteEnrollment(selectedEnrollment.id)}>삭제</button>
                 </>
               )}
-              
               {isAdminOrTeacher && (
                 <>
                   {selectedEnrollment?.isOnHold ? (
-                    <button 
-                      className="btn-warning" 
-                      onClick={() => {
-                        if (window.confirm('홀딩을 종료하시겠습니까?')) {
-                          endHoldMutation.mutate(selectedEnrollment.id);
-                        }
-                      }}
-                    >
-                      홀딩 종료
-                    </button>
+                    <button className="enr-detail-btn warning" onClick={() => { if (window.confirm('홀딩을 종료하시겠습니까?')) endHoldMutation.mutate(selectedEnrollment.id); }}>홀딩 종료</button>
                   ) : (
-                    <button 
-                      className="btn-info" 
-                      onClick={() => {
-                        setShowHoldModal(true);
-                        setShowDetailModal(false);
-                      }}
-                    >
-                      홀딩 시작
-                    </button>
+                    <button className="enr-detail-btn hold" onClick={() => { setShowHoldModal(true); setShowDetailModal(false); }}>홀딩 시작</button>
                   )}
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => {
-                      setShowDetailModal(false);
-                      setShowEditModal(true);
-                    }}
-                  >
-                    수정
-                  </button>
+                  <button className="enr-detail-btn edit" onClick={() => { setShowDetailModal(false); setShowEditModal(true); }}>수정</button>
                 </>
               )}
-              
-              <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
-                닫기
-              </button>
+              <button className="enr-detail-btn close" onClick={() => setShowDetailModal(false)}>닫기</button>
             </div>
           </div>
         </div>

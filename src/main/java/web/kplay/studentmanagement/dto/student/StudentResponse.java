@@ -29,5 +29,9 @@ public class StudentResponse {
     private String parentEmail;
     private Boolean isActive;
     private String renaissanceUsername;
+    private Boolean assignedVocabulary;
+    private Boolean assignedSightword;
+    private Boolean assignedGrammar;
+    private Boolean assignedPhonics;
     private List<EnrollmentResponse> enrollments;
 }

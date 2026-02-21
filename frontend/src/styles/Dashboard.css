@@ -176,6 +176,126 @@
   margin-right: 4px;
 }
 
+/* ===== 대시보드 통계 카드 (독립 스타일) ===== */
+.dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.dash-stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  border: 1px solid #eee;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #03C75A, #02a84d);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.dash-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.dash-stat-card:hover::after {
+  transform: scaleX(1);
+}
+
+.dash-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dash-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #03C75A, #029a47);
+}
+
+.dash-stat-icon.lesson { background: linear-gradient(135deg, #4A90D9, #3672b5); }
+.dash-stat-icon.attend { background: linear-gradient(135deg, #34C759, #28a745); }
+.dash-stat-icon.enroll { background: linear-gradient(135deg, #FF9500, #e08600); }
+
+.dash-stat-trend {
+  font-size: 12px;
+  font-weight: 600;
+  color: #03C75A;
+  background: #E8F8EE;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.dash-stat-trend.success { color: #2E7D32; background: #E8F5E9; }
+.dash-stat-trend.info { color: #1565C0; background: #E3F2FD; }
+
+.dash-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-stat-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+}
+
+.dash-stat-number {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.dash-stat-number small {
+  font-size: 16px;
+  font-weight: 500;
+  color: #999;
+  margin-left: 3px;
+}
+
+.dash-stat-foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 11px;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1024px) {
+  .dash-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .dash-stat-grid { grid-template-columns: 1fr; }
+}
+
 /* 대시보드 그리드 */
 .dashboard-grid {
   display: grid;

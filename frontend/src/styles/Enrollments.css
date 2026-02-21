@@ -887,3 +887,175 @@
   background: #E8F8EE;
   border-color: var(--naver-green);
 }
+
+/* ===== 수강권 상세 모달 (독립 스타일) ===== */
+.enr-detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.enr-detail-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.enr-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.enr-detail-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.enr-detail-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.enr-detail-close:hover {
+  color: #333;
+}
+
+.enr-detail-body {
+  padding: 24px;
+}
+
+.enr-detail-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.enr-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 24px;
+}
+
+.enr-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.enr-detail-full {
+  grid-column: 1 / -1;
+}
+
+.enr-detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.enr-detail-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.enr-detail-count-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.enr-detail-count-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.enr-detail-count-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.enr-detail-count-btn.minus { color: #FF3B30; }
+.enr-detail-count-btn.minus:hover { background: #FFF0F0; border-color: #FF3B30; }
+.enr-detail-count-btn.plus { color: #03C75A; }
+.enr-detail-count-btn.plus:hover { background: #E8F8EE; border-color: #03C75A; }
+
+.enr-detail-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  justify-content: flex-end;
+}
+
+.enr-detail-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.enr-detail-btn.extend { background: #E3F2FD; color: #1565C0; }
+.enr-detail-btn.extend:hover { background: #BBDEFB; }
+.enr-detail-btn.duration { background: #F3E5F5; color: #7B1FA2; }
+.enr-detail-btn.duration:hover { background: #E1BEE7; }
+.enr-detail-btn.cancel { background: #FFF3E0; color: #E65100; }
+.enr-detail-btn.cancel:hover { background: #FFE0B2; }
+.enr-detail-btn.expire { background: #FFF8E1; color: #F57F17; }
+.enr-detail-btn.expire:hover { background: #FFECB3; }
+.enr-detail-btn.activate { background: #E8F5E9; color: #2E7D32; }
+.enr-detail-btn.activate:hover { background: #C8E6C9; }
+.enr-detail-btn.delete { background: #FFEBEE; color: #C62828; }
+.enr-detail-btn.delete:hover { background: #FFCDD2; }
+.enr-detail-btn.warning { background: #FFF3E0; color: #E65100; }
+.enr-detail-btn.warning:hover { background: #FFE0B2; }
+.enr-detail-btn.hold { background: #E0F7FA; color: #00695C; }
+.enr-detail-btn.hold:hover { background: #B2EBF2; }
+.enr-detail-btn.edit { background: #03C75A; color: #fff; }
+.enr-detail-btn.edit:hover { background: #02b350; }
+.enr-detail-btn.close { background: #f5f5f5; color: #666; }
+.enr-detail-btn.close:hover { background: #e0e0e0; }
+
+@media (max-width: 480px) {
+  .enr-detail-modal { max-width: 100%; }
+  .enr-detail-grid { grid-template-columns: 1fr; }
+  .enr-detail-footer { justify-content: stretch; }
+  .enr-detail-btn { flex: 1; text-align: center; }
+}
