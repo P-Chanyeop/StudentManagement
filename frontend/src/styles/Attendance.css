@@ -250,15 +250,53 @@
 .table-search {
   padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .table-search-input {
-  width: 100%;
+  flex: 1;
   padding: 0.75rem;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s;
+}
+
+.add-attendance-btn {
+  padding: 0.75rem 1.2rem;
+  background: #03C75A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.add-attendance-btn:hover {
+  background: #02b350;
+}
+
+.add-modal-type-btn {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-modal-type-btn.active {
+  border-color: #03C75A;
+  background: #f0fff4;
+  color: #03C75A;
 }
 
 .table-search-input:focus {

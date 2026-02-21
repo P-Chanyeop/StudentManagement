@@ -374,6 +374,45 @@ public class AttendanceService {
     }
 
     @Transactional
+    public AttendanceResponse addManualAttendance(String type, Long studentId, String studentName,
+            String dateStr, String startTimeStr, int durationMinutes, String courseName) {
+        LocalDate date = LocalDate.parse(dateStr);
+        LocalTime startTime = LocalTime.parse(startTimeStr);
+        LocalTime endTime = startTime.plusMinutes(durationMinutes);
+        
+        Student student = null;
+        web.kplay.studentmanagement.domain.course.Course course = null;
+        
+        if ("system".equals(type) && studentId != null) {
+            student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
+            List<Enrollment> enrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
+            if (!enrollments.isEmpty()) {
+                course = enrollments.get(0).getCourse();
+            }
+        } else if ("naver".equals(type) && courseName != null) {
+            course = courseRepository.findByCourseName(courseName).orElse(null);
+        }
+        
+        Attendance attendance = Attendance.builder()
+                .student(student)
+                .course(course)
+                .attendanceDate(date)
+                .attendanceTime(startTime)
+                .durationMinutes(durationMinutes)
+                .expectedLeaveTime(endTime)
+                .originalExpectedLeaveTime(endTime)
+                .manualStudentName("naver".equals(type) ? studentName : null)
+                .status(AttendanceStatus.NOTYET)
+                .classCompleted(false)
+                .build();
+        
+        Attendance saved = attendanceRepository.save(attendance);
+        log.info("수동 출석 추가: type={}, name={}, date={}, time={}", type, studentName, date, startTime);
+        return toResponse(saved);
+    }
+
+    @Transactional
     public AttendanceResponse checkOut(Long attendanceId) {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
@@ -722,13 +761,13 @@ public class AttendanceService {
     private AttendanceResponse toResponse(Attendance attendance) {
         boolean isNaver = attendance.getNaverBooking() != null;
         Student student = attendance.getStudent();
+        boolean isManual = !isNaver && student == null && (attendance.getCourse() != null || attendance.getManualStudentName() != null);
         
-        // student가 null이면 null 반환 (필터링됨)
-        if (!isNaver && student == null) {
+        // student가 null이고 네이버도 아니고 수동추가도 아니면 필터링
+        if (!isNaver && student == null && !isManual) {
             return null;
         }
         
-        // 네이버 예약인 경우 학생 이름과 반 정보 가져오기
         String studentName;
         String courseName = "없음";
         String assignedClassInitials = null;
@@ -736,40 +775,44 @@ public class AttendanceService {
         if (isNaver) {
             NaverBooking naverBooking = attendance.getNaverBooking();
             studentName = naverBooking.getStudentName() != null ? naverBooking.getStudentName() : naverBooking.getName();
-            
-            // 엑셀에서 반 정보 조회
             if (naverBooking.getStudentName() != null) {
                 String cleanName = naverBooking.getStudentName().trim().replaceAll("\\s+", "");
                 String excelCourseName = studentCourseExcelService.getCourseName(cleanName);
-                if (excelCourseName != null) {
-                    courseName = excelCourseName;
-                }
-                // 네이버 예약: 엑셀에서 추가수업 정보 조회
+                if (excelCourseName != null) courseName = excelCourseName;
                 assignedClassInitials = additionalClassExcelService.getAssignedClassInitials(cleanName);
             }
-        } else {
+        } else if (student != null) {
             studentName = student.getStudentName();
             courseName = attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음";
-            // 시스템 예약: Student 엔티티에서 추가수업 정보 조회
             assignedClassInitials = student.getAssignedClassInitials();
+        } else {
+            // 수동 추가 (네이버 엑셀 학생)
+            studentName = attendance.getManualStudentName() != null ? attendance.getManualStudentName() : "수동 추가";
+            if (attendance.getCourse() != null) {
+                courseName = attendance.getCourse().getCourseName();
+            } else if (attendance.getManualStudentName() != null) {
+                String cleanName = attendance.getManualStudentName().trim().replaceAll("\\s+", "");
+                String excelCourseName = studentCourseExcelService.getCourseName(cleanName);
+                if (excelCourseName != null) courseName = excelCourseName;
+            }
         }
         
-        // 추가수업 시간 계산 (출석체크 시간 + 30분, 출석체크 했을 때만)
+        // 추가수업 시간 계산
         LocalTime additionalClassTime = null;
         if (assignedClassInitials != null && attendance.getCheckInTime() != null) {
             additionalClassTime = attendance.getCheckInTime().toLocalTime().plusMinutes(30);
         }
         
-        // 전화번호 마스킹 (010****1234)
-        String rawPhone = isNaver ? attendance.getNaverBooking().getPhone() : student.getParentPhone();
+        String rawPhone = isNaver ? attendance.getNaverBooking().getPhone() 
+            : (student != null ? student.getParentPhone() : null);
         String maskedPhone = maskPhone(rawPhone);
         
         return AttendanceResponse.builder()
                 .id(attendance.getId())
-                .studentId(isNaver ? null : student.getId())
+                .studentId(student != null ? student.getId() : null)
                 .studentName(studentName)
                 .parentPhone(maskedPhone)
-                .className(isNaver ? "네이버 예약" : (attendance.getCourse() != null ? attendance.getCourse().getCourseName() : "없음"))
+                .className(isNaver ? "네이버 예약" : (isManual ? "네이버 예약" : (attendance.getCourse() != null ? attendance.getCourse().getCourseName() : null)))
                 .isNaverBooking(isNaver)
                 .courseName(courseName)
                 .startTime(attendance.getAttendanceTime().toString())

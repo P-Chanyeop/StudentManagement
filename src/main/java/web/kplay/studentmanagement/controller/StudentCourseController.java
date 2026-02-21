@@ -42,6 +42,14 @@ public class StudentCourseController {
         }
     }
 
+    @GetMapping("/list")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<?> getExcelStudentList() {
+        return ResponseEntity.ok(studentCourseExcelService.getAllStudents().entrySet().stream()
+            .map(e -> Map.of("studentName", e.getKey(), "courseName", e.getValue()))
+            .toList());
+    }
+
     /**
      * 현재 로드된 학생 수 조회
      */

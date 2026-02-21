@@ -53,6 +53,24 @@ public class AttendanceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/manual")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> addManualAttendance(@RequestBody Map<String, Object> request) {
+        String type = request.get("type").toString(); // "system" or "naver"
+        String studentName = request.get("studentName").toString();
+        String date = request.get("date").toString();
+        String startTime = request.get("startTime").toString();
+        int durationMinutes = Integer.parseInt(request.get("durationMinutes").toString());
+        Long studentId = request.containsKey("studentId") && request.get("studentId") != null 
+            ? Long.valueOf(request.get("studentId").toString()) : null;
+        String courseName = request.containsKey("courseName") && request.get("courseName") != null 
+            ? request.get("courseName").toString() : null;
+        
+        AttendanceResponse response = attendanceService.addManualAttendance(
+            type, studentId, studentName, date, startTime, durationMinutes, courseName);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/{id}/checkout")
     public ResponseEntity<AttendanceResponse> checkOut(@PathVariable Long id) {
         AttendanceResponse response = attendanceService.checkOut(id);

@@ -96,6 +96,7 @@ export const studentAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  getExcelList: () => api.get('/student-course/list'),
 };
 
 // 수업 API
@@ -173,6 +174,7 @@ export const attendanceAPI = {
     api.put(`/attendances/${attendanceId}/phonics`),
   toggleSpeakingClass: (attendanceId) =>
     api.put(`/attendances/${attendanceId}/speaking`),
+  addManual: (data) => api.post('/attendances/manual', data),
 };
 
 // 선생님 출퇴근 API

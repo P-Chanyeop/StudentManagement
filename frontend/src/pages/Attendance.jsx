@@ -20,7 +20,14 @@ function Attendance() {
   
   // 테이블 헤더 정렬 상태
   const [tableSortBy, setTableSortBy] = useState('schedule');
-  const [tableSortOrder, setTableSortOrder] = useState('asc'); // 'asc' 또는 'desc'
+  const [tableSortOrder, setTableSortOrder] = useState('asc');
+
+  // 행 추가 모달 상태
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addType, setAddType] = useState('naver'); // 'naver' or 'system'
+  const [addStudentSearch, setAddStudentSearch] = useState('');
+  const [addSelectedStudent, setAddSelectedStudent] = useState(null);
+  const [addStartTime, setAddStartTime] = useState('09:00');
   
   // 날짜 선택을 위한 분리된 상태
   const [dateComponents, setDateComponents] = useState(() => {
@@ -118,6 +125,31 @@ function Attendance() {
     queryFn: async () => {
       const response = await studentAPI.getAll();
       return response.data;
+    },
+  });
+
+  // 엑셀 학생 목록 (네이버 예약용)
+  const { data: excelStudents } = useQuery({
+    queryKey: ['excelStudents'],
+    queryFn: async () => {
+      const response = await studentAPI.getExcelList();
+      return response.data;
+    },
+  });
+
+  // 수동 출석 추가 mutation
+  const addManualMutation = useMutation({
+    mutationFn: (data) => attendanceAPI.addManual(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances', selectedDate]);
+      alert('출석부에 추가되었습니다.');
+      setShowAddModal(false);
+      setAddSelectedStudent(null);
+      setAddStudentSearch('');
+      setAddStartTime('09:00');
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || '추가 중 오류가 발생했습니다.');
     },
   });
 
@@ -566,6 +598,12 @@ function Attendance() {
               onChange={(e) => setTableSearchName(e.target.value)}
               className="table-search-input"
             />
+            <button 
+              className="add-attendance-btn"
+              onClick={() => { setShowAddModal(true); setAddType('naver'); setAddSelectedStudent(null); setAddStudentSearch(''); }}
+            >
+              + 행 추가
+            </button>
           </div>
           
           <table className="attendance-table">
@@ -623,10 +661,10 @@ function Attendance() {
                   <td className="student-name-td">
                     <div className="student-info">
                       <span className="name">{attendance.studentName}</span>
-                      {attendance.isNaverBooking && (
+                      {(attendance.isNaverBooking || attendance.className === '네이버 예약') && (
                         <span className="naver-badge">네이버 예약</span>
                       )}
-                      {!attendance.isNaverBooking && attendance.className && (
+                      {!attendance.isNaverBooking && attendance.className && attendance.className !== '네이버 예약' && (
                         <span className="class-badge">{attendance.className}</span>
                       )}
                       <span className="status-badge">
@@ -792,6 +830,123 @@ function Attendance() {
                 disabled={checkInMutation.isPending || !selectedStudent}
               >
                 {checkInMutation.isPending ? '처리중...' : '출석 체크'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 행 추가 모달 */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>출석부 행 추가</h3>
+              <button className="modal-close" onClick={() => setShowAddModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>예약 유형</label>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <button
+                    className={`add-modal-type-btn ${addType === 'naver' ? 'active' : ''}`}
+                    onClick={() => { setAddType('naver'); setAddSelectedStudent(null); setAddStudentSearch(''); }}
+                  >
+                    네이버 예약
+                  </button>
+                  <button
+                    className={`add-modal-type-btn ${addType === 'system' ? 'active' : ''}`}
+                    onClick={() => { setAddType('system'); setAddSelectedStudent(null); setAddStudentSearch(''); }}
+                  >
+                    시스템 학생
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>학생 검색</label>
+                <input
+                  type="text"
+                  value={addStudentSearch}
+                  onChange={(e) => setAddStudentSearch(e.target.value)}
+                  placeholder="학생 이름 검색..."
+                  className="phone-input"
+                  autoFocus
+                />
+              </div>
+
+              {addStudentSearch && (
+                <div className="search-results" style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '15px' }}>
+                  {addType === 'naver' 
+                    ? (excelStudents || [])
+                        .filter(s => s.studentName.includes(addStudentSearch))
+                        .map((s, i) => (
+                          <div key={i}
+                            className={`student-result ${addSelectedStudent?.studentName === s.studentName ? 'selected' : ''}`}
+                            onClick={() => setAddSelectedStudent(s)}
+                            style={{
+                              padding: '10px', border: addSelectedStudent?.studentName === s.studentName ? '2px solid #00c73c' : '1px solid #ddd',
+                              borderRadius: '8px', marginBottom: '5px', cursor: 'pointer',
+                              backgroundColor: addSelectedStudent?.studentName === s.studentName ? '#f0fff4' : 'white'
+                            }}
+                          >
+                            <strong>{s.studentName}</strong> - {s.courseName}
+                          </div>
+                        ))
+                    : (allStudents || [])
+                        .filter(s => s.studentName?.includes(addStudentSearch))
+                        .map((s, i) => (
+                          <div key={i}
+                            className={`student-result ${addSelectedStudent?.id === s.id ? 'selected' : ''}`}
+                            onClick={() => setAddSelectedStudent(s)}
+                            style={{
+                              padding: '10px', border: addSelectedStudent?.id === s.id ? '2px solid #00c73c' : '1px solid #ddd',
+                              borderRadius: '8px', marginBottom: '5px', cursor: 'pointer',
+                              backgroundColor: addSelectedStudent?.id === s.id ? '#f0fff4' : 'white'
+                            }}
+                          >
+                            <strong>{s.studentName}</strong> {s.parentPhone && `- ${s.parentPhone}`}
+                          </div>
+                        ))
+                  }
+                </div>
+              )}
+
+              {addSelectedStudent && (
+                <div className="form-group">
+                  <label>수업 시작 시간</label>
+                  <input
+                    type="time"
+                    value={addStartTime}
+                    onChange={(e) => setAddStartTime(e.target.value)}
+                    className="phone-input"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowAddModal(false)}>취소</button>
+              <button
+                className="btn btn-primary"
+                disabled={!addSelectedStudent || addManualMutation.isPending}
+                onClick={() => {
+                  const courseName = addType === 'naver' ? addSelectedStudent.courseName : null;
+                  const durationMap = { Able: 60, Basic: 90, Core: 120, Development: 150 };
+                  const duration = courseName ? (durationMap[courseName] || 120) : 120;
+                  addManualMutation.mutate({
+                    type: addType,
+                    studentId: addType === 'system' ? addSelectedStudent.id : null,
+                    studentName: addSelectedStudent.studentName,
+                    date: selectedDate,
+                    startTime: addStartTime,
+                    durationMinutes: duration,
+                    courseName: courseName,
+                  });
+                }}
+              >
+                {addManualMutation.isPending ? '추가중...' : '추가'}
               </button>
             </div>
           </div>

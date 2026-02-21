@@ -188,4 +188,11 @@ public class StudentCourseExcelService {
     public int getStudentCount() {
         return studentCourseMap.size();
     }
+
+    /**
+     * 엑셀 학생 목록 전체 조회 (이름 → 반이름)
+     */
+    public Map<String, String> getAllStudents() {
+        return new HashMap<>(studentCourseMap);
+    }
 }

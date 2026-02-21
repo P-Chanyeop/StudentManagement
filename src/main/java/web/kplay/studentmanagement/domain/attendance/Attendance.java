@@ -44,6 +44,9 @@ public class Attendance extends BaseEntity {
     @Column
     private Integer durationMinutes; // 수업 시간 (분)
 
+    @Column
+    private String manualStudentName; // 수동 추가 시 학생 이름
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AttendanceStatus status;
