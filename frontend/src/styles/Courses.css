@@ -1,153 +1,112 @@
-/* Courses Page - Modern Design */
+/* ===== 반 관리 페이지 (crs-) ===== */
 
-/* 페이지 래퍼 */
-.page-wrapper {
-  min-height: 100vh;
-  background: var(--gray-50);
-}
-
-/* 페이지 헤더 */
-.page-header {
-  background: white;
-  border-bottom: 1px solid var(--gray-200);
-  padding: 32px 0;
-}
-
-.page-header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.page-title-section {
-  flex: 1;
-}
-
-.page-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-title i {
-  color: var(--naver-green);
-  font-size: 28px;
-}
-
-.page-subtitle {
-  font-size: 15px;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-/* 페이지 컨텐츠 */
-.page-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 32px;
-}
-
-/* 검색 섹션 */
-.search-section {
+/* 검색 & 헤더 */
+.crs-toolbar {
   background: white;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px 24px;
   margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.search-input-wrapper {
+.crs-search-wrap {
   position: relative;
   flex: 1;
   max-width: 400px;
 }
 
-.search-icon {
+.crs-search-wrap i {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--gray-400);
-  font-size: 16px;
+  font-size: 14px;
 }
 
-.search-input {
+.crs-search-input {
   width: 100%;
-  padding: 12px 16px 12px 48px;
+  padding: 10px 14px 10px 40px;
   border: 2px solid var(--gray-200);
   border-radius: 8px;
-  font-size: 15px;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  transition: all 0.2s;
   background: var(--gray-50);
+  box-sizing: border-box;
 }
 
-.search-input:focus {
+.crs-search-input:focus {
   outline: none;
   border-color: var(--naver-green);
   background: white;
   box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
 }
 
-.result-count {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
+.crs-count {
+  font-size: 14px;
   color: var(--gray-600);
   white-space: nowrap;
 }
 
-.result-count i {
+.crs-count strong {
   color: var(--naver-green);
 }
 
-.result-count strong {
-  color: var(--naver-green);
+.crs-create-btn {
+  background: var(--naver-green);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+  white-space: nowrap;
 }
 
-/* 수업 그리드 */
-.courses-grid {
+.crs-create-btn:hover {
+  background: #02b351;
+}
+
+/* 카드 그리드 */
+.crs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
 
-/* 수업 카드 */
-.course-card {
+.crs-card {
   background: white;
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
   border: 1px solid var(--gray-200);
+  transition: all 0.2s;
 }
 
-.course-card:hover {
+.crs-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.course-header {
+.crs-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.course-header h3 {
-  font-size: 20px;
+.crs-card-header h3 {
+  font-size: 18px;
   font-weight: 600;
   color: var(--gray-900);
   margin: 0;
@@ -155,121 +114,108 @@
   margin-right: 12px;
 }
 
-.course-level-badge {
-  padding: 4px 12px !important;
-  border-radius: 12px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  color: white !important;
-  white-space: nowrap !important;
+.crs-level-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: var(--naver-green);
+  white-space: nowrap;
 }
 
-.course-description {
+.crs-desc {
   color: var(--gray-600);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.course-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+.crs-details {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 8px;
 }
 
-.course-detail-item {
+.crs-detail-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
   color: var(--gray-600);
 }
 
-.course-detail-item i {
+.crs-detail-item i {
   color: var(--naver-green);
-  width: 16px;
+  width: 14px;
   text-align: center;
 }
 
-.course-actions {
+.crs-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
 }
 
-.btn-edit, .btn-delete {
-  padding: 8px 16px;
+.crs-btn-edit,
+.crs-btn-delete {
+  padding: 8px 14px;
   border: none;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
-.btn-edit {
+.crs-btn-edit {
   background: var(--gray-100);
   color: var(--gray-700);
 }
 
-.btn-edit:hover {
+.crs-btn-edit:hover {
   background: var(--gray-200);
 }
 
-.btn-delete {
+.crs-btn-delete {
   background: #fee;
   color: #dc2626;
 }
 
-.btn-delete:hover {
+.crs-btn-delete:hover {
   background: #fecaca;
 }
 
 /* 빈 상태 */
-.empty-state {
+.crs-empty {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 80px 20px;
+  padding: 60px 20px;
   color: var(--gray-500);
-  font-size: 16px;
-}
-
-/* 기본 버튼 스타일 */
-.btn-primary {
-  background: var(--naver-green);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
   font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.btn-primary:hover {
-  background: #02b351;
-  transform: translateY(-1px);
+.crs-empty i {
+  font-size: 40px;
+  margin-bottom: 12px;
+  color: var(--gray-300);
+  display: block;
 }
 
-/* 모달 스타일 */
-.modal-overlay {
+/* 모달 */
+.crs-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -277,459 +223,288 @@
   z-index: 1000;
 }
 
-.modal {
+.crs-modal {
   background: white;
   border-radius: 12px;
-  padding: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
+  animation: crsModalIn 0.3s ease-out;
 }
 
-.modal-header {
+@keyframes crsModalIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.crs-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 12px 12px 0 0;
 }
 
-.modal-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--gray-900);
+.crs-modal-header h2 {
   margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
 }
 
-.btn-close {
+.crs-modal-close {
   background: none;
   border: none;
-  font-size: 24px;
-  color: var(--gray-400);
+  font-size: 1.2rem;
+  color: #999;
   cursor: pointer;
-  padding: 4px;
-}
-
-.btn-close:hover {
-  color: var(--gray-600);
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: var(--gray-700);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid var(--gray-200);
-  border-radius: 8px;
-  font-size: 15px;
-  transition: border-color 0.2s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: var(--naver-green);
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 32px;
-}
-
-.btn-secondary {
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary:hover {
-  background: var(--gray-200);
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .page-header-content {
-    flex-direction: column;
-    gap: 20px;
-    align-items: flex-start;
-  }
-
-  .search-section {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
-
-  .search-input-wrapper {
-    max-width: none;
-  }
-
-  .courses-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .course-details {
-    grid-template-columns: 1fr;
-  }
-
-  .modal {
-    margin: 20px;
-    width: calc(100% - 40px);
-  }
-}
-
-/* 스케줄 관리 모달 스타일 */
-.course-detail-modal {
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-/* 수업 관리 페이지 전용 탭 스타일 */
-.courses-tab-section {
-  max-width: 1400px;
-  margin: 0 auto 30px auto;
-  padding: 0 32px;
-}
-
-.courses-tab-navigation {
-  background: white;
-  border-radius: 12px;
-  padding: 4px;
-  display: flex;
-  gap: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.courses-tab-navigation::before {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: calc(50% - 6px);
-  height: calc(100% - 8px);
-  background: var(--naver-green);
-  border-radius: 8px;
-  transition: transform 0.3s ease;
-  z-index: 1;
-}
-
-.courses-tab-navigation[data-active="courses"]::before {
-  transform: translateX(0);
-}
-
-.courses-tab-navigation[data-active="schedules"]::before {
-  transform: translateX(calc(100% + 4px));
-}
-
-.courses-tab-button {
-  flex: 1;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  color: #6c757d;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 14px;
+  border-radius: 50%;
+}
+
+.crs-modal-close:hover {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.crs-modal-body {
+  padding: 24px;
+}
+
+.crs-field {
+  margin-bottom: 16px;
+}
+
+.crs-field label {
+  display: block;
+  margin-bottom: 6px;
   font-weight: 500;
-  border-radius: 8px;
-  position: relative;
-  z-index: 2;
-}
-
-.courses-tab-button.active {
-  color: white;
-}
-
-.courses-tab-button:not(.active):hover {
-  color: #495057;
-  background: rgba(3, 199, 90, 0.1);
-}
-
-.courses-tab-button i {
-  font-size: 16px;
-}
-
-.courses-tab-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 32px;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: visible;
-}
-
-/* 탭 컨텐츠 통일 레이아웃 */
-.tab-content-wrapper {
-  padding: 0;
-}
-
-.tab-header {
-  display: flex;
-  justify-content: flex-end;
-  padding: 20px 25px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.search-section,
-.filter-section {
-  padding: 20px 25px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.content-section {
-  padding: 25px;
-}
-
-.courses-grid {
-  margin: 0;
-}
-
-.schedule-list {
-  margin: 0;
-}
-
-.page-content {
-  padding: 0;
-}
-
-.schedule-filters {
-  margin-bottom: 0;
-  padding: 0;
-}
-
-.filter-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #f0f0f0;
-  display: flex;
-  gap: 25px;
-  align-items: end;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 200px;
-}
-
-.filter-group label {
-  font-weight: 600;
-  color: #333;
+  color: var(--gray-700);
   font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.filter-group label i {
-  color: var(--naver-green);
-  font-size: 16px;
-}
-
-.filter-input,
-.filter-select {
-  padding: 12px 16px;
-  border: 2px solid #e9ecef;
+.crs-field input,
+.crs-field select,
+.crs-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--gray-200);
   border-radius: 8px;
   font-size: 14px;
-  transition: all 0.2s ease;
-  background: white;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
-.filter-input:focus,
-.filter-select:focus {
+.crs-field input:focus,
+.crs-field select:focus,
+.crs-field textarea:focus {
   outline: none;
   border-color: var(--naver-green);
   box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
 }
 
-.filter-select {
-  cursor: pointer;
+.crs-field textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
-.filter-select option {
-  padding: 8px;
-}
-
-.btn-table-schedule {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-right: 8px;
-  transition: background-color 0.2s;
-}
-
-.btn-table-schedule:hover {
-  background: #218838;
-}
-
-.schedule-header {
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-}
-
-.schedule-create-form {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.schedule-create-form h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.form-actions {
+.crs-modal-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 15px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #f0f0f0;
 }
 
-.schedule-list h3 {
-  margin: 0 0 15px 0;
+.crs-btn-submit {
+  background: var(--naver-green);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.crs-btn-submit:hover {
+  background: #02b351;
+}
+
+.crs-btn-cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.crs-btn-cancel:hover {
+  background: var(--gray-200);
+}
+
+/* 스케줄 관리 */
+.crs-schedule-filters {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.crs-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.crs-filter-group label {
+  font-weight: 600;
   color: #333;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.schedule-items {
+.crs-filter-group label i {
+  color: var(--naver-green);
+}
+
+.crs-filter-group input,
+.crs-filter-group select {
+  padding: 10px 14px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.crs-filter-group input:focus,
+.crs-filter-group select:focus {
+  outline: none;
+  border-color: var(--naver-green);
+  box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
+}
+
+.crs-schedule-items {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.schedule-item {
+.crs-schedule-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 16px 20px;
   background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.schedule-item.cancelled {
+.crs-schedule-item.cancelled {
   background: #f8f9fa;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
-.schedule-info {
+.crs-schedule-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.schedule-date,
-.schedule-time,
-.schedule-students,
-.schedule-memo {
+.crs-schedule-info span {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
+  color: var(--gray-600);
 }
 
-.schedule-date i {
-  color: #007bff;
-}
-
-.schedule-time i {
-  color: #28a745;
-}
-
-.schedule-students i {
-  color: #ffc107;
-}
-
-.schedule-memo i {
-  color: #6c757d;
-}
-
-.schedule-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.cancelled-badge {
-  background: #dc3545;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.empty-state {
+.crs-schedule-info span i {
+  width: 16px;
   text-align: center;
-  padding: 40px;
-  color: #6c757d;
 }
 
-.empty-state i {
-  font-size: 48px;
-  margin-bottom: 15px;
-  opacity: 0.5;
+/* 탭 */
+.crs-tab-nav {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 32px 0;
+}
+
+.crs-tab-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.crs-tab-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.crs-tab-btn:hover {
+  color: #666;
+  background: rgba(3, 199, 90, 0.05);
+}
+
+.crs-tab-btn.active {
+  background: var(--naver-green);
+  color: white;
 }
 
 @media (max-width: 768px) {
-  .form-row {
+  .crs-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .crs-search-wrap {
+    max-width: none;
+  }
+  .crs-grid {
     grid-template-columns: 1fr;
   }
-  
-  .schedule-item {
+  .crs-details {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
   }
-  
-  .schedule-actions {
-    align-self: flex-end;
+  .crs-schedule-filters {
+    flex-direction: column;
   }
 }

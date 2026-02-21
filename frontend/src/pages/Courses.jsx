@@ -202,104 +202,55 @@ function Courses() {
 
       {/* 코스 생성 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="crs-modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="crs-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="crs-modal-header">
               <h2>반 생성</h2>
-              <button className="modal-close" onClick={() => setShowCreateModal(false)}>
-                ×
-              </button>
+              <button className="crs-modal-close" onClick={() => setShowCreateModal(false)}>×</button>
             </div>
-
-            <div className="modal-body">
-              <div className="form-group">
+            <div className="crs-modal-body">
+              <div className="crs-field">
                 <label>반이름 *</label>
-                <input
-                  type="text"
-                  value={newCourse.courseName}
-                  onChange={(e) => setNewCourse({ ...newCourse, courseName: e.target.value })}
-                  placeholder="예: A반, 초급반, 월수금반 등"
-                />
+                <input type="text" value={newCourse.courseName} onChange={(e) => setNewCourse({ ...newCourse, courseName: e.target.value })} placeholder="예: A반, 초급반, 월수금반 등" />
               </div>
-
-              <div className="form-group">
+              <div className="crs-field">
                 <label>설명</label>
-                <textarea
-                  value={newCourse.description || ''}
-                  onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                  placeholder="반에 대한 설명을 입력하세요"
-                  rows="3"
-                />
+                <textarea value={newCourse.description || ''} onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })} placeholder="반에 대한 설명을 입력하세요" rows="3" />
               </div>
-
-              <div className="form-group">
+              <div className="crs-field">
                 <label>수업시간 (분) *</label>
-                <input
-                  type="number"
-                  value={newCourse.durationMinutes}
-                  onChange={(e) =>
-                    setNewCourse({
-                      ...newCourse,
-                      durationMinutes: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  placeholder="60"
-                  min="1"
-                />
+                <input type="number" value={newCourse.durationMinutes} onChange={(e) => setNewCourse({ ...newCourse, durationMinutes: parseInt(e.target.value) || 0 })} placeholder="60" min="1" />
               </div>
             </div>
-
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>
-                취소
-              </button>
-              <button className="btn-primary" onClick={handleCreateCourse}>
-                생성
-              </button>
+            <div className="crs-modal-actions">
+              <button className="crs-btn-cancel" onClick={() => setShowCreateModal(false)}>취소</button>
+              <button className="crs-btn-submit" onClick={handleCreateCourse}>생성</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 코스 상세 모달 (탭 구조) */}
+      {/* 코스 상세 모달 */}
       {showEditModal && selectedCourse && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal-content course-detail-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="crs-modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="crs-modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
+            <div className="crs-modal-header">
               <h2>{selectedCourse.courseName}</h2>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>
-                ×
-              </button>
+              <button className="crs-modal-close" onClick={() => setShowEditModal(false)}>×</button>
             </div>
-
-            {/* 탭 네비게이션 */}
-            <div className="tab-navigation">
-              <button 
-                className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
-                onClick={() => setActiveTab('info')}
-              >
+            <div className="crs-tab-bar" style={{ margin: '0', borderRadius: 0 }}>
+              <button className={`crs-tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
                 <i className="fas fa-info-circle"></i> 수업 정보
               </button>
-              <button 
-                className={`tab-button ${activeTab === 'schedule' ? 'active' : ''}`}
-                onClick={() => setActiveTab('schedule')}
-              >
+              <button className={`crs-tab-btn ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>
                 <i className="fas fa-calendar-alt"></i> 스케줄 관리
               </button>
             </div>
-
-            <div className="modal-body">
+            <div className="crs-modal-body">
               {activeTab === 'info' ? (
-                <CourseInfoTab 
-                  course={selectedCourse}
-                  onUpdate={(updatedCourse) => setSelectedCourse(updatedCourse)}
-                  onClose={() => setShowEditModal(false)}
-                  updateMutation={updateMutation}
-                />
+                <CourseInfoTab course={selectedCourse} onUpdate={(u) => setSelectedCourse(u)} onClose={() => setShowEditModal(false)} updateMutation={updateMutation} />
               ) : (
-                <ScheduleTab 
-                  course={selectedCourse}
-                />
+                <ScheduleTab course={selectedCourse} />
               )}
             </div>
           </div>
@@ -321,58 +272,25 @@ function CourseInfoTab({ course, onUpdate, onClose, updateMutation }) {
 
   return (
     <>
-      <div className="form-group">
+      <div className="crs-field">
         <label>코스명 *</label>
-        <input
-          type="text"
-          value={course.courseName}
-          onChange={(e) => onUpdate({ ...course, courseName: e.target.value })}
-          placeholder="예: 기초 영어 회화"
-        />
+        <input type="text" value={course.courseName} onChange={(e) => onUpdate({ ...course, courseName: e.target.value })} placeholder="예: 기초 영어 회화" />
       </div>
-
-      <div className="form-group">
-        <label>설명 *</label>
-        <textarea
-          value={course.description || ''}
-          onChange={(e) => onUpdate({ ...course, description: e.target.value })}
-          placeholder="코스에 대한 설명을 입력하세요"
-          rows="4"
-        />
+      <div className="crs-field">
+        <label>설명</label>
+        <textarea value={course.description || ''} onChange={(e) => onUpdate({ ...course, description: e.target.value })} placeholder="코스에 대한 설명을 입력하세요" rows="4" />
       </div>
-
-      <div className="form-group">
-        <label>반 이름 *</label>
-        <input
-          type="text"
-          value={course.level}
-          onChange={(e) => onUpdate({ ...course, level: e.target.value })}
-          placeholder="예: A반, 초급반, 월수금반 등"
-          required
-        />
+      <div className="crs-field">
+        <label>반 이름</label>
+        <input type="text" value={course.level} onChange={(e) => onUpdate({ ...course, level: e.target.value })} placeholder="예: A반, 초급반" />
       </div>
-
-      <div className="form-group">
+      <div className="crs-field">
         <label>수업시간 (분) *</label>
-        <input
-          type="number"
-          value={course.durationMinutes}
-          onChange={(e) => onUpdate({
-            ...course,
-            durationMinutes: parseInt(e.target.value) || 0
-          })}
-          placeholder="60"
-          min="1"
-        />
+        <input type="number" value={course.durationMinutes} onChange={(e) => onUpdate({ ...course, durationMinutes: parseInt(e.target.value) || 0 })} placeholder="60" min="1" />
       </div>
-
-      <div className="modal-footer">
-        <button className="btn-secondary" onClick={onClose}>
-          취소
-        </button>
-        <button className="btn-primary" onClick={handleUpdateCourse}>
-          저장
-        </button>
+      <div className="crs-modal-actions" style={{ padding: '16px 0 0', border: 'none' }}>
+        <button className="crs-btn-cancel" onClick={onClose}>취소</button>
+        <button className="crs-btn-submit" onClick={handleUpdateCourse}>저장</button>
       </div>
     </>
   );
@@ -446,112 +364,56 @@ function ScheduleTab({ course }) {
 
   return (
     <>
-      <div className="schedule-header">
-        <button 
-          className="btn-primary"
-          onClick={() => setShowCreateSchedule(true)}
-        >
+      <div style={{ marginBottom: 16 }}>
+        <button className="crs-btn-submit" onClick={() => setShowCreateSchedule(true)}>
           <i className="fas fa-plus"></i> 스케줄 추가
         </button>
       </div>
 
       {showCreateSchedule && (
-        <div className="schedule-create-form">
-          <h3>새 스케줄 생성</h3>
+        <div style={{ background: '#f8f9fa', padding: 20, borderRadius: 8, marginBottom: 16 }}>
+          <h3 style={{ margin: '0 0 12px' }}>새 스케줄 생성</h3>
           <form onSubmit={handleCreateSchedule}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>날짜 *</label>
-                <input
-                  type="date"
-                  value={newSchedule.scheduleDate}
-                  onChange={(e) => setNewSchedule({...newSchedule, scheduleDate: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>시작 시간 *</label>
-                <input
-                  type="time"
-                  value={newSchedule.startTime}
-                  onChange={(e) => setNewSchedule({...newSchedule, startTime: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>종료 시간 *</label>
-                <input
-                  type="time"
-                  value={newSchedule.endTime}
-                  onChange={(e) => setNewSchedule({...newSchedule, endTime: e.target.value})}
-                  required
-                />
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+              <div className="crs-field"><label>날짜 *</label><input type="date" value={newSchedule.scheduleDate} onChange={(e) => setNewSchedule({...newSchedule, scheduleDate: e.target.value})} required /></div>
+              <div className="crs-field"><label>시작 *</label><input type="time" value={newSchedule.startTime} onChange={(e) => setNewSchedule({...newSchedule, startTime: e.target.value})} required /></div>
+              <div className="crs-field"><label>종료 *</label><input type="time" value={newSchedule.endTime} onChange={(e) => setNewSchedule({...newSchedule, endTime: e.target.value})} required /></div>
             </div>
-            <div className="form-group">
-              <label>메모</label>
-              <textarea
-                value={newSchedule.memo}
-                onChange={(e) => setNewSchedule({...newSchedule, memo: e.target.value})}
-                placeholder="수업 관련 메모를 입력하세요"
-              />
-            </div>
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">생성</button>
-              <button type="button" className="btn-secondary" onClick={() => setShowCreateSchedule(false)}>취소</button>
+            <div className="crs-field"><label>메모</label><textarea value={newSchedule.memo} onChange={(e) => setNewSchedule({...newSchedule, memo: e.target.value})} placeholder="수업 관련 메모" /></div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+              <button type="submit" className="crs-btn-submit">생성</button>
+              <button type="button" className="crs-btn-cancel" onClick={() => setShowCreateSchedule(false)}>취소</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="schedule-list">
-        <h3>스케줄 목록</h3>
-        {scheduleData.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-calendar-times"></i>
-            <p>등록된 스케줄이 없습니다</p>
-          </div>
-        ) : (
-          <div className="schedule-items">
-            {scheduleData.map((schedule) => (
-              <div key={schedule.id} className={`schedule-item ${schedule.isCancelled ? 'cancelled' : ''}`}>
-                <div className="schedule-info">
-                  <div className="schedule-date">
-                    <i className="fas fa-calendar"></i>
-                    {schedule.scheduleDate}
-                  </div>
-                  <div className="schedule-time">
-                    <i className="fas fa-clock"></i>
-                    {schedule.startTime} - {schedule.endTime}
-                  </div>
-                  <div className="schedule-students">
-                    <i className="fas fa-users"></i>
-                    {schedule.currentStudents}명 등록
-                  </div>
-                  {schedule.memo && (
-                    <div className="schedule-memo">
-                      <i className="fas fa-sticky-note"></i>
-                      {schedule.memo}
-                    </div>
-                  )}
-                </div>
-                <div className="schedule-actions">
-                  {!schedule.isCancelled ? (
-                    <button 
-                      className="btn-table-delete"
-                      onClick={() => handleCancelSchedule(schedule.id)}
-                    >
-                      <i className="fas fa-times"></i> 취소
-                    </button>
-                  ) : (
-                    <span className="cancelled-badge">취소됨</span>
-                  )}
-                </div>
+      <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>스케줄 목록</h3>
+      {scheduleData.length === 0 ? (
+        <div className="crs-empty"><i className="fas fa-calendar-times"></i>등록된 스케줄이 없습니다</div>
+      ) : (
+        <div className="crs-schedule-items">
+          {scheduleData.map((schedule) => (
+            <div key={schedule.id} className={`crs-schedule-item ${schedule.isCancelled ? 'cancelled' : ''}`}>
+              <div className="crs-schedule-info">
+                <span><i className="fas fa-calendar"></i> {schedule.scheduleDate}</span>
+                <span><i className="fas fa-clock"></i> {schedule.startTime} - {schedule.endTime}</span>
+                <span><i className="fas fa-users"></i> {schedule.currentStudents}명</span>
+                {schedule.memo && <span><i className="fas fa-sticky-note"></i> {schedule.memo}</span>}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <div>
+                {!schedule.isCancelled ? (
+                  <button className="crs-btn-delete" onClick={() => handleCancelSchedule(schedule.id)}>
+                    <i className="fas fa-times"></i> 취소
+                  </button>
+                ) : (
+                  <span style={{ fontSize: 12, background: '#dc3545', color: '#fff', padding: '4px 8px', borderRadius: 4 }}>취소됨</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
@@ -560,80 +422,63 @@ export default Courses;
 
 // 수업 관리 탭 컴포넌트
 function CoursesTab({ courses, searchQuery, setSearchQuery, setShowCreateModal, openEditModal, handleDeleteCourse, isLoading, filteredCourses }) {
-  const getClassBadge = (className) => {
-    return <span className="level-badge default">{className || '미지정'}</span>;
-  };
-
   return (
-    <div className="tab-content-wrapper">
-      <div className="tab-header">
-        <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-          <i className="fas fa-plus"></i> 반 생성
-        </button>
-      </div>
-
-      <div className="search-section">
-        <div className="search-input-wrapper">
-          <i className="fas fa-search search-icon"></i>
+    <div>
+      <div className="crs-toolbar">
+        <div className="crs-search-wrap">
+          <i className="fas fa-search"></i>
           <input
             type="text"
             placeholder="수업명, 설명, 레벨로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
+            className="crs-search-input"
           />
         </div>
-        <div className="result-count">
-          <i className="fas fa-chalkboard-teacher"></i>
+        <span className="crs-count">
           총 <strong>{filteredCourses.length}</strong>개
-        </div>
+        </span>
+        <button className="crs-create-btn" onClick={() => setShowCreateModal(true)}>
+          <i className="fas fa-plus"></i> 반 생성
+        </button>
       </div>
 
-      <div className="content-section">
-        {filteredCourses.length === 0 ? (
-          <div className="empty-state">
-            {searchQuery ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.'}
-          </div>
-        ) : (
-          <div className="courses-grid">
-            {filteredCourses.map((course) => (
-              <div key={course.id} className="course-card">
-                <div className="course-header">
-                  <h3>{course.courseName}</h3>
-                  {getClassBadge(course.level)}
+      {filteredCourses.length === 0 ? (
+        <div className="crs-empty">
+          <i className="fas fa-chalkboard"></i>
+          {searchQuery ? '검색 결과가 없습니다.' : '등록된 수업이 없습니다.'}
+        </div>
+      ) : (
+        <div className="crs-grid">
+          {filteredCourses.map((course) => (
+            <div key={course.id} className="crs-card">
+              <div className="crs-card-header">
+                <h3>{course.courseName}</h3>
+                {course.level && <span className="crs-level-badge">{course.level}</span>}
+              </div>
+              <p className="crs-desc">{course.description}</p>
+              <div className="crs-details">
+                <div className="crs-detail-item">
+                  <i className="fas fa-users"></i>
+                  <span>수강생: {course.currentEnrollments || 0}명</span>
                 </div>
-
-                <p className="course-description">{course.description}</p>
-
-                <div className="course-details">
-                  <div className="detail-item">
-                    <span className="icon"><i className="fas fa-users"></i></span>
-                    <span className="label">현재 수강생:</span>
-                    <span className="value">{course.currentEnrollments || 0}명</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="icon"><i className="fas fa-clock"></i></span>
-                    <span className="label">수업시간:</span>
-                    <span className="value">{course.durationMinutes}분</span>
-                  </div>
-                </div>
-
-                <div className="course-actions">
-                  <button className="btn-table-edit" onClick={() => openEditModal(course)}>
-                    <i className="fas fa-edit"></i> 수정
-                  </button>
-                  <button
-                    className="btn-table-delete"
-                    onClick={() => handleDeleteCourse(course.id, course.courseName)}
-                  >
-                    <i className="fas fa-trash"></i> 삭제
-                  </button>
+                <div className="crs-detail-item">
+                  <i className="fas fa-clock"></i>
+                  <span>수업: {course.durationMinutes}분</span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <div className="crs-actions">
+                <button className="crs-btn-edit" onClick={() => openEditModal(course)}>
+                  <i className="fas fa-edit"></i> 수정
+                </button>
+                <button className="crs-btn-delete" onClick={() => handleDeleteCourse(course.id, course.courseName)}>
+                  <i className="fas fa-trash"></i> 삭제
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
