@@ -178,22 +178,30 @@ function Consultations() {
   const handleFileUpload = async (files, type) => {
     try {
       if (files.length === 1) {
-        // 단일 파일
         const response = type === 'audio' 
           ? await fileAPI.uploadAudio(files[0])
           : await fileAPI.uploadDocument(files[0]);
-        return response.data.filePath;
+        return `${response.data.fileName}::${response.data.filePath}`;
       } else {
-        // 다중 파일
         const response = type === 'audio' 
           ? await fileAPI.uploadMultipleAudio(files)
           : await fileAPI.uploadMultipleDocument(files);
-        return response.data.files.map(file => file.filePath).join(',');
+        return response.data.files.map(f => `${f.fileName}::${f.filePath}`).join(',');
       }
     } catch (error) {
       alert('파일 업로드에 실패했습니다.');
       return null;
     }
+  };
+
+  // "원본파일명::경로" 또는 "경로" 에서 표시명/경로 추출
+  const parseFileEntry = (entry) => {
+    const trimmed = entry.trim();
+    if (trimmed.includes('::')) {
+      const [name, path] = trimmed.split('::');
+      return { name, path };
+    }
+    return { name: trimmed.split('/').pop(), path: trimmed };
   };
 
   const handleStudentToggle = (studentId) => {
@@ -276,17 +284,15 @@ function Consultations() {
     const audioFiles = consultation.recordingFileUrl ? consultation.recordingFileUrl.split(',') : [];
     const documentFiles = consultation.attachmentFileUrl ? consultation.attachmentFileUrl.split(',') : [];
     
-    setAudioFiles(audioFiles.map((url, index) => ({
-      name: url.trim().split('/').pop() || `녹음파일_${index + 1}`,
-      isExisting: true,
-      url: url.trim()
-    })));
+    setAudioFiles(audioFiles.map((entry, index) => {
+      const { name, path } = parseFileEntry(entry);
+      return { name, isExisting: true, url: entry.trim() };
+    }));
     
-    setDocumentFiles(documentFiles.map((url, index) => ({
-      name: url.trim().split('/').pop() || `첨부파일_${index + 1}`,
-      isExisting: true,
-      url: url.trim()
-    })));
+    setDocumentFiles(documentFiles.map((entry, index) => {
+      const { name, path } = parseFileEntry(entry);
+      return { name, isExisting: true, url: entry.trim() };
+    }));
     
     setShowEditModal(true);
   };
@@ -294,25 +300,34 @@ function Consultations() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     
-    let recordingFileUrl = selectedConsultation.recordingFileUrl;
-    let attachmentFileUrl = selectedConsultation.attachmentFileUrl;
-
+    // 기존 파일 URL 수집
+    const existingAudioUrls = audioFiles.filter(f => f.isExisting).map(f => f.url);
+    const existingDocUrls = documentFiles.filter(f => f.isExisting).map(f => f.url);
+    
     // 새 파일 업로드
-    if (audioFile) {
-      recordingFileUrl = await handleFileUpload(audioFile, 'audio');
-      if (!recordingFileUrl) return;
+    const newAudioFiles = audioFiles.filter(f => !f.isExisting).map(f => f.file);
+    const newDocFiles = documentFiles.filter(f => !f.isExisting).map(f => f.file);
+    
+    let recordingFileUrl = existingAudioUrls.join(',');
+    let attachmentFileUrl = existingDocUrls.join(',');
+
+    if (newAudioFiles.length > 0) {
+      const uploaded = await handleFileUpload(newAudioFiles, 'audio');
+      if (!uploaded) return;
+      recordingFileUrl = [recordingFileUrl, uploaded].filter(Boolean).join(',');
     }
     
-    if (documentFile) {
-      attachmentFileUrl = await handleFileUpload(documentFile, 'document');
-      if (!attachmentFileUrl) return;
+    if (newDocFiles.length > 0) {
+      const uploaded = await handleFileUpload(newDocFiles, 'document');
+      if (!uploaded) return;
+      attachmentFileUrl = [attachmentFileUrl, uploaded].filter(Boolean).join(',');
     }
 
     const consultationData = {
       ...newConsultation,
       consultationDate: selectedConsultation.consultationDate,
-      recordingFileUrl,
-      attachmentFileUrl
+      recordingFileUrl: recordingFileUrl || null,
+      attachmentFileUrl: attachmentFileUrl || null
     };
 
     updateMutation.mutate({ id: selectedConsultation.id, data: consultationData });
@@ -540,9 +555,6 @@ function Consultations() {
                       <div className="consultation-meta">
                         <span className="student-name">{consultation.studentName}</span>
                         <span className="consultation-date">{consultation.consultationDate}</span>
-                        <span className={`consultation-type type-${consultation.consultationType}`}>
-                          {consultation.consultationType}
-                        </span>
                       </div>
                     </div>
                     {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
@@ -578,31 +590,33 @@ function Consultations() {
                   {(consultation.recordingFileUrl || consultation.attachmentFileUrl) && (
                     <div className="consultation-files">
                       {consultation.recordingFileUrl && (
-                        <div className="file-download-item">
-                          <button 
-                            className="file-download-btn audio"
-                            onClick={() => handleFileDownload(consultation.recordingFileUrl, `상담녹음_${consultation.studentName}_${consultation.consultationDate}.mp3`)}
-                          >
-                            <i className="fas fa-microphone"></i>
-                            녹음 파일 다운로드
-                          </button>
-                          <div className="file-name">
-                            상담녹음_{consultation.studentName}_{consultation.consultationDate}.mp3
-                          </div>
+                        <div className="file-column">
+                          <div className="file-column-title"><i className="fas fa-microphone"></i> 녹음 파일</div>
+                          {consultation.recordingFileUrl.split(',').map((entry, idx) => {
+                            const { name, path } = parseFileEntry(entry);
+                            return (
+                              <div key={`rec-${idx}`} className="file-download-item">
+                                <button className="file-download-btn audio" onClick={() => handleFileDownload(path, name)}>
+                                  <i className="fas fa-download"></i> {name}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                       {consultation.attachmentFileUrl && (
-                        <div className="file-download-item">
-                          <button 
-                            className="file-download-btn document"
-                            onClick={() => handleFileDownload(consultation.attachmentFileUrl, `상담자료_${consultation.studentName}_${consultation.consultationDate}`)}
-                          >
-                            <i className="fas fa-file-alt"></i>
-                            첨부 파일 다운로드
-                          </button>
-                          <div className="file-name">
-                            상담자료_{consultation.studentName}_{consultation.consultationDate}
-                          </div>
+                        <div className="file-column">
+                          <div className="file-column-title"><i className="fas fa-file-alt"></i> 첨부 파일</div>
+                          {consultation.attachmentFileUrl.split(',').map((entry, idx) => {
+                            const { name, path } = parseFileEntry(entry);
+                            return (
+                              <div key={`att-${idx}`} className="file-download-item">
+                                <button className="file-download-btn document" onClick={() => handleFileDownload(path, name)}>
+                                  <i className="fas fa-download"></i> {name}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

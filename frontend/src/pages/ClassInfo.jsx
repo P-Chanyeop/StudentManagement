@@ -67,10 +67,7 @@ function ClassInfo() {
 
   // 날짜별 출석 상태 맵 (달력용)
   const getDateStatus = (dateStr) => {
-    const atts = monthlyAttendances.filter(a => {
-      if (a.checkInTime) return a.checkInTime.split('T')[0] === dateStr;
-      return false;
-    });
+    const atts = monthlyAttendances.filter(a => a.attendanceDate === dateStr);
     if (atts.length === 0) return null;
     if (atts.some(a => a.status === 'ABSENT')) return 'absent';
     if (atts.some(a => a.status === 'LATE')) return 'late';
@@ -107,10 +104,11 @@ function ClassInfo() {
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const status = getDateStatus(dateStr);
+      const dayOfWeek = new Date(year, month, d).getDay();
       days.push(
         <div
           key={d}
-          className={`ci-day ${dateStr === selectedDate ? 'ci-selected' : ''} ${dateStr === today ? 'ci-today' : ''}`}
+          className={`ci-day ${dateStr === selectedDate ? 'ci-selected' : ''} ${dateStr === today ? 'ci-today' : ''} ${dayOfWeek === 0 ? 'ci-sunday' : ''}`}
           onClick={() => setSelectedDate(dateStr)}
         >
           <span>{d}</span>
