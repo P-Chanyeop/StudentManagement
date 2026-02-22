@@ -89,6 +89,7 @@ public class SecurityConfig {
                                         "/parent-reservation", "/consultation-reservation", "/enrollment-adjustment", "/check-in").permitAll() // React 라우팅 경로
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/naver-booking/events").permitAll() // SSE 엔드포인트
+                        .requestMatchers("/api/holidays/year/**").permitAll() // 공휴일 조회
                         .requestMatchers("/api/attendances/search-by-phone", "/api/attendances/*/check-in", "/api/attendances/naver-booking/*/check-in", "/api/attendances/*/checkout").permitAll() // 출석체크 페이지
                         .requestMatchers("/api/teacher-attendance/**").permitAll() // 선생님 출퇴근 체크
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

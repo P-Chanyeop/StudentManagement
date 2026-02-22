@@ -238,20 +238,8 @@ function Courses() {
               <h2>{selectedCourse.courseName}</h2>
               <button className="crs-modal-close" onClick={() => setShowEditModal(false)}>×</button>
             </div>
-            <div className="crs-tab-bar" style={{ margin: '0', borderRadius: 0 }}>
-              <button className={`crs-tab-btn ${activeTab === 'info' ? 'active' : ''}`} onClick={() => setActiveTab('info')}>
-                <i className="fas fa-info-circle"></i> 수업 정보
-              </button>
-              <button className={`crs-tab-btn ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>
-                <i className="fas fa-calendar-alt"></i> 스케줄 관리
-              </button>
-            </div>
             <div className="crs-modal-body">
-              {activeTab === 'info' ? (
-                <CourseInfoTab course={selectedCourse} onUpdate={(u) => setSelectedCourse(u)} onClose={() => setShowEditModal(false)} updateMutation={updateMutation} />
-              ) : (
-                <ScheduleTab course={selectedCourse} />
-              )}
+              <CourseInfoTab course={selectedCourse} onUpdate={(u) => setSelectedCourse(u)} onClose={() => setShowEditModal(false)} updateMutation={updateMutation} />
             </div>
           </div>
         </div>

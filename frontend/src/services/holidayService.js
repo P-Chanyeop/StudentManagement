@@ -1,35 +1,17 @@
-// 공휴일 API 서비스
+// 공휴일 API 서비스 (백엔드 프록시)
 class HolidayService {
-  constructor() {
-    // 한국천문연구원 특일정보 API 사용
-    this.apiUrl = 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService';
-    this.serviceKey = import.meta.env.VITE_HOLIDAY_API_KEY || 'YOUR_API_KEY';
-  }
-
   // 특정 연도의 공휴일 조회
   async getHolidays(year) {
     try {
-      // API 키가 없으면 기본 공휴일 반환
-      if (!this.serviceKey || this.serviceKey === 'YOUR_API_KEY') {
-        console.warn('공휴일 API 키가 설정되지 않았습니다. 기본 공휴일을 사용합니다.');
-        return this.getDefaultHolidays(year);
-      }
-
-      const response = await fetch(
-        `${this.apiUrl}/getHoliDeInfo?serviceKey=${this.serviceKey}&solYear=${year}&numOfRows=100&_type=json`
-      );
+      const response = await fetch(`/api/holidays/year/${year}`);
+      if (!response.ok) throw new Error('API error');
       const data = await response.json();
-      
-      if (data.response?.body?.items?.item) {
-        return data.response.body.items.item.map(item => ({
-          date: item.locdate.toString(),
-          name: item.dateName
-        }));
-      }
-      return [];
+      return data.map(item => ({
+        date: item.date.replace(/-/g, ''),
+        name: item.name
+      }));
     } catch (error) {
       console.error('공휴일 조회 실패:', error);
-      // API 실패 시 기본 공휴일 반환
       return this.getDefaultHolidays(year);
     }
   }
@@ -73,7 +55,6 @@ class HolidayService {
     let businessDaysCount = 0;
     let currentDate = new Date(start);
     
-    // 시작일도 영업일에 포함되므로 1부터 시작
     if (this.isBusinessDay(currentDate, holidays)) {
       businessDaysCount = 1;
     }
@@ -94,7 +75,6 @@ class HolidayService {
     const currentYear = start.getFullYear();
     const nextYear = currentYear + 1;
     
-    // 시작년도와 다음년도 공휴일 조회
     const [currentYearHolidays, nextYearHolidays] = await Promise.all([
       this.getHolidays(currentYear),
       this.getHolidays(nextYear)
@@ -104,7 +84,7 @@ class HolidayService {
     
     let businessDaysCount = 0;
     let currentDate = new Date(start);
-    const targetBusinessDays = weeks * 6; // 주 6일 기준 (월~토)
+    const targetBusinessDays = weeks * 6;
     
     while (businessDaysCount < targetBusinessDays) {
       if (this.isBusinessDay(currentDate, allHolidays)) {

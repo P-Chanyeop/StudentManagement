@@ -43,7 +43,6 @@ public class HolidayController {
      * 특정 연도의 공휴일 조회
      */
     @GetMapping("/year/{year}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<Holiday>> getHolidaysByYear(@PathVariable int year) {
         List<Holiday> holidays = holidayService.getHolidaysByYear(year);
         return ResponseEntity.ok(holidays);

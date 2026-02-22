@@ -92,6 +92,33 @@ public class HolidayService {
         
         log.info("3년치 공휴일 데이터 초기화 완료 ({}-{})", currentYear, currentYear + 2);
     }
+
+    /**
+     * 매일 새벽 3시에 공휴일 데이터 동기화 (임시공휴일 등 반영)
+     */
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void syncHolidayData() {
+        int currentYear = LocalDate.now().getYear();
+        for (int year = currentYear; year <= currentYear + 2; year++) {
+            try {
+                List<Holiday> apiHolidays = fetchHolidaysFromApi(year);
+                int savedCount = 0;
+                for (Holiday holiday : apiHolidays) {
+                    if (!holidayRepository.existsByDate(holiday.getDate())) {
+                        holidayRepository.save(holiday);
+                        savedCount++;
+                    }
+                }
+                if (savedCount > 0) {
+                    holidayCache.remove(year);
+                    log.info("공휴일 동기화: {}년 {}개 추가", year, savedCount);
+                }
+            } catch (Exception e) {
+                log.error("공휴일 동기화 실패: {}년 - {}", year, e.getMessage());
+            }
+        }
+    }
     
     /**
      * 공공데이터 포탈 API에서 공휴일 데이터 가져오기
