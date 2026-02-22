@@ -1079,6 +1079,47 @@
   background: var(--gray-50);
 }
 
+.cslt-modal-footer {
+  padding: 20px 32px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: var(--gray-50);
+}
+
+.cslt-btn-cancel {
+  padding: 10px 24px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  background: white;
+  color: var(--gray-700);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cslt-btn-cancel:hover {
+  background: var(--gray-100);
+}
+
+.cslt-btn-submit {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  background: var(--naver-green);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cslt-btn-submit:hover {
+  background: var(--naver-green-dark);
+}
+
 /* 폼 스타일 */
 .form-section {
   margin-bottom: 32px;
@@ -1497,6 +1538,11 @@
   .btn-secondary {
     width: 100%;
     justify-content: center;
+  }
+
+  .modal-footer .btn-primary,
+  .modal-footer .btn-secondary {
+    width: auto;
   }
 }
 /* 학생 선택 드롭다운 스타일 */

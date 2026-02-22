@@ -831,14 +831,14 @@ function Consultations() {
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => {
+              <div className="cslt-modal-footer">
+                <button type="button" className="cslt-btn-cancel" onClick={() => {
                   setShowCreateModal(false);
                   resetForm();
                 }}>
                   취소
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="cslt-btn-submit">
                   등록
                 </button>
               </div>
@@ -1002,11 +1002,11 @@ function Consultations() {
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowEditModal(false)}>
+              <div className="cslt-modal-footer">
+                <button type="button" className="cslt-btn-cancel" onClick={() => setShowEditModal(false)}>
                   취소
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="cslt-btn-submit">
                   수정
                 </button>
               </div>
