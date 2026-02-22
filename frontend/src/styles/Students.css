@@ -879,3 +879,42 @@
   padding: 0 4px;
 }
 .std-parent-selected button:hover { color: #ef4444; }
+
+/* ===== 학생 수정 모달 footer (std-edit-) ===== */
+.std-edit-footer {
+  padding: 20px 32px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+.std-edit-cancel {
+  padding: 10px 24px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.std-edit-cancel:hover {
+  background: #e5e7eb;
+}
+.std-edit-submit {
+  padding: 10px 24px;
+  background: #03C75A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.std-edit-submit:hover {
+  background: #02b351;
+}

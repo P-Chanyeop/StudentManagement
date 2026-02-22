@@ -32,7 +32,7 @@ api.interceptors.response.use(
     if (originalRequest.url?.includes('/auth/refresh')) {
       localStorage.clear();
       window.location.href = '/login';
-      return Promise.reject(error);
+      return new Promise(() => {}); // 리다이렉트 중 대기
     }
     
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -49,13 +49,14 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
         } catch (refreshError) {
-          // 리프레시 토큰도 만료됨
           localStorage.clear();
           window.location.href = '/login';
+          return new Promise(() => {});
         }
       } else {
         localStorage.clear();
         window.location.href = '/login';
+        return new Promise(() => {});
       }
     }
     return Promise.reject(error);

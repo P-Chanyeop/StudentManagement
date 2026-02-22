@@ -16,6 +16,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByStudentId(Long studentId);
 
+    List<Reservation> findByStudentIdAndReservationDate(Long studentId, LocalDate date);
+
     List<Reservation> findByStatus(ReservationStatus status);
 
     // 날짜/시간으로 예약 조회

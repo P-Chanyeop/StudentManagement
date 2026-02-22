@@ -939,11 +939,11 @@ function Students() {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowEditModal(false)}>
+            <div className="std-edit-footer">
+              <button className="std-edit-cancel" onClick={() => setShowEditModal(false)}>
                 취소
               </button>
-              <button className="btn-primary" onClick={handleUpdateStudent}>
+              <button className="std-edit-submit" onClick={handleUpdateStudent}>
                 수정
               </button>
             </div>
@@ -1043,13 +1043,13 @@ function Students() {
               )}
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
+            <div className="std-edit-footer">
+              <button className="std-edit-cancel" onClick={() => setShowDetailModal(false)}>
                 닫기
               </button>
               {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER' || profile?.role === 'PARENT') && (
                 <button
-                  className="btn-primary"
+                  className="std-edit-submit"
                   onClick={() => {
                     setShowDetailModal(false);
                     openEditModal(selectedStudent);

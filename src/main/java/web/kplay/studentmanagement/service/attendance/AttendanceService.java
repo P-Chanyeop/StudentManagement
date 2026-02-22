@@ -48,6 +48,7 @@ public class AttendanceService {
     private final StudentCourseExcelService studentCourseExcelService;
     private final AdditionalClassExcelService additionalClassExcelService;
     private final web.kplay.studentmanagement.repository.CourseRepository courseRepository;
+    private final web.kplay.studentmanagement.repository.ReservationRepository reservationRepository;
 
     /**
      * 출석 체크인 (부모님 핸드폰 뒷자리 4자리 검증 포함)
@@ -74,6 +75,12 @@ public class AttendanceService {
             course = activeEnrollments.get(0).getCourse();
         }
 
+        // 오늘 이미 결석 처리된 레코드가 있는지 확인
+        List<Attendance> todayRecords = attendanceRepository.findByStudentAndDate(student, now.toLocalDate());
+        Attendance existingAbsent = todayRecords.stream()
+                .filter(a -> a.getStatus() == AttendanceStatus.ABSENT && a.getCheckInTime() == null)
+                .findFirst().orElse(null);
+
         // Expected leave time auto calculated
         LocalTime expectedLeave;
         if (request.getExpectedLeaveTime() != null) {
@@ -82,30 +89,53 @@ public class AttendanceService {
             Integer courseDuration = course.getDurationMinutes();
             expectedLeave = now.toLocalTime().plusMinutes(courseDuration);
         } else {
-            expectedLeave = now.toLocalTime().plusHours(2); // 기본 2시간
+            expectedLeave = now.toLocalTime().plusHours(2);
         }
 
-        Attendance attendance = Attendance.builder()
-                .student(student)
-                .course(course)
-                .attendanceDate(now.toLocalDate())
-                .attendanceTime(now.toLocalTime())
-                .durationMinutes(course != null ? course.getDurationMinutes() : 120)
-                .status(AttendanceStatus.PRESENT)
-                .classCompleted(false)
-                .build();
+        // 예약 시간 기준 출석/지각 판단
+        AttendanceStatus checkInStatus = AttendanceStatus.PRESENT;
+        var reservations = reservationRepository.findByStudentIdAndReservationDate(student.getId(), now.toLocalDate());
+        if (!reservations.isEmpty()) {
+            LocalTime reservedTime = reservations.get(0).getReservationTime();
+            long minutesLate = java.time.Duration.between(reservedTime, now.toLocalTime()).toMinutes();
+            if (minutesLate > 10) {
+                checkInStatus = AttendanceStatus.LATE;
+            }
+        }
 
-        attendance.checkIn(now, expectedLeave);
+        Attendance attendance;
+        if (existingAbsent != null) {
+            // 자동 결석 처리 후 뒤늦게 온 경우 → 지각으로 변경
+            attendance = existingAbsent;
+            attendance.checkIn(now, expectedLeave);
+            attendance.updateStatus(AttendanceStatus.LATE, null);
+            log.info("결석→지각 변경: student={}", student.getStudentName());
+        } else {
+            // 새 출석 레코드 생성
+            attendance = Attendance.builder()
+                    .student(student)
+                    .course(course)
+                    .attendanceDate(now.toLocalDate())
+                    .attendanceTime(now.toLocalTime())
+                    .durationMinutes(course != null ? course.getDurationMinutes() : 120)
+                    .status(checkInStatus)
+                    .classCompleted(false)
+                    .build();
+            attendance.checkIn(now, expectedLeave);
+            if (checkInStatus == AttendanceStatus.LATE) {
+                attendance.updateStatus(AttendanceStatus.LATE, null);
+            }
+
+            // 새 레코드일 때만 수강권 1회 차감
+            if (!activeEnrollments.isEmpty()) {
+                Enrollment enrollment = activeEnrollments.get(0);
+                enrollment.useCount();
+                log.info("체크인 횟수 차감: student={}, remaining={}/{}", 
+                        student.getStudentName(), enrollment.getRemainingCount(), enrollment.getTotalCount());
+            }
+        }
 
         Attendance savedAttendance = attendanceRepository.save(attendance);
-        
-        // 체크인 시 수강권 1회 차감
-        if (!activeEnrollments.isEmpty()) {
-            Enrollment enrollment = activeEnrollments.get(0);
-            enrollment.useCount();
-            log.info("체크인 횟수 차감: student={}, remaining={}/{}", 
-                    student.getStudentName(), enrollment.getRemainingCount(), enrollment.getTotalCount());
-        }
         
         log.info("Attendance check-in: student={}, course={}, status={}, expected leave={}",
                 student.getStudentName(),
@@ -287,11 +317,29 @@ public class AttendanceService {
                 .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
                 .collect(Collectors.toList());
         
+        // 예약 시간 기준 출석/지각 판단
+        AttendanceStatus phoneCheckInStatus = AttendanceStatus.PRESENT;
+        var phoneReservations = reservationRepository.findByStudentIdAndReservationDate(student.getId(), today);
+        if (!phoneReservations.isEmpty()) {
+            LocalTime reservedTime = phoneReservations.get(0).getReservationTime();
+            long minutesLate = java.time.Duration.between(reservedTime, now.toLocalTime()).toMinutes();
+            if (minutesLate > 10) {
+                phoneCheckInStatus = AttendanceStatus.LATE;
+            }
+        }
+
         Attendance attendance;
         if (!existingAttendances.isEmpty()) {
             // 기존 레코드 업데이트
             attendance = existingAttendances.get(0);
+            boolean wasAbsent = attendance.getStatus() == AttendanceStatus.ABSENT && attendance.getCheckInTime() == null;
             attendance.checkIn(now, expectedLeave);
+            if (wasAbsent) {
+                attendance.updateStatus(AttendanceStatus.LATE, null);
+                log.info("결석→지각 변경: name={}", student.getStudentName());
+            } else if (phoneCheckInStatus == AttendanceStatus.LATE) {
+                attendance.updateStatus(AttendanceStatus.LATE, null);
+            }
             log.info("Existing attendance updated: name={}, expectedLeave={}", student.getStudentName(), expectedLeave);
         } else {
             // 새 레코드 생성
@@ -301,10 +349,13 @@ public class AttendanceService {
                     .attendanceDate(today)
                     .attendanceTime(now.toLocalTime())
                     .durationMinutes(course != null ? course.getDurationMinutes() : 120)
-                    .status(AttendanceStatus.PRESENT)
+                    .status(phoneCheckInStatus)
                     .classCompleted(false)
                     .build();
             attendance.checkIn(now, expectedLeave);
+            if (phoneCheckInStatus == AttendanceStatus.LATE) {
+                attendance.updateStatus(AttendanceStatus.LATE, null);
+            }
             log.info("New attendance created: name={}, expectedLeave={}", student.getStudentName(), expectedLeave);
         }
         

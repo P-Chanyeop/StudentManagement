@@ -46,6 +46,22 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
+  // 토큰 만료 체크 (JWT payload의 exp)
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp * 1000 < Date.now()) {
+      // 만료됨 - refresh 시도
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        localStorage.clear();
+        return <Navigate to="/login" replace />;
+      }
+    }
+  } catch {
+    localStorage.clear();
+    return <Navigate to="/login" replace />;
+  }
+
   return <Layout>{children}</Layout>;
 }
 
