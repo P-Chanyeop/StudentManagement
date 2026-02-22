@@ -49,8 +49,10 @@ public class AttendanceScheduler {
                 
                 Student student = attendance.getStudent();
                 if (student != null) {
-                    // 미출석 알림 발송
-                    automatedMessageService.sendNoShowNotification(student, attendance.getAttendanceTime());
+                    // 미출석 알림 발송 (네이버 예약 학생은 제외)
+                    if (attendance.getNaverBooking() == null) {
+                        automatedMessageService.sendNoShowNotification(student, attendance.getAttendanceTime());
+                    }
                     
                     // 횟수 차감
                     List<Enrollment> enrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
@@ -69,10 +71,9 @@ public class AttendanceScheduler {
                     log.info("No-show notification sent: student={}, time={}", 
                         student.getStudentName(), attendance.getAttendanceTime());
                 } else if (attendance.getNaverBooking() != null) {
-                    // 네이버 예약 학생 미출석 알림 발송
-                    automatedMessageService.sendNaverNoShowNotification(attendance.getNaverBooking(), attendance.getAttendanceTime());
+                    // 네이버 예약 학생 - 결석 문자 발송 안 함
                     attendance.markLateNotificationSent();
-                    log.info("No-show notification sent (Naver): student={}, time={}", 
+                    log.info("No-show (Naver, no message): student={}, time={}", 
                         attendance.getNaverBooking().getStudentName(), attendance.getAttendanceTime());
                 }
             }

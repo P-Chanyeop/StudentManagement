@@ -92,13 +92,15 @@ public class AttendanceService {
             expectedLeave = now.toLocalTime().plusHours(2);
         }
 
-        // 예약 시간 기준 출석/지각 판단
+        // 예약 시간 기준 출석/지각/결석 판단 (15분 출석, 30분 지각, 이후 결석)
         AttendanceStatus checkInStatus = AttendanceStatus.PRESENT;
         var reservations = reservationRepository.findByStudentIdAndReservationDate(student.getId(), now.toLocalDate());
         if (!reservations.isEmpty()) {
             LocalTime reservedTime = reservations.get(0).getReservationTime();
             long minutesLate = java.time.Duration.between(reservedTime, now.toLocalTime()).toMinutes();
-            if (minutesLate > 10) {
+            if (minutesLate > 30) {
+                checkInStatus = AttendanceStatus.ABSENT;
+            } else if (minutesLate > 15) {
                 checkInStatus = AttendanceStatus.LATE;
             }
         }
@@ -317,13 +319,15 @@ public class AttendanceService {
                 .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
                 .collect(Collectors.toList());
         
-        // 예약 시간 기준 출석/지각 판단
+        // 예약 시간 기준 출석/지각/결석 판단 (15분 출석, 30분 지각, 이후 결석)
         AttendanceStatus phoneCheckInStatus = AttendanceStatus.PRESENT;
         var phoneReservations = reservationRepository.findByStudentIdAndReservationDate(student.getId(), today);
         if (!phoneReservations.isEmpty()) {
             LocalTime reservedTime = phoneReservations.get(0).getReservationTime();
             long minutesLate = java.time.Duration.between(reservedTime, now.toLocalTime()).toMinutes();
-            if (minutesLate > 10) {
+            if (minutesLate > 30) {
+                phoneCheckInStatus = AttendanceStatus.ABSENT;
+            } else if (minutesLate > 15) {
                 phoneCheckInStatus = AttendanceStatus.LATE;
             }
         }

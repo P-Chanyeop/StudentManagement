@@ -164,8 +164,8 @@ function ParentReservation() {
         // 일요일, 공휴일 제외 모두 예약 가능 (토요일 포함)
         return dayOfWeek !== 0 && !isHoliday;
       case '레벨테스트':
-        // 평일(월-금, 공휴일 제외)만 예약 가능
-        return dayOfWeek >= 1 && dayOfWeek <= 5 && !isHoliday;
+        // 일요일, 공휴일 제외 모두 예약 가능 (토요일 포함)
+        return dayOfWeek !== 0 && !isHoliday;
       default:
         return true;
     }
