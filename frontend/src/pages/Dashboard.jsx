@@ -519,14 +519,16 @@ function Dashboard() {
                       <div className="item-content">
                         <div className="item-title">{attendance.studentName}</div>
                         <div className="item-subtitle">
-                          체크인: {formatTime(attendance.checkInTime)}
+                          등원: {formatTime(attendance.checkInTime)}
+                          {attendance.checkOutTime && ` / 하원: ${formatTime(attendance.checkOutTime)}`}
                         </div>
                       </div>
-                      <div className={`item-badge badge-${attendance.status.toLowerCase()}`}>
+                      <div className={`item-badge badge-${attendance.status.toLowerCase()}`} style={attendance.status === 'NOTYET' ? { backgroundColor: '#9e9e9e', color: '#fff' } : {}}>
                         {attendance.status === 'PRESENT' ? '출석' :
                          attendance.status === 'LATE' ? '지각' :
                          attendance.status === 'ABSENT' ? '결석' :
-                         attendance.status === 'EXCUSED' ? '사유결석' : attendance.status}
+                         attendance.status === 'EXCUSED' ? '사유결석' :
+                         attendance.status === 'NOTYET' ? '미출석' : attendance.status}
                       </div>
                     </div>
                   ))}

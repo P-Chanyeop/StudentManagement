@@ -13,7 +13,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -23,6 +25,7 @@ public class StudentCourseExcelService {
     private static final String EXCEL_FILENAME = "student-list.xlsx";
     
     private Map<String, String> studentCourseMap = new HashMap<>();
+    private Map<String, String> studentPhoneMap = new HashMap<>();
     private Map<String, Integer> courseDurationMap = new HashMap<>();
 
     public StudentCourseExcelService() {
@@ -73,6 +76,7 @@ public class StudentCourseExcelService {
         
         // 데이터 다시 로드
         studentCourseMap.clear();
+        studentPhoneMap.clear();
         loadExcelData();
         
         return studentCourseMap.size();
@@ -122,11 +126,22 @@ public class StudentCourseExcelService {
 
             Cell nameCell = row.getCell(0);
             Cell classCell = row.getCell(1);
+            Cell phoneCell = row.getCell(4); // 보호자1 휴대폰번호
 
             if (nameCell == null || classCell == null) continue;
 
             String studentName = nameCell.getStringCellValue().trim().replaceAll("\\s+", "");
             String classInfo = classCell.getStringCellValue().trim();
+
+            // 보호자 전화번호 읽기
+            String parentPhone = null;
+            if (phoneCell != null) {
+                parentPhone = getCellValueSafe(phoneCell);
+                if (parentPhone != null) {
+                    parentPhone = parentPhone.trim().replaceAll("[^0-9]", "");
+                    if (parentPhone.isEmpty()) parentPhone = null;
+                }
+            }
 
             // 선생님 제외
             if (classInfo.contains("선생님") || studentName.endsWith("T")) {
@@ -142,6 +157,9 @@ public class StudentCourseExcelService {
 
             if (courseName != null) {
                 studentCourseMap.put(studentName, courseName);
+                if (parentPhone != null) {
+                    studentPhoneMap.put(studentName, parentPhone);
+                }
                 loadCount++;
             }
         }
@@ -194,5 +212,28 @@ public class StudentCourseExcelService {
      */
     public Map<String, String> getAllStudents() {
         return new HashMap<>(studentCourseMap);
+    }
+
+    /**
+     * 학생 이름으로 보호자 전화번호 조회
+     */
+    public String getParentPhone(String studentName) {
+        if (studentPhoneMap.containsKey(studentName)) {
+            return studentPhoneMap.get(studentName);
+        }
+        return studentPhoneMap.entrySet().stream()
+                .filter(e -> e.getKey().contains(studentName) || studentName.contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * 전화번호 뒷4자리로 엑셀 학생 검색
+     */
+    public List<Map.Entry<String, String>> findByPhoneLast4(String phoneLast4) {
+        return studentPhoneMap.entrySet().stream()
+                .filter(e -> e.getValue().length() >= 4 && e.getValue().substring(e.getValue().length() - 4).equals(phoneLast4))
+                .collect(Collectors.toList());
     }
 }

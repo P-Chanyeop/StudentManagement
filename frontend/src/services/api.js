@@ -177,6 +177,8 @@ export const attendanceAPI = {
   toggleSpeakingClass: (attendanceId) =>
     api.put(`/attendances/${attendanceId}/speaking`),
   addManual: (data) => api.post('/attendances/manual', data),
+  checkInByAttendanceId: (attendanceId) => api.post(`/attendances/${attendanceId}/manual-check-in`),
+  updateTime: (id, data) => api.patch(`/attendances/${id}/time`, data),
 };
 
 // 선생님 출퇴근 API

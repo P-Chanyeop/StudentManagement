@@ -460,3 +460,51 @@
 .card-btn-checkout:hover:not(:disabled) {
   background: #f57c00;
 }
+
+/* 2페이지 상하 분할 */
+.page2-split {
+  flex-direction: column;
+  padding: 0;
+}
+
+.ci-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 30px;
+  overflow-y: auto;
+}
+
+.ci-half--in {
+  background: #e3f2fd;
+}
+
+.ci-half--out {
+  background: #fff3e0;
+}
+
+.ci-half__label {
+  font-size: 32px;
+  font-weight: 800;
+  text-align: center;
+  padding: 16px 0;
+  flex-shrink: 0;
+}
+
+.ci-half__label--in { color: #1565c0; }
+.ci-half__label--out { color: #e65100; }
+
+.ci-half__cards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.ci-half__empty {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  font-size: 15px;
+}

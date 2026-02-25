@@ -209,6 +209,40 @@ public class AutomatedMessageService {
     }
 
     /**
+     * 수동 추가 학생 등원 알림 발송
+     */
+    public void sendManualCheckInNotification(String studentName, String phone, LocalDateTime checkInTime, LocalTime expectedLeaveTime) {
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d %d:%02d 등원했습니다.\n\n감사합니다! :)",
+                studentName,
+                checkInTime.getMonthValue(), checkInTime.getDayOfMonth(),
+                checkInTime.getHour(), checkInTime.getMinute()
+        );
+        if (phone != null && !phone.isEmpty()) {
+            smsService.sendSms(phone, content);
+            log.info("수동 추가 학생 등원 알림 발송: 학생={}, 전화={}", studentName, phone);
+        }
+    }
+
+    /**
+     * 수동 추가 학생 하원 알림 발송
+     */
+    public void sendManualCheckOutNotification(String studentName, String phone, LocalDateTime checkOutTime) {
+        String content = String.format(
+                "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                "%s 학생 %d/%d %d:%02d 하원했습니다.\n\n감사합니다! :)",
+                studentName,
+                checkOutTime.getMonthValue(), checkOutTime.getDayOfMonth(),
+                checkOutTime.getHour(), checkOutTime.getMinute()
+        );
+        if (phone != null && !phone.isEmpty()) {
+            smsService.sendSms(phone, content);
+            log.info("수동 추가 학생 하원 알림 발송: 학생={}, 전화={}", studentName, phone);
+        }
+    }
+
+    /**
      * 네이버 예약 미출석 알림 발송 (15분 경과)
      */
     @Transactional

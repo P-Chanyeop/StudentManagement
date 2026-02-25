@@ -19,6 +19,7 @@ public class StudentSearchResponse {
     private String school;
     private String courseName;
     private boolean isNaverBooking;
+    private boolean isManualExcel;
     private Long naverBookingId;
     private Long attendanceId;
     private LocalDateTime checkInTime;

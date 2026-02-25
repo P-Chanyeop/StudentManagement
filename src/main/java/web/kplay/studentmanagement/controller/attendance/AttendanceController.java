@@ -222,6 +222,20 @@ public class AttendanceController {
     }
 
     /**
+     * 출석 시간 수정 (관리자용)
+     */
+    @PatchMapping("/{id}/time")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AttendanceResponse> updateTime(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String startTime = request.get("startTime");
+        String endTime = request.get("endTime");
+        AttendanceResponse response = attendanceService.updateClassTime(id, startTime, endTime);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * 사유 업데이트
      */
     @PatchMapping("/{id}/reason")
@@ -342,6 +356,15 @@ public class AttendanceController {
     @PostMapping("/{studentId}/check-in")
     public ResponseEntity<AttendanceResponse> checkInByStudentId(@PathVariable Long studentId) {
         AttendanceResponse response = attendanceService.checkInByStudentId(studentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 출석 ID로 체크인 (수동 추가 학생용)
+     */
+    @PostMapping("/{attendanceId}/manual-check-in")
+    public ResponseEntity<AttendanceResponse> checkInByAttendanceId(@PathVariable Long attendanceId) {
+        AttendanceResponse response = attendanceService.checkInByAttendanceId(attendanceId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

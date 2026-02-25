@@ -47,6 +47,9 @@ public class Attendance extends BaseEntity {
     @Column
     private String manualStudentName; // 수동 추가 시 학생 이름
 
+    @Column
+    private String manualParentPhone; // 수동 추가 시 보호자 전화번호
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AttendanceStatus status;
@@ -150,6 +153,16 @@ public class Attendance extends BaseEntity {
     // 예상 하원 시간 업데이트
     public void updateExpectedLeaveTime(LocalTime expectedLeaveTime) {
         this.expectedLeaveTime = expectedLeaveTime;
+    }
+
+    // 수업 시작 시간 수정
+    public void updateAttendanceTime(LocalTime attendanceTime) {
+        this.attendanceTime = attendanceTime;
+    }
+
+    // 수업 시간(분) 수정
+    public void updateDurationMinutes(int durationMinutes) {
+        this.durationMinutes = durationMinutes;
     }
 
     // 수업 완료 처리

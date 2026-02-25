@@ -45,6 +45,9 @@ const CheckIn = () => {
 
   const checkInMutation = useMutation({
     mutationFn: async (studentData) => {
+      if (studentData.isManualExcel && studentData.attendanceId) {
+        return axios.post(`/api/attendances/${studentData.attendanceId}/manual-check-in`);
+      }
       const isNaver = studentData.isNaverBooking || studentData.naverBooking;
       if (isNaver) {
         return axios.post(`/api/attendances/naver-booking/${studentData.naverBookingId}/check-in`);
@@ -154,27 +157,54 @@ const CheckIn = () => {
             </button>
           </div>
         </div>
-        <div className="checkin-right page2-right">
-          <div className="student-card-list">
-            {searchResults.map((result, index) => (
-              <div key={index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
-                <div className="student-card-info">
-                  <div className="student-card-name">{result.studentName}</div>
-                  <div className="student-card-class">{result.courseName || result.school || ''}</div>
+        <div className="checkin-right page2-right page2-split">
+          <div className="ci-half ci-half--in">
+            <div className="ci-half__label ci-half__label--in">🏫 학원 왔을때</div>
+            <div className="ci-half__cards">
+              {searchResults.filter(r => r.needsCheckIn).length === 0
+                ? <div className="ci-half__empty">등원 대상이 없습니다</div>
+                : searchResults.filter(r => r.needsCheckIn).map((result, index) => (
+                <div key={'in-' + index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
+                  <div className="student-card-info">
+                    <div className="student-card-name">{result.studentName}</div>
+                    <div className="student-card-class">{result.courseName || result.school || ''}</div>
+                  </div>
+                  <div className="student-card-actions">
+                    <button
+                      className="card-btn card-btn-checkin"
+                      onClick={() => handleAction(result)}
+                      disabled={isLoading}
+                    >
+                      {result.isTeacher ? '출근' : '등원'}
+                    </button>
+                  </div>
                 </div>
-                <div className="student-card-actions">
-                  <button
-                    className={`card-btn ${result.needsCheckIn ? 'card-btn-checkin' : 'card-btn-checkout'}`}
-                    onClick={() => handleAction(result)}
-                    disabled={isLoading}
-                  >
-                    {result.isTeacher
-                      ? (result.needsCheckIn ? '출근' : '퇴근')
-                      : (result.needsCheckIn ? '등원' : '하원')}
-                  </button>
+              ))}
+            </div>
+          </div>
+          <div className="ci-half ci-half--out">
+            <div className="ci-half__label ci-half__label--out">🏠 집에 갈때</div>
+            <div className="ci-half__cards">
+              {searchResults.filter(r => r.needsCheckOut).length === 0
+                ? <div className="ci-half__empty">하원 대상이 없습니다</div>
+                : searchResults.filter(r => r.needsCheckOut).map((result, index) => (
+                <div key={'out-' + index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
+                  <div className="student-card-info">
+                    <div className="student-card-name">{result.studentName}</div>
+                    <div className="student-card-class">{result.courseName || result.school || ''}</div>
+                  </div>
+                  <div className="student-card-actions">
+                    <button
+                      className="card-btn card-btn-checkout"
+                      onClick={() => handleAction(result)}
+                      disabled={isLoading}
+                    >
+                      {result.isTeacher ? '퇴근' : '하원'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

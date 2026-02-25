@@ -254,6 +254,36 @@ public class AttendanceService {
                     .build());
         }
         
+        // 3. 엑셀 학생 중 수동 추가된 출석 레코드 찾기 (위에서 이미 찾은 학생 제외)
+        var excelMatches = studentCourseExcelService.findByPhoneLast4(phoneLast4);
+        for (var entry : excelMatches) {
+            String excelName = entry.getKey();
+            // 이미 시스템 학생이나 네이버 예약으로 찾은 이름이면 스킵
+            boolean alreadyFound = results.stream().anyMatch(r -> 
+                r.getStudentName() != null && r.getStudentName().replaceAll("\\s+", "").equals(excelName));
+            if (alreadyFound) continue;
+            
+            // 오늘 수동 추가된 출석 레코드 찾기
+            List<Attendance> manualAttendances = attendanceRepository.findByDate(today).stream()
+                    .filter(a -> a.getStudent() == null && a.getNaverBooking() == null 
+                            && a.getManualStudentName() != null
+                            && a.getManualStudentName().trim().replaceAll("\\s+", "").equals(excelName))
+                    .collect(Collectors.toList());
+            Attendance manualAtt = manualAttendances.isEmpty() ? null : manualAttendances.get(0);
+            
+            String courseName = studentCourseExcelService.getCourseName(excelName);
+            results.add(StudentSearchResponse.builder()
+                    .studentName(excelName)
+                    .parentPhone(entry.getValue())
+                    .courseName(courseName)
+                    .isNaverBooking(false)
+                    .isManualExcel(true)
+                    .attendanceId(manualAtt != null ? manualAtt.getId() : null)
+                    .checkInTime(manualAtt != null ? manualAtt.getCheckInTime() : null)
+                    .checkOutTime(manualAtt != null ? manualAtt.getCheckOutTime() : null)
+                    .build());
+        }
+        
         if (results.isEmpty()) {
             throw new ResourceNotFoundException("전화번호 뒷자리 " + phoneLast4 + "로 등록된 학생이나 예약을 찾을 수 없습니다");
         }
@@ -458,6 +488,7 @@ public class AttendanceService {
                 .expectedLeaveTime(endTime)
                 .originalExpectedLeaveTime(endTime)
                 .manualStudentName("naver".equals(type) ? studentName : null)
+                .manualParentPhone("naver".equals(type) ? studentCourseExcelService.getParentPhone(studentName) : null)
                 .status(AttendanceStatus.NOTYET)
                 .classCompleted(false)
                 .build();
@@ -465,6 +496,40 @@ public class AttendanceService {
         Attendance saved = attendanceRepository.save(attendance);
         log.info("수동 출석 추가: type={}, name={}, date={}, time={}", type, studentName, date, startTime);
         return toResponse(saved);
+    }
+
+    /**
+     * 출석 ID로 체크인 (수동 추가 학생용)
+     */
+    @Transactional
+    public AttendanceResponse checkInByAttendanceId(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+
+        if (attendance.getCheckInTime() != null) {
+            throw new IllegalStateException("이미 출석 체크가 완료되었습니다");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime expectedLeave = null;
+        if (attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0) {
+            expectedLeave = now.toLocalTime().plusMinutes(attendance.getDurationMinutes());
+        }
+
+        attendance.checkIn(now, expectedLeave);
+        log.info("Manual attendance check-in: name={}", attendance.getManualStudentName());
+
+        // 문자 발송
+        if (attendance.getManualParentPhone() != null) {
+            try {
+                automatedMessageService.sendManualCheckInNotification(
+                        attendance.getManualStudentName(), attendance.getManualParentPhone(), now, expectedLeave);
+            } catch (Exception e) {
+                log.error("수동 추가 학생 등원 알림 문자 발송 실패: {}", e.getMessage());
+            }
+        }
+
+        return toResponse(attendance);
     }
 
     @Transactional
@@ -484,6 +549,13 @@ public class AttendanceService {
                 automatedMessageService.sendNaverCheckOutNotification(attendance.getNaverBooking(), now);
             } catch (Exception e) {
                 log.error("네이버 예약 하원 알림 문자 발송 실패: {}", e.getMessage());
+            }
+        } else if (attendance.getManualParentPhone() != null) {
+            try {
+                automatedMessageService.sendManualCheckOutNotification(
+                        attendance.getManualStudentName(), attendance.getManualParentPhone(), now);
+            } catch (Exception e) {
+                log.error("수동 추가 학생 하원 알림 문자 발송 실패: {}", e.getMessage());
             }
         }
 
@@ -756,6 +828,30 @@ public class AttendanceService {
     }
 
     /**
+     * 수업 시작/종료 시간 수정 (관리자용)
+     */
+    @Transactional
+    public AttendanceResponse updateClassTime(Long attendanceId, String startTimeStr, String endTimeStr) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+
+        if (startTimeStr != null && !startTimeStr.isEmpty()) {
+            LocalTime startTime = LocalTime.parse(startTimeStr);
+            attendance.updateAttendanceTime(startTime);
+        }
+        if (endTimeStr != null && !endTimeStr.isEmpty()) {
+            LocalTime endTime = LocalTime.parse(endTimeStr);
+            LocalTime startTime = attendance.getAttendanceTime();
+            int duration = (int) java.time.Duration.between(startTime, endTime).toMinutes();
+            attendance.updateDurationMinutes(duration);
+        }
+
+        log.info("Class time updated: student={}, start={}, end={}",
+                getStudentName(attendance), startTimeStr, endTimeStr);
+        return toResponse(attendance);
+    }
+
+    /**
      * 학부모용 자녀 출석 조회
      */
     @Transactional(readOnly = true)
@@ -859,7 +955,7 @@ public class AttendanceService {
         }
         
         String rawPhone = isNaver ? attendance.getNaverBooking().getPhone() 
-            : (student != null ? student.getParentPhone() : null);
+            : (student != null ? student.getParentPhone() : attendance.getManualParentPhone());
         String maskedPhone = maskPhone(rawPhone);
         
         return AttendanceResponse.builder()

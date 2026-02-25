@@ -25,6 +25,11 @@ function Attendance() {
 
   // 행 추가 모달 상태
   const [showAddModal, setShowAddModal] = useState(false);
+  // 학생 상세 모달 상태
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailAttendance, setDetailAttendance] = useState(null);
+  const [editCheckInTime, setEditCheckInTime] = useState('');
+  const [editCheckOutTime, setEditCheckOutTime] = useState('');
   const [showTeacherRegModal, setShowTeacherRegModal] = useState(false);
   const [teacherRegForm, setTeacherRegForm] = useState({ username: '', password: '', passwordConfirm: '', name: '', phoneNumber: '' });
   const [addType, setAddType] = useState('naver'); // 'naver' or 'system'
@@ -158,6 +163,18 @@ function Attendance() {
       setTeacherRegForm({ username: '', password: '', passwordConfirm: '', name: '', phoneNumber: '' });
     },
     onError: (err) => alert(err.response?.data?.message || '등록 실패'),
+  });
+
+  // 시간 수정 mutation
+  const updateTimeMutation = useMutation({
+    mutationFn: ({ attendanceId, startTime, endTime }) =>
+      attendanceAPI.updateTime(attendanceId, { startTime, endTime }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances', selectedDate]);
+      alert('시간이 수정되었습니다.');
+      setShowDetailModal(false);
+    },
+    onError: (error) => alert(error.response?.data?.message || '시간 수정 실패'),
   });
 
   // 수동 출석 추가 mutation
@@ -692,6 +709,13 @@ function Attendance() {
                 <tr 
                   key={attendance.id || `attendance-${index}`}
                   className={`attendance-row ${getAttendanceRowClass(attendance)}`}
+                  onClick={() => {
+                    setDetailAttendance(attendance);
+                    setEditCheckInTime(attendance.startTime || '');
+                    setEditCheckOutTime(attendance.endTime || '');
+                    setShowDetailModal(true);
+                  }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <td className="student-name-td">
                     <div className="student-info">
@@ -737,7 +761,7 @@ function Attendance() {
                   <td className="class-complete">
                     {attendance.checkOutTime ? formatTime(attendance.checkOutTime) : '-'}
                   </td>
-                  <td className="dc-check">
+                  <td className="dc-check" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       placeholder="D/C"
@@ -747,7 +771,7 @@ function Attendance() {
                       onBlur={(e) => handleDcCheckUpdate(attendance.id, e.target.value)}
                     />
                   </td>
-                  <td className="wr-check">
+                  <td className="wr-check" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       placeholder="WR"
@@ -757,7 +781,7 @@ function Attendance() {
                       onBlur={(e) => handleWrCheckUpdate(attendance.id, e.target.value)}
                     />
                   </td>
-                  <td className="notes">
+                  <td className="notes" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="text"
                       placeholder="결석/지각 사유 입력..."
@@ -864,6 +888,75 @@ function Attendance() {
                 disabled={checkInMutation.isPending || !selectedStudent}
               >
                 {checkInMutation.isPending ? '처리중...' : '출석 체크'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 학생 상세 모달 */}
+      {showDetailModal && detailAttendance && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h3>{detailAttendance.studentName} 상세</h3>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div><strong>반:</strong> {detailAttendance.courseName || '-'}</div>
+                <div><strong>수업시간:</strong> {formatTime(detailAttendance.startTime)} - {formatTime(detailAttendance.endTime)}</div>
+                <div><strong>상태:</strong> {getAttendanceStatusText(detailAttendance)}</div>
+                <div><strong>하원 예정:</strong> {detailAttendance.expectedLeaveTime ? formatTime(detailAttendance.expectedLeaveTime) : '-'}</div>
+                <div><strong>등원:</strong> {detailAttendance.checkInTime ? formatTime(detailAttendance.checkInTime) : '-'}</div>
+                <div><strong>하원:</strong> {detailAttendance.checkOutTime ? formatTime(detailAttendance.checkOutTime) : '-'}</div>
+
+                <div className="form-group">
+                  <label><strong>수업 시작 시간</strong></label>
+                  <input
+                    type="time"
+                    value={editCheckInTime}
+                    onChange={(e) => setEditCheckInTime(e.target.value)}
+                    className="phone-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label><strong>수업 종료 시간</strong></label>
+                  <input
+                    type="time"
+                    value={editCheckOutTime}
+                    onChange={(e) => setEditCheckOutTime(e.target.value)}
+                    className="phone-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label><strong>비고 (사유)</strong></label>
+                  <textarea
+                    defaultValue={detailAttendance.reason || ''}
+                    onBlur={(e) => handleReasonBlur(detailAttendance.id, e.target.value)}
+                    placeholder="결석/지각 사유 입력..."
+                    style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>닫기</button>
+              <button
+                className="btn btn-primary"
+                disabled={updateTimeMutation.isPending}
+                onClick={() => {
+                  updateTimeMutation.mutate({
+                    attendanceId: detailAttendance.id,
+                    startTime: editCheckInTime || null,
+                    endTime: editCheckOutTime || null,
+                  });
+                }}
+              >
+                {updateTimeMutation.isPending ? '저장중...' : '시간 저장'}
               </button>
             </div>
           </div>

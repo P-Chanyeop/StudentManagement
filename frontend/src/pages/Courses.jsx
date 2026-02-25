@@ -142,7 +142,7 @@ function Courses() {
       course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.level.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  });
+  }).sort((a, b) => a.courseName.localeCompare(b.courseName, 'ko'));
 
   // 반 이름 배지
   const getClassBadge = (className) => {
