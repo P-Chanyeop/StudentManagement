@@ -19,4 +19,5 @@ public class BlockedTimeSlotRequest {
     private DayOfWeek dayOfWeek;      // WEEKLY
     private LocalTime blockTime;
     private String reason;
+    private String targetType;
 }

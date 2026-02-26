@@ -355,8 +355,9 @@ public class ReservationService {
     }
 
     private List<String> getUnavailableTimes(LocalDate date, String consultationType) {
-        // 1. 차단된 시간
-        var blocks = blockedTimeSlotRepository.findActiveBlocksForDate(date, date.getDayOfWeek());
+        // 1. 차단된 시간 (consultationType에 따라 targetType 필터)
+        String targetType = "상담".equals(consultationType) ? "CONSULTATION" : "CLASS";
+        var blocks = blockedTimeSlotRepository.findActiveBlocksForDateAndType(date, date.getDayOfWeek(), targetType);
         java.util.Set<String> unavailable = blocks.stream()
                 .map(b -> b.getBlockTime().toString().substring(0, 5))
                 .collect(java.util.stream.Collectors.toCollection(java.util.HashSet::new));
@@ -387,8 +388,9 @@ public class ReservationService {
     public List<java.util.Map<String, Object>> getTimeSlotStatus(LocalDate date, String consultationType) {
         String[] slots = {"09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"};
 
-        // 차단된 시간
-        var blocks = blockedTimeSlotRepository.findActiveBlocksForDate(date, date.getDayOfWeek());
+        // 차단된 시간 (consultationType에 따라 targetType 필터)
+        String targetType = "상담".equals(consultationType) ? "CONSULTATION" : "CLASS";
+        var blocks = blockedTimeSlotRepository.findActiveBlocksForDateAndType(date, date.getDayOfWeek(), targetType);
         java.util.Set<String> blockedTimes = blocks.stream()
                 .map(b -> b.getBlockTime().toString().substring(0, 5))
                 .collect(java.util.stream.Collectors.toSet());

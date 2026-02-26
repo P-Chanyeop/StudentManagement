@@ -21,6 +21,7 @@ public class BlockedTimeSlotResponse {
     private LocalTime blockTime;
     private String reason;
     private Boolean isActive;
+    private String targetType;
 
     public static BlockedTimeSlotResponse from(BlockedTimeSlot entity) {
         return BlockedTimeSlotResponse.builder()
@@ -33,6 +34,7 @@ public class BlockedTimeSlotResponse {
                 .blockTime(entity.getBlockTime())
                 .reason(entity.getReason())
                 .isActive(entity.getIsActive())
+                .targetType(entity.getTargetType())
                 .build();
     }
 }

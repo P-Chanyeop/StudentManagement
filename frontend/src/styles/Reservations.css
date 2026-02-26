@@ -418,6 +418,52 @@
   font-weight: 600;
 }
 
+/* 상담 상세 모달 */
+.consult-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.consult-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.consult-detail-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+
+.consult-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.consult-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.consult-detail-memo {
+  background: var(--gray-50);
+  padding: 16px;
+  border-radius: 8px;
+  line-height: 1.7;
+  font-size: 14px;
+  color: var(--gray-800);
+  white-space: pre-wrap;
+  min-height: 80px;
+}
+
 /* 예약 액션 */
 .reservation-actions {
   display: flex;

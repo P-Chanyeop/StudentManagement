@@ -39,6 +39,7 @@ public class BlockedTimeSlotController {
                 .dayOfWeek(req.getDayOfWeek())
                 .blockTime(req.getBlockTime())
                 .reason(req.getReason())
+                .targetType(req.getTargetType() != null ? req.getTargetType() : "CLASS")
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BlockedTimeSlotResponse.from(repository.save(entity)));

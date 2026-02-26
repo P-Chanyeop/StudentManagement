@@ -18,5 +18,11 @@ public interface BlockedTimeSlotRepository extends JpaRepository<BlockedTimeSlot
            "(b.blockType = 'WEEKLY' AND b.dayOfWeek = :dayOfWeek))")
     List<BlockedTimeSlot> findActiveBlocksForDate(@Param("date") LocalDate date, @Param("dayOfWeek") DayOfWeek dayOfWeek);
 
+    @Query("SELECT b FROM BlockedTimeSlot b WHERE b.isActive = true AND b.targetType = :targetType AND (" +
+           "(b.blockType = 'SINGLE' AND b.blockDate = :date) OR " +
+           "(b.blockType = 'RANGE' AND b.startDate <= :date AND b.endDate >= :date) OR " +
+           "(b.blockType = 'WEEKLY' AND b.dayOfWeek = :dayOfWeek))")
+    List<BlockedTimeSlot> findActiveBlocksForDateAndType(@Param("date") LocalDate date, @Param("dayOfWeek") DayOfWeek dayOfWeek, @Param("targetType") String targetType);
+
     List<BlockedTimeSlot> findByIsActiveTrue();
 }

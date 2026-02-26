@@ -51,6 +51,16 @@ function ConsultationReservation() {
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
+  // 선택된 날짜의 시간대 상태 조회
+  const { data: timeSlotStatus = [] } = useQuery({
+    queryKey: ['consultationTimeSlots', formData.consultationDate],
+    queryFn: async () => {
+      const response = await reservationAPI.getTimeSlotStatus(formData.consultationDate, '상담');
+      return response.data;
+    },
+    enabled: !!formData.consultationDate,
+  });
+
   // 상담 예약 생성 (reservations 테이블에 저장)
   const createConsultation = useMutation({
     mutationFn: (data) => {
@@ -428,15 +438,17 @@ function ConsultationReservation() {
                       const hour = (i + 9).toString().padStart(2, '0');
                       const time = `${hour}:00`;
                       
-                      // 오늘 날짜이고 과거 시간이면 비활성화
                       const now = new Date();
                       const today = getLocalDateString(now);
                       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
                       const isPastTime = formData.consultationDate === today && time < currentTime;
+
+                      const slotInfo = timeSlotStatus.find(s => s.time === time);
+                      const isBlocked = slotInfo?.status === 'BLOCKED' || slotInfo?.status === 'FULL';
                       
                       return (
-                        <option key={time} value={time} disabled={isPastTime}>
-                          {time} {isPastTime ? '(지난 시간)' : ''}
+                        <option key={time} value={time} disabled={isPastTime || isBlocked}>
+                          {time} {isPastTime ? '(지난 시간)' : isBlocked ? '(예약 불가)' : ''}
                         </option>
                       );
                     })}

@@ -43,6 +43,10 @@ public class BlockedTimeSlot extends BaseEntity {
     @Column(length = 200)
     private String reason;
 
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String targetType = "CLASS"; // CLASS, CONSULTATION
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean isActive = true;

@@ -17,11 +17,13 @@ function Reservations() {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [blockForm, setBlockForm] = useState({
     blockType: 'SINGLE', blockDate: '', startDate: '', endDate: '',
-    dayOfWeek: '', blockTime: '', reason: ''
+    dayOfWeek: '', blockTime: '', reason: '', targetType: 'CLASS'
   });
+  const [blockTab, setBlockTab] = useState('CLASS');
   const [naverBookings, setNaverBookings] = useState([]);
   const [showAllNaverBookings, setShowAllNaverBookings] = useState(false);
   const [showAllSystemReservations, setShowAllSystemReservations] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [newReservation, setNewReservation] = useState({
     studentId: '',
@@ -191,8 +193,8 @@ function Reservations() {
     mutationFn: (data) => blockedTimeSlotAPI.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries(['blockedTimeSlots']);
-      setShowBlockModal(false);
-      setBlockForm({ blockType: 'SINGLE', blockDate: '', startDate: '', endDate: '', dayOfWeek: '', blockTime: '', reason: '' });
+      alert('차단이 추가되었습니다.');
+      setBlockForm(f => ({ ...f, blockTime: '', reason: '' }));
     },
     onError: (error) => alert(`차단 실패: ${error.response?.data?.message || '오류'}`),
   });
@@ -651,6 +653,12 @@ function Reservations() {
                     </div>
 
                     <div className="reservation-actions">
+                      {/* 상담 예약 상세보기 */}
+                      {reservation.consultationType === '상담' && reservation.memo && (
+                        <button className="btn-secondary" onClick={() => setSelectedConsultation(reservation)}>
+                          <i className="fas fa-eye"></i> 상세보기
+                        </button>
+                      )}
                       {/* 관리자/선생님 전용 액션 */}
                       {!isParent && (
                         <>
@@ -983,6 +991,32 @@ function Reservations() {
         </div>
       )}
 
+      {/* 상담 예약 상세 모달 */}
+      {selectedConsultation && (
+        <div className="modal-overlay" onClick={() => setSelectedConsultation(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px'}}>
+            <div className="modal-header">
+              <h2><i className="fas fa-comments"></i> 상담 예약 상세</h2>
+              <button className="close-button" onClick={() => setSelectedConsultation(null)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="consult-detail-grid">
+                <div className="consult-detail-item"><span className="consult-detail-label">학생명</span><span className="consult-detail-value">{selectedConsultation.student?.name || selectedConsultation.studentName}</span></div>
+                <div className="consult-detail-item"><span className="consult-detail-label">상태</span><span className="consult-detail-value">{({PENDING:'대기', CONFIRMED:'확정', CANCELLED:'취소', COMPLETED:'완료', NO_SHOW:'노쇼'})[selectedConsultation.status]}</span></div>
+                <div className="consult-detail-item"><span className="consult-detail-label">날짜</span><span className="consult-detail-value">{selectedConsultation.reservationDate}</span></div>
+                <div className="consult-detail-item"><span className="consult-detail-label">시간</span><span className="consult-detail-value">{selectedConsultation.reservationTime}</span></div>
+              </div>
+              <div className="consult-detail-content">
+                <span className="consult-detail-label">상담 내용</span>
+                <div className="consult-detail-memo">{selectedConsultation.memo}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 네이버 예약 상세 모달 */}
       {showNaverDetailModal && (
         <div className="modal-overlay" onClick={() => setShowNaverDetailModal(false)}>
@@ -1051,6 +1085,15 @@ function Reservations() {
               <button className="modal-close" onClick={() => setShowBlockModal(false)}>×</button>
             </div>
             <div className="modal-body">
+              {/* 탭 */}
+              <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '2px solid #eee' }}>
+                {[['CLASS','수업'], ['CONSULTATION','상담']].map(([key, label]) => (
+                  <button key={key} type="button"
+                    style={{ flex: 1, padding: '10px 0', border: 'none', borderBottom: blockTab === key ? '2px solid #03C75A' : '2px solid transparent', background: 'none', fontWeight: blockTab === key ? 700 : 400, color: blockTab === key ? '#03C75A' : '#999', fontSize: 15, cursor: 'pointer', marginBottom: -2 }}
+                    onClick={() => { setBlockTab(key); setBlockForm(f => ({ ...f, targetType: key })); }}
+                  >{label}</button>
+                ))}
+              </div>
               {/* 새 차단 추가 */}
               <div style={{ marginBottom: 24, padding: 16, background: '#f9f9f9', borderRadius: 8 }}>
                 <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>새 차단 추가</h3>
@@ -1106,6 +1149,16 @@ function Reservations() {
                   if (blockForm.blockType === 'SINGLE' && !blockForm.blockDate) return alert('날짜를 선택해주세요');
                   if (blockForm.blockType === 'RANGE' && (!blockForm.startDate || !blockForm.endDate)) return alert('기간을 선택해주세요');
                   if (blockForm.blockType === 'WEEKLY' && !blockForm.dayOfWeek) return alert('요일을 선택해주세요');
+                  // 중복 체크
+                  const dup = blockedSlots.filter(s => (s.targetType || 'CLASS') === blockTab).some(s => {
+                    if (s.blockTime?.substring(0,5) !== blockForm.blockTime) return false;
+                    if (s.blockType !== blockForm.blockType) return false;
+                    if (blockForm.blockType === 'SINGLE') return s.blockDate === blockForm.blockDate;
+                    if (blockForm.blockType === 'WEEKLY') return s.dayOfWeek === blockForm.dayOfWeek;
+                    if (blockForm.blockType === 'RANGE') return s.startDate === blockForm.startDate && s.endDate === blockForm.endDate;
+                    return false;
+                  });
+                  if (dup) return alert('이미 동일한 차단이 등록되어 있습니다.');
                   createBlockMutation.mutate(blockForm);
                 }} style={{ padding: '8px 20px', background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>
                   차단 추가
@@ -1113,12 +1166,12 @@ function Reservations() {
               </div>
 
               {/* 차단 목록 */}
-              <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>현재 차단 목록 ({blockedSlots.length}건)</h3>
-              {blockedSlots.length === 0 ? (
+              <h3 style={{ margin: '0 0 12px', fontSize: 15 }}>현재 차단 목록 ({blockedSlots.filter(s => (s.targetType || 'CLASS') === blockTab).length}건)</h3>
+              {blockedSlots.filter(s => (s.targetType || 'CLASS') === blockTab).length === 0 ? (
                 <p style={{ color: '#999', textAlign: 'center', padding: 20 }}>차단된 시간이 없습니다</p>
               ) : (
                 <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-                  {blockedSlots.map(slot => (
+                  {blockedSlots.filter(s => (s.targetType || 'CLASS') === blockTab).map(slot => (
                     <div key={slot.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderBottom: '1px solid #f0f0f0' }}>
                       <div>
                         <span style={{ fontWeight: 600, marginRight: 8 }}>{slot.blockTime}</span>

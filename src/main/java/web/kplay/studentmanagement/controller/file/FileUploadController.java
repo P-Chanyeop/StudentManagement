@@ -62,7 +62,7 @@ public class FileUploadController {
         log.info("Multiple recording files upload request: {} files", files.length);
 
         java.util.List<Map<String, String>> uploadedFiles = new java.util.ArrayList<>();
-        
+
         for (MultipartFile file : files) {
             String filePath = fileStorageService.storeFile(file, "audio");
             
