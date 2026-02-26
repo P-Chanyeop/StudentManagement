@@ -142,13 +142,15 @@ function ConsultationReservation() {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const isPast = date < today;
+      const isSunday = date.getDay() === 0;
       const isSelected = formData.consultationDate === `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isDisabled = isPast || isSunday;
       
       days.push(
         <div
           key={day}
-          className={`calendar-day ${isPast ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
-          onClick={() => !isPast && handleDateSelect(year, month, day)}
+          className={`calendar-day ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isSunday ? 'sunday' : ''}`}
+          onClick={() => !isDisabled && handleDateSelect(year, month, day)}
         >
           {day}
         </div>

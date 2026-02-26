@@ -99,6 +99,8 @@ public class ReservationService {
                 
                 // 수강권 횟수 차감
                 enrollment.useCount();
+            } else if ("재원생수업".equals(request.getConsultationType())) {
+                throw new BusinessException("활성 수강권이 없습니다. 수강권 등록 후 예약해주세요.");
             }
         }
 
