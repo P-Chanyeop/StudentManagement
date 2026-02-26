@@ -75,6 +75,9 @@ export const authAPI = {
   updateProfile: (data) => api.put('/auth/profile', data),
   checkUsername: (username) => api.get(`/auth/check-username?username=${username}`),
   getParents: () => api.get('/auth/parents'),
+  passwordResetSendCode: (data) => api.post('/auth/password-reset/send-code', data),
+  passwordResetVerifyCode: (data) => api.post('/auth/password-reset/verify-code', data),
+  passwordReset: (data) => api.post('/auth/password-reset/reset', data),
 };
 
 // 학생 API

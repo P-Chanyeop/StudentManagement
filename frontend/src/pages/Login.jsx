@@ -99,6 +99,9 @@ function Login() {
         </form>
 
         <div className="login-links">
+          <Link to="/forgot-password" className="register-link" style={{ marginRight: 16 }}>
+            비밀번호 찾기
+          </Link>
           <Link to="/register" className="register-link">
             회원가입
           </Link>

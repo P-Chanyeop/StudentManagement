@@ -196,3 +196,27 @@
   color: #02b350;
   text-decoration: underline;
 }
+
+/* 비밀번호 찾기 - 재발송 버튼 */
+.resend-button {
+  margin-top: 8px;
+  padding: 10px;
+  background: white;
+  color: #03c75a;
+  border: 1.5px solid #03c75a;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.resend-button:hover:not(:disabled) {
+  background: #f0fff4;
+}
+
+.resend-button:disabled {
+  color: #a0aec0;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+}
