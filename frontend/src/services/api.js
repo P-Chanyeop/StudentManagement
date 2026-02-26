@@ -377,4 +377,12 @@ export const makeupClassAPI = {
   cancel: (id) => api.patch(`/makeup-classes/${id}/cancel`),
 };
 
+// 알림 API
+export const notificationAPI = {
+  getAll: () => api.get('/notifications'),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+  dismiss: (id) => api.patch(`/notifications/${id}/dismiss`),
+};
+
 export default api;

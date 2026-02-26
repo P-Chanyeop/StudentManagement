@@ -27,7 +27,7 @@ function Consultations() {
     studentId: '',
     title: '',
     content: '',
-    consultationType: '재원생상담',
+    consultationType: '재원생수업',
     actionItems: '',
     nextConsultationDate: '',
   });
@@ -134,7 +134,7 @@ function Consultations() {
       studentId: '',
       title: '',
       content: '',
-      consultationType: '재원생상담',
+      consultationType: '재원생수업',
       actionItems: '',
       nextConsultationDate: '',
     });

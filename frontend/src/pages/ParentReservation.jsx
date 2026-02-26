@@ -160,7 +160,7 @@ function ParentReservation() {
     const isHoliday = holidays[year] && holidays[year][dateString];
 
     switch(consultationType) {
-      case '재원생상담':
+      case '재원생수업':
         // 일요일, 공휴일 제외 모두 예약 가능 (토요일 포함)
         return dayOfWeek !== 0 && !isHoliday;
       case '레벨테스트':
@@ -197,7 +197,7 @@ function ParentReservation() {
     }
     
     // 재원생 예약(영어 수업)이 아니면 원래 로직 사용
-    if (formData.consultationType !== '재원생상담') {
+    if (formData.consultationType !== '재원생수업') {
       return true; // 레벨테스트 등은 제한 없음
     }
     
@@ -228,7 +228,7 @@ function ParentReservation() {
     today.setHours(0, 0, 0, 0);
     
     // 재원생 상담의 경우 특별한 날짜 제한 적용
-    if (formData.consultationType === '재원생상담') {
+    if (formData.consultationType === '재원생수업') {
       const now = new Date();
       const currentHour = now.getHours();
       
@@ -563,7 +563,7 @@ function ParentReservation() {
   // 상담 유형별 안내 문구
   const getConsultationInfo = (type) => {
     switch(type) {
-      case '재원생상담':
+      case '재원생수업':
         return {
           title: "'재원생' 수업 예약 시스템입니다. 메모란에 '아이이름 정목초' 형태로 예약 부탁드립니다.",
           content: `예약 시 확인해 주세요
@@ -615,7 +615,7 @@ function ParentReservation() {
 
   const consultationTypes = [
     { value: '레벨테스트', label: '레벨테스트' },
-    { value: '재원생상담', label: '재원생 예약 시스템' },
+    { value: '재원생수업', label: '재원생 예약 시스템' },
   ];
 
   const timeSlots = [

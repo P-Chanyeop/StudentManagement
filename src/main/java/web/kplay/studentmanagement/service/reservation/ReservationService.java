@@ -46,6 +46,7 @@ public class ReservationService {
     private final AttendanceRepository attendanceRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
     private final web.kplay.studentmanagement.repository.BlockedTimeSlotRepository blockedTimeSlotRepository;
+    private final web.kplay.studentmanagement.service.notification.AdminNotificationService adminNotificationService;
 
     private static final int MAX_RESERVATIONS_PER_SLOT = 9;
 
@@ -55,7 +56,7 @@ public class ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
         // 날짜/시간 검증
-        if ("재원생상담".equals(request.getConsultationType())) {
+        if ("재원생수업".equals(request.getConsultationType())) {
             validateReservationDateTime(request.getReservationDate());
         }
 
@@ -133,6 +134,25 @@ public class ReservationService {
 
         // 예약 생성 시 출석 레코드도 자동 생성
         createAttendanceRecord(savedReservation);
+
+        // 관리자 알림 생성
+        try {
+            boolean isClass = "재원생수업".equals(request.getConsultationType()) || "레벨테스트".equals(request.getConsultationType());
+            String type = isClass ? "RESERVATION" : "CONSULTATION";
+            String title = isClass ? "새로운 수업 예약" : "새로운 상담 예약";
+            String label = isClass ? "수업" : "상담";
+            LocalTime time = request.getReservationTime();
+            String content = String.format("%s님이 %d년 %02d월 %02d일 %02d시 %02d분으로 %s 예약하였습니다.",
+                    student.getStudentName(),
+                    request.getReservationDate().getYear(),
+                    request.getReservationDate().getMonthValue(),
+                    request.getReservationDate().getDayOfMonth(),
+                    time.getHour(), time.getMinute(),
+                    label);
+            adminNotificationService.createNotification(type, title, content, savedReservation.getId());
+        } catch (Exception e) {
+            log.error("관리자 알림 생성 실패: {}", e.getMessage());
+        }
 
         log.info("예약 생성: 학생={}, 날짜={}, 시간={}",
                 student.getStudentName(),

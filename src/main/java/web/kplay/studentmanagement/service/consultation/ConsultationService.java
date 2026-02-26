@@ -29,6 +29,7 @@ public class ConsultationService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
+    private final web.kplay.studentmanagement.service.notification.AdminNotificationService adminNotificationService;
 
     @Transactional
     public ConsultationResponse createConsultation(ConsultationRequest request) {
@@ -55,6 +56,20 @@ public class ConsultationService {
         Consultation savedConsultation = consultationRepository.save(consultation);
         log.info("Consultation record saved: student={}, consultant={}, date={}, time={}",
                 student.getStudentName(), consultant.getName(), request.getConsultationDate(), request.getConsultationTime());
+
+        // 관리자 알림 생성
+        try {
+            String time = request.getConsultationTime() != null ? request.getConsultationTime().toString().substring(0, 5) : "";
+            String content = String.format("%s님이 %d년 %02d월 %02d일 %s으로 상담 예약하였습니다.",
+                    student.getStudentName(),
+                    request.getConsultationDate().getYear(),
+                    request.getConsultationDate().getMonthValue(),
+                    request.getConsultationDate().getDayOfMonth(),
+                    time);
+            adminNotificationService.createNotification("CONSULTATION", "새로운 상담 예약", content, savedConsultation.getId());
+        } catch (Exception e) {
+            log.error("관리자 알림 생성 실패: {}", e.getMessage());
+        }
 
         // 학부모에게 상담 예약 확인 문자 발송
         try {

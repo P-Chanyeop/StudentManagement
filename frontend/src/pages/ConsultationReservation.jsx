@@ -39,7 +39,7 @@ function ConsultationReservation() {
     // 상담 정보
     consultationDate: '',
     consultationTime: '',
-    consultationType: '학생상담',
+    consultationType: '상담',
     content: '',
     memo: ''
   });
@@ -67,7 +67,7 @@ function ConsultationReservation() {
         selectedStudentId: '',
         consultationDate: '',
         consultationTime: '',
-        consultationType: '재원생상담',
+        consultationType: '상담',
         content: '',
         memo: ''
       });
@@ -278,7 +278,7 @@ function ConsultationReservation() {
   };
 
   const consultationTypes = [
-    { value: '학생상담', label: '학생상담' },
+    { value: '상담', label: '상담' },
     { value: '학부모상담', label: '학부모상담' }
   ];
 

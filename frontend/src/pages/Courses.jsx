@@ -507,13 +507,13 @@ function SchedulesTab() {
     }
   });
 
-  // 재원생상담 예약 조회
+  // 재원생수업 예약 조회
   const { data: classReservations = [] } = useQuery({
     queryKey: ['classReservations', selectedDate],
     queryFn: async () => {
       const response = await reservationAPI.getByDate(selectedDate);
-      // 재원생상담 유형만 필터링
-      return response.data.filter(reservation => reservation.consultationType === '재원생상담');
+      // 재원생수업 유형만 필터링
+      return response.data.filter(reservation => reservation.consultationType === '재원생수업');
     },
   });
 
