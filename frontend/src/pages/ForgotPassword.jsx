@@ -166,7 +166,7 @@ function ForgotPassword() {
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleChange}
-                  placeholder="010-0000-0000"
+                  placeholder="'-' 없이 번호만 입력 (01012345678)"
                   disabled={step > 1}
                   required
                 />
