@@ -53,20 +53,24 @@ public class MunjaNaraSmsProvider implements SmsProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
+            // 문자 길이에 따라 SMS/LMS 자동 선택
+            String msgType = content.length() > 90 ? "lms" : "sms";
+            
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("user_id", userId);
             params.add("key", apiKey);
             params.add("sender", sender);
             params.add("receiver", cleanPhone);
             params.add("msg", content);
-            params.add("msg_type", "sms"); // sms, lms, mms
+            params.add("msg_type", msgType); // sms: 단문(90자), lms: 장문(2000자)
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(SEND_URL, request, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                log.info("문자나라 SMS 발송 성공: 수신자={}, 응답={}", cleanPhone, response.getBody());
+                log.info("문자나라 SMS 발송 성공: 수신자={}, 타입={}, 길이={}자, 응답={}", 
+                        cleanPhone, msgType, content.length(), response.getBody());
                 return "MUNJANARA-" + System.currentTimeMillis();
             } else {
                 log.error("문자나라 SMS 발송 실패: 상태={}, 응답={}", response.getStatusCode(), response.getBody());

@@ -53,14 +53,17 @@ public class AligoSmsProvider implements SmsProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
+            // 문자 길이에 따라 SMS/LMS 자동 선택
+            String msgType = content.length() > 90 ? "LMS" : "SMS";
+            
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("key", apiKey);
             params.add("user_id", userId);
             params.add("sender", sender);
             params.add("receiver", cleanPhone);
             params.add("msg", content);
-            params.add("msg_type", "SMS"); // SMS: 단문, LMS: 장문, MMS: 이미지
-            params.add("title", ""); // LMS/MMS 제목
+            params.add("msg_type", msgType); // SMS: 단문(90자), LMS: 장문(2000자)
+            params.add("title", msgType.equals("LMS") ? "리틀베어 리딩클럽" : ""); // LMS 제목
             params.add("testmode_yn", "N"); // 테스트 모드 비활성화 (실제 발송)
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
@@ -68,7 +71,8 @@ public class AligoSmsProvider implements SmsProvider {
             ResponseEntity<String> response = restTemplate.postForEntity(SEND_URL, request, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
-                log.info("알리고 SMS 발송 성공: 수신자={}, 응답={}", cleanPhone, response.getBody());
+                log.info("알리고 SMS 발송 성공: 수신자={}, 타입={}, 길이={}자, 응답={}", 
+                        cleanPhone, msgType, content.length(), response.getBody());
                 // 알리고는 응답에서 message_id를 반환합니다
                 return "ALIGO-" + System.currentTimeMillis();
             } else {
