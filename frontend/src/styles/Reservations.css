@@ -142,7 +142,7 @@
 
 .section-header {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
@@ -487,6 +487,32 @@
 
 .selected-date-header {
   margin-bottom: 24px;
+}
+
+.rsv-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--gray-100);
+}
+
+.rsv-date-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.rsv-date-count {
+  background: var(--naver-green);
+  color: white;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* 예약 컨텐츠 레이아웃 */

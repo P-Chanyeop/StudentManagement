@@ -524,14 +524,14 @@ function Reservations() {
 
           {/* 선택된 날짜 정보 섹션 */}
           <div className="selected-info-section">
-            <div className="selected-date-header">
-              <h2>{new Date(selectedDate).toLocaleDateString('ko-KR', { 
+            <div className="rsv-date-header">
+              <h2 className="rsv-date-title">{new Date(selectedDate).toLocaleDateString('ko-KR', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric',
                 weekday: 'long'
               })} 예약 현황</h2>
-              <span className="count-badge">{reservations.length}건</span>
+              <span className="rsv-date-count">{reservations.length}건</span>
             </div>
 
             {/* 통계 및 동기화 버튼 */}
