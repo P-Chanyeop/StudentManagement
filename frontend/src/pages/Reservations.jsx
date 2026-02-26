@@ -610,52 +610,40 @@ function Reservations() {
                     </div>
 
                     <div className="reservation-details">
-                      {reservation.consultationType ? (
-                        <>
-                          <div className="detail-row">
-                            <span className="label">유형:</span>
-                            <span className="value consultation-badge">상담 예약</span>
-                          </div>
-                          <div className="detail-row">
-                            <span className="label">상담 유형:</span>
-                            <span className="value">{reservation.consultationType}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="detail-row">
-                          <span className="label">수업:</span>
-                          <span className="value">{reservation.courseName || "-"}</span>
-                        </div>
-                      )}
-                      <div className="detail-row">
-                        <span className="label">날짜:</span>
-                        <span className="value">{reservation.reservationDate}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="label">시간:</span>
-                        <span className="value">
-                          {reservation.reservationTime}
-                        </span>
-                      </div>
-                      {!reservation.consultationType && (
-                        <div className="detail-row">
-                          <span className="label">수강권:</span>
-                          <span className="value">
-                            {reservation.enrollment?.course?.name || '수강권 정보 없음'}
-                            {reservation.enrollment?.type === 'COUNT_BASED' && (
-                              <span className="remaining-count">
-                                ({reservation.enrollment.remainingCount}회 남음)
+                      {(() => {
+                        const isClassReservation = reservation.consultationType === '재원생수업' || reservation.consultationType === '레벨테스트';
+                        const isConsultationReservation = reservation.consultationType === '상담';
+                        return (
+                          <>
+                            <div className="detail-row">
+                              <span className="label">유형:</span>
+                              <span className={`value ${isClassReservation ? 'class-badge' : 'consultation-badge'}`}>
+                                {isClassReservation ? '수업 예약' : isConsultationReservation ? '상담 예약' : (reservation.consultationType || '수업 예약')}
                               </span>
+                            </div>
+                            {reservation.consultationType && (
+                              <div className="detail-row">
+                                <span className="label">{isClassReservation ? '수업 유형:' : '상담 유형:'}</span>
+                                <span className="value">{reservation.consultationType}</span>
+                              </div>
                             )}
-                          </span>
-                        </div>
-                      )}
-                      {reservation.notes && (
-                        <div className="detail-row">
-                          <span className="label">메모:</span>
-                          <span className="value">{reservation.notes}</span>
-                        </div>
-                      )}
+                            <div className="detail-row">
+                              <span className="label">날짜:</span>
+                              <span className="value">{reservation.reservationDate}</span>
+                            </div>
+                            <div className="detail-row">
+                              <span className="label">시간:</span>
+                              <span className="value">{reservation.reservationTime}</span>
+                            </div>
+                            {reservation.notes && (
+                              <div className="detail-row">
+                                <span className="label">메모:</span>
+                                <span className="value">{reservation.notes}</span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
 
                     <div className="reservation-actions">
