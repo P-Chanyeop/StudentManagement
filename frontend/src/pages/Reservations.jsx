@@ -601,12 +601,16 @@ function Reservations() {
                 <>
                   {(showAllSystemReservations ? reservations : reservations.slice(0, 2)).map((reservation) => (
                   <div key={reservation.id} className="reservation-card">
-                    <div className="reservation-header">
-                      <div className="student-info">
-                        <h3>{reservation.student?.name || reservation.studentName}</h3>
-                        <span className="student-contact">{reservation.student?.phone}</span>
+                    <div className="rsv-card-header">
+                      <div className="rsv-card-student">
+                        <span className="rsv-card-name">{reservation.student?.name || reservation.studentName}</span>
+                        {reservation.student?.phone && (
+                          <span className="rsv-card-phone">{reservation.student.phone}</span>
+                        )}
                       </div>
-                      {getStatusBadge(reservation.status)}
+                      <span className={`rsv-card-status rsv-status-${(reservation.status || '').toLowerCase()}`}>
+                        {({PENDING:'대기', CONFIRMED:'확정', CANCELLED:'취소', COMPLETED:'완료', NO_SHOW:'노쇼'})[reservation.status] || reservation.status}
+                      </span>
                     </div>
 
                     <div className="reservation-details">

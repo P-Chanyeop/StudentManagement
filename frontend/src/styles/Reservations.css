@@ -48,12 +48,68 @@
 }
 
 /* 상담 예약 배지 */
-.consultation-badge {
-  display: inline-block;
+.rsv-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.rsv-card-student {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rsv-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.rsv-card-phone {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.rsv-card-status {
   padding: 4px 12px;
-  background: #e3f2fd;
-  color: #1976d2;
-  border-radius: 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.rsv-status-confirmed { background: #03C75A; }
+.rsv-status-pending { background: #FFA500; }
+.rsv-status-cancelled { background: #aaa; }
+.rsv-status-completed { background: #0066FF; }
+.rsv-status-no_show { background: #FF4444; }
+
+.consultation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.class-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
 }

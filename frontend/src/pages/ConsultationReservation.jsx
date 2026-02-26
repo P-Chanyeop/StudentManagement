@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { consultationAPI, authAPI, studentAPI } from '../services/api';
+import { consultationAPI, authAPI, studentAPI, reservationAPI } from '../services/api';
 import { getLocalDateString } from '../utils/dateUtils';
 import '../styles/ConsultationReservation.css';
 
@@ -51,18 +51,13 @@ function ConsultationReservation() {
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
-  // 상담 생성
+  // 상담 예약 생성 (reservations 테이블에 저장)
   const createConsultation = useMutation({
     mutationFn: (data) => {
-      console.log('=== 상담 예약 요청 데이터 ===');
-      console.log(JSON.stringify(data, null, 2));
-      return consultationAPI.create(data);
+      return reservationAPI.create(data);
     },
-    onSuccess: (response) => {
-      console.log('=== 상담 예약 성공 ===');
-      console.log(response);
+    onSuccess: () => {
       alert('상담이 예약되었습니다.');
-      // 폼 초기화
       setFormData({
         selectedStudentId: '',
         consultationDate: '',
@@ -74,11 +69,6 @@ function ConsultationReservation() {
       setErrors({});
     },
     onError: (error) => {
-      console.error('=== 상담 예약 실패 ===');
-      console.error('Error:', error);
-      console.error('Response:', error.response);
-      console.error('Data:', error.response?.data);
-      console.error('Status:', error.response?.status);
       alert(`상담 예약 실패: ${error.response?.data?.message || error.message || '오류가 발생했습니다.'}`);
     }
   });
@@ -257,21 +247,17 @@ function ConsultationReservation() {
         return;
       }
 
-      // 상담 요청 데이터 구성
-      const consultationData = {
+      // 예약 요청 데이터 구성 (reservations 테이블)
+      const reservationData = {
         studentId: selectedStudent.id,
-        consultationDate: formData.consultationDate,
-        consultationTime: formData.consultationTime,
-        title: formData.consultationType,
-        content: formData.content,
+        reservationDate: formData.consultationDate,
+        reservationTime: formData.consultationTime,
         consultationType: formData.consultationType,
-        recordingFileUrl: null
+        memo: formData.content,
+        reservationSource: 'WEB'
       };
       
-      console.log('=== 최종 전송 데이터 ===');
-      console.log(JSON.stringify(consultationData, null, 2));
-      
-      createConsultation.mutate(consultationData);
+      createConsultation.mutate(reservationData);
     } catch (error) {
       console.error('=== handleSubmit catch 에러 ===');
       console.error('상담 예약 실패:', error);
