@@ -889,10 +889,11 @@ public class AttendanceService {
     }
 
     /**
-     * 수업 시작/종료 시간 수정 (관리자용)
+     * 수업 시작/종료 시간 및 등원/하원/하원예정 시간 수정 (관리자용)
      */
     @Transactional
-    public AttendanceResponse updateClassTime(Long attendanceId, String startTimeStr, String endTimeStr) {
+    public AttendanceResponse updateClassTime(Long attendanceId, String startTimeStr, String endTimeStr,
+                                               String checkInTimeStr, String checkOutTimeStr, String expectedLeaveTimeStr) {
         Attendance attendance = attendanceRepository.findById(attendanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
 
@@ -905,16 +906,38 @@ public class AttendanceService {
             LocalTime startTime = attendance.getAttendanceTime();
             int duration = (int) java.time.Duration.between(startTime, endTime).toMinutes();
             attendance.updateDurationMinutes(duration);
+        }
 
-            // 체크인(등원) 시간 + duration = 하원예정시간 재계산
-            if (attendance.getCheckInTime() != null) {
-                LocalTime newExpected = attendance.getCheckInTime().toLocalTime().plusMinutes(duration);
-                attendance.updateExpectedLeaveTime(newExpected);
+        // 등원시간 변경 → duration 기반 하원예정시간 자동 재계산
+        if (checkInTimeStr != null && !checkInTimeStr.isEmpty()) {
+            LocalTime newCheckInLocal = LocalTime.parse(checkInTimeStr);
+            LocalDateTime newCheckIn = attendance.getAttendanceDate().atTime(newCheckInLocal);
+            attendance.updateCheckInTime(newCheckIn);
+
+            int duration = attendance.getDurationMinutes() != null ? attendance.getDurationMinutes()
+                    : (attendance.getCourse() != null && attendance.getCourse().getDurationMinutes() != null
+                        ? attendance.getCourse().getDurationMinutes() : 120);
+            LocalTime autoExpected = newCheckInLocal.plusMinutes(duration);
+            attendance.updateExpectedLeaveTime(autoExpected);
+            attendance.updateOriginalExpectedLeaveTime(autoExpected);
+        }
+
+        // 하원예정시간 직접 변경 (등원시간 변경과 독립)
+        if (checkInTimeStr == null || checkInTimeStr.isEmpty()) {
+            if (expectedLeaveTimeStr != null && !expectedLeaveTimeStr.isEmpty()) {
+                attendance.updateExpectedLeaveTime(LocalTime.parse(expectedLeaveTimeStr));
             }
         }
 
-        log.info("Class time updated: student={}, start={}, end={}",
-                getStudentName(attendance), startTimeStr, endTimeStr);
+        // 하원시간 직접 변경
+        if (checkOutTimeStr != null && !checkOutTimeStr.isEmpty()) {
+            LocalTime newCheckOutLocal = LocalTime.parse(checkOutTimeStr);
+            LocalDateTime newCheckOut = attendance.getAttendanceDate().atTime(newCheckOutLocal);
+            attendance.updateCheckOutTime(newCheckOut);
+        }
+
+        log.info("Class time updated: student={}, start={}, end={}, checkIn={}, checkOut={}, expectedLeave={}",
+                getStudentName(attendance), startTimeStr, endTimeStr, checkInTimeStr, checkOutTimeStr, expectedLeaveTimeStr);
         return toResponse(attendance);
     }
 

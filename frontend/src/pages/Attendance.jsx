@@ -30,6 +30,9 @@ function Attendance() {
   const [detailAttendance, setDetailAttendance] = useState(null);
   const [editCheckInTime, setEditCheckInTime] = useState('');
   const [editCheckOutTime, setEditCheckOutTime] = useState('');
+  const [editActualCheckInTime, setEditActualCheckInTime] = useState('');
+  const [editActualCheckOutTime, setEditActualCheckOutTime] = useState('');
+  const [editExpectedLeaveTime, setEditExpectedLeaveTime] = useState('');
   const [addType, setAddType] = useState('naver'); // 'naver' or 'system'
   const [addStudentSearch, setAddStudentSearch] = useState('');
   const [addSelectedStudent, setAddSelectedStudent] = useState(null);
@@ -157,8 +160,8 @@ function Attendance() {
 
   // 시간 수정 mutation
   const updateTimeMutation = useMutation({
-    mutationFn: ({ attendanceId, startTime, endTime }) =>
-      attendanceAPI.updateTime(attendanceId, { startTime, endTime }),
+    mutationFn: ({ attendanceId, startTime, endTime, checkInTime, checkOutTime, expectedLeaveTime }) =>
+      attendanceAPI.updateTime(attendanceId, { startTime, endTime, checkInTime, checkOutTime, expectedLeaveTime }),
     onSuccess: () => {
       queryClient.invalidateQueries(['attendances', selectedDate]);
       alert('시간이 수정되었습니다.');
@@ -718,6 +721,20 @@ function Attendance() {
                     setDetailAttendance(attendance);
                     setEditCheckInTime(attendance.startTime || '');
                     setEditCheckOutTime(attendance.endTime || '');
+                    // DateTime → HH:mm 변환 헬퍼
+                    const toTimeStr = (dt) => {
+                      if (!dt) return '';
+                      if (typeof dt === 'string' && dt.includes('T')) {
+                        return dt.substring(11, 16);
+                      }
+                      if (typeof dt === 'string' && dt.includes(':')) {
+                        return dt.substring(0, 5);
+                      }
+                      return '';
+                    };
+                    setEditActualCheckInTime(toTimeStr(attendance.checkInTime));
+                    setEditActualCheckOutTime(toTimeStr(attendance.checkOutTime));
+                    setEditExpectedLeaveTime(attendance.expectedLeaveTime ? attendance.expectedLeaveTime.substring(0, 5) : '');
                     setShowDetailModal(true);
                   }}
                   style={{ cursor: 'pointer' }}
@@ -914,9 +931,54 @@ function Attendance() {
                 <div><strong>반:</strong> {detailAttendance.courseName || '-'}</div>
                 <div><strong>수업시간:</strong> {formatTime(detailAttendance.startTime)} - {formatTime(detailAttendance.endTime)}</div>
                 <div><strong>상태:</strong> {getAttendanceStatusText(detailAttendance)}</div>
-                <div><strong>하원 예정:</strong> {detailAttendance.expectedLeaveTime ? formatTime(detailAttendance.expectedLeaveTime) : '-'}</div>
-                <div><strong>등원:</strong> {detailAttendance.checkInTime ? formatTime(detailAttendance.checkInTime) : '-'}</div>
-                <div><strong>하원:</strong> {detailAttendance.checkOutTime ? formatTime(detailAttendance.checkOutTime) : '-'}</div>
+
+                <div className="form-group">
+                  <label><strong>등원 시간</strong></label>
+                  <input
+                    type="time"
+                    value={editActualCheckInTime}
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      setEditActualCheckInTime(newVal);
+                      // 등원시간 변경 시 duration 기반 하원예정시간 자동 계산
+                      if (newVal && detailAttendance) {
+                        const [h, m] = newVal.split(':').map(Number);
+                        const startParts = (detailAttendance.startTime || '').split(':').map(Number);
+                        const endParts = (detailAttendance.endTime || '').split(':').map(Number);
+                        let duration = 120;
+                        if (startParts.length >= 2 && endParts.length >= 2) {
+                          duration = (endParts[0] * 60 + endParts[1]) - (startParts[0] * 60 + startParts[1]);
+                          if (duration <= 0) duration = 120;
+                        }
+                        const totalMin = h * 60 + m + duration;
+                        const newH = Math.floor(totalMin / 60) % 24;
+                        const newM = totalMin % 60;
+                        setEditExpectedLeaveTime(`${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`);
+                      }
+                    }}
+                    className="phone-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label><strong>하원 예정 시간</strong></label>
+                  <input
+                    type="time"
+                    value={editExpectedLeaveTime}
+                    onChange={(e) => setEditExpectedLeaveTime(e.target.value)}
+                    className="phone-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label><strong>하원 시간</strong></label>
+                  <input
+                    type="time"
+                    value={editActualCheckOutTime}
+                    onChange={(e) => setEditActualCheckOutTime(e.target.value)}
+                    className="phone-input"
+                  />
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '4px 0' }} />
 
                 <div className="form-group">
                   <label><strong>수업 시작 시간</strong></label>
@@ -972,6 +1034,9 @@ function Attendance() {
                     attendanceId: detailAttendance.id,
                     startTime: editCheckInTime || null,
                     endTime: editCheckOutTime || null,
+                    checkInTime: editActualCheckInTime || null,
+                    checkOutTime: editActualCheckOutTime || null,
+                    expectedLeaveTime: editExpectedLeaveTime || null,
                   });
                 }}
               >

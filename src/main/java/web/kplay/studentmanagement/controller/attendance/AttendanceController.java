@@ -231,7 +231,11 @@ public class AttendanceController {
             @RequestBody Map<String, String> request) {
         String startTime = request.get("startTime");
         String endTime = request.get("endTime");
-        AttendanceResponse response = attendanceService.updateClassTime(id, startTime, endTime);
+        String checkInTime = request.get("checkInTime");
+        String checkOutTime = request.get("checkOutTime");
+        String expectedLeaveTime = request.get("expectedLeaveTime");
+        AttendanceResponse response = attendanceService.updateClassTime(id, startTime, endTime,
+                checkInTime, checkOutTime, expectedLeaveTime);
         return ResponseEntity.ok(response);
     }
 

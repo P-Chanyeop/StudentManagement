@@ -155,6 +155,21 @@ public class Attendance extends BaseEntity {
         this.expectedLeaveTime = expectedLeaveTime;
     }
 
+    // 원래 예정 하원 시간 업데이트
+    public void updateOriginalExpectedLeaveTime(LocalTime originalExpectedLeaveTime) {
+        this.originalExpectedLeaveTime = originalExpectedLeaveTime;
+    }
+
+    // 체크인 시간 직접 수정 (관리자용)
+    public void updateCheckInTime(LocalDateTime checkInTime) {
+        this.checkInTime = checkInTime;
+    }
+
+    // 체크아웃 시간 직접 수정 (관리자용)
+    public void updateCheckOutTime(LocalDateTime checkOutTime) {
+        this.checkOutTime = checkOutTime;
+    }
+
     // 수업 시작 시간 수정
     public void updateAttendanceTime(LocalTime attendanceTime) {
         this.attendanceTime = attendanceTime;
