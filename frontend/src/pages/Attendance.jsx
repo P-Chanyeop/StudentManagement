@@ -60,6 +60,8 @@ function Attendance() {
           return 'excused';
         case 'EARLY_LEAVE':
           return 'early-leave';
+        case 'NOTYET':
+          return 'notyet';
         default:
           return 'absent';
       }
@@ -373,10 +375,14 @@ function Attendance() {
   // 테이블 헤더 클릭 정렬 핸들러
   const handleTableSort = (sortType) => {
     if (tableSortBy === sortType) {
-      // 같은 컬럼 클릭 시 정렬 순서 토글
-      setTableSortOrder(tableSortOrder === 'asc' ? 'desc' : 'asc');
+      if (tableSortOrder === 'asc') {
+        setTableSortOrder('desc');
+      } else {
+        // 내림차순 → 해제 (기본 정렬로)
+        setTableSortBy('schedule');
+        setTableSortOrder('asc');
+      }
     } else {
-      // 다른 컬럼 클릭 시 해당 컬럼으로 오름차순 정렬
       setTableSortBy(sortType);
       setTableSortOrder('asc');
     }

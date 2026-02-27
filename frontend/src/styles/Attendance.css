@@ -331,6 +331,10 @@
   background: #fef2f2;
 }
 
+.attendance-row.notyet {
+  background: #ffffff;
+}
+
 .attendance-row.absent .status-badge {
   background: #fee2e2;
   color: #991b1b;
