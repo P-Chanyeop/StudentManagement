@@ -215,6 +215,46 @@ public class StudentCourseExcelService {
     }
 
     /**
+     * 엑셀 원본 데이터 전체 조회
+     */
+    public List<Map<String, String>> getAllExcelRows() {
+        File excelFile = new File(EXCEL_DIR + EXCEL_FILENAME);
+        if (!excelFile.exists()) {
+            excelFile = new File("src/main/resources/static/images/리틀베어_리딩클럽_학생목록 (16).xlsx");
+        }
+        if (!excelFile.exists()) return List.of();
+
+        List<Map<String, String>> rows = new java.util.ArrayList<>();
+        try (FileInputStream fis = new FileInputStream(excelFile);
+             Workbook workbook = WorkbookFactory.create(fis)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) return rows;
+
+            String[] headers = new String[headerRow.getLastCellNum()];
+            for (int c = 0; c < headers.length; c++) {
+                headers[c] = getCellValueSafe(headerRow.getCell(c));
+                if (headers[c] == null) headers[c] = "col" + c;
+            }
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                Map<String, String> map = new java.util.LinkedHashMap<>();
+                for (int c = 0; c < headers.length; c++) {
+                    map.put(headers[c], getCellValueSafe(row.getCell(c)));
+                }
+                if (map.get(headers[0]) != null && !map.get(headers[0]).isBlank()) {
+                    rows.add(map);
+                }
+            }
+        } catch (Exception e) {
+            log.error("엑셀 원본 데이터 조회 실패", e);
+        }
+        return rows;
+    }
+
+    /**
      * 학생 이름으로 보호자 전화번호 조회
      */
     public String getParentPhone(String studentName) {

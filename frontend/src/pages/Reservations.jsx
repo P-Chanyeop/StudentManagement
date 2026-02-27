@@ -23,6 +23,7 @@ function Reservations() {
   const [naverBookings, setNaverBookings] = useState([]);
   const [showAllNaverBookings, setShowAllNaverBookings] = useState(false);
   const [showAllSystemReservations, setShowAllSystemReservations] = useState(false);
+  const [showExcelListModal, setShowExcelListModal] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [newReservation, setNewReservation] = useState({
@@ -271,6 +272,19 @@ function Reservations() {
       console.error('네이버 예약 동기화 실패:', error);
       alert(`동기화 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     },
+  });
+
+  // 엑셀 학생 전체 데이터 조회
+  const { data: excelFullList = [], refetch: refetchExcel } = useQuery({
+    queryKey: ['excelFullList'],
+    queryFn: async () => {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.get('/api/student-course/list/full', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return res.data;
+    },
+    enabled: showExcelListModal,
   });
 
   // 학생 목록 엑셀 업로드 mutation
@@ -536,41 +550,39 @@ function Reservations() {
               <span className="rsv-date-count">{reservations.length}건</span>
             </div>
 
-            {/* 통계 및 동기화 버튼 */}
+            {/* 통계 및 관리 버튼 */}
             {!isParent && (
-              <div className="reservation-stats">
-                <div className="stats-row">
-                  <div className="stat-item">
-                    <span className="stat-label">시스템 예약</span>
-                    <span className="stat-value">{reservations.length}건</span>
+              <div className="rsv-admin-panel">
+                <div className="rsv-stats-row">
+                  <div className="rsv-stat-chip">
+                    <span className="rsv-stat-label">시스템</span>
+                    <span className="rsv-stat-val">{reservations.length}</span>
                   </div>
-                  <div className="stat-divider"></div>
-                  <div className="stat-item">
-                    <span className="stat-label">네이버 예약</span>
-                    <span className="stat-value">{naverBookings.length}건</span>
+                  <div className="rsv-stat-chip">
+                    <span className="rsv-stat-label">네이버</span>
+                    <span className="rsv-stat-val">{naverBookings.length}</span>
                   </div>
-                  <div className="stat-divider"></div>
-                  <div className="stat-item total">
-                    <span className="stat-label">총</span>
-                    <span className="stat-value">{reservations.length + naverBookings.length}건</span>
+                  <div className="rsv-stat-chip rsv-stat-total">
+                    <span className="rsv-stat-label">합계</span>
+                    <span className="rsv-stat-val">{reservations.length + naverBookings.length}</span>
                   </div>
                 </div>
-                <button 
-                  className="sync-button"
-                  onClick={handleSyncNaver}
-                  disabled={syncNaverMutation.isPending}
-                >
-                  <i className={`fas fa-sync-alt ${syncNaverMutation.isPending ? 'fa-spin' : ''}`}></i>
-                  {syncNaverMutation.isPending ? '동기화 중...' : '네이버 예약 동기화'}
-                </button>
-
-                <label htmlFor="student-list-upload" className="sync-button" style={{ cursor: 'pointer' }}>
-                  <i className={`fas fa-file-excel ${uploadStudentListMutation.isPending ? 'fa-spin' : ''}`}></i>
-                  {uploadStudentListMutation.isPending ? '업로드 중...' : '기존 학생 목록 업데이트'}
-                </label>
-                <button className="sync-button" onClick={() => setShowBlockModal(true)} style={{ background: '#FF6B6B', color: '#fff' }}>
-                  <i className="fas fa-ban"></i> 시간대 차단 관리
-                </button>
+                <div className="rsv-btn-group">
+                  <button className="rsv-action-btn rsv-btn-green" onClick={handleSyncNaver} disabled={syncNaverMutation.isPending}>
+                    <i className={`fas fa-sync-alt ${syncNaverMutation.isPending ? 'fa-spin' : ''}`}></i>
+                    {syncNaverMutation.isPending ? '동기화 중...' : '네이버 동기화'}
+                  </button>
+                  <label htmlFor="student-list-upload" className="rsv-action-btn rsv-btn-teal">
+                    <i className={`fas fa-file-excel ${uploadStudentListMutation.isPending ? 'fa-spin' : ''}`}></i>
+                    {uploadStudentListMutation.isPending ? '업로드 중...' : '학생목록 업로드'}
+                  </label>
+                  <button className="rsv-action-btn rsv-btn-blue" onClick={() => { setShowExcelListModal(true); refetchExcel(); }}>
+                    <i className="fas fa-list"></i> 학생목록 보기
+                  </button>
+                  <button className="rsv-action-btn rsv-btn-red" onClick={() => setShowBlockModal(true)}>
+                    <i className="fas fa-ban"></i> 시간대 차단
+                  </button>
+                </div>
                 <input
                   id="student-list-upload"
                   type="file"
@@ -1194,6 +1206,44 @@ function Reservations() {
           </div>
         </div>
       )}
+
+        {showExcelListModal && (
+          <div className="rsv-excel-overlay" onClick={() => setShowExcelListModal(false)}>
+            <div className="rsv-excel-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="rsv-excel-header">
+                <h2>📋 업로드된 학생 목록 ({excelFullList.length}명)</h2>
+                <button className="rsv-excel-close" onClick={() => setShowExcelListModal(false)}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="rsv-excel-body">
+                {excelFullList.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#9ca3af', padding: 40 }}>업로드된 학생 목록이 없습니다.</p>
+                ) : (
+                  <table className="rsv-excel-table">
+                    <thead>
+                      <tr>
+                        {Object.keys(excelFullList[0]).map((key) => (
+                          <th key={key}>{key}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {excelFullList.map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((val, j) => (
+                            <td key={j}>{val || ''}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         </div>
       </div>
     </div>

@@ -1414,3 +1414,154 @@
   color: white;
   box-shadow: 0 2px 8px rgba(239, 83, 80, 0.3);
 }
+
+/* 엑셀 학생 목록 모달 */
+.rsv-excel-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.rsv-excel-modal {
+  background: white;
+  border-radius: 12px;
+  width: 95vw;
+  max-width: 1200px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.rsv-excel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rsv-excel-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.rsv-excel-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.rsv-excel-body {
+  overflow: auto;
+  padding: 16px;
+  flex: 1;
+}
+
+.rsv-excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.rsv-excel-table th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.rsv-excel-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #4b5563;
+}
+
+.rsv-excel-table tbody tr:hover {
+  background: #f0fdf4;
+}
+
+/* 관리자 패널 (통계 + 버튼) */
+.rsv-admin-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+
+.rsv-stats-row {
+  display: flex;
+  gap: 8px;
+}
+
+.rsv-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.rsv-stat-chip.rsv-stat-total {
+  background: #ecfdf5;
+}
+
+.rsv-stat-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.rsv-stat-val {
+  color: #111827;
+  font-weight: 700;
+}
+
+.rsv-stat-total .rsv-stat-val {
+  color: #059669;
+}
+
+.rsv-btn-group {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.rsv-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  text-decoration: none;
+}
+
+.rsv-action-btn:hover {
+  opacity: 0.85;
+}
+
+.rsv-btn-green { background: #00c73c; color: white; }
+.rsv-btn-teal { background: #0d9488; color: white; }
+.rsv-btn-blue { background: #2563eb; color: white; }
+.rsv-btn-red { background: #ef4444; color: white; }

@@ -50,6 +50,12 @@ public class StudentCourseController {
             .toList());
     }
 
+    @GetMapping("/list/full")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getExcelFullList() {
+        return ResponseEntity.ok(studentCourseExcelService.getAllExcelRows());
+    }
+
     /**
      * 현재 로드된 학생 수 조회
      */
