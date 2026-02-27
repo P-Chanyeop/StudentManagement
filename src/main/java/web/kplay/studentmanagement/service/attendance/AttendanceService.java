@@ -875,6 +875,20 @@ public class AttendanceService {
     }
 
     /**
+     * 관리자 예약(행 추가) 출석 삭제
+     */
+    @Transactional
+    public void deleteManualAttendance(Long attendanceId) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("출석 기록을 찾을 수 없습니다"));
+        if (attendance.getManualStudentName() == null) {
+            throw new IllegalStateException("관리자 예약(행 추가)만 삭제할 수 있습니다");
+        }
+        attendanceRepository.delete(attendance);
+        log.info("출석 삭제: id={}, name={}", attendanceId, attendance.getManualStudentName());
+    }
+
+    /**
      * 수업 시작/종료 시간 수정 (관리자용)
      */
     @Transactional

@@ -376,4 +376,14 @@ public class AttendanceController {
         AttendanceResponse response = attendanceService.checkInByNaverBookingId(naverBookingId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    /**
+     * 관리자 예약(행 추가) 출석 삭제
+     */
+    @DeleteMapping("/{attendanceId}/manual")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteAttendance(@PathVariable Long attendanceId) {
+        attendanceService.deleteManualAttendance(attendanceId);
+        return ResponseEntity.ok(Map.of("message", "삭제되었습니다"));
+    }
 }

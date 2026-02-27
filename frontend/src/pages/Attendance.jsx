@@ -167,6 +167,17 @@ function Attendance() {
     onError: (error) => alert(error.response?.data?.message || '시간 수정 실패'),
   });
 
+  // 출석 삭제 mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => attendanceAPI.deleteAttendance(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['attendances', selectedDate]);
+      alert('삭제되었습니다.');
+      setShowDetailModal(false);
+    },
+    onError: (error) => alert(error.response?.data?.message || '삭제 실패'),
+  });
+
   // 수동 출석 추가 mutation
   const addManualMutation = useMutation({
     mutationFn: (data) => attendanceAPI.addManual(data),
@@ -938,6 +949,20 @@ function Attendance() {
               </div>
             </div>
             <div className="modal-footer">
+              {detailAttendance.className === '관리자 예약' && (
+                <button
+                  className="btn btn-danger"
+                  style={{ marginRight: 'auto', background: '#ef4444', color: 'white' }}
+                  onClick={() => {
+                    if (window.confirm(`${detailAttendance.studentName} 행을 삭제하시겠습니까?`)) {
+                      deleteMutation.mutate(detailAttendance.id);
+                    }
+                  }}
+                  disabled={deleteMutation?.isPending}
+                >
+                  <i className="fas fa-trash"></i> 행 삭제
+                </button>
+              )}
               <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>닫기</button>
               <button
                 className="btn btn-primary"

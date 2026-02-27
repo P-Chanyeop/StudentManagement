@@ -182,6 +182,7 @@ export const attendanceAPI = {
   addManual: (data) => api.post('/attendances/manual', data),
   checkInByAttendanceId: (attendanceId) => api.post(`/attendances/${attendanceId}/manual-check-in`),
   updateTime: (id, data) => api.patch(`/attendances/${id}/time`, data),
+  deleteAttendance: (id) => api.delete(`/attendances/${id}/manual`),
 };
 
 // 선생님 출퇴근 API
