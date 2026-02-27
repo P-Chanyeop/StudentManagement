@@ -114,11 +114,12 @@ public class AttendanceService {
             log.info("결석→지각 변경: student={}", student.getStudentName());
         } else {
             // 새 출석 레코드 생성
+            LocalTime classStartTime = !reservations.isEmpty() ? reservations.get(0).getReservationTime() : now.toLocalTime();
             attendance = Attendance.builder()
                     .student(student)
                     .course(course)
                     .attendanceDate(now.toLocalDate())
-                    .attendanceTime(now.toLocalTime())
+                    .attendanceTime(classStartTime)
                     .durationMinutes(course != null ? course.getDurationMinutes() : 120)
                     .status(checkInStatus)
                     .classCompleted(false)
@@ -377,11 +378,12 @@ public class AttendanceService {
             log.info("Existing attendance updated: name={}, expectedLeave={}", student.getStudentName(), expectedLeave);
         } else {
             // 새 레코드 생성
+            LocalTime phoneClassStartTime = !phoneReservations.isEmpty() ? phoneReservations.get(0).getReservationTime() : now.toLocalTime();
             attendance = Attendance.builder()
                     .student(student)
                     .course(course)
                     .attendanceDate(today)
-                    .attendanceTime(now.toLocalTime())
+                    .attendanceTime(phoneClassStartTime)
                     .durationMinutes(course != null ? course.getDurationMinutes() : 120)
                     .status(phoneCheckInStatus)
                     .classCompleted(false)
@@ -844,6 +846,12 @@ public class AttendanceService {
             LocalTime startTime = attendance.getAttendanceTime();
             int duration = (int) java.time.Duration.between(startTime, endTime).toMinutes();
             attendance.updateDurationMinutes(duration);
+
+            // 체크인(등원) 시간 + duration = 하원예정시간 재계산
+            if (attendance.getCheckInTime() != null) {
+                LocalTime newExpected = attendance.getCheckInTime().toLocalTime().plusMinutes(duration);
+                attendance.updateExpectedLeaveTime(newExpected);
+            }
         }
 
         log.info("Class time updated: student={}, start={}, end={}",

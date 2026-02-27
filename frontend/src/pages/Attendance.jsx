@@ -158,11 +158,12 @@ function Attendance() {
   const registerTeacherMutation = useMutation({
     mutationFn: (data) => teacherAttendanceAPI.registerTeacher(data),
     onSuccess: (res) => {
-      alert(res.data.message);
-      setShowTeacherRegModal(false);
+      queryClient.invalidateQueries(['teachers']);
       setTeacherRegForm({ username: '', password: '', passwordConfirm: '', name: '', phoneNumber: '' });
+      setShowTeacherRegModal(false);
+      alert(res.data?.message || '선생님 등록이 완료되었습니다.');
     },
-    onError: (err) => alert(err.response?.data?.message || '등록 실패'),
+    onError: (err) => alert(err.response?.data?.message || '선생님 등록에 실패했습니다.'),
   });
 
   // 시간 수정 mutation
