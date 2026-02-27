@@ -30,8 +30,6 @@ function Attendance() {
   const [detailAttendance, setDetailAttendance] = useState(null);
   const [editCheckInTime, setEditCheckInTime] = useState('');
   const [editCheckOutTime, setEditCheckOutTime] = useState('');
-  const [showTeacherRegModal, setShowTeacherRegModal] = useState(false);
-  const [teacherRegForm, setTeacherRegForm] = useState({ username: '', password: '', passwordConfirm: '', name: '', phoneNumber: '' });
   const [addType, setAddType] = useState('naver'); // 'naver' or 'system'
   const [addStudentSearch, setAddStudentSearch] = useState('');
   const [addSelectedStudent, setAddSelectedStudent] = useState(null);
@@ -153,17 +151,6 @@ function Attendance() {
       return response.data;
     },
     enabled: activeTab === 'teacher',
-  });
-
-  const registerTeacherMutation = useMutation({
-    mutationFn: (data) => teacherAttendanceAPI.registerTeacher(data),
-    onSuccess: (res) => {
-      queryClient.invalidateQueries(['teachers']);
-      setTeacherRegForm({ username: '', password: '', passwordConfirm: '', name: '', phoneNumber: '' });
-      setShowTeacherRegModal(false);
-      alert(res.data?.message || '선생님 등록이 완료되었습니다.');
-    },
-    onError: (err) => alert(err.response?.data?.message || '선생님 등록에 실패했습니다.'),
   });
 
   // 시간 수정 mutation
@@ -1100,9 +1087,6 @@ function Attendance() {
             <button className="tch-att-today-btn" onClick={() => setSelectedDate(getTodayString())}>오늘</button>
           </div>
           <div className="tch-att-actions">
-            <button className="tch-att-action-btn" onClick={() => setShowTeacherRegModal(true)}>
-              <i className="fas fa-user-plus"></i> 선생님 등록
-            </button>
             <button className="tch-att-action-btn" onClick={() => {
               const rows = teacherAttendances || [];
               if (rows.length === 0) return alert('데이터가 없습니다');
@@ -1167,57 +1151,6 @@ function Attendance() {
           </div>
         )}
 
-        {showTeacherRegModal && (
-          <div className="tch-att-overlay" onClick={() => setShowTeacherRegModal(false)}>
-            <div className="tch-att-modal" onClick={e => e.stopPropagation()}>
-              <div className="tch-att-modal-header">
-                <h3>선생님 계정 등록</h3>
-                <button className="tch-att-modal-close" onClick={() => setShowTeacherRegModal(false)}>
-                  <i className="fas fa-times"></i>
-                </button>
-              </div>
-              <div className="tch-att-modal-body">
-                <div className="tch-att-field">
-                  <label>이름 <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input placeholder="이름을 입력하세요" value={teacherRegForm.name} onChange={e => setTeacherRegForm(f => ({ ...f, name: e.target.value }))} />
-                </div>
-                <div className="tch-att-field">
-                  <label>전화번호</label>
-                  <input placeholder="010-0000-0000" value={teacherRegForm.phoneNumber} onChange={e => {
-                    const v = e.target.value.replace(/[^0-9]/g, '');
-                    let f = v;
-                    if (v.length > 7) f = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
-                    else if (v.length > 3) f = v.slice(0,3)+'-'+v.slice(3);
-                    setTeacherRegForm(prev => ({ ...prev, phoneNumber: f }));
-                  }} maxLength="13" />
-                </div>
-                <div className="tch-att-field">
-                  <label>아이디 <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input placeholder="로그인 아이디" value={teacherRegForm.username} onChange={e => setTeacherRegForm(f => ({ ...f, username: e.target.value }))} />
-                </div>
-                <div className="tch-att-field">
-                  <label>비밀번호 <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input placeholder="영문+숫자 8자 이상" type="password" value={teacherRegForm.password} onChange={e => setTeacherRegForm(f => ({ ...f, password: e.target.value }))} />
-                </div>
-                <div className="tch-att-field">
-                  <label>비밀번호 확인 <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input placeholder="비밀번호를 다시 입력하세요" type="password" value={teacherRegForm.passwordConfirm} onChange={e => setTeacherRegForm(f => ({ ...f, passwordConfirm: e.target.value }))} className={teacherRegForm.passwordConfirm && teacherRegForm.password !== teacherRegForm.passwordConfirm ? 'tch-att-input-error' : ''} />
-                  {teacherRegForm.passwordConfirm && teacherRegForm.password !== teacherRegForm.passwordConfirm && (
-                    <span className="tch-att-error-msg">비밀번호가 일치하지 않습니다</span>
-                  )}
-                </div>
-                <button className="tch-att-submit-btn" onClick={() => {
-                  const { username, password, passwordConfirm, name } = teacherRegForm;
-                  if (!username || !password || !name) return alert('이름, 아이디, 비밀번호는 필수입니다');
-                  if (password !== passwordConfirm) return alert('비밀번호가 일치하지 않습니다');
-                  registerTeacherMutation.mutate(teacherRegForm);
-                }}>
-                  {registerTeacherMutation.isPending ? '등록중...' : '선생님 등록'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     )}
     </div>

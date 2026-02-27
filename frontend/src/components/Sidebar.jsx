@@ -103,6 +103,7 @@ function Sidebar() {
     const adminMenus = [
       { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
       { path: '/students', icon: <i className="fas fa-users"></i>, label: '학생 관리' },
+      { path: '/teachers', icon: <i className="fas fa-user-tie"></i>, label: '선생님 관리' },
       { path: '/courses', icon: <i className="fas fa-chalkboard-teacher"></i>, label: '반 관리' },
       // { path: '/class-info', icon: <i className="fas fa-calendar-check"></i>, label: '수업 스케줄' },
       { path: '/check-in', icon: <i className="fas fa-check-circle"></i>, label: '출석 체크' },

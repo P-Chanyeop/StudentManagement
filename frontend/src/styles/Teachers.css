@@ -1,0 +1,288 @@
+.tch-page {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.tch-header {
+  background: white;
+  padding: 32px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tch-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tch-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.tch-title i {
+  color: #00c73c;
+  margin-right: 12px;
+}
+
+.tch-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.tch-add-btn {
+  background: #00c73c;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.tch-add-btn:hover {
+  background: #00b035;
+}
+
+.tch-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 32px;
+}
+
+.tch-search-section {
+  margin-bottom: 20px;
+}
+
+.tch-search-box {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 16px;
+  max-width: 400px;
+}
+
+.tch-search-box i {
+  color: #9ca3af;
+  margin-right: 10px;
+}
+
+.tch-search-box input {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+}
+
+.tch-table-wrap {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.tch-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tch-table thead {
+  background: #f9fafb;
+}
+
+.tch-table th {
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tch-table td {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.tch-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.tch-empty {
+  text-align: center;
+  padding: 40px;
+  color: #9ca3af;
+}
+
+/* 모달 */
+.tch-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.tch-modal {
+  background: white;
+  border-radius: 12px;
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.tch-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tch-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.tch-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.tch-modal-body {
+  padding: 24px;
+}
+
+.tch-form-group {
+  margin-bottom: 16px;
+}
+
+.tch-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.tch-form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.tch-form-group input:focus {
+  border-color: #00c73c;
+  box-shadow: 0 0 0 3px rgba(0, 199, 60, 0.1);
+}
+
+.tch-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.tch-btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tch-btn-save {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #00c73c;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tch-btn-save:hover {
+  background: #00b035;
+}
+
+.tch-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tch-action-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.tch-edit-btn,
+.tch-delete-btn {
+  border: none;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.tch-edit-btn {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.tch-edit-btn:hover {
+  background: #bae6fd;
+}
+
+.tch-delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.tch-delete-btn:hover {
+  background: #fecaca;
+}
+
+.tch-input-error {
+  border-color: #ef4444 !important;
+}
+
+.tch-error-msg {
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 4px;
+}

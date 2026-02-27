@@ -194,6 +194,8 @@ export const teacherAttendanceAPI = {
   getMy: () => api.get('/teacher-attendance/my'),
   getTeachers: () => api.get('/teacher-attendance/teachers'),
   registerTeacher: (data) => api.post('/teacher-attendance/register', data),
+  updateTeacher: (id, data) => api.put(`/teacher-attendance/teachers/${id}`, data),
+  deleteTeacher: (id) => api.delete(`/teacher-attendance/teachers/${id}`),
 };
 
 // 예약 API

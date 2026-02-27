@@ -60,9 +60,46 @@ public class TeacherAttendanceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<?> getTeachers() {
         return ResponseEntity.ok(userRepository.findAll().stream()
-                .filter(u -> u.getRole() == UserRole.TEACHER)
-                .map(t -> Map.of("id", t.getId(), "name", t.getName(), "phoneNumber", (Object)(t.getPhoneNumber() != null ? t.getPhoneNumber() : "")))
+                .filter(u -> u.getRole() == UserRole.TEACHER && u.getIsActive())
+                .map(t -> Map.of("id", t.getId(), "name", t.getName(),
+                        "phoneNumber", (Object)(t.getPhoneNumber() != null ? t.getPhoneNumber() : ""),
+                        "username", (Object)(t.getUsername() != null ? t.getUsername() : "")))
                 .toList());
+    }
+
+    // 관리자: 선생님 정보 수정
+    @PutMapping("/teachers/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateTeacher(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        User teacher = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("선생님을 찾을 수 없습니다"));
+        if (teacher.getRole() != UserRole.TEACHER) {
+            return ResponseEntity.badRequest().body(Map.of("message", "선생님 계정이 아닙니다"));
+        }
+        String name = request.get("name");
+        String phoneNumber = request.get("phoneNumber");
+        String password = request.get("password");
+        if (name != null && !name.isEmpty()) teacher.setName(name);
+        if (phoneNumber != null) teacher.setPhoneNumber(phoneNumber);
+        if (password != null && !password.isEmpty()) teacher.changePassword(passwordEncoder.encode(password));
+        userRepository.save(teacher);
+        log.info("선생님 정보 수정: {}", teacher.getName());
+        return ResponseEntity.ok(Map.of("message", teacher.getName() + " 선생님 정보가 수정되었습니다"));
+    }
+
+    // 관리자: 선생님 삭제 (비활성화)
+    @DeleteMapping("/teachers/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteTeacher(@PathVariable Long id) {
+        User teacher = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("선생님을 찾을 수 없습니다"));
+        if (teacher.getRole() != UserRole.TEACHER) {
+            return ResponseEntity.badRequest().body(Map.of("message", "선생님 계정이 아닙니다"));
+        }
+        teacher.deactivate();
+        userRepository.save(teacher);
+        log.info("선생님 삭제: {}", teacher.getName());
+        return ResponseEntity.ok(Map.of("message", teacher.getName() + " 선생님이 삭제되었습니다"));
     }
 
     // 전화번호 뒷자리로 선생님 검색
