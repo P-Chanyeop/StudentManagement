@@ -432,6 +432,16 @@
   margin-left: 0.5rem;
 }
 
+.naver-badge.badge-system {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.naver-badge.badge-manual {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .class-badge {
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;

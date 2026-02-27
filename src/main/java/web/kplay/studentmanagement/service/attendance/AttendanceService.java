@@ -188,22 +188,36 @@ public class AttendanceService {
                 courseName = activeEnrollments.get(0).getCourse().getCourseName();
             }
             
-            // 오늘 출석 기록 조회
+            // 오늘 출석 기록 조회 (여러 개일 수 있음: 원래 예약 + 행 추가)
             List<Attendance> todayAttendances = attendanceRepository.findByStudentAndDate(student, today);
-            Attendance todayAttendance = todayAttendances.isEmpty() ? null : todayAttendances.get(0);
-            
-            results.add(StudentSearchResponse.builder()
-                    .studentId(student.getId())
-                    .studentName(student.getStudentName())
-                    .parentName(student.getParentName())
-                    .parentPhone(student.getParentPhone())
-                    .school(student.getSchool())
-                    .courseName(courseName)
-                    .isNaverBooking(false)
-                    .attendanceId(todayAttendance != null ? todayAttendance.getId() : null)
-                    .checkInTime(todayAttendance != null ? todayAttendance.getCheckInTime() : null)
-                    .checkOutTime(todayAttendance != null ? todayAttendance.getCheckOutTime() : null)
-                    .build());
+            if (todayAttendances.isEmpty()) {
+                results.add(StudentSearchResponse.builder()
+                        .studentId(student.getId())
+                        .studentName(student.getStudentName())
+                        .parentName(student.getParentName())
+                        .parentPhone(student.getParentPhone())
+                        .school(student.getSchool())
+                        .courseName(courseName)
+                        .isNaverBooking(false)
+                        .build());
+            } else {
+                for (Attendance att : todayAttendances) {
+                    boolean isManual = att.getManualStudentName() != null;
+                    results.add(StudentSearchResponse.builder()
+                            .studentId(student.getId())
+                            .studentName(student.getStudentName())
+                            .parentName(student.getParentName())
+                            .parentPhone(student.getParentPhone())
+                            .school(student.getSchool())
+                            .courseName(att.getCourse() != null ? att.getCourse().getCourseName() : courseName)
+                            .isNaverBooking(false)
+                            .isManualExcel(isManual)
+                            .attendanceId(att.getId())
+                            .checkInTime(att.getCheckInTime())
+                            .checkOutTime(att.getCheckOutTime())
+                            .build());
+                }
+            }
         }
         
         // 2. 네이버 예약 찾기 (오늘 예약만, 취소 제외)
@@ -266,8 +280,7 @@ public class AttendanceService {
             
             // 오늘 수동 추가된 출석 레코드 찾기
             List<Attendance> manualAttendances = attendanceRepository.findByDate(today).stream()
-                    .filter(a -> a.getStudent() == null && a.getNaverBooking() == null 
-                            && a.getManualStudentName() != null
+                    .filter(a -> a.getManualStudentName() != null
                             && a.getManualStudentName().trim().replaceAll("\\s+", "").equals(excelName))
                     .collect(Collectors.toList());
             Attendance manualAtt = manualAttendances.isEmpty() ? null : manualAttendances.get(0);
@@ -282,6 +295,33 @@ public class AttendanceService {
                     .attendanceId(manualAtt != null ? manualAtt.getId() : null)
                     .checkInTime(manualAtt != null ? manualAtt.getCheckInTime() : null)
                     .checkOutTime(manualAtt != null ? manualAtt.getCheckOutTime() : null)
+                    .build());
+        }
+        
+        // 4. 오늘 행 추가된 출석 레코드 중 manualParentPhone으로 직접 검색 (위에서 못 찾은 것만)
+        List<Attendance> todayManualByPhone = attendanceRepository.findByDate(today).stream()
+                .filter(a -> a.getManualParentPhone() != null
+                        && a.getManualParentPhone().length() >= 4
+                        && a.getManualParentPhone().substring(a.getManualParentPhone().length() - 4).equals(phoneLast4))
+                .collect(Collectors.toList());
+        for (Attendance ma : todayManualByPhone) {
+            String name = ma.getManualStudentName() != null ? ma.getManualStudentName() :
+                    (ma.getStudent() != null ? ma.getStudent().getStudentName() : "알수없음");
+            boolean alreadyFound = results.stream().anyMatch(r ->
+                    r.getAttendanceId() != null && r.getAttendanceId().equals(ma.getId()));
+            if (alreadyFound) continue;
+            String courseName = ma.getCourse() != null ? ma.getCourse().getCourseName() :
+                    studentCourseExcelService.getCourseName(name);
+            results.add(StudentSearchResponse.builder()
+                    .studentId(ma.getStudent() != null ? ma.getStudent().getId() : null)
+                    .studentName(name)
+                    .parentPhone(ma.getManualParentPhone())
+                    .courseName(courseName)
+                    .isNaverBooking(false)
+                    .isManualExcel(true)
+                    .attendanceId(ma.getId())
+                    .checkInTime(ma.getCheckInTime())
+                    .checkOutTime(ma.getCheckOutTime())
                     .build());
         }
         
@@ -481,6 +521,11 @@ public class AttendanceService {
             course = courseRepository.findByCourseName(courseName).orElse(null);
         }
         
+        String parentPhone = studentCourseExcelService.getParentPhone(studentName);
+        if (parentPhone == null && student != null && student.getParentPhone() != null) {
+            parentPhone = student.getParentPhone().replaceAll("[^0-9]", "");
+        }
+
         Attendance attendance = Attendance.builder()
                 .student(student)
                 .course(course)
@@ -489,8 +534,8 @@ public class AttendanceService {
                 .durationMinutes(durationMinutes)
                 .expectedLeaveTime(endTime)
                 .originalExpectedLeaveTime(endTime)
-                .manualStudentName("naver".equals(type) ? studentName : null)
-                .manualParentPhone("naver".equals(type) ? studentCourseExcelService.getParentPhone(studentName) : null)
+                .manualStudentName(studentName)
+                .manualParentPhone(parentPhone)
                 .status(AttendanceStatus.NOTYET)
                 .classCompleted(false)
                 .build();
@@ -921,6 +966,7 @@ public class AttendanceService {
         boolean isNaver = attendance.getNaverBooking() != null;
         Student student = attendance.getStudent();
         boolean isManual = !isNaver && student == null && (attendance.getCourse() != null || attendance.getManualStudentName() != null);
+        boolean isManualAdded = attendance.getManualStudentName() != null;
         
         // student가 null이고 네이버도 아니고 수동추가도 아니면 필터링
         if (!isNaver && student == null && !isManual) {
@@ -971,7 +1017,7 @@ public class AttendanceService {
                 .studentId(student != null ? student.getId() : null)
                 .studentName(studentName)
                 .parentPhone(maskedPhone)
-                .className(isNaver ? "네이버 예약" : (isManual ? "네이버 예약" : (attendance.getCourse() != null ? attendance.getCourse().getCourseName() : null)))
+                .className(isNaver ? "네이버 예약" : (isManualAdded ? "관리자 예약" : (student != null ? "시스템 예약" : null)))
                 .isNaverBooking(isNaver)
                 .courseName(courseName)
                 .startTime(attendance.getAttendanceTime().toString())
@@ -1160,27 +1206,26 @@ public class AttendanceService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
-        // 오늘 이미 출석한 기록이 있는지 확인
+        // 오늘 출석 기록 중 미체크인 레코드 찾기
         List<Attendance> existingAttendances = attendanceRepository.findByStudentAndDate(student, today);
-        for (Attendance att : existingAttendances) {
-            if (att.getCheckInTime() != null) {
-                throw new IllegalStateException("이미 출석 체크가 완료되었습니다");
+        Attendance unchecked = existingAttendances.stream()
+                .filter(a -> a.getCheckInTime() == null)
+                .findFirst().orElse(null);
+
+        // 미체크인 레코드가 있으면 체크인 처리
+        if (unchecked != null) {
+            LocalTime newExpectedLeaveTime = null;
+            if (unchecked.getDurationMinutes() != null && unchecked.getDurationMinutes() > 0) {
+                newExpectedLeaveTime = now.toLocalTime().plusMinutes(unchecked.getDurationMinutes());
             }
+            unchecked.checkIn(now, newExpectedLeaveTime);
+            log.info("Student check-in: name={}", student.getStudentName());
+            return toResponse(unchecked);
         }
 
-        // 기존 출석 기록이 있으면 체크인 처리
+        // 모든 레코드가 이미 체크인 완료면 에러
         if (!existingAttendances.isEmpty()) {
-            Attendance attendance = existingAttendances.get(0);
-            
-            // 수업시간을 알면 하원예정시간 계산, 모르면 null
-            LocalTime newExpectedLeaveTime = null;
-            if (attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0) {
-                newExpectedLeaveTime = now.toLocalTime().plusMinutes(attendance.getDurationMinutes());
-            }
-            
-            attendance.checkIn(now, newExpectedLeaveTime);
-            log.info("Student check-in: name={}", student.getStudentName());
-            return toResponse(attendance);
+            throw new IllegalStateException("이미 출석 체크가 완료되었습니다");
         }
 
         // 새 출석 기록 생성

@@ -1,5 +1,6 @@
 package web.kplay.studentmanagement.dto.attendance;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,8 +19,13 @@ public class StudentSearchResponse {
     private String parentPhone;
     private String school;
     private String courseName;
+
+    @JsonProperty("isNaverBooking")
     private boolean isNaverBooking;
+
+    @JsonProperty("isManualExcel")
     private boolean isManualExcel;
+
     private Long naverBookingId;
     private Long attendanceId;
     private LocalDateTime checkInTime;

@@ -45,7 +45,8 @@ const CheckIn = () => {
 
   const checkInMutation = useMutation({
     mutationFn: async (studentData) => {
-      if (studentData.isManualExcel && studentData.attendanceId) {
+      // attendanceId가 있으면 해당 레코드를 정확히 체크인
+      if (studentData.attendanceId) {
         return axios.post(`/api/attendances/${studentData.attendanceId}/manual-check-in`);
       }
       const isNaver = studentData.isNaverBooking || studentData.naverBooking;
@@ -167,7 +168,14 @@ const CheckIn = () => {
                 <div key={'in-' + index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
                   <div className="student-card-info">
                     <div className="student-card-name">{result.studentName}</div>
-                    <div className="student-card-class">{result.courseName || result.school || ''}</div>
+                    <div className="student-card-class">
+                      {result.courseName || result.school || ''}
+                      {result.isTeacher ? '' : (
+                        <span className={`ci-source-badge ${result.isNaverBooking ? 'ci-badge-naver' : result.isManualExcel ? 'ci-badge-manual' : 'ci-badge-system'}`}>
+                          {result.isNaverBooking ? 'N' : result.isManualExcel ? '수동' : 'S'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="student-card-actions">
                     <button
@@ -191,7 +199,14 @@ const CheckIn = () => {
                 <div key={'out-' + index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
                   <div className="student-card-info">
                     <div className="student-card-name">{result.studentName}</div>
-                    <div className="student-card-class">{result.courseName || result.school || ''}</div>
+                    <div className="student-card-class">
+                      {result.courseName || result.school || ''}
+                      {result.isTeacher ? '' : (
+                        <span className={`ci-source-badge ${result.isNaverBooking ? 'ci-badge-naver' : result.isManualExcel ? 'ci-badge-manual' : 'ci-badge-system'}`}>
+                          {result.isNaverBooking ? 'N' : result.isManualExcel ? '수동' : 'S'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="student-card-actions">
                     <button

@@ -712,7 +712,7 @@ function Attendance() {
                         <span className="naver-badge">네이버 예약</span>
                       )}
                       {!attendance.isNaverBooking && attendance.className && attendance.className !== '네이버 예약' && (
-                        <span className="class-badge">{attendance.className}</span>
+                        <span className={`naver-badge ${attendance.className === '관리자 예약' ? 'badge-manual' : 'badge-system'}`}>{attendance.className}</span>
                       )}
                       <span className="status-badge">
                         {getAttendanceStatusText(attendance)}
