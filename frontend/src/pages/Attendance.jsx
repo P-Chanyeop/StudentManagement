@@ -33,6 +33,7 @@ function Attendance() {
   const [editActualCheckInTime, setEditActualCheckInTime] = useState('');
   const [editActualCheckOutTime, setEditActualCheckOutTime] = useState('');
   const [editExpectedLeaveTime, setEditExpectedLeaveTime] = useState('');
+  const [hideCheckedOut, setHideCheckedOut] = useState(false);
   const [addType, setAddType] = useState('naver'); // 'naver' or 'system'
   const [addStudentSearch, setAddStudentSearch] = useState('');
   const [addSelectedStudent, setAddSelectedStudent] = useState(null);
@@ -456,7 +457,8 @@ function Attendance() {
 
   // 테이블 필터링된 출석 목록
   const filteredAttendances = sortedAttendances.filter(attendance => 
-    !tableSearchName || attendance.studentName?.includes(tableSearchName)
+    (!tableSearchName || attendance.studentName?.includes(tableSearchName)) &&
+    (!hideCheckedOut || !attendance.checkOutTime)
   );
 
   const formatTime = (timeString) => {
@@ -664,6 +666,14 @@ function Attendance() {
             >
               + 행 추가
             </button>
+            <label className="hide-checkout-label" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <input
+                type="checkbox"
+                checked={hideCheckedOut}
+                onChange={(e) => setHideCheckedOut(e.target.checked)}
+              />
+              하원 숨기기
+            </label>
           </div>
           
           <table className="attendance-table">
