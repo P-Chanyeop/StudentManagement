@@ -50,3 +50,4 @@ CREDENTIALS.md
 # AWS RDS 설정 파일 (민감 정보 포함)
 application-prod.yml
 uploads/
+.kiro/

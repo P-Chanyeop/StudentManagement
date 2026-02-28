@@ -223,7 +223,15 @@ public class AuthService {
             user.setName(updates.get("name"));
         }
         if (updates.containsKey("phoneNumber")) {
-            user.setPhoneNumber(updates.get("phoneNumber"));
+            String oldPhone = user.getPhoneNumber();
+            String newPhone = updates.get("phoneNumber");
+            user.setPhoneNumber(newPhone);
+
+            // 학부모 전화번호 변경 시 연관 학생의 parentPhone도 동기화
+            if (user.getRole() == UserRole.PARENT && oldPhone != null && !oldPhone.equals(newPhone)) {
+                studentRepository.findByParentPhone(oldPhone)
+                        .forEach(s -> s.updateParentInfo(s.getParentName(), newPhone, s.getParentEmail()));
+            }
         }
         if (updates.containsKey("address")) {
             user.setAddress(updates.get("address"));
