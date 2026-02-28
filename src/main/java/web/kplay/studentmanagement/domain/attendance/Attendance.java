@@ -252,7 +252,8 @@ public class Attendance extends BaseEntity {
 
     // 추가 수업이 있는지 확인
     public boolean hasAnyAdditionalClass() {
-        return vocabularyClass || grammarClass || phonicsClass || speakingClass;
+        return Boolean.TRUE.equals(vocabularyClass) || Boolean.TRUE.equals(grammarClass) 
+            || Boolean.TRUE.equals(phonicsClass) || Boolean.TRUE.equals(speakingClass);
     }
 
     // 미출석 알림 발송 표시

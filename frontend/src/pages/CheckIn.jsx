@@ -50,11 +50,16 @@ const CheckIn = () => {
 
   const checkInMutation = useMutation({
     mutationFn: async (studentData) => {
+      if (studentData.isNaverBooking || studentData.naverBooking) {
+        if (studentData.naverBookingId) {
+          return axios.post(`/api/attendances/naver-booking/${studentData.naverBookingId}/check-in`);
+        }
+        if (studentData.attendanceId) {
+          return axios.post(`/api/attendances/${studentData.attendanceId}/manual-check-in`);
+        }
+      }
       if (studentData.attendanceId) {
         return axios.post(`/api/attendances/${studentData.attendanceId}/manual-check-in`);
-      }
-      if (studentData.isNaverBooking || studentData.naverBooking) {
-        return axios.post(`/api/attendances/naver-booking/${studentData.naverBookingId}/check-in`);
       }
       if (studentData.studentId) {
         return axios.post(`/api/attendances/${studentData.studentId}/check-in`);
