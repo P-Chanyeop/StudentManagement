@@ -155,12 +155,6 @@ function Students() {
   // 학생 수정 mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => studentAPI.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['students', profile?.role]);
-      setShowEditModal(false);
-      setSelectedStudent(null);
-      alert('학생 정보가 수정되었습니다.');
-    },
     onError: (error) => {
       alert(`수정 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
     },
@@ -258,7 +252,6 @@ function Students() {
         const enrollmentsResponse = await enrollmentAPI.getByStudent(selectedStudent.id);
         const activeEnrollments = enrollmentsResponse.data.filter(e => e.isActive);
         
-        // 활성 수강권이 있으면 반 정보 업데이트
         if (activeEnrollments.length > 0) {
           for (const enrollment of activeEnrollments) {
             await enrollmentAPI.update(enrollment.id, {
@@ -272,6 +265,11 @@ function Students() {
           }
         }
       }
+
+      queryClient.invalidateQueries(['students', profile?.role]);
+      setShowEditModal(false);
+      setSelectedStudent(null);
+      alert('학생 정보가 수정되었습니다.');
     } catch (error) {
       console.error('학생 수정 실패:', error);
     }

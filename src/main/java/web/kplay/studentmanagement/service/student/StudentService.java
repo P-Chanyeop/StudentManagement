@@ -122,6 +122,19 @@ public class StudentService {
             if (!student.getParentPhone().equals(user.getPhoneNumber())) {
                 throw new RuntimeException("본인 자녀의 정보만 수정할 수 있습니다.");
             }
+
+            // 학부모가 전화번호를 변경하면 User 전화번호 + 다른 자녀의 parentPhone도 동기화
+            if (request.getParentPhone() != null && !request.getParentPhone().equals(user.getPhoneNumber())) {
+                String oldPhone = user.getPhoneNumber();
+                user.setPhoneNumber(request.getParentPhone());
+                userRepository.save(user);
+                // 같은 학부모의 다른 자녀들도 전화번호 업데이트
+                List<Student> siblings = studentRepository.findByParentPhoneAndIsActive(oldPhone, true);
+                for (Student sibling : siblings) {
+                    sibling.updateParentInfo(sibling.getParentName(), request.getParentPhone(), sibling.getParentEmail());
+                }
+                log.info("학부모 전화번호 동기화: {} -> {}", oldPhone, request.getParentPhone());
+            }
         }
 
         // 학생 정보 업데이트
