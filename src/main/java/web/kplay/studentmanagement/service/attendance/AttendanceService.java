@@ -555,21 +555,49 @@ public class AttendanceService {
 
         LocalDateTime now = LocalDateTime.now();
         LocalTime expectedLeave = null;
-        if (attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0) {
+
+        // 시스템 학생이면 수강권 기반 수업시간 계산
+        Student student = attendance.getStudent();
+        if (student != null) {
+            int duration = attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0
+                    ? attendance.getDurationMinutes()
+                    : (attendance.getCourse() != null ? attendance.getCourse().getDurationMinutes() : 120);
+            expectedLeave = now.toLocalTime().plusMinutes(duration);
+        } else if (attendance.getManualStudentName() != null) {
+            // 네이버 관리자 예약 — 엑셀에서 반 이름 조회 후 수업시간 계산
+            String cleanName = attendance.getManualStudentName().trim().replaceAll("\\s+", "");
+            String courseName = studentCourseExcelService.getCourseName(cleanName);
+            if (courseName != null) {
+                var course = courseRepository.findByCourseName(courseName);
+                if (course.isPresent() && course.get().getDurationMinutes() != null) {
+                    expectedLeave = now.toLocalTime().plusMinutes(course.get().getDurationMinutes());
+                }
+            }
+            if (expectedLeave == null && attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0) {
+                expectedLeave = now.toLocalTime().plusMinutes(attendance.getDurationMinutes());
+            }
+        } else if (attendance.getDurationMinutes() != null && attendance.getDurationMinutes() > 0) {
             expectedLeave = now.toLocalTime().plusMinutes(attendance.getDurationMinutes());
         }
 
         attendance.checkIn(now, expectedLeave);
-        log.info("Manual attendance check-in: name={}", attendance.getManualStudentName());
 
-        // 문자 발송
-        if (attendance.getManualParentPhone() != null) {
+        // 문자 발송: 시스템 학생이면 student 기반, 아니면 manual 기반
+        if (student != null) {
+            try {
+                automatedMessageService.sendCheckInNotification(student, now, expectedLeave);
+            } catch (Exception e) {
+                log.error("등원 알림 문자 발송 실패: {}", e.getMessage());
+            }
+            log.info("System student check-in: name={}", student.getStudentName());
+        } else if (attendance.getManualParentPhone() != null) {
             try {
                 automatedMessageService.sendManualCheckInNotification(
                         attendance.getManualStudentName(), attendance.getManualParentPhone(), now, expectedLeave);
             } catch (Exception e) {
                 log.error("수동 추가 학생 등원 알림 문자 발송 실패: {}", e.getMessage());
             }
+            log.info("Manual attendance check-in: name={}", attendance.getManualStudentName());
         }
 
         return toResponse(attendance);
