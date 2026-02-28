@@ -325,10 +325,6 @@ public class AttendanceService {
                     .build());
         }
         
-        if (results.isEmpty()) {
-            throw new ResourceNotFoundException("전화번호 뒷자리 " + phoneLast4 + "로 등록된 학생이나 예약을 찾을 수 없습니다");
-        }
-        
         return results;
     }
     

@@ -149,7 +149,7 @@ function Teachers() {
       </div>
 
       {(showCreateModal || showEditModal) && (
-        <div className="tch-modal-overlay" onClick={closeModal}>
+        <div className="tch-modal-overlay">
           <div className="tch-modal" onClick={(e) => e.stopPropagation()}>
             <div className="tch-modal-header">
               <h2>{showCreateModal ? '선생님 등록' : '선생님 수정'}</h2>

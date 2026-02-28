@@ -17,9 +17,14 @@ const CheckIn = () => {
 
   const searchMutation = useMutation({
     mutationFn: async (phone) => {
-      const studentRes = await axios.post('/api/attendances/search-by-phone', { phoneLast4: phone });
-      const teacherRes = await axios.post('/api/teacher-attendance/search', { phoneLast4: phone });
-      return { students: studentRes.data, teachers: teacherRes.data };
+      const [studentRes, teacherRes] = await Promise.allSettled([
+        axios.post('/api/attendances/search-by-phone', { phoneLast4: phone }),
+        axios.post('/api/teacher-attendance/search', { phoneLast4: phone })
+      ]);
+      return {
+        students: studentRes.status === 'fulfilled' ? studentRes.value.data : [],
+        teachers: teacherRes.status === 'fulfilled' ? teacherRes.value.data : []
+      };
     },
     onSuccess: (data) => {
       let results = [];
