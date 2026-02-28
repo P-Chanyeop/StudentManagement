@@ -918,3 +918,42 @@
 .std-edit-submit:hover {
   background: #02b351;
 }
+
+/* 학생 등록/수정 모달 footer */
+.std-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 32px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.std-modal-cancel,
+.std-modal-submit {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.std-modal-cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.std-modal-cancel:hover {
+  background: var(--gray-200);
+}
+
+.std-modal-submit {
+  background: var(--naver-green);
+  color: white;
+}
+
+.std-modal-submit:hover {
+  opacity: 0.9;
+}

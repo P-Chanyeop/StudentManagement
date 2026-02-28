@@ -644,11 +644,11 @@ function Students() {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowCreateModal(false)}>
+            <div className="std-modal-footer">
+              <button className="std-modal-cancel" onClick={() => setShowCreateModal(false)}>
                 취소
               </button>
-              <button className="btn-primary" onClick={handleCreateStudent}>
+              <button className="std-modal-submit" onClick={handleCreateStudent}>
                 등록
               </button>
             </div>
