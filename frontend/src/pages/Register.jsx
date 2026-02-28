@@ -232,18 +232,18 @@ function Register() {
       marketingAgreed: formData.marketingAgreed,
       smsAgreed: formData.smsAgreed,
       
-      // 학생 정보 (첫 번째 학생)
-      student: formData.students && formData.students.length > 0 ? {
-        studentName: formData.students[0].studentName,
-        studentPhone: formData.students[0].studentPhone,
-        birthDate: formData.students[0].birthDate || null,
-        gender: formData.students[0].gender,
-        school: formData.students[0].school,
-        grade: formData.students[0].grade,
-        englishLevel: formData.students[0].englishLevel || '1.0',
+      // 학생 정보 (전체)
+      students: formData.students.map(s => ({
+        studentName: s.studentName,
+        studentPhone: s.studentPhone,
+        birthDate: s.birthDate || null,
+        gender: s.gender,
+        school: s.school,
+        grade: s.grade,
+        englishLevel: s.englishLevel || '1.0',
         parentName: formData.parentName,
         parentPhone: formData.parentPhone
-      } : null
+      }))
     };
 
     registerMutation.mutate(registerData);

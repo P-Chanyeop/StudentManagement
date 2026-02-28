@@ -50,16 +50,16 @@ const CheckIn = () => {
 
   const checkInMutation = useMutation({
     mutationFn: async (studentData) => {
-      // attendanceId가 있으면 해당 레코드를 정확히 체크인
       if (studentData.attendanceId) {
         return axios.post(`/api/attendances/${studentData.attendanceId}/manual-check-in`);
       }
-      const isNaver = studentData.isNaverBooking || studentData.naverBooking;
-      if (isNaver) {
+      if (studentData.isNaverBooking || studentData.naverBooking) {
         return axios.post(`/api/attendances/naver-booking/${studentData.naverBookingId}/check-in`);
-      } else {
+      }
+      if (studentData.studentId) {
         return axios.post(`/api/attendances/${studentData.studentId}/check-in`);
       }
+      throw new Error('출석 처리할 수 없는 학생입니다. 관리자에게 문의해주세요.');
     },
     onSuccess: () => { alert('등원 체크가 완료되었습니다.'); resetState(); queryClient.invalidateQueries(['attendances']); },
     onError: (error) => { alert(error.response?.data?.message || '등원 체크 중 오류가 발생했습니다.'); resetState(); }

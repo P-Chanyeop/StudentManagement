@@ -918,11 +918,9 @@ public class AttendanceService {
             attendance.updateOriginalExpectedLeaveTime(autoExpected);
         }
 
-        // 하원예정시간 직접 변경 (등원시간 변경과 독립)
-        if (checkInTimeStr == null || checkInTimeStr.isEmpty()) {
-            if (expectedLeaveTimeStr != null && !expectedLeaveTimeStr.isEmpty()) {
-                attendance.updateExpectedLeaveTime(LocalTime.parse(expectedLeaveTimeStr));
-            }
+        // 하원예정시간 직접 변경 (자동 계산보다 우선)
+        if (expectedLeaveTimeStr != null && !expectedLeaveTimeStr.isEmpty()) {
+            attendance.updateExpectedLeaveTime(LocalTime.parse(expectedLeaveTimeStr));
         }
 
         // 하원시간 직접 변경

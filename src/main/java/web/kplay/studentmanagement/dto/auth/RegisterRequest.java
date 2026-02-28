@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -44,7 +46,7 @@ public class RegisterRequest {
     private Boolean smsAgreed;
     
     // 학생 정보
-    private StudentInfo student;
+    private List<StudentInfo> students;
     
     @Getter
     @NoArgsConstructor

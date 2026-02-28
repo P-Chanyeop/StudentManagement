@@ -39,7 +39,6 @@ sms:
 holiday:
   api:
     key: ${HOLIDAY_API_KEY:89f7714a095eef41a5d331112f94b5ac301f9bab83eaf354e9327faf1f2fec74}
-
 # 네이버 예약 크롤링 설정
 naver:
   id: ${NAVER_ID:littlebearrc}

@@ -43,7 +43,6 @@ public class AttendanceController {
     }
 
     @PostMapping("/checkin-by-phone")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<AttendanceResponse> checkInByPhone(@RequestBody Map<String, Object> request) {
         String phoneLast4 = request.get("phoneLast4").toString();
         java.time.LocalTime expectedLeaveTime = request.get("expectedLeaveTime") != null ? 

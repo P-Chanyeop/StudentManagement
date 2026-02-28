@@ -297,25 +297,25 @@ public class AuthService {
         User savedParent = userRepository.save(parentUser);
 
         // 학생 정보가 있으면 학생도 생성
-        if (request.getStudent() != null) {
-            RegisterRequest.StudentInfo studentInfo = request.getStudent();
-            
-            Student student = Student.builder()
-                    .parentUser(savedParent)
-                    .studentName(studentInfo.getStudentName())
-                    .studentPhone(studentInfo.getStudentPhone())
-                    .birthDate(studentInfo.getBirthDate() != null ? LocalDate.parse(studentInfo.getBirthDate()) : null)
-                    .gender(studentInfo.getGender())
-                    .school(studentInfo.getSchool())
-                    .grade(studentInfo.getGrade())
-                    .englishLevel(studentInfo.getEnglishLevel())
-                    .parentName(request.getName())
-                    .parentPhone(request.getPhoneNumber())
-                    .address(request.getAddress())
-                    .isActive(true)
-                    .build();
+        if (request.getStudents() != null) {
+            for (RegisterRequest.StudentInfo studentInfo : request.getStudents()) {
+                Student student = Student.builder()
+                        .parentUser(savedParent)
+                        .studentName(studentInfo.getStudentName())
+                        .studentPhone(studentInfo.getStudentPhone())
+                        .birthDate(studentInfo.getBirthDate() != null ? LocalDate.parse(studentInfo.getBirthDate()) : null)
+                        .gender(studentInfo.getGender())
+                        .school(studentInfo.getSchool())
+                        .grade(studentInfo.getGrade())
+                        .englishLevel(studentInfo.getEnglishLevel())
+                        .parentName(request.getName())
+                        .parentPhone(request.getPhoneNumber())
+                        .address(request.getAddress())
+                        .isActive(true)
+                        .build();
 
-            studentRepository.save(student);
+                studentRepository.save(student);
+            }
         }
 
         log.info("학부모 회원가입 완료 - 사용자명: {}, 이름: {}", request.getUsername(), request.getName());
