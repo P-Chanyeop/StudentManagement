@@ -861,9 +861,12 @@ function Students() {
                                   }
                                   queryClient.invalidateQueries(['students', profile?.role]);
                                   
-                                  // selectedStudent 상태 즉시 업데이트
+                                  // selectedStudent 상태 즉시 업데이트 (사용자가 수정한 필드 보존)
                                   const updatedResponse = await studentAPI.getById(selectedStudent.id);
-                                  setSelectedStudent(updatedResponse.data);
+                                  setSelectedStudent(prev => ({
+                                    ...prev,
+                                    enrollments: updatedResponse.data.enrollments,
+                                  }));
                                 } catch (error) {
                                   alert('처리 실패: ' + (error.response?.data?.message || '오류가 발생했습니다.'));
                                 }
