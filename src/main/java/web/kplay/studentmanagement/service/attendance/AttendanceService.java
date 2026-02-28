@@ -285,6 +285,9 @@ public class AttendanceService {
                     .collect(Collectors.toList());
             Attendance manualAtt = manualAttendances.isEmpty() ? null : manualAttendances.get(0);
             
+            // 오늘 출석 레코드가 없으면 검색 결과에서 제외
+            if (manualAtt == null) continue;
+            
             String courseName = studentCourseExcelService.getCourseName(excelName);
             results.add(StudentSearchResponse.builder()
                     .studentName(excelName)
