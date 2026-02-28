@@ -51,6 +51,9 @@ function Attendance() {
 
   // 출석 상태에 따른 행 클래스 반환
   const getAttendanceRowClass = (attendance) => {
+    // 하원 완료된 학생은 gray out
+    if (attendance.checkOutTime) return 'checked-out';
+
     // 상태가 있으면 상태에 따라 클래스 반환
     if (attendance.status) {
       switch (attendance.status) {
