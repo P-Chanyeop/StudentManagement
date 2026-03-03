@@ -172,7 +172,7 @@ public class AttendanceService {
         LocalDate today = LocalDate.now();
         List<StudentSearchResponse> results = new ArrayList<>();
         
-        // 1. 회원 학생 찾기
+        // 1. 회원 학생 찾기 (오늘 출석부에 있는 학생만)
         List<Student> students = studentRepository.findAll().stream()
                 .filter(s -> {
                     if (s.getParentPhone() == null) return false;
@@ -182,66 +182,46 @@ public class AttendanceService {
                 .collect(Collectors.toList());
         
         for (Student student : students) {
+            // 오늘 출석 기록이 있는 학생만 결과에 포함
+            List<Attendance> todayAttendances = attendanceRepository.findByStudentAndDate(student, today);
+            if (todayAttendances.isEmpty()) continue;
+            
             String courseName = null;
             List<Enrollment> activeEnrollments = enrollmentRepository.findByStudentAndIsActiveTrue(student);
             if (!activeEnrollments.isEmpty()) {
                 courseName = activeEnrollments.get(0).getCourse().getCourseName();
             }
             
-            // 오늘 출석 기록 조회 (여러 개일 수 있음: 원래 예약 + 행 추가)
-            List<Attendance> todayAttendances = attendanceRepository.findByStudentAndDate(student, today);
-            if (todayAttendances.isEmpty()) {
+            for (Attendance att : todayAttendances) {
+                boolean isManual = att.getManualStudentName() != null;
                 results.add(StudentSearchResponse.builder()
                         .studentId(student.getId())
                         .studentName(student.getStudentName())
                         .parentName(student.getParentName())
                         .parentPhone(student.getParentPhone())
                         .school(student.getSchool())
-                        .courseName(courseName)
+                        .courseName(att.getCourse() != null ? att.getCourse().getCourseName() : courseName)
                         .isNaverBooking(false)
+                        .isManualExcel(isManual)
+                        .attendanceId(att.getId())
+                        .checkInTime(att.getCheckInTime())
+                        .checkOutTime(att.getCheckOutTime())
                         .build());
-            } else {
-                for (Attendance att : todayAttendances) {
-                    boolean isManual = att.getManualStudentName() != null;
-                    results.add(StudentSearchResponse.builder()
-                            .studentId(student.getId())
-                            .studentName(student.getStudentName())
-                            .parentName(student.getParentName())
-                            .parentPhone(student.getParentPhone())
-                            .school(student.getSchool())
-                            .courseName(att.getCourse() != null ? att.getCourse().getCourseName() : courseName)
-                            .isNaverBooking(false)
-                            .isManualExcel(isManual)
-                            .attendanceId(att.getId())
-                            .checkInTime(att.getCheckInTime())
-                            .checkOutTime(att.getCheckOutTime())
-                            .build());
-                }
             }
         }
         
-        // 2. 네이버 예약 찾기 (오늘 예약만, 취소 제외)
-        var naverBookings = naverBookingRepository.findAll().stream()
-                .filter(nb -> {
-                    if (nb.getPhone() == null) return false;
-                    // 취소된 예약 제외 (취소, RC04)
-                    if (nb.getStatus() != null && (nb.getStatus().contains("취소") || nb.getStatus().equals("RC04"))) return false;
-                    // 오늘 예약만 (bookingTime에서 날짜 추출)
-                    if (nb.getBookingTime() == null) return false;
-                    try {
-                        String dateStr = nb.getBookingTime().split(" ")[0]; // "2026-02-06 14:00" -> "2026-02-06"
-                        LocalDate bookingDate = LocalDate.parse(dateStr);
-                        if (!bookingDate.equals(today)) return false;
-                    } catch (Exception e) {
-                        return false;
-                    }
-                    String cleanPhone = nb.getPhone().replaceAll("[^0-9]", "");
+        // 2. 네이버 예약 찾기 (오늘 출석부에 있는 것만)
+        List<Attendance> todayNaverAttendances = attendanceRepository.findByDate(today).stream()
+                .filter(a -> a.getNaverBooking() != null && a.getNaverBooking().getPhone() != null)
+                .filter(a -> {
+                    String cleanPhone = a.getNaverBooking().getPhone().replaceAll("[^0-9]", "");
                     return cleanPhone.length() >= 4 && cleanPhone.substring(cleanPhone.length() - 4).equals(phoneLast4);
                 })
                 .collect(Collectors.toList());
         
-        for (var booking : naverBookings) {
-            // 학생명이 없으면 스킵 (예약자명만 있는 경우)
+        for (Attendance todayAttendance : todayNaverAttendances) {
+            var booking = todayAttendance.getNaverBooking();
+            // 학생명이 없으면 스킵
             if (booking.getStudentName() == null || booking.getStudentName().trim().isEmpty()) {
                 continue;
             }
@@ -251,10 +231,6 @@ public class AttendanceService {
             String cleanName = booking.getStudentName().trim().replaceAll("\\s+", "");
             courseName = studentCourseExcelService.getCourseName(cleanName);
             
-            // 오늘 출석 기록 조회
-            List<Attendance> todayAttendances = attendanceRepository.findByNaverBookingAndDate(booking, today);
-            Attendance todayAttendance = todayAttendances.isEmpty() ? null : todayAttendances.get(0);
-            
             results.add(StudentSearchResponse.builder()
                     .naverBookingId(booking.getId())
                     .studentName(booking.getStudentName())
@@ -263,9 +239,9 @@ public class AttendanceService {
                     .school(booking.getSchool())
                     .courseName(courseName)
                     .isNaverBooking(true)
-                    .attendanceId(todayAttendance != null ? todayAttendance.getId() : null)
-                    .checkInTime(todayAttendance != null ? todayAttendance.getCheckInTime() : null)
-                    .checkOutTime(todayAttendance != null ? todayAttendance.getCheckOutTime() : null)
+                    .attendanceId(todayAttendance.getId())
+                    .checkInTime(todayAttendance.getCheckInTime())
+                    .checkOutTime(todayAttendance.getCheckOutTime())
                     .build());
         }
         
