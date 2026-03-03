@@ -464,6 +464,18 @@ function Attendance() {
     (!hideCheckedOut || !attendance.checkOutTime)
   );
 
+  // 동일 이름이 있으면 이름 뒤에 (전화번호 뒷4자리) 표시
+  const nameCount = {};
+  filteredAttendances.forEach(a => { const n = a.studentName; nameCount[n] = (nameCount[n] || 0) + 1; });
+  filteredAttendances.forEach(a => {
+    if (nameCount[a.studentName] > 1 && a.parentPhone) {
+      const digits = a.parentPhone.replace(/[^0-9]/g, '');
+      a.displayName = `${a.studentName} (${digits.slice(-4)})`;
+    } else {
+      a.displayName = a.studentName;
+    }
+  });
+
   const formatTime = (timeString) => {
     if (!timeString) return '-';
     
@@ -754,7 +766,7 @@ function Attendance() {
                 >
                   <td className="student-name-td">
                     <div className="student-info">
-                      <span className="name">{attendance.studentName}</span>
+                      <span className="name">{attendance.displayName || attendance.studentName}</span>
                       {(attendance.isNaverBooking || attendance.className === '네이버 예약') && (
                         <span className="naver-badge">네이버 예약</span>
                       )}
