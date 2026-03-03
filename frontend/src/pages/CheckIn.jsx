@@ -42,6 +42,17 @@ const CheckIn = () => {
           results.push({ ...s, needsCheckIn: true, needsCheckOut: false });
         }
       });
+      // 동일 이름이 있으면 이름 뒤에 (전화번호 뒷4자리) 표시
+      const nameCount = {};
+      results.forEach(r => { const n = r.studentName; nameCount[n] = (nameCount[n] || 0) + 1; });
+      results.forEach(r => {
+        if (nameCount[r.studentName] > 1 && r.parentPhone) {
+          const digits = r.parentPhone.replace(/[^0-9]/g, '');
+          r.displayName = `${r.studentName} (${digits.slice(-4)})`;
+        } else {
+          r.displayName = r.studentName;
+        }
+      });
       setSearchResults(results);
       if (results.length > 0) setPage(2);
     },
@@ -177,7 +188,7 @@ const CheckIn = () => {
                 : searchResults.filter(r => r.needsCheckIn).map((result, index) => (
                 <div key={'in-' + index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
                   <div className="student-card-info">
-                    <div className="student-card-name">{result.studentName}</div>
+                    <div className="student-card-name">{result.displayName || result.studentName}</div>
                     <div className="student-card-class">
                       {result.courseName || result.school || ''}
                       {result.isTeacher ? '' : (
@@ -208,7 +219,7 @@ const CheckIn = () => {
                 : searchResults.filter(r => r.needsCheckOut).map((result, index) => (
                 <div key={'out-' + index} className="student-card" style={{ animationDelay: `${index * 0.08}s` }}>
                   <div className="student-card-info">
-                    <div className="student-card-name">{result.studentName}</div>
+                    <div className="student-card-name">{result.displayName || result.studentName}</div>
                     <div className="student-card-class">
                       {result.courseName || result.school || ''}
                       {result.isTeacher ? '' : (
