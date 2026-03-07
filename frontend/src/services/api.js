@@ -171,6 +171,8 @@ export const attendanceAPI = {
     api.put(`/attendances/${attendanceId}/dc-check`, { dcCheck }),
   updateWrCheck: (attendanceId, wrCheck) =>
     api.put(`/attendances/${attendanceId}/wr-check`, { wrCheck }),
+  updateReadingNote: (attendanceId, readingNote) =>
+    api.put(`/attendances/${attendanceId}/reading-note`, { readingNote }),
   toggleVocabularyClass: (attendanceId) =>
     api.put(`/attendances/${attendanceId}/vocabulary`),
   toggleGrammarClass: (attendanceId) =>

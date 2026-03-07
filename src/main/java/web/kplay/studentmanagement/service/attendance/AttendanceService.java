@@ -1083,6 +1083,7 @@ public class AttendanceService {
                 .additionalClassEndTime(attendance.getAdditionalClassEndTime())
                 .assignedClassInitials(assignedClassInitials)
                 .additionalClassTime(additionalClassTime)
+                .readingNote(attendance.getReadingNote())
                 .build();
     }
 
@@ -1173,6 +1174,19 @@ public class AttendanceService {
         return toResponse(attendance);
     }
 
+    /**
+     * 리딩시간 메모 업데이트
+     */
+    @Transactional
+    public AttendanceResponse updateReadingNote(Long attendanceId, String readingNote) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        attendance.updateReadingNote(readingNote);
+        log.info("Reading note updated: student={}, readingNote={}", getStudentName(attendance), readingNote);
+
+        return toResponse(attendance);
+    }
     /**
      * Vocabulary 수업 토글
      */

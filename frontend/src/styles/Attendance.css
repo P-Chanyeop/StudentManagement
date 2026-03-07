@@ -244,7 +244,9 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .table-search {
@@ -306,6 +308,7 @@
 
 .attendance-table {
   width: 100%;
+  min-width: 1400px;
   border-collapse: collapse;
 }
 
@@ -680,7 +683,7 @@
   opacity: 1;
 }
 /* D/C, WR 입력 */
-.dc-input, .wr-input {
+.dc-input, .wr-input, .reading-note-input {
   width: 60px;
   padding: 6px 8px;
   border: 1px solid var(--gray-300);
@@ -691,7 +694,11 @@
   font-weight: 500;
 }
 
-.dc-input:focus, .wr-input:focus {
+.reading-note-input {
+  width: 100px;
+}
+
+.dc-input:focus, .wr-input:focus, .reading-note-input:focus {
   outline: none;
   border-color: var(--naver-green);
   box-shadow: 0 0 0 2px rgba(3, 199, 90, 0.1);

@@ -102,6 +102,9 @@ public class Attendance extends BaseEntity {
     @Column
     private LocalTime additionalClassEndTime; // 추가 수업 종료 시간
 
+    @Column(length = 500)
+    private String readingNote; // 리딩시간 메모
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean lateNotificationSent = false; // 미출석 알림 발송 여부
@@ -203,6 +206,11 @@ public class Attendance extends BaseEntity {
     // WR 체크 업데이트
     public void updateWrCheck(String wrCheck) {
         this.wrCheck = wrCheck;
+    }
+
+    // 리딩시간 메모 업데이트
+    public void updateReadingNote(String readingNote) {
+        this.readingNote = readingNote;
     }
 
     // 추가 수업 토글 및 종료 시간 계산

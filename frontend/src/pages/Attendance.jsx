@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { attendanceAPI, studentAPI, teacherAttendanceAPI } from '../services/api';
@@ -48,6 +48,35 @@ function Attendance() {
       day: today.getDate().toString()
     };
   });
+
+  // 테이블 드래그 스크롤
+  const tableContainerRef = useRef(null);
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  const handleMouseDown = useCallback((e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    isDragging.current = true;
+    hasDragged.current = false;
+    startX.current = e.pageX - tableContainerRef.current.offsetLeft;
+    scrollLeft.current = tableContainerRef.current.scrollLeft;
+    tableContainerRef.current.style.cursor = 'grabbing';
+  }, []);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const x = e.pageX - tableContainerRef.current.offsetLeft;
+    if (Math.abs(x - startX.current) > 5) hasDragged.current = true;
+    tableContainerRef.current.scrollLeft = scrollLeft.current - (x - startX.current);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false;
+    if (tableContainerRef.current) tableContainerRef.current.style.cursor = 'grab';
+  }, []);
 
   // 출석 상태에 따른 행 클래스 반환
   const getAttendanceRowClass = (attendance) => {
@@ -303,6 +332,19 @@ function Attendance() {
     }
   };
 
+
+  // 리딩시간 메모 업데이트
+  const handleReadingNoteUpdate = (attendanceId, readingNote) => {
+    if (attendanceId) {
+      attendanceAPI.updateReadingNote(attendanceId, readingNote)
+        .then(() => {
+          queryClient.invalidateQueries(['attendances', selectedDate]);
+        })
+        .catch(error => {
+          console.error('리딩시간 업데이트 오류:', error);
+        });
+    }
+  };
   // 추가 수업 토글
   const handleToggleClass = (attendanceId, classType) => {
     if (attendanceId) {
@@ -666,7 +708,15 @@ function Attendance() {
           </div>
         </div>
 
-        <div className="attendance-table-container">
+        <div
+          className="attendance-table-container"
+          ref={tableContainerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          style={{ cursor: 'grab' }}
+        >
           <div className="table-search">
             <input
               type="text"
@@ -734,6 +784,7 @@ function Attendance() {
                 </th>
                 <th>D/C</th>
                 <th>WR</th>
+                <th>리딩시간</th>
                 <th>비고</th>
               </tr>
             </thead>
@@ -743,6 +794,7 @@ function Attendance() {
                   key={attendance.id || `attendance-${index}`}
                   className={`attendance-row ${getAttendanceRowClass(attendance)}`}
                   onClick={() => {
+                    if (hasDragged.current) return;
                     setDetailAttendance(attendance);
                     setEditCheckInTime(attendance.startTime || '');
                     setEditCheckOutTime(attendance.endTime || '');
@@ -826,6 +878,15 @@ function Attendance() {
                       className="wr-input"
                       maxLength="10"
                       onBlur={(e) => handleWrCheckUpdate(attendance.id, e.target.value)}
+                    />
+                  </td>
+                  <td className="reading-note" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      placeholder="리딩시간"
+                      defaultValue={attendance.readingNote || ''}
+                      className="reading-note-input"
+                      onBlur={(e) => handleReadingNoteUpdate(attendance.id, e.target.value)}
                     />
                   </td>
                   <td className="notes" onClick={(e) => e.stopPropagation()}>
@@ -1030,6 +1091,16 @@ function Attendance() {
                     defaultValue={detailAttendance.reason || ''}
                     onBlur={(e) => handleReasonBlur(detailAttendance.id, e.target.value)}
                     placeholder="결석/지각 사유 입력..."
+                    style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label><strong>리딩시간</strong></label>
+                  <textarea
+                    defaultValue={detailAttendance.readingNote || ''}
+                    onBlur={(e) => handleReadingNoteUpdate(detailAttendance.id, e.target.value)}
+                    placeholder="리딩시간 메모 입력..."
                     style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical', boxSizing: 'border-box' }}
                   />
                 </div>

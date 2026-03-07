@@ -321,6 +321,17 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
+    // 리딩시간 메모 업데이트
+    @PutMapping("/{id}/reading-note")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<AttendanceResponse> updateReadingNote(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        String readingNote = request.get("readingNote");
+        AttendanceResponse response = attendanceService.updateReadingNote(id, readingNote);
+        return ResponseEntity.ok(response);
+    }
+
     // V - Vocabulary 수업 토글
     @PutMapping("/{id}/vocabulary")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")

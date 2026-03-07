@@ -46,4 +46,6 @@ public class AttendanceResponse {
     // 할당된 추가수업 정보
     private String assignedClassInitials; // 할당된 추가수업 이니셜 (VSGP)
     private LocalTime additionalClassTime; // 추가수업 시간 (등원시간 + 30분)
+    
+    private String readingNote; // 리딩시간 메모
 }
