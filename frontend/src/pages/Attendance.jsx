@@ -1121,6 +1121,24 @@ function Attendance() {
                   <i className="fas fa-trash"></i> 행 삭제
                 </button>
               )}
+              {!detailAttendance.checkInTime && (
+                <button
+                  className="btn btn-success"
+                  style={{ background: '#03c75a', color: 'white' }}
+                  onClick={() => {
+                    if (window.confirm(`${detailAttendance.studentName} 학생을 출석 처리하시겠습니까?`)) {
+                      attendanceAPI.checkInByAttendanceId(detailAttendance.id)
+                        .then(() => {
+                          queryClient.invalidateQueries(['attendances', selectedDate]);
+                          setShowDetailModal(false);
+                        })
+                        .catch(err => alert(err.response?.data?.message || '출석 처리 실패'));
+                    }
+                  }}
+                >
+                  <i className="fas fa-check"></i> 출석 처리
+                </button>
+              )}
               <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>닫기</button>
               <button
                 className="btn btn-primary"
