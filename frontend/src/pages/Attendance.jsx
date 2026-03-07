@@ -1106,56 +1106,78 @@ function Attendance() {
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
-              {detailAttendance.className === '관리자 예약' && (
+            <div className="modal-footer" style={{ flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-start' }}>
+                {detailAttendance.className === '관리자 예약' && (
+                  <button
+                    className="btn btn-danger"
+                    style={{ background: '#ef4444', color: 'white' }}
+                    onClick={() => {
+                      if (window.confirm(`${detailAttendance.studentName} 행을 삭제하시겠습니까?`)) {
+                        deleteMutation.mutate(detailAttendance.id);
+                      }
+                    }}
+                    disabled={deleteMutation?.isPending}
+                  >
+                    <i className="fas fa-trash"></i> 행 삭제
+                  </button>
+                )}
+                {!detailAttendance.checkInTime && (
+                  <button
+                    className="btn btn-success"
+                    style={{ background: '#03c75a', color: 'white' }}
+                    onClick={() => {
+                      if (window.confirm(`${detailAttendance.studentName} 학생을 출석 처리하시겠습니까?`)) {
+                        attendanceAPI.checkInByAttendanceId(detailAttendance.id)
+                          .then(() => {
+                            queryClient.invalidateQueries(['attendances', selectedDate]);
+                            setShowDetailModal(false);
+                          })
+                          .catch(err => alert(err.response?.data?.message || '출석 처리 실패'));
+                      }
+                    }}
+                  >
+                    <i className="fas fa-check"></i> 출석 처리
+                  </button>
+                )}
+                {detailAttendance.checkInTime && !detailAttendance.checkOutTime && (
+                  <button
+                    className="btn"
+                    style={{ background: '#f59e0b', color: 'white' }}
+                    onClick={() => {
+                      if (window.confirm(`${detailAttendance.studentName} 학생을 하원 처리하시겠습니까?`)) {
+                        attendanceAPI.checkOut(detailAttendance.id)
+                          .then(() => {
+                            queryClient.invalidateQueries(['attendances', selectedDate]);
+                            setShowDetailModal(false);
+                          })
+                          .catch(err => alert(err.response?.data?.message || '하원 처리 실패'));
+                      }
+                    }}
+                  >
+                    <i className="fas fa-sign-out-alt"></i> 하원 처리
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end' }}>
+                <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>닫기</button>
                 <button
-                  className="btn btn-danger"
-                  style={{ marginRight: 'auto', background: '#ef4444', color: 'white' }}
+                  className="btn btn-primary"
+                  disabled={updateTimeMutation.isPending}
                   onClick={() => {
-                    if (window.confirm(`${detailAttendance.studentName} 행을 삭제하시겠습니까?`)) {
-                      deleteMutation.mutate(detailAttendance.id);
-                    }
-                  }}
-                  disabled={deleteMutation?.isPending}
-                >
-                  <i className="fas fa-trash"></i> 행 삭제
-                </button>
-              )}
-              {!detailAttendance.checkInTime && (
-                <button
-                  className="btn btn-success"
-                  style={{ background: '#03c75a', color: 'white' }}
-                  onClick={() => {
-                    if (window.confirm(`${detailAttendance.studentName} 학생을 출석 처리하시겠습니까?`)) {
-                      attendanceAPI.checkInByAttendanceId(detailAttendance.id)
-                        .then(() => {
-                          queryClient.invalidateQueries(['attendances', selectedDate]);
-                          setShowDetailModal(false);
-                        })
-                        .catch(err => alert(err.response?.data?.message || '출석 처리 실패'));
-                    }
+                    updateTimeMutation.mutate({
+                      attendanceId: detailAttendance.id,
+                      startTime: editCheckInTime || null,
+                      endTime: editCheckOutTime || null,
+                      checkInTime: editActualCheckInTime || null,
+                      checkOutTime: editActualCheckOutTime || null,
+                      expectedLeaveTime: editExpectedLeaveTime || null,
+                    });
                   }}
                 >
-                  <i className="fas fa-check"></i> 출석 처리
+                  {updateTimeMutation.isPending ? '저장중...' : '시간 저장'}
                 </button>
-              )}
-              <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>닫기</button>
-              <button
-                className="btn btn-primary"
-                disabled={updateTimeMutation.isPending}
-                onClick={() => {
-                  updateTimeMutation.mutate({
-                    attendanceId: detailAttendance.id,
-                    startTime: editCheckInTime || null,
-                    endTime: editCheckOutTime || null,
-                    checkInTime: editActualCheckInTime || null,
-                    checkOutTime: editActualCheckOutTime || null,
-                    expectedLeaveTime: editExpectedLeaveTime || null,
-                  });
-                }}
-              >
-                {updateTimeMutation.isPending ? '저장중...' : '시간 저장'}
-              </button>
+              </div>
             </div>
           </div>
         </div>
