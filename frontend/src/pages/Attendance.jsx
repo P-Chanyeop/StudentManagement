@@ -1257,7 +1257,9 @@ function Attendance() {
                 className="btn btn-primary"
                 disabled={!addSelectedStudent || addManualMutation.isPending}
                 onClick={() => {
-                  const courseName = addType === 'naver' ? addSelectedStudent.courseName : null;
+                  const courseName = addSelectedStudent.courseName
+                    || (addSelectedStudent.enrollments?.[0]?.courseName)
+                    || null;
                   const durationMap = { Able: 60, Basic: 90, Core: 120, Development: 150 };
                   const duration = courseName ? (durationMap[courseName] || 120) : 120;
                   addManualMutation.mutate({

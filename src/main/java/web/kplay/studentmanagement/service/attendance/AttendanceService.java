@@ -480,7 +480,6 @@ public class AttendanceService {
             String dateStr, String startTimeStr, int durationMinutes, String courseName) {
         LocalDate date = LocalDate.parse(dateStr);
         LocalTime startTime = LocalTime.parse(startTimeStr);
-        LocalTime endTime = startTime.plusMinutes(durationMinutes);
         
         Student student = null;
         web.kplay.studentmanagement.domain.course.Course course = null;
@@ -496,6 +495,11 @@ public class AttendanceService {
             course = courseRepository.findByCourseName(courseName).orElse(null);
         }
         
+        // course 기반 수업시간 우선 적용
+        int actualDuration = (course != null && course.getDurationMinutes() != null)
+                ? course.getDurationMinutes() : durationMinutes;
+        LocalTime endTime = startTime.plusMinutes(actualDuration);
+        
         String parentPhone = studentCourseExcelService.getParentPhone(studentName);
         if (parentPhone == null && student != null && student.getParentPhone() != null) {
             parentPhone = student.getParentPhone().replaceAll("[^0-9]", "");
@@ -506,7 +510,7 @@ public class AttendanceService {
                 .course(course)
                 .attendanceDate(date)
                 .attendanceTime(startTime)
-                .durationMinutes(durationMinutes)
+                .durationMinutes(actualDuration)
                 .expectedLeaveTime(endTime)
                 .originalExpectedLeaveTime(endTime)
                 .manualStudentName(studentName)
