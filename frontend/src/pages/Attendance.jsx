@@ -764,6 +764,7 @@ function Attendance() {
                   )}
                 </th>
                 <th>추가수업</th>
+                <th>리딩시간</th>
                 <th 
                   className={`sortable ${tableSortBy === 'departure' ? 'active' : ''}`}
                   onClick={() => handleTableSort('departure')}
@@ -784,7 +785,6 @@ function Attendance() {
                 </th>
                 <th>D/C</th>
                 <th>WR</th>
-                <th>리딩시간</th>
                 <th>비고</th>
               </tr>
             </thead>
@@ -854,6 +854,15 @@ function Attendance() {
                       '-'
                     )}
                   </td>
+                  <td className="reading-note" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      placeholder="리딩시간"
+                      defaultValue={attendance.readingNote || ''}
+                      className="reading-note-input"
+                      onBlur={(e) => handleReadingNoteUpdate(attendance.id, e.target.value)}
+                    />
+                  </td>
                   <td className="check-out-time">
                     {attendance.checkInTime && attendance.expectedLeaveTime ? formatTime(attendance.expectedLeaveTime) : '-'}
                   </td>
@@ -878,15 +887,6 @@ function Attendance() {
                       className="wr-input"
                       maxLength="10"
                       onBlur={(e) => handleWrCheckUpdate(attendance.id, e.target.value)}
-                    />
-                  </td>
-                  <td className="reading-note" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="text"
-                      placeholder="리딩시간"
-                      defaultValue={attendance.readingNote || ''}
-                      className="reading-note-input"
-                      onBlur={(e) => handleReadingNoteUpdate(attendance.id, e.target.value)}
                     />
                   </td>
                   <td className="notes" onClick={(e) => e.stopPropagation()}>
