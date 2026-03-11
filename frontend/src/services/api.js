@@ -264,6 +264,12 @@ export const levelTestAPI = {
   getByStudent: (studentId) => api.get(`/leveltests/student/${studentId}`),
 };
 
+// 사이트 설정 API
+export const siteSettingAPI = {
+  get: (key) => api.get(`/settings/${key}`),
+  update: (key, value) => api.put(`/settings/${key}`, { value }),
+};
+
 // 파일 업로드 API
 export const fileAPI = {
   uploadAudio: (file) => {

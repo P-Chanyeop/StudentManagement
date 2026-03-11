@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { reservationAPI, scheduleAPI, authAPI, studentAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, authAPI, studentAPI, siteSettingAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import { getLocalDateString } from '../utils/dateUtils';
 import '../styles/ParentReservation.css';
@@ -79,6 +79,21 @@ function ParentReservation() {
   const [showTimeSelector, setShowTimeSelector] = useState(false);
   const [reservedTimes, setReservedTimes] = useState([]);
   const [slotStatus, setSlotStatus] = useState({});
+
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+
+  // 안내 문구 조회
+  const settingKey = formData.consultationType === '레벨테스트' ? 'reservation_info_leveltest' : 'reservation_info_class';
+  const { data: infoSetting, refetch: refetchInfo } = useQuery({
+    queryKey: ['siteSetting', settingKey],
+    queryFn: async () => {
+      const res = await siteSettingAPI.get(settingKey);
+      return res.data;
+    },
+    enabled: !!formData.consultationType,
+  });
 
   // 선택된 날짜의 예약 현황 조회
   const fetchReservedTimes = async (date) => {
@@ -560,8 +575,13 @@ function ParentReservation() {
     }
   };
 
-  // 상담 유형별 안내 문구
+  // 상담 유형별 안내 문구 (DB 값 우선, 없으면 기본값)
   const getConsultationInfo = (type) => {
+    if (infoSetting?.value) {
+      try {
+        return JSON.parse(infoSetting.value);
+      } catch (e) { /* 파싱 실패 시 기본값 사용 */ }
+    }
     switch(type) {
       case '재원생수업':
         return {
@@ -668,15 +688,51 @@ function ParentReservation() {
             {/* 상담 유형별 안내 문구 */}
             {formData.consultationType && (
               <div className="consultation-info">
-                <h3>{getConsultationInfo(formData.consultationType).title}</h3>
-                <div className="consultation-content">
-                  {getConsultationInfo(formData.consultationType).content.split('\n').map((line, index) => (
-                    <div key={index}>
-                      {line}
-                      {index < getConsultationInfo(formData.consultationType).content.split('\n').length - 1 && <br />}
+                {editingInfo ? (
+                  <div className="info-edit-form">
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600 }}>제목</label>
+                      <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)}
+                        style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6, marginTop: 4 }} />
                     </div>
-                  ))}
-                </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600 }}>내용</label>
+                      <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={10}
+                        style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 6, marginTop: 4, fontFamily: 'inherit' }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                      <button type="button" onClick={async () => {
+                        await siteSettingAPI.update(settingKey, JSON.stringify({ title: editTitle, content: editContent }));
+                        setEditingInfo(false);
+                        refetchInfo();
+                      }} style={{ padding: '6px 16px', background: '#03C75A', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>저장</button>
+                      <button type="button" onClick={() => setEditingInfo(false)}
+                        style={{ padding: '6px 16px', background: '#eee', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>취소</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h3>{getConsultationInfo(formData.consultationType).title}</h3>
+                    <div className="consultation-content">
+                      {getConsultationInfo(formData.consultationType).content.split('\n').map((line, index) => (
+                        <div key={index}>
+                          {line}
+                          {index < getConsultationInfo(formData.consultationType).content.split('\n').length - 1 && <br />}
+                        </div>
+                      ))}
+                    </div>
+                    {profile?.role === 'ADMIN' && (
+                      <button type="button" onClick={() => {
+                        const info = getConsultationInfo(formData.consultationType);
+                        setEditTitle(info.title);
+                        setEditContent(info.content);
+                        setEditingInfo(true);
+                      }} style={{ marginTop: 12, padding: '6px 14px', background: '#03C75A', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                        <i className="fas fa-edit"></i> 안내 문구 수정
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>
