@@ -79,6 +79,23 @@
   transition: all 0.3s;
 }
 
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+}
+
 .btn-secondary:hover {
   background: var(--gray-200);
 }
@@ -478,6 +495,74 @@
   background: var(--gray-50);
 }
 
+/* 공지사항 모달 푸터 */
+.notice-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 32px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.notice-modal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.notice-modal-btn--submit,
+.notice-modal-btn--edit {
+  background: var(--naver-green);
+  color: white;
+}
+
+.notice-modal-btn--submit:hover,
+.notice-modal-btn--edit:hover {
+  background: var(--naver-green-dark);
+}
+
+.notice-modal-btn--submit:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.notice-modal-btn--delete {
+  background: #e74c3c;
+  color: white;
+}
+
+.notice-modal-btn--delete:hover {
+  background: #c0392b;
+}
+
+.notice-modal-btn--info {
+  background: #17a2b8;
+  color: white;
+}
+
+.notice-modal-btn--info:hover {
+  background: #138496;
+}
+
+.notice-modal-btn--cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.notice-modal-btn--cancel:hover {
+  background: var(--gray-200);
+}
+
 /* 반응형 */
 @media (max-width: 1024px) {
   .page-header-content {
@@ -532,6 +617,7 @@
   .modal-header,
   .modal-body,
   .modal-footer,
+  .notice-modal-footer,
   .modal-meta {
     padding: 16px 20px;
   }
@@ -656,20 +742,6 @@
   border-color: #03c75a;
   color: #03c75a;
   font-weight: 600 !important;
-}
-
-/* 모달 푸터 */
-.modal-footer {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
-}
-
-.btn-primary:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
 }
 /* 조회자 목록 스타일 */
 .viewers-list {

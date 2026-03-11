@@ -73,8 +73,12 @@ public class NoticeService {
         Notice saved = noticeRepository.save(notice);
         log.info("공지사항 생성: 제목={}, 작성자={}", sanitizedTitle, author.getUsername());
 
-        // 모든 학생(학부모)에게 공지 알림 문자 발송
-        automatedMessageService.sendNoticeNotificationToAll(studentRepository.findAll());
+        // 모든 학생(학부모)에게 공지 알림 문자 발송 (실패해도 공지 등록은 유지)
+        try {
+            automatedMessageService.sendNoticeNotificationToAll(studentRepository.findAll());
+        } catch (Exception e) {
+            log.warn("공지 알림 문자 발송 실패: {}", e.getMessage());
+        }
 
         return toResponse(saved);
     }

@@ -16,6 +16,8 @@ function Notices() {
     content: '',
     isPinned: false
   });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editNotice, setEditNotice] = useState({ title: '', content: '', isPinned: false });
   const pageSize = 10;
   const queryClient = useQueryClient();
 
@@ -93,6 +95,57 @@ function Notices() {
       return;
     }
     createNotice.mutate(newNotice);
+  };
+
+  // 공지사항 수정
+  const updateNoticeMutation = useMutation({
+    mutationFn: (data) => noticeAPI.update(selectedNotice.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notices']);
+      setShowEditModal(false);
+      setSelectedNotice(null);
+      alert('공지사항이 수정되었습니다.');
+    },
+    onError: (error) => {
+      alert(`수정 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  const handleEditNotice = (e) => {
+    e.preventDefault();
+    if (!editNotice.title.trim() || !editNotice.content.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+    updateNoticeMutation.mutate(editNotice);
+  };
+
+  const openEditModal = () => {
+    setEditNotice({
+      title: selectedNotice.title,
+      content: selectedNotice.content,
+      isPinned: selectedNotice.isPinned
+    });
+    setShowEditModal(true);
+  };
+
+  // 공지사항 삭제
+  const deleteNoticeMutation = useMutation({
+    mutationFn: (id) => noticeAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['notices']);
+      setSelectedNotice(null);
+      alert('공지사항이 삭제되었습니다.');
+    },
+    onError: (error) => {
+      alert(`삭제 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
+    }
+  });
+
+  const handleDeleteNotice = () => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      deleteNoticeMutation.mutate(selectedNotice.id);
+    }
   };
 
   // 조회자 목록 조회
@@ -311,17 +364,25 @@ function Notices() {
             <div className="modal-body">
               <p className="notice-content">{selectedNotice.content}</p>
             </div>
-            <div className="modal-footer">
+            <div className="notice-modal-footer">
               {profile?.role === 'ADMIN' && (
-                <button
-                  className="btn-info"
-                  onClick={() => handleViewViewers(selectedNotice.id)}
-                >
-                  조회자 목록
-                </button>
+                <>
+                  <button className="notice-modal-btn notice-modal-btn--edit" onClick={openEditModal}>
+                    <i className="fas fa-edit"></i> 수정
+                  </button>
+                  <button className="notice-modal-btn notice-modal-btn--delete" onClick={handleDeleteNotice}>
+                    <i className="fas fa-trash"></i> 삭제
+                  </button>
+                  <button
+                    className="notice-modal-btn notice-modal-btn--info"
+                    onClick={() => handleViewViewers(selectedNotice.id)}
+                  >
+                    조회자 목록
+                  </button>
+                </>
               )}
               <button
-                className="btn-secondary"
+                className="notice-modal-btn notice-modal-btn--cancel"
                 onClick={() => setSelectedNotice(null)}
               >
                 닫기
@@ -384,15 +445,74 @@ function Notices() {
                   </label>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="submit" className="btn-primary" disabled={createNotice.isLoading}>
-                  {createNotice.isLoading ? '등록 중...' : '등록'}
+              <div className="notice-modal-footer">
+                <button type="submit" className="notice-modal-btn notice-modal-btn--submit" disabled={createNotice.isPending}>
+                  {createNotice.isPending ? '등록 중...' : '등록'}
                 </button>
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="notice-modal-btn notice-modal-btn--cancel"
                   onClick={() => setShowCreateModal(false)}
                 >
+                  취소
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 공지사항 수정 모달 */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <i className="fas fa-edit"></i>
+                공지사항 수정
+              </h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleEditNotice}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label htmlFor="edit-title">제목 *</label>
+                  <input
+                    type="text"
+                    id="edit-title"
+                    value={editNotice.title}
+                    onChange={(e) => setEditNotice({...editNotice, title: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="edit-content">내용 *</label>
+                  <textarea
+                    id="edit-content"
+                    value={editNotice.content}
+                    onChange={(e) => setEditNotice({...editNotice, content: e.target.value})}
+                    rows="8"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={editNotice.isPinned}
+                      onChange={(e) => setEditNotice({...editNotice, isPinned: e.target.checked})}
+                    />
+                    중요 공지 설정
+                  </label>
+                </div>
+              </div>
+              <div className="notice-modal-footer">
+                <button type="submit" className="notice-modal-btn notice-modal-btn--submit" disabled={updateNoticeMutation.isPending}>
+                  {updateNoticeMutation.isPending ? '수정 중...' : '수정'}
+                </button>
+                <button type="button" className="notice-modal-btn notice-modal-btn--cancel" onClick={() => setShowEditModal(false)}>
                   취소
                 </button>
               </div>
@@ -443,9 +563,9 @@ function Notices() {
                 </div>
               )}
             </div>
-            <div className="modal-footer">
+            <div className="notice-modal-footer">
               <button
-                className="btn-secondary"
+                className="notice-modal-btn notice-modal-btn--cancel"
                 onClick={() => setShowViewersModal(false)}
               >
                 닫기
