@@ -1171,7 +1171,13 @@ function Reservations() {
                     return false;
                   });
                   if (dup) return alert('이미 동일한 차단이 등록되어 있습니다.');
-                  createBlockMutation.mutate(blockForm);
+                  createBlockMutation.mutate({
+                    ...blockForm,
+                    dayOfWeek: blockForm.dayOfWeek || null,
+                    blockDate: blockForm.blockDate || null,
+                    startDate: blockForm.startDate || null,
+                    endDate: blockForm.endDate || null,
+                  });
                 }} style={{ padding: '8px 20px', background: '#FF6B6B', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}>
                   차단 추가
                 </button>

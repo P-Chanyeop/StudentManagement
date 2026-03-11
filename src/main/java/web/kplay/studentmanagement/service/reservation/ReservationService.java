@@ -354,13 +354,25 @@ public class ReservationService {
         return getUnavailableTimes(date, consultationType);
     }
 
+    /**
+     * consultationType을 차단 targetType으로 매핑 (레벨테스트는 null → 차단 미적용)
+     */
+    private String mapConsultationToTargetType(String consultationType) {
+        if ("상담".equals(consultationType)) return "CONSULTATION";
+        if ("재원생수업".equals(consultationType)) return "CLASS";
+        return null; // 레벨테스트 등은 차단 대상 아님
+    }
+
     private List<String> getUnavailableTimes(LocalDate date, String consultationType) {
-        // 1. 차단된 시간 (consultationType에 따라 targetType 필터)
-        String targetType = "상담".equals(consultationType) ? "CONSULTATION" : "CLASS";
-        var blocks = blockedTimeSlotRepository.findActiveBlocksForDateAndType(date, date.getDayOfWeek(), targetType);
-        java.util.Set<String> unavailable = blocks.stream()
-                .map(b -> b.getBlockTime().toString().substring(0, 5))
-                .collect(java.util.stream.Collectors.toCollection(java.util.HashSet::new));
+        // 1. 차단된 시간 (레벨테스트는 차단 미적용)
+        String targetType = mapConsultationToTargetType(consultationType);
+        java.util.Set<String> unavailable = new java.util.HashSet<>();
+        if (targetType != null) {
+            var blocks = blockedTimeSlotRepository.findActiveBlocksForDateAndType(date, date.getDayOfWeek(), targetType);
+            blocks.stream()
+                    .map(b -> b.getBlockTime().toString().substring(0, 5))
+                    .forEach(unavailable::add);
+        }
 
         // 2. 9명 만석 시간
         List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
@@ -388,12 +400,15 @@ public class ReservationService {
     public List<java.util.Map<String, Object>> getTimeSlotStatus(LocalDate date, String consultationType) {
         String[] slots = {"09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"};
 
-        // 차단된 시간 (consultationType에 따라 targetType 필터)
-        String targetType = "상담".equals(consultationType) ? "CONSULTATION" : "CLASS";
-        var blocks = blockedTimeSlotRepository.findActiveBlocksForDateAndType(date, date.getDayOfWeek(), targetType);
-        java.util.Set<String> blockedTimes = blocks.stream()
-                .map(b -> b.getBlockTime().toString().substring(0, 5))
-                .collect(java.util.stream.Collectors.toSet());
+        // 차단된 시간 (레벨테스트는 차단 미적용)
+        String targetType = mapConsultationToTargetType(consultationType);
+        java.util.Set<String> blockedTimes = new java.util.HashSet<>();
+        if (targetType != null) {
+            var blocks = blockedTimeSlotRepository.findActiveBlocksForDateAndType(date, date.getDayOfWeek(), targetType);
+            blocks.stream()
+                    .map(b -> b.getBlockTime().toString().substring(0, 5))
+                    .forEach(blockedTimes::add);
+        }
 
         // 시간별 예약 수
         List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
