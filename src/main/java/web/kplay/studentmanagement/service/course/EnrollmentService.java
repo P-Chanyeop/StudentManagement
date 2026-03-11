@@ -183,17 +183,27 @@ public class EnrollmentService {
                     .orElseThrow(() -> new ResourceNotFoundException("수업을 찾을 수 없습니다"));
         }
 
+        // 종료일 계산 (공휴일 제외) - 생성 시와 동일한 로직 적용
+        LocalDate endDate;
+        if (request.getEndDate() != null) {
+            endDate = request.getEndDate();
+        } else {
+            endDate = holidayService.addBusinessDays(request.getStartDate(), request.getTotalCount());
+            log.info("수정 시 종료일 자동 계산: start={}, count={}, end={}",
+                    request.getStartDate(), request.getTotalCount(), endDate);
+        }
+
         enrollment.updateEnrollment(
                 course,
                 request.getStartDate(),
-                request.getEndDate(),
+                endDate,
                 request.getTotalCount(),
                 request.getRemainingCount()
         );
 
         log.info("Enrollment updated: id={}, course={}, period={} ~ {}, count={}/{}",
                 id, course != null ? course.getCourseName() : "없음",
-                request.getStartDate(), request.getEndDate(),
+                request.getStartDate(), endDate,
                 request.getRemainingCount(), request.getTotalCount());
 
         return toResponse(enrollment);
