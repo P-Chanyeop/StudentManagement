@@ -514,7 +514,7 @@ function Consultations() {
                 <div
                   className="student-select-trigger"
                   onClick={() => setShowMainStudentDropdown(!showMainStudentDropdown)}
-                  style={{ cursor: 'pointer', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}
+                  style={{ cursor: 'pointer', padding: '12px 40px 12px 44px', border: '1px solid #ddd', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', height: '48px', boxSizing: 'border-box', fontSize: '15px' }}
                 >
                   {selectedStudent ? (
                     <span>{students.find(s => s.id == selectedStudent)?.studentName} ({students.find(s => s.id == selectedStudent)?.parentName})</span>
