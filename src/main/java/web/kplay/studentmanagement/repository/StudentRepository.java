@@ -14,6 +14,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByIsActive(Boolean isActive);
 
+    @Query("SELECT DISTINCT s FROM Student s LEFT JOIN FETCH s.enrollments WHERE s.isActive = true")
+    List<Student> findByIsActiveTrueWithEnrollments();
+
     @Query("SELECT s FROM Student s WHERE s.studentName LIKE %:keyword% OR s.parentName LIKE %:keyword%")
     List<Student> searchByKeyword(@Param("keyword") String keyword);
 

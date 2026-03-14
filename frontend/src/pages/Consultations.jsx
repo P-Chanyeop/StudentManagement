@@ -23,6 +23,8 @@ function Consultations() {
   // 학생 선택 드롭다운 상태
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [showMainStudentDropdown, setShowMainStudentDropdown] = useState(false);
+  const [mainStudentSearchQuery, setMainStudentSearchQuery] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportDateRange, setExportDateRange] = useState({
     startDate: '',
@@ -508,17 +510,51 @@ function Consultations() {
         {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
           <div className="search-section">
             <div className="student-selector">
-              <select
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-              >
-                <option value="">담당 학생을 선택해주세요</option>
-                {students.map((student) => (
-                  <option key={student.id} value={student.id}>
-                    {student.studentName} ({student.parentName})
-                  </option>
-                ))}
-              </select>
+              <div className="custom-student-select" style={{ position: 'relative' }}>
+                <div
+                  className="student-select-trigger"
+                  onClick={() => setShowMainStudentDropdown(!showMainStudentDropdown)}
+                  style={{ cursor: 'pointer', padding: '8px 12px', border: '1px solid #ddd', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}
+                >
+                  {selectedStudent ? (
+                    <span>{students.find(s => s.id == selectedStudent)?.studentName} ({students.find(s => s.id == selectedStudent)?.parentName})</span>
+                  ) : (
+                    <span style={{ color: '#999' }}>담당 학생을 선택해주세요</span>
+                  )}
+                  <i className={`fas fa-chevron-${showMainStudentDropdown ? 'up' : 'down'}`}></i>
+                </div>
+                {showMainStudentDropdown && (
+                  <div className="student-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#fff', border: '1px solid #ddd', borderRadius: '6px', marginTop: '4px', maxHeight: '300px', overflow: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+                    <div style={{ padding: '8px', borderBottom: '1px solid #eee', position: 'sticky', top: 0, background: '#fff' }}>
+                      <input
+                        type="text"
+                        placeholder="학생 이름 또는 학부모 이름으로 검색..."
+                        value={mainStudentSearchQuery}
+                        onChange={(e) => setMainStudentSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    {[...students]
+                      .filter(s => !mainStudentSearchQuery ||
+                        s.studentName.toLowerCase().includes(mainStudentSearchQuery.toLowerCase()) ||
+                        s.parentName?.toLowerCase().includes(mainStudentSearchQuery.toLowerCase()))
+                      .sort((a, b) => a.studentName.localeCompare(b.studentName, 'ko'))
+                      .map(student => (
+                        <div
+                          key={student.id}
+                          onClick={() => { setSelectedStudent(String(student.id)); setShowMainStudentDropdown(false); setMainStudentSearchQuery(''); }}
+                          style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0', fontSize: '14px' }}
+                          onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                          onMouseLeave={(e) => e.target.style.background = '#fff'}
+                        >
+                          <span style={{ fontWeight: 500 }}>{student.studentName}</span>
+                          <span style={{ color: '#888', marginLeft: '8px' }}>({student.parentName})</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
             {selectedStudent && (
               <div className="result-count-actions">

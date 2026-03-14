@@ -77,7 +77,7 @@ public class StudentService {
 
     @Transactional(readOnly = true)
     public List<StudentResponse> getActiveStudents() {
-        return studentRepository.findByIsActive(true).stream()
+        return studentRepository.findByIsActiveTrueWithEnrollments().stream()
                 .filter(s -> s.getParentPhone() != null && !s.getParentPhone().isEmpty())
                 .map(this::toResponse)
                 .collect(Collectors.toList());
