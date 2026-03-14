@@ -82,7 +82,7 @@ public class AutomatedMessageService {
     @Transactional
     public void sendReservationNotification(web.kplay.studentmanagement.domain.reservation.Reservation reservation) {
         Student student = reservation.getStudent();
-        String reservationType = reservation.getConsultationType() != null ? "상담" : "수업";
+        String reservationType = "상담".equals(reservation.getConsultationType()) ? "상담" : "수업";
         
         String content = String.format(
                 "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
