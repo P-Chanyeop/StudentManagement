@@ -72,17 +72,8 @@ public class FileStorageService {
                 throw new RuntimeException("파일 크기가 최대 허용 크기(50MB)를 초과했습니다.");
             }
 
-            // 파일 확장자 체크
+            // 파일 확장자 체크 (경로 조작 방지만)
             String extension = getFileExtension(originalFileName);
-            if (fileType.equals("audio")) {
-                validateAudioFile(extension);
-                // MIME 타입 검증
-                validateMimeType(file.getContentType(), ALLOWED_AUDIO_MIME_TYPES, "오디오");
-            } else {
-                validateDocumentFile(extension);
-                // MIME 타입 검증
-                validateMimeType(file.getContentType(), ALLOWED_FILE_MIME_TYPES, "문서");
-            }
 
             // 고유 파일명 생성 (날짜 + UUID + 원본 확장자)
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));

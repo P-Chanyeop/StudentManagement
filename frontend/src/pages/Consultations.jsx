@@ -727,7 +727,7 @@ function Consultations() {
                       <input 
                         type="file" 
                         id="audio-file"
-                        accept="audio/*"
+                        accept="*/*"
                         multiple
                         onChange={(e) => setAudioFiles([...e.target.files])}
                         className="file-input-hidden"
@@ -781,7 +781,7 @@ function Consultations() {
                       <input 
                         type="file" 
                         id="document-file"
-                        accept=".pdf,.doc,.docx,.hwp,.txt"
+                        accept="*/*"
                         multiple
                         onChange={(e) => setDocumentFiles([...e.target.files])}
                         className="file-input-hidden"
@@ -884,7 +884,7 @@ function Consultations() {
                       <input 
                         type="file" 
                         id="edit-audio-file"
-                        accept="audio/*"
+                        accept="*/*"
                         multiple
                         onChange={(e) => {
                           const newFiles = [...e.target.files].map(file => ({
@@ -945,7 +945,7 @@ function Consultations() {
                       <input 
                         type="file" 
                         id="edit-document-file"
-                        accept=".pdf,.doc,.docx,.hwp,.txt"
+                        accept="*/*"
                         multiple
                         onChange={(e) => {
                           const newFiles = [...e.target.files].map(file => ({
