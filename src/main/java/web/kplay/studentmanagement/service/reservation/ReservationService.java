@@ -55,8 +55,8 @@ public class ReservationService {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));
 
-        // 날짜/시간 검증
-        if ("재원생수업".equals(request.getConsultationType())) {
+        // 날짜/시간 검증 (관리자는 제외)
+        if ("재원생수업".equals(request.getConsultationType()) && !isCurrentUserAdmin()) {
             validateReservationDateTime(request.getReservationDate());
         }
 
@@ -337,6 +337,12 @@ public class ReservationService {
         }
         
         log.info("Reservation date validation passed for date: {}, current time: {}", reservationDate, now);
+    }
+
+    private boolean isCurrentUserAdmin() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     /**
