@@ -638,10 +638,13 @@ function ParentReservation() {
     { value: '재원생수업', label: '재원생 예약 시스템' },
   ];
 
-  const timeSlots = [
-    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
-    '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
-  ];
+  const timeSlots = (() => {
+    if (!formData.preferredDate) return [];
+    const day = new Date(formData.preferredDate + 'T00:00:00').getDay(); // 0=일,6=토
+    if (day === 0) return []; // 일요일 불가
+    if (day === 6) return ['09:00', '10:00', '11:00', '12:00', '13:00']; // 토요일 9~13시
+    return ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']; // 월~금 9~18시
+  })();
 
   if (profileLoading) {
     return <div>로딩 중...</div>;

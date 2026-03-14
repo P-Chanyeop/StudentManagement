@@ -9,6 +9,7 @@ import web.kplay.studentmanagement.domain.reservation.ReservationPeriod;
 import web.kplay.studentmanagement.repository.ReservationPeriodRepository;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
@@ -158,5 +159,39 @@ public class ReservationPeriodService {
         }
         
         return currentSunday;
+    }
+
+    /**
+     * 관리자 수동 예약 기간 열기 (특정 날짜 범위)
+     */
+    @Transactional
+    public ReservationPeriod openManualPeriod(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 기존 활성 기간 비활성화
+        reservationPeriodRepository.findLatestActivePeriod()
+                .ifPresent(p -> {
+                    ReservationPeriod closed = ReservationPeriod.builder()
+                            .id(p.getId())
+                            .openTime(p.getOpenTime())
+                            .closeTime(p.getCloseTime())
+                            .reservationStartDate(p.getReservationStartDate())
+                            .reservationEndDate(p.getReservationEndDate())
+                            .isActive(false)
+                            .build();
+                    reservationPeriodRepository.save(closed);
+                });
+
+        ReservationPeriod period = ReservationPeriod.builder()
+                .openTime(now)
+                .closeTime(endDate.plusDays(1).atStartOfDay()) // 종료일 자정까지 예약창 열림
+                .reservationStartDate(startDate.atStartOfDay())
+                .reservationEndDate(endDate.atTime(23, 59, 59))
+                .isActive(true)
+                .build();
+
+        reservationPeriodRepository.save(period);
+        log.info("수동 예약 기간 열림: {} ~ {}", startDate, endDate);
+        return period;
     }
 }

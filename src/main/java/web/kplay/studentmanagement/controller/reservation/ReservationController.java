@@ -152,6 +152,24 @@ public class ReservationController {
     }
 
     /**
+     * 관리자 수동 예약 기간 열기 (특정 날짜)
+     */
+    @PostMapping("/period/open")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> openReservationPeriod(@RequestBody Map<String, String> request) {
+        String startDateStr = request.get("startDate");
+        String endDateStr = request.get("endDate");
+        LocalDate startDate = LocalDate.parse(startDateStr);
+        LocalDate endDate = endDateStr != null ? LocalDate.parse(endDateStr) : startDate;
+        ReservationPeriod period = reservationPeriodService.openManualPeriod(startDate, endDate);
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "예약 기간이 열렸습니다");
+        result.put("reservationStartDate", period.getReservationStartDate().toLocalDate().toString());
+        result.put("reservationEndDate", period.getReservationEndDate().toLocalDate().toString());
+        return ResponseEntity.ok(result);
+    }
+
+    /**
      * 예약 가능한 날짜 범위 조회
      */
     @GetMapping("/available-dates")

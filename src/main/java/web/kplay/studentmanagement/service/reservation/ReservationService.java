@@ -360,7 +360,8 @@ public class ReservationService {
     private String mapConsultationToTargetType(String consultationType) {
         if ("상담".equals(consultationType)) return "CONSULTATION";
         if ("재원생수업".equals(consultationType)) return "CLASS";
-        return null; // 레벨테스트 등은 차단 대상 아님
+        if ("레벨테스트".equals(consultationType)) return "LEVELTEST";
+        return null;
     }
 
     private List<String> getUnavailableTimes(LocalDate date, String consultationType) {

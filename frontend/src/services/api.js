@@ -223,6 +223,7 @@ export const reservationAPI = {
   forceCancel: (id, reason) => api.post(`/reservations/${id}/force-cancel`, { reason }),
   checkAvailability: () => api.get('/reservations/availability'),
   getAvailableDates: () => api.get('/reservations/available-dates'),
+  openPeriod: (startDate, endDate) => api.post('/reservations/period/open', { startDate, endDate }),
 };
 
 export const blockedTimeSlotAPI = {

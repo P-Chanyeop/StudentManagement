@@ -183,6 +183,29 @@ function Reservations() {
     enabled: !!newReservation.studentId,
   });
 
+  // 예약 기간 열림 여부 조회 (관리자용)
+  const { data: isReservationOpen = false } = useQuery({
+    queryKey: ['reservationAvailability'],
+    queryFn: async () => (await reservationAPI.checkAvailability()).data,
+    enabled: profile?.role === 'ADMIN',
+  });
+
+  const { data: availableDatesAdmin } = useQuery({
+    queryKey: ['availableDatesAdmin'],
+    queryFn: async () => (await reservationAPI.getAvailableDates()).data,
+    enabled: profile?.role === 'ADMIN',
+  });
+
+  const openPeriodMutation = useMutation({
+    mutationFn: ({ startDate, endDate }) => reservationAPI.openPeriod(startDate, endDate),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries(['reservationAvailability']);
+      queryClient.invalidateQueries(['availableDatesAdmin']);
+      alert(`예약이 열렸습니다.\n예약 가능 날짜: ${res.data.reservationStartDate} ~ ${res.data.reservationEndDate}`);
+    },
+    onError: (error) => alert(`실패: ${error.response?.data?.message || '오류'}`),
+  });
+
   // 차단 시간 목록
   const { data: blockedSlots = [] } = useQuery({
     queryKey: ['blockedTimeSlots'],
@@ -495,6 +518,35 @@ function Reservations() {
             </p>
           </div>
           <div className="date-selector">
+            {profile?.role === 'ADMIN' && (
+              <button
+                onClick={() => {
+                  const startDate = prompt('예약 시작 날짜 (YYYY-MM-DD):', selectedDate);
+                  if (!startDate) return;
+                  const endDate = prompt('예약 종료 날짜 (YYYY-MM-DD):', startDate);
+                  if (!endDate) return;
+                  if (window.confirm(`${startDate} ~ ${endDate} 예약을 열겠습니까?`)) {
+                    openPeriodMutation.mutate({ startDate, endDate });
+                  }
+                }}
+                style={{
+                  marginRight: 10,
+                  padding: '8px 16px',
+                  background: isReservationOpen ? '#03C75A' : '#ff6b6b',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 6,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <i className={`fas ${isReservationOpen ? 'fa-lock-open' : 'fa-lock'}`}></i>
+                {' '}{isReservationOpen
+                  ? `예약 열림 (${availableDatesAdmin?.startDate || ''} ~ ${availableDatesAdmin?.endDate || ''})`
+                  : '예약 열기'}
+              </button>
+            )}
             <input
               type="date"
               value={selectedDate}
@@ -1099,7 +1151,7 @@ function Reservations() {
             <div className="modal-body">
               {/* 탭 */}
               <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '2px solid #eee' }}>
-                {[['CLASS','수업'], ['CONSULTATION','상담']].map(([key, label]) => (
+                {[['CLASS','수업'], ['CONSULTATION','상담'], ['LEVELTEST','레벨테스트']].map(([key, label]) => (
                   <button key={key} type="button"
                     style={{ flex: 1, padding: '10px 0', border: 'none', borderBottom: blockTab === key ? '2px solid #03C75A' : '2px solid transparent', background: 'none', fontWeight: blockTab === key ? 700 : 400, color: blockTab === key ? '#03C75A' : '#999', fontSize: 15, cursor: 'pointer', marginBottom: -2 }}
                     onClick={() => { setBlockTab(key); setBlockForm(f => ({ ...f, targetType: key })); }}
