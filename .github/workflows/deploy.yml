@@ -8,7 +8,43 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build
+        run: chmod +x gradlew && ./gradlew clean build -x test
+
+      - name: Upload JAR and restart
+        uses: appleboy/ssh-action@v1
+        env:
+          JAR_NAME: StudentManagement-0.0.1-SNAPSHOT.jar
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          envs: JAR_NAME
+          script: |
+            cd /home/ubuntu/reading
+            ./stop.sh
+            sleep 2
+
+      - name: Copy JAR to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          source: "build/libs/StudentManagement-0.0.1-SNAPSHOT.jar"
+          target: "/home/ubuntu/reading/"
+          strip_components: 2
+
+      - name: Start application
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
@@ -16,7 +52,4 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd /home/ubuntu/reading
-            git pull origin master
-            ./gradlew clean build -x test
-            ./stop.sh
             ./start.sh
