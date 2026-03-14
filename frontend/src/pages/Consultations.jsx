@@ -11,6 +11,7 @@ function Consultations() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [audioFile, setAudioFile] = useState(null);
   const [documentFile, setDocumentFile] = useState(null);
   const [audioFiles, setAudioFiles] = useState([]);
@@ -584,7 +585,7 @@ function Consultations() {
           ) : (
             <div className="consultations-list">
               {consultations.map((consultation) => (
-                <div key={consultation.id} className="consultation-card">
+                <div key={consultation.id} className="consultation-card" onClick={() => { setSelectedConsultation(consultation); setShowDetailModal(true); }} style={{ cursor: 'pointer' }}>
                   <div className="consultation-header">
                     <div className="consultation-info">
                       <h3>{consultation.title}</h3>
@@ -595,10 +596,10 @@ function Consultations() {
                     </div>
                     {(profile?.role === 'ADMIN' || profile?.role === 'TEACHER') && (
                       <div className="consultation-actions">
-                        <button className="btn-edit" onClick={() => handleEdit(consultation)}>
+                        <button className="btn-edit" onClick={(e) => { e.stopPropagation(); handleEdit(consultation); }}>
                           <i className="fas fa-edit"></i>
                         </button>
-                        <button className="btn-delete" onClick={() => handleDelete(consultation.id)}>
+                        <button className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(consultation.id); }}>
                           <i className="fas fa-trash"></i>
                         </button>
                       </div>
@@ -632,7 +633,7 @@ function Consultations() {
                             const { name, path } = parseFileEntry(entry);
                             return (
                               <div key={`rec-${idx}`} className="file-download-item">
-                                <button className="file-download-btn audio" onClick={() => handleFileDownload(path, name)}>
+                                <button className="file-download-btn audio" onClick={(e) => { e.stopPropagation(); handleFileDownload(path, name); }}>
                                   <i className="fas fa-download"></i> {name}
                                 </button>
                               </div>
@@ -647,7 +648,7 @@ function Consultations() {
                             const { name, path } = parseFileEntry(entry);
                             return (
                               <div key={`att-${idx}`} className="file-download-item">
-                                <button className="file-download-btn document" onClick={() => handleFileDownload(path, name)}>
+                                <button className="file-download-btn document" onClick={(e) => { e.stopPropagation(); handleFileDownload(path, name); }}>
                                   <i className="fas fa-download"></i> {name}
                                 </button>
                               </div>
@@ -1113,6 +1114,40 @@ function Consultations() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 학습 기록 상세보기 모달 */}
+      {showDetailModal && selectedConsultation && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '80vh', overflow: 'auto' }}>
+            <div className="modal-header">
+              <h2>{selectedConsultation.title}</h2>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '12px', color: '#888', fontSize: '14px' }}>
+                <span>{selectedConsultation.studentName}</span>
+                <span style={{ marginLeft: '12px' }}>{selectedConsultation.consultationDate}</span>
+              </div>
+              <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', lineHeight: '1.8', fontSize: '15px', whiteSpace: 'pre-wrap' }}>
+                {selectedConsultation.content}
+              </div>
+              {selectedConsultation.actionItems && (
+                <div style={{ marginTop: '16px', padding: '18px', background: 'rgba(0,199,60,0.05)', borderRadius: '12px' }}>
+                  <strong>후속 조치:</strong>
+                  <p style={{ margin: '8px 0 0', whiteSpace: 'pre-wrap' }}>{selectedConsultation.actionItems}</p>
+                </div>
+              )}
+              {selectedConsultation.nextConsultationDate && (
+                <div style={{ marginTop: '12px', color: '#666', fontSize: '14px' }}>
+                  <strong>다음 상담 예정일:</strong> {selectedConsultation.nextConsultationDate}
+                </div>
+              )}
             </div>
           </div>
         </div>
