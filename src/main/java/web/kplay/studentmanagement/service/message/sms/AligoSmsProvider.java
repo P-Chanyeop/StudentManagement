@@ -53,8 +53,13 @@ public class AligoSmsProvider implements SmsProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            // 문자 길이에 따라 SMS/LMS 자동 선택
-            String msgType = content.length() > 90 ? "LMS" : "SMS";
+            // 문자 길이에 따라 SMS/LMS 자동 선택 (EUC-KR 기준 90바이트)
+            String msgType;
+            try {
+                msgType = content.getBytes("EUC-KR").length > 90 ? "LMS" : "SMS";
+            } catch (Exception e) {
+                msgType = content.length() > 45 ? "LMS" : "SMS";
+            }
             
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("key", apiKey);

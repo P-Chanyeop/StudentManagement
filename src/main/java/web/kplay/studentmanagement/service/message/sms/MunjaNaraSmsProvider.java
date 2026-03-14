@@ -53,8 +53,13 @@ public class MunjaNaraSmsProvider implements SmsProvider {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            // 문자 길이에 따라 SMS/LMS 자동 선택
-            String msgType = content.length() > 90 ? "lms" : "sms";
+            // 문자 길이에 따라 SMS/LMS 자동 선택 (EUC-KR 기준 90바이트)
+            String msgType;
+            try {
+                msgType = content.getBytes("EUC-KR").length > 90 ? "lms" : "sms";
+            } catch (Exception e) {
+                msgType = content.length() > 45 ? "lms" : "sms";
+            }
             
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("user_id", userId);

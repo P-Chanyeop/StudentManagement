@@ -34,7 +34,13 @@ public class AligoSmsService {
      * 단일 문자 발송 (동일 내용)
      */
     public SmsResponse sendSms(String receiver, String message) {
-        return sendSms(receiver, message, null, null);
+        String autoMsgType;
+        try {
+            autoMsgType = message.getBytes("EUC-KR").length > 90 ? "LMS" : "SMS";
+        } catch (Exception e) {
+            autoMsgType = message.length() > 45 ? "LMS" : "SMS";
+        }
+        return sendSms(receiver, message, null, autoMsgType);
     }
 
     /**

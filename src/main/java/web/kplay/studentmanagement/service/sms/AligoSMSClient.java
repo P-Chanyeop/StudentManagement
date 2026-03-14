@@ -49,8 +49,13 @@ public class AligoSMSClient {
             params.add("msg", message);
             params.add("testmode_yn", testMode ? "Y" : "N");
 
-            // 메시지 타입 설정 (90자 이하: SMS, 초과: LMS)
-            String msgType = message.length() <= 90 ? "SMS" : "LMS";
+            // 메시지 타입 설정 (EUC-KR 기준 90바이트 이하: SMS, 초과: LMS)
+            String msgType;
+            try {
+                msgType = message.getBytes("EUC-KR").length > 90 ? "LMS" : "SMS";
+            } catch (Exception e) {
+                msgType = message.length() > 45 ? "LMS" : "SMS";
+            }
             params.add("msg_type", msgType);
 
             // HTTP 헤더 설정
