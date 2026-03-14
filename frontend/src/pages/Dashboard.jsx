@@ -618,7 +618,7 @@ function Dashboard() {
 
       {/* 수강권 상세 모달 */}
       {showEnrollmentModal && selectedEnrollment && (
-        <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>

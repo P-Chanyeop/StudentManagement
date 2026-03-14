@@ -913,7 +913,7 @@ function Attendance() {
 
       {/* 부모님 핸드폰 번호 입력 모달 */}
       {showPhoneModal && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>출석 체크</h3>
@@ -1004,7 +1004,7 @@ function Attendance() {
 
       {/* 학생 상세 모달 */}
       {showDetailModal && detailAttendance && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
             <div className="modal-header">
               <h3>{detailAttendance.studentName} 상세</h3>
@@ -1185,7 +1185,7 @@ function Attendance() {
 
       {/* 행 추가 모달 */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>출석부 행 추가</h3>

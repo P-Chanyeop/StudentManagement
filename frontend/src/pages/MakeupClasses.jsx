@@ -368,7 +368,7 @@ function MakeupClasses() {
       </div>
 
         {showModal && (
-          <div className="modal-overlay" onClick={() => {
+          <div className="modal-overlay">
             setShowModal(false);
             setEditingMakeup(null);
             resetForm();

@@ -212,7 +212,7 @@ function EnrollmentAdjustment() {
 
       {/* 횟수 조정 모달 */}
       {showAdjustModal && (
-        <div className="modal-overlay" onClick={() => setShowAdjustModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>수강권 횟수 조정</h2>

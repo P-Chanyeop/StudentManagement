@@ -750,7 +750,7 @@ function Enrollments() {
 
       {/* 수강권 생성 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>수강권 등록</h2>
@@ -901,7 +901,7 @@ function Enrollments() {
 
       {/* 수강권 수정 모달 */}
       {showEditModal && selectedEnrollment && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>수강권 수정</h2>
@@ -993,7 +993,7 @@ function Enrollments() {
 
       {/* 수강권 상세 모달 */}
       {showDetailModal && selectedEnrollment && (
-        <div className="enr-detail-overlay" onClick={() => setShowDetailModal(false)}>
+        <div className="enr-detail-overlay">
           <div className="enr-detail-modal" onClick={(e) => e.stopPropagation()}>
             <div className="enr-detail-header">
               <h2>수강권 상세</h2>
@@ -1269,7 +1269,7 @@ function Enrollments() {
 
       {/* 미가입자 등록 모달 */}
       {showUnregisteredModal && (
-        <div className="modal-overlay" onClick={() => setShowUnregisteredModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>미가입자 수강권 등록</h2>

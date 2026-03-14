@@ -339,7 +339,7 @@ function Notices() {
 
       {/* 공지사항 상세 모달 */}
       {selectedNotice && (
-        <div className="modal-overlay" onClick={() => setSelectedNotice(null)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">{selectedNotice.title}</h2>
@@ -394,7 +394,7 @@ function Notices() {
 
       {/* 공지사항 작성 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">
@@ -464,7 +464,7 @@ function Notices() {
 
       {/* 공지사항 수정 모달 */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">
@@ -523,7 +523,7 @@ function Notices() {
 
       {/* 조회자 목록 모달 */}
       {showViewersModal && (
-        <div className="modal-overlay" onClick={() => setShowViewersModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">

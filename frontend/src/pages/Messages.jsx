@@ -511,7 +511,7 @@ function Messages() {
 
       {/* 문자 발송 모달 */}
       {showSendModal && (
-        <div className="modal-overlay" onClick={() => {
+        <div className="modal-overlay">
           setShowSendModal(false);
           resetForm();
         }}>
@@ -679,7 +679,7 @@ function Messages() {
 
       {/* 템플릿 관리 모달 */}
       {showTemplateModal && (
-        <div className="modal-overlay" onClick={() => { setShowTemplateModal(false); setEditingTemplate(null); }}>
+        <div className="modal-overlay">
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>템플릿 관리</h2>

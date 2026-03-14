@@ -138,7 +138,7 @@ function UserDashboard() {
 
       {/* 레코딩 파일 모달 */}
       {showRecordingModal && selectedEnrollment && (
-        <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal-overlay">
           <div className="modal-content recording-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>

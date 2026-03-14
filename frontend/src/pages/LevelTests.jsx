@@ -337,7 +337,7 @@ function LevelTests() {
 
       {/* 레벨 테스트 예약 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2><i className="fas fa-clipboard-list"></i> 레벨 테스트 예약</h2>

@@ -928,7 +928,7 @@ function Reservations() {
 
       {/* 예약 생성 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>예약 등록</h2>
@@ -1005,7 +1005,7 @@ function Reservations() {
 
       {/* 상담 예약 상세 모달 */}
       {selectedConsultation && (
-        <div className="modal-overlay" onClick={() => setSelectedConsultation(null)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px'}}>
             <div className="modal-header">
               <h2><i className="fas fa-comments"></i> 상담 예약 상세</h2>
@@ -1031,7 +1031,7 @@ function Reservations() {
 
       {/* 네이버 예약 상세 모달 */}
       {showNaverDetailModal && (
-        <div className="modal-overlay" onClick={() => setShowNaverDetailModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content naver-detail-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2><i className="fas fa-globe"></i> 네이버 예약 상세</h2>
@@ -1090,7 +1090,7 @@ function Reservations() {
 
       {/* 시간대 차단 관리 모달 */}
       {showBlockModal && (
-        <div className="modal-overlay" onClick={() => setShowBlockModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>시간대 차단 관리</h2>
@@ -1214,7 +1214,7 @@ function Reservations() {
       )}
 
         {showExcelListModal && (
-          <div className="rsv-excel-overlay" onClick={() => setShowExcelListModal(false)}>
+          <div className="rsv-excel-overlay">
             <div className="rsv-excel-modal" onClick={(e) => e.stopPropagation()}>
               <div className="rsv-excel-header">
                 <h2>📋 업로드된 학생 목록 ({excelFullList.length}명)</h2>

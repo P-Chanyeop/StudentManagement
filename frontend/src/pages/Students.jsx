@@ -431,7 +431,7 @@ function Students() {
 
       {/* 학생 등록 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>학생 등록</h2>
@@ -658,7 +658,7 @@ function Students() {
 
       {/* 학생 수정 모달 */}
       {showEditModal && selectedStudent && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>학생 정보 수정</h2>
@@ -954,7 +954,7 @@ function Students() {
 
       {/* 학생 상세 모달 */}
       {showDetailModal && selectedStudent && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>학생 상세 정보</h2>

@@ -202,7 +202,7 @@ function Courses() {
 
       {/* 코스 생성 모달 */}
       {showCreateModal && (
-        <div className="crs-modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="crs-modal-overlay">
           <div className="crs-modal" onClick={(e) => e.stopPropagation()}>
             <div className="crs-modal-header">
               <h2>반 생성</h2>
@@ -232,7 +232,7 @@ function Courses() {
 
       {/* 코스 상세 모달 */}
       {showEditModal && selectedCourse && (
-        <div className="crs-modal-overlay" onClick={() => setShowEditModal(false)}>
+        <div className="crs-modal-overlay">
           <div className="crs-modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
             <div className="crs-modal-header">
               <h2>{selectedCourse.courseName}</h2>

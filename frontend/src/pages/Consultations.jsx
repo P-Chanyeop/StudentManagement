@@ -671,7 +671,7 @@ function Consultations() {
 
       {/* 학습 기록 등록 모달 */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>학습 기록 등록</h2>
@@ -886,7 +886,7 @@ function Consultations() {
 
       {/* 학습 기록 수정 모달 */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>학습 기록 수정</h2>
@@ -1054,7 +1054,7 @@ function Consultations() {
 
       {/* Excel 내보내기 모달 */}
       {showExportModal && (
-        <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>상담 이력 Excel 내보내기</h2>
@@ -1121,7 +1121,7 @@ function Consultations() {
 
       {/* 학습 기록 상세보기 모달 */}
       {showDetailModal && selectedConsultation && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '80vh', overflow: 'auto' }}>
             <div className="modal-header">
               <h2>{selectedConsultation.title}</h2>
