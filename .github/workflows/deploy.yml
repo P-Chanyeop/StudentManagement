@@ -16,19 +16,17 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Build
-        run: chmod +x gradlew && ./gradlew clean build -x test
+        run: chmod +x gradlew && ./gradlew clean build -x test --no-daemon
 
-      - name: Upload JAR and restart
+      - name: Stop application
         uses: appleboy/ssh-action@v1
-        env:
-          JAR_NAME: StudentManagement-0.0.1-SNAPSHOT.jar
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-          envs: JAR_NAME
           script: |
             cd /home/ubuntu/reading
             ./stop.sh
