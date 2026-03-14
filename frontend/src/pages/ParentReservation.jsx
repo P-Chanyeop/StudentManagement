@@ -204,6 +204,7 @@ function ParentReservation() {
     const date = new Date(year, month, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const isAdmin = profile?.role === 'ADMIN';
     
     
     // 과거 날짜는 선택 불가
@@ -217,11 +218,15 @@ function ParentReservation() {
     }
     
     
-    // 재원생 예약만 격주 제한 적용
-    // 일요일만 선택 불가
+    // 일요일 선택 불가
     const dayOfWeek = date.getDay();
     if (dayOfWeek === 0) {
       return false;
+    }
+    
+    // 관리자는 예약 기간 범위 제한 없음
+    if (isAdmin) {
+      return true;
     }
     
     // 예약 가능한 날짜 범위가 없으면 선택 불가
@@ -238,6 +243,7 @@ function ParentReservation() {
   };
 
   const isDateDisabled = (year, month, day) => {
+    if (profile?.role === 'ADMIN') return false; // 관리자는 제한 없음
     const date = new Date(year, month, day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -640,10 +646,10 @@ function ParentReservation() {
 
   const timeSlots = (() => {
     if (!formData.preferredDate) return [];
-    const day = new Date(formData.preferredDate + 'T00:00:00').getDay(); // 0=일,6=토
-    if (day === 0) return []; // 일요일 불가
-    if (day === 6) return ['09:00', '10:00', '11:00', '12:00', '13:00']; // 토요일 9~13시
-    return ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']; // 월~금 9~18시
+    const day = new Date(formData.preferredDate + 'T00:00:00').getDay();
+    if (day === 0) return [];
+    if (day === 6) return ['09:00', '10:00', '11:00', '12:00', '13:00'];
+    return ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
   })();
 
   if (profileLoading) {
