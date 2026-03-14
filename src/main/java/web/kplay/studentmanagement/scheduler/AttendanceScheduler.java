@@ -30,12 +30,11 @@ public class AttendanceScheduler {
     /**
      * 5분마다 실행: 수업 시작 후 15분 지난 미출석자에게 알림 발송 및 횟수 차감
      */
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */5 8-22 * * *") // 오전 8시 ~ 오후 10시만 실행
     @Transactional
     public void checkLateStudents() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-        LocalTime fifteenMinutesAgo = now.minusMinutes(15);
 
         List<Attendance> attendances = attendanceRepository.findByDate(today);
 
@@ -43,7 +42,7 @@ public class AttendanceScheduler {
             // 체크인하지 않았고, 수업 시작 시간이 15분 이상 지났고, 아직 알림 안 보낸 경우
             if (attendance.getCheckInTime() == null 
                 && attendance.getAttendanceTime() != null
-                && attendance.getAttendanceTime().isBefore(fifteenMinutesAgo)
+                && now.isAfter(attendance.getAttendanceTime().plusMinutes(15))
                 && attendance.getStatus() == AttendanceStatus.NOTYET
                 && !attendance.isLateNotificationSent()) {
                 
@@ -83,15 +82,11 @@ public class AttendanceScheduler {
     /**
      * 5분마다 실행: 수업 시작 후 15분 지난 미출석자를 결석 처리 + 횟수 차감
      */
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */5 8-22 * * *") // 오전 8시 ~ 오후 10시만 실행
     @Transactional
     public void checkAbsentStudents() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-
-        // 현재 시간 기준 15분 전까지만 결석 대상
-        // 예: 지금 11:35이면 11:20 이전 수업만 결석 처리
-        LocalTime cutoff = now.minusMinutes(15);
 
         List<Attendance> attendances = attendanceRepository.findByDate(today);
 
@@ -99,8 +94,7 @@ public class AttendanceScheduler {
         for (Attendance attendance : attendances) {
             if (attendance.getCheckInTime() == null 
                 && attendance.getAttendanceTime() != null
-                && attendance.getAttendanceTime().isBefore(cutoff)
-                && attendance.getAttendanceTime().isBefore(now) // 미래 수업 제외
+                && now.isAfter(attendance.getAttendanceTime().plusMinutes(15))
                 && attendance.getStatus() != AttendanceStatus.ABSENT
                 && attendance.getStatus() != AttendanceStatus.EXCUSED) {
                 

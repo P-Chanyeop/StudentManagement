@@ -245,16 +245,11 @@ public class HolidayService {
     }
 
     /**
-     * 영업일 계산 (주말, 공휴일 제외)
+     * 영업일 계산 (시작일 불포함, 다음날부터 카운트)
      */
     public LocalDate calculateEndDate(LocalDate startDate, int businessDays) {
         LocalDate currentDate = startDate;
         int count = 0;
-        
-        // 시작일이 영업일이면 1로 시작
-        if (isBusinessDay(currentDate)) {
-            count = 1;
-        }
         
         while (count < businessDays) {
             currentDate = currentDate.plusDays(1);
@@ -270,9 +265,8 @@ public class HolidayService {
      * 영업일인지 확인 (주말, 공휴일 제외)
      */
     public boolean isBusinessDay(LocalDate date) {
-        // 주말 체크
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+        // 주말 체크 (일요일만 - 학원 토요일 운영)
+        if (isWeekend(date)) {
             return false;
         }
         
@@ -330,11 +324,10 @@ public class HolidayService {
     }
 
     /**
-     * 주말 여부 확인
+     * 주말 여부 확인 (일요일만 주말 - 학원 토요일 운영)
      */
     private boolean isWeekend(LocalDate date) {
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
-        return dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
+        return date.getDayOfWeek() == DayOfWeek.SUNDAY;
     }
 
     /**

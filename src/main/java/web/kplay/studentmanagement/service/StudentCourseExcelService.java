@@ -169,6 +169,45 @@ public class StudentCourseExcelService {
     }
 
     /**
+     * 학생 이름 + 전화번호로 반 이름 조회 (동명이인 대응)
+     */
+    public String getCourseNameByNameAndPhone(String studentName, String phone) {
+        String phoneLast4 = normalizePhoneLast4(phone);
+        if (phoneLast4 != null) {
+            for (Map.Entry<String, String> entry : studentCourseMap.entrySet()) {
+                String excelName = entry.getKey();
+                if (namesMatch(excelName, studentName)) {
+                    String excelPhone = studentPhoneMap.get(excelName);
+                    if (excelPhone != null && excelPhone.endsWith(phoneLast4)) {
+                        return entry.getValue();
+                    }
+                }
+            }
+        }
+        // 전화번호 매칭 실패 시 이름만으로 조회
+        return getCourseName(studentName);
+    }
+
+    /**
+     * 학생 이름 + 전화번호로 수업 시간(분) 조회 (동명이인 대응)
+     */
+    public Integer getDurationMinutesByNameAndPhone(String studentName, String phone) {
+        String courseName = getCourseNameByNameAndPhone(studentName, phone);
+        if (courseName == null) return null;
+        return courseDurationMap.get(courseName);
+    }
+
+    private String normalizePhoneLast4(String phone) {
+        if (phone == null) return null;
+        String digits = phone.replaceAll("[^0-9]", "");
+        return digits.length() >= 4 ? digits.substring(digits.length() - 4) : null;
+    }
+
+    private boolean namesMatch(String excelName, String inputName) {
+        return excelName.equals(inputName) || excelName.contains(inputName) || inputName.contains(excelName);
+    }
+
+    /**
      * 학생 이름으로 반 이름 조회 (부분 매칭)
      */
     public String getCourseName(String studentName) {

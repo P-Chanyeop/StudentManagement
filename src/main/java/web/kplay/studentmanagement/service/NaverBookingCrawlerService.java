@@ -440,8 +440,8 @@ public class NaverBookingCrawlerService {
             
             // 엑셀에서 학생 이름으로 반 정보 조회
             String studentName = naverBooking.getName().trim().replaceAll("\\s+", "");
-            String courseName = studentCourseExcelService.getCourseName(studentName);
-            Integer durationMinutes = studentCourseExcelService.getDurationMinutes(studentName);
+            String courseName = studentCourseExcelService.getCourseNameByNameAndPhone(studentName, naverBooking.getPhone());
+            Integer durationMinutes = studentCourseExcelService.getDurationMinutesByNameAndPhone(studentName, naverBooking.getPhone());
             
             java.time.LocalTime expectedLeaveTime = null;
             

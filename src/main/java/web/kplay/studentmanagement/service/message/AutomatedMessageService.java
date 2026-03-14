@@ -456,9 +456,10 @@ public class AutomatedMessageService {
 
             long daysRemaining = ChronoUnit.DAYS.between(today, enrollment.getEndDate());
             String content = String.format(
-                    "[K-PLAY 학원] 안녕하세요. %s 학생의 %s 수강권이 %d일 후 만료 예정입니다. 갱신을 원하시면 연락 부탁드립니다.",
+                    "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                    "%s 학생의 수강권이 %d일 후 만료 예정입니다.\n\n" +
+                    "재등록을 원하신다면 결제 부탁드립니다.\n감사합니다! :)",
                     enrollment.getStudent().getStudentName(),
-                    enrollment.getCourse().getCourseName(),
                     daysRemaining
             );
 
@@ -479,44 +480,6 @@ public class AutomatedMessageService {
         }
 
         log.info("수강권 만료 알림 일괄 발송 완료: 총 {}건", expiringEnrollments.size());
-    }
-
-    /**
-     * 만료된 수강권 재등록 안내 (매주 월요일 오전 9시)
-     */
-    @Scheduled(cron = "0 0 9 * * MON") // 매주 월요일 오전 9시
-    @Transactional
-    public void sendExpiredEnrollmentReminders() {
-        List<Enrollment> expiredEnrollments = enrollmentRepository.findExpiredEnrollments();
-
-        for (Enrollment enrollment : expiredEnrollments) {
-            // 최근 1주일 이내 알림을 보낸 경우 스킵
-            if (hasRecentNotification(enrollment.getStudent(), MessageType.ENROLLMENT_EXPIRY, 7)) {
-                continue;
-            }
-
-            String content = String.format(
-                    "[K-PLAY 학원] 안녕하세요. %s 학생의 %s 수강권이 만료되었습니다. 재등록을 원하시면 연락 부탁드립니다.",
-                    enrollment.getStudent().getStudentName(),
-                    enrollment.getCourse().getCourseName()
-            );
-
-            Message message = Message.builder()
-                    .student(enrollment.getStudent())
-                    .recipientPhone(enrollment.getStudent().getParentPhone())
-                    .recipientName(enrollment.getStudent().getParentName())
-                    .messageType(MessageType.ENROLLMENT_EXPIRY)
-                    .content(content)
-                    .sendStatus("PENDING")
-                    .build();
-
-            Message savedMessage = messageRepository.save(message);
-            savedMessage.markAsSent(LocalDateTime.now(), "AUTO-EXPIRED-" + savedMessage.getId());
-
-            log.info("만료 수강권 재등록 안내 발송: 학생={}", enrollment.getStudent().getStudentName());
-        }
-
-        log.info("만료 수강권 재등록 안내 발송 완료: 총 {}건", expiredEnrollments.size());
     }
 
     /**

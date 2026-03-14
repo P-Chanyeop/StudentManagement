@@ -49,15 +49,11 @@ class HolidayService {
     return !this.isWeekend(date) && !this.isHoliday(date, holidays);
   }
 
-  // 수강권 만료일 계산 (캐시된 공휴일 데이터 사용)
+  // 수강권 만료일 계산 (캐시된 공휴일 데이터 사용, 시작일 불포함)
   calculateEndDateWithCache(startDate, businessDays, holidays) {
     const start = new Date(startDate);
     let businessDaysCount = 0;
     let currentDate = new Date(start);
-    
-    if (this.isBusinessDay(currentDate, holidays)) {
-      businessDaysCount = 1;
-    }
     
     while (businessDaysCount < businessDays) {
       currentDate.setDate(currentDate.getDate() + 1);

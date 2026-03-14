@@ -383,12 +383,11 @@ public class NaverBookingApiCrawlerService {
             // 공백 제거
             studentName = studentName.trim().replaceAll("\\s+", "");
             
-            String courseName = studentCourseExcelService.getCourseName(studentName);
-            Integer durationMinutes = studentCourseExcelService.getDurationMinutes(studentName);
+            String courseName = studentCourseExcelService.getCourseNameByNameAndPhone(studentName, naverBooking.getPhone());
+            Integer durationMinutes = studentCourseExcelService.getDurationMinutesByNameAndPhone(studentName, naverBooking.getPhone());
             
             LocalTime expectedLeaveTime = null;
             
-            // 엑셀 매칭 정보 우선 사용
             if (courseName != null && durationMinutes != null) {
                 expectedLeaveTime = bookingTime.plusMinutes(durationMinutes);
                 log.info("학생 [{}] 반: {}, 수업 시간: {}분, 시작: {}, 예상 하원: {}", 
