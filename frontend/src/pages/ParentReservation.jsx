@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { reservationAPI, scheduleAPI, authAPI, studentAPI, siteSettingAPI } from '../services/api';
+import { reservationAPI, scheduleAPI, authAPI, studentAPI, siteSettingAPI, waitlistAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import { getLocalDateString } from '../utils/dateUtils';
 import '../styles/ParentReservation.css';
@@ -366,6 +366,12 @@ function ParentReservation() {
       return newDate;
     });
   };
+
+  const waitlistMutation = useMutation({
+    mutationFn: (data) => waitlistAPI.add(data),
+    onSuccess: () => alert('대기 신청이 완료되었습니다.\n빈자리 발생 시 문자로 안내드리겠습니다.'),
+    onError: (error) => alert(error.response?.data?.message || '대기 신청에 실패했습니다.'),
+  });
 
   // 예약 생성 mutation
   const createReservation = useMutation({
@@ -807,11 +813,23 @@ function ParentReservation() {
                               }
                             }
                           }}
-                          disabled={isUnavailable}
+                          disabled={isBlocked}
                         >
                           {time}
                           {isBlocked && <span className="reserved-text">예약 불가</span>}
                           {isFull && <span className="reserved-text">마감</span>}
+                          {isFull && (
+                            <span
+                              className="waitlist-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!formData.selectedStudentId) return alert('자녀를 먼저 선택해주세요.');
+                                if (window.confirm(`${formData.preferredDate} ${time} 대기 신청하시겠습니까?`)) {
+                                  waitlistMutation.mutate({ studentId: formData.selectedStudentId, date: formData.preferredDate, time, consultationType: formData.consultationType });
+                                }
+                              }}
+                            >대기 신청</span>
+                          )}
                           {!isUnavailable && <span className="remaining-text">예약 가능 {remaining}명</span>}
                         </button>
                       );

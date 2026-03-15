@@ -566,7 +566,7 @@ public class AutomatedMessageService {
     /**
      * 공통: 문자 저장 및 실제 발송
      */
-    private void sendAndSaveMessage(Student student, MessageType messageType, String content) {
+    public void sendAndSaveMessage(Student student, MessageType messageType, String content) {
         Message message = Message.builder()
                 .student(student)
                 .recipientPhone(student.getParentPhone())

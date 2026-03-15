@@ -47,6 +47,7 @@ public class ReservationService {
     private final web.kplay.studentmanagement.service.message.AutomatedMessageService automatedMessageService;
     private final web.kplay.studentmanagement.repository.BlockedTimeSlotRepository blockedTimeSlotRepository;
     private final web.kplay.studentmanagement.service.notification.AdminNotificationService adminNotificationService;
+    private final web.kplay.studentmanagement.repository.WaitlistRepository waitlistRepository;
 
     private static final int MAX_RESERVATIONS_PER_SLOT = 9;
 
@@ -231,6 +232,8 @@ public class ReservationService {
                 reservation.getReservationTime(),
                 reason,
                 reservation.getEnrollment() != null);
+
+        notifyWaitlist(reservation);
     }
 
     @Transactional
@@ -255,6 +258,8 @@ public class ReservationService {
                 reservation.getReservationTime(),
                 reason,
                 reservation.getEnrollment() != null);
+
+        notifyWaitlist(reservation);
     }
 
     @Transactional(readOnly = true)
@@ -552,6 +557,27 @@ public class ReservationService {
         }
     }
 
+
+    private void notifyWaitlist(Reservation reservation) {
+        try {
+            var waiters = waitlistRepository.findByWaitDateAndWaitTimeAndConsultationTypeAndActiveTrue(
+                    reservation.getReservationDate(), reservation.getReservationTime(), reservation.getConsultationType());
+            String type = "상담".equals(reservation.getConsultationType()) ? "상담" : "수업";
+            for (var w : waiters) {
+                String content = String.format(
+                        "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
+                        "%s %s %s에 빈자리가 생겼습니다.\n" +
+                        "예약을 원하시면 홈페이지에서 신청해주세요.\nhttps://littlebear-readingclub.com/parent-reservation\n\n감사합니다! :)",
+                        reservation.getReservationDate(), reservation.getReservationTime().toString().substring(0, 5), type);
+                automatedMessageService.sendAndSaveMessage(w.getStudent(), web.kplay.studentmanagement.domain.message.MessageType.GENERAL, content);
+                w.deactivate();
+                waitlistRepository.save(w);
+            }
+            if (!waiters.isEmpty()) log.info("빈자리 알림 발송: {}명, 날짜={}, 시간={}", waiters.size(), reservation.getReservationDate(), reservation.getReservationTime());
+        } catch (Exception e) {
+            log.error("대기자 알림 발송 실패", e);
+        }
+    }
     /**
      * 예약 취소 시 출석 레코드 삭제
      */
