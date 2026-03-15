@@ -209,7 +209,7 @@ function Reservations() {
   });
 
   const closePeriodMutation = useMutation({
-    mutationFn: () => reservationAPI.closePeriod(),
+    mutationFn: () => reservationAPI.closePeriod(periodStartDate, periodEndDate),
     onSuccess: () => {
       queryClient.invalidateQueries(['reservationAvailability']);
       queryClient.invalidateQueries(['availableDatesAdmin']);
@@ -532,16 +532,6 @@ function Reservations() {
           <div className="date-selector">
             {profile?.role === 'ADMIN' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 10, flexWrap: 'wrap' }}>
-                {isReservationOpen && (
-                  <span style={{ fontSize: 13, color: '#03C75A', fontWeight: 600, marginRight: 4 }}>
-                    <i className="fas fa-lock-open"></i> {availableDatesAdmin?.startDate || ''} ~ {availableDatesAdmin?.endDate || ''}
-                  </span>
-                )}
-                {!isReservationOpen && (
-                  <span style={{ fontSize: 13, color: '#ff6b6b', fontWeight: 600, marginRight: 4 }}>
-                    <i className="fas fa-lock"></i> 예약 닫힘
-                  </span>
-                )}
                 <input type="date" value={periodStartDate} onChange={e => setPeriodStartDate(e.target.value)} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13 }} />
                 <span style={{ fontSize: 13, color: '#888' }}>~</span>
                 <input type="date" value={periodEndDate} onChange={e => setPeriodEndDate(e.target.value)} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13 }} />
@@ -557,7 +547,12 @@ function Reservations() {
                   <i className="fas fa-lock-open"></i> 열기
                 </button>
                 <button
-                  onClick={() => { if (window.confirm('예약을 닫겠습니까?')) closePeriodMutation.mutate(); }}
+                  onClick={() => {
+                    if (!periodStartDate || !periodEndDate) return alert('시작일과 종료일을 선택하세요.');
+                    if (window.confirm(`${periodStartDate} ~ ${periodEndDate} 예약을 닫겠습니까?`)) {
+                      closePeriodMutation.mutate();
+                    }
+                  }}
                   style={{ padding: '6px 14px', background: '#ff6b6b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                 >
                   <i className="fas fa-lock"></i> 닫기

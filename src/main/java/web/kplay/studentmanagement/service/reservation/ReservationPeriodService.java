@@ -168,25 +168,79 @@ public class ReservationPeriodService {
     @Transactional
     public ReservationPeriod openManualPeriod(LocalDate startDate, LocalDate endDate) {
         LocalDateTime now = LocalDateTime.now();
-
-        // 기존 활성 기간 비활성화
-        deactivateAllActivePeriods();
+        LocalDateTime openStart = startDate.atStartOfDay();
+        LocalDateTime openEnd = endDate.atTime(23, 59, 59);
+        
+        // 겹치거나 인접한 기존 기간과 병합
+        List<ReservationPeriod> activePeriods = reservationPeriodRepository.findAllActivePeriods();
+        for (ReservationPeriod p : activePeriods) {
+            LocalDateTime pStart = p.getReservationStartDate();
+            LocalDateTime pEnd = p.getReservationEndDate();
+            
+            // 겹치거나 인접하면 병합
+            if (!openEnd.plusSeconds(1).isBefore(pStart) && !openStart.minusSeconds(1).isAfter(pEnd)) {
+                if (pStart.isBefore(openStart)) openStart = pStart;
+                if (pEnd.isAfter(openEnd)) openEnd = pEnd;
+                // 기존 기간 비활성화
+                ReservationPeriod closed = ReservationPeriod.builder()
+                        .id(p.getId()).openTime(p.getOpenTime()).closeTime(p.getCloseTime())
+                        .reservationStartDate(pStart).reservationEndDate(pEnd)
+                        .isActive(false).build();
+                reservationPeriodRepository.save(closed);
+            }
+        }
 
         ReservationPeriod period = ReservationPeriod.builder()
                 .openTime(now)
-                .closeTime(endDate.plusDays(1).atStartOfDay()) // 종료일 자정까지 예약창 열림
-                .reservationStartDate(startDate.atStartOfDay())
-                .reservationEndDate(endDate.atTime(23, 59, 59))
+                .closeTime(openEnd.toLocalDate().plusDays(1).atStartOfDay())
+                .reservationStartDate(openStart)
+                .reservationEndDate(openEnd)
                 .isActive(true)
                 .build();
 
         reservationPeriodRepository.save(period);
-        log.info("수동 예약 기간 열림: {} ~ {}", startDate, endDate);
+        log.info("수동 예약 기간 열림: {} ~ {}", openStart.toLocalDate(), openEnd.toLocalDate());
         return period;
     }
 
-    public void closeCurrentPeriod() {
-        deactivateAllActivePeriods();
-        log.info("예약 기간 수동 닫힘");
+    @Transactional
+    public void closePeriod(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime closeStart = startDate.atStartOfDay();
+        LocalDateTime closeEnd = endDate.atTime(23, 59, 59);
+        
+        List<ReservationPeriod> activePeriods = reservationPeriodRepository.findAllActivePeriods();
+        for (ReservationPeriod p : activePeriods) {
+            LocalDateTime pStart = p.getReservationStartDate();
+            LocalDateTime pEnd = p.getReservationEndDate();
+            
+            // 겹치지 않으면 스킵
+            if (closeEnd.isBefore(pStart) || closeStart.isAfter(pEnd)) continue;
+            
+            // 기존 기간 비활성화
+            ReservationPeriod closed = ReservationPeriod.builder()
+                    .id(p.getId()).openTime(p.getOpenTime()).closeTime(p.getCloseTime())
+                    .reservationStartDate(pStart).reservationEndDate(pEnd)
+                    .isActive(false).build();
+            reservationPeriodRepository.save(closed);
+            
+            // 앞쪽 남은 기간 (기존 시작 ~ 닫기 시작 전날)
+            if (pStart.isBefore(closeStart)) {
+                ReservationPeriod before = ReservationPeriod.builder()
+                        .openTime(p.getOpenTime()).closeTime(p.getCloseTime())
+                        .reservationStartDate(pStart).reservationEndDate(closeStart.minusSeconds(1))
+                        .isActive(true).build();
+                reservationPeriodRepository.save(before);
+            }
+            
+            // 뒤쪽 남은 기간 (닫기 종료 다음날 ~ 기존 종료)
+            if (pEnd.isAfter(closeEnd)) {
+                ReservationPeriod after = ReservationPeriod.builder()
+                        .openTime(p.getOpenTime()).closeTime(p.getCloseTime())
+                        .reservationStartDate(closeEnd.plusSeconds(1)).reservationEndDate(pEnd)
+                        .isActive(true).build();
+                reservationPeriodRepository.save(after);
+            }
+        }
+        log.info("예약 기간 닫힘: {} ~ {}", startDate, endDate);
     }
 }

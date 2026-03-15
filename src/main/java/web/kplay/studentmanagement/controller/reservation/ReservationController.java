@@ -171,9 +171,11 @@ public class ReservationController {
 
     @PostMapping("/period/close")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> closeReservationPeriod() {
-        reservationPeriodService.closeCurrentPeriod();
-        return ResponseEntity.ok(Map.of("message", "예약이 닫혔습니다"));
+    public ResponseEntity<Map<String, String>> closeReservationPeriod(@RequestBody Map<String, String> request) {
+        LocalDate startDate = LocalDate.parse(request.get("startDate"));
+        LocalDate endDate = LocalDate.parse(request.get("endDate"));
+        reservationPeriodService.closePeriod(startDate, endDate);
+        return ResponseEntity.ok(Map.of("message", startDate + " ~ " + endDate + " 예약이 닫혔습니다"));
     }
 
     /**

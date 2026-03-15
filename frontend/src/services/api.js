@@ -224,7 +224,7 @@ export const reservationAPI = {
   checkAvailability: () => api.get('/reservations/availability'),
   getAvailableDates: () => api.get('/reservations/available-dates'),
   openPeriod: (startDate, endDate) => api.post('/reservations/period/open', { startDate, endDate }),
-  closePeriod: () => api.post('/reservations/period/close'),
+  closePeriod: (startDate, endDate) => api.post('/reservations/period/close', { startDate, endDate }),
 };
 
 export const blockedTimeSlotAPI = {
