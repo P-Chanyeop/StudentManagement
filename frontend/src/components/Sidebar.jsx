@@ -27,7 +27,13 @@ function Sidebar() {
   const [sidebarTop, setSidebarTop] = useState(window.innerHeight / 2);
   const [isEditMode, setIsEditMode] = useState(false);
   const [customMenuOrder, setCustomMenuOrder] = useState([]);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileOpen]);
   const queryClient = useQueryClient();
 
   const sensors = useSensors(
@@ -224,12 +230,17 @@ function Sidebar() {
   };
 
   return (
-    <div 
-      className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
-      style={{
-        top: `${sidebarTop}px`
-      }}
-    >
+    <>
+      <button className="mobile-hamburger" onClick={() => setIsMobileOpen(!isMobileOpen)}>
+        <i className={`fas ${isMobileOpen ? 'fa-times' : 'fa-bars'}`}></i>
+      </button>
+      {isMobileOpen && <div className="mobile-overlay" onClick={() => setIsMobileOpen(false)} />}
+      <div 
+        className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isMobileOpen ? 'mobile-open' : ''}`}
+        style={{
+          top: `${sidebarTop}px`
+        }}
+      >
       <button className="toggle-btn" onClick={toggleSidebar}>
         <i className={`fas ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
       </button>
@@ -283,6 +294,7 @@ function Sidebar() {
               to={item.path}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               title={isCollapsed ? item.label : ''}
+              onClick={() => setIsMobileOpen(false)}
             >
               <span className="nav-icon">{item.icon}</span>
               {!isCollapsed && <span className="nav-label">{item.label}</span>}
@@ -298,6 +310,7 @@ function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }
 

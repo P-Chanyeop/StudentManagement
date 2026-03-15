@@ -267,7 +267,7 @@
 
 .enrollment-header-small h4 {
   margin: 0 0 8px 0;
-  padding: 0 16px;
+  padding: 0 16px 0 56px;
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
@@ -406,7 +406,7 @@
 
 @media (max-width: 768px) {
   .header-container {
-    padding: 0 16px;
+    padding: 0 16px 0 56px;
     height: 64px;
   }
 
