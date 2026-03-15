@@ -36,6 +36,6 @@ public class ReservationPeriod extends BaseEntity {
 
     public boolean isReservationOpen() {
         LocalDateTime now = LocalDateTime.now();
-        return isActive && now.isAfter(openTime) && now.isBefore(closeTime);
+        return isActive && !now.isBefore(openTime) && now.isBefore(closeTime);
     }
 }

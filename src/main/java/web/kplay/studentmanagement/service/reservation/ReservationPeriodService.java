@@ -75,50 +75,54 @@ public class ReservationPeriodService {
     }
 
     /**
-     * 현재 예약 가능한지 확인
+     * 현재 예약 가능한지 확인 (없으면 자동 생성 시도)
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean isReservationOpen() {
-        return reservationPeriodRepository.findActiveReservationPeriod(LocalDateTime.now())
-                .map(ReservationPeriod::isReservationOpen)
-                .orElse(false);
+        ReservationPeriod period = getCurrentReservationPeriod();
+        return period != null && period.isReservationOpen();
     }
 
     /**
-     * 현재 활성 예약 기간 조회 (없으면 생성)
+     * 현재 활성 예약 기간 조회 (없으면 격주 기준으로 자동 생성)
      */
     @Transactional
     public ReservationPeriod getCurrentReservationPeriod() {
         LocalDateTime now = LocalDateTime.now();
-        log.info("getCurrentReservationPeriod 호출됨. 현재 시간: {}", now);
         
-        // 기존 활성 예약 기간 확인
+        // 현재 시간에 유효한 활성 기간 확인
         Optional<ReservationPeriod> existing = reservationPeriodRepository.findActiveReservationPeriod(now);
         if (existing.isPresent()) {
-            log.info("기존 예약 기간 발견: {}", existing.get());
             return existing.get();
         }
         
-        log.info("기존 예약 기간 없음. 새로 생성 시도");
+        // 만료됐지만 아직 active인 기간 정리
+        reservationPeriodRepository.findLatestActivePeriod()
+                .ifPresent(p -> {
+                    if (now.isAfter(p.getCloseTime())) {
+                        ReservationPeriod closed = ReservationPeriod.builder()
+                                .id(p.getId())
+                                .openTime(p.getOpenTime())
+                                .closeTime(p.getCloseTime())
+                                .reservationStartDate(p.getReservationStartDate())
+                                .reservationEndDate(p.getReservationEndDate())
+                                .isActive(false)
+                                .build();
+                        reservationPeriodRepository.save(closed);
+                        log.info("만료된 예약 기간 비활성화: id={}", p.getId());
+                    }
+                });
         
-        // 없으면 현재 시점 기준으로 예약 기간 생성
-        // 가장 최근 격주 일요일 오전 9시를 찾기
+        // 격주 일요일 기준으로 새 기간 자동 생성
         LocalDateTime lastSunday = findLastBiweeklySunday(now);
-        log.info("가장 최근 격주 일요일: {}", lastSunday);
-        
-        // 예약창 기간 (격주 일요일 오전 9시부터 2주간)
         LocalDateTime openTime = lastSunday;
         LocalDateTime closeTime = openTime.plusDays(14);
         
-        // 예약 가능한 수업 기간 (그 다음 월요일부터 2주간 평일)
-        LocalDateTime reservationStartDate = lastSunday.plusDays(1).withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime reservationEndDate = reservationStartDate.plusDays(13).withHour(23).withMinute(59).withSecond(59);
-        
-        log.info("예약창 기간: {} ~ {}", openTime, closeTime);
-        log.info("수업 예약 가능 기간: {} ~ {}", reservationStartDate, reservationEndDate);
-        
-        // 현재 시간이 예약창 기간 내에 있는지 확인
-        if (now.isAfter(openTime) && now.isBefore(closeTime)) {
+        // 현재 시간이 예약창 기간 내인 경우만 생성
+        if (!now.isBefore(openTime) && now.isBefore(closeTime)) {
+            LocalDateTime reservationStartDate = lastSunday.plusDays(1).withHour(0).withMinute(0).withSecond(0);
+            LocalDateTime reservationEndDate = reservationStartDate.plusDays(13).withHour(23).withMinute(59).withSecond(59);
+            
             ReservationPeriod newPeriod = ReservationPeriod.builder()
                     .openTime(openTime)
                     .closeTime(closeTime)
@@ -128,10 +132,9 @@ public class ReservationPeriodService {
                     .build();
             
             reservationPeriodRepository.save(newPeriod);
-            log.info("예약 기간 생성 완료: {}", newPeriod);
+            log.info("예약 기간 자동 생성: 예약창 {} ~ {}, 수업 {} ~ {}", 
+                    openTime, closeTime, reservationStartDate.toLocalDate(), reservationEndDate.toLocalDate());
             return newPeriod;
-        } else {
-            log.info("현재 시간이 예약창 기간 밖임. 예약 기간 생성하지 않음");
         }
         
         return null;
