@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { reservationAPI, scheduleAPI, authAPI, studentAPI, siteSettingAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
@@ -8,6 +8,7 @@ import '../styles/ParentReservation.css';
 
 function ParentReservation() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [reservationStatus, setReservationStatus] = useState(null); // 'success', 'error', null
   // 사용자 프로필 조회
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -371,7 +372,9 @@ function ParentReservation() {
     mutationFn: (data) => reservationAPI.create(data),
     onSuccess: (response) => {
       alert('예약이 완료되었습니다!');
-      navigate('/reservations', { replace: true });
+      setFormData(prev => ({ ...prev, preferredDate: '', preferredTime: '', requirements: '' }));
+      setSelectedDateForTime(null);
+      queryClient.invalidateQueries(['availableDates']);
     },
     onError: (error) => {
       console.error('예약 실패:', error);
