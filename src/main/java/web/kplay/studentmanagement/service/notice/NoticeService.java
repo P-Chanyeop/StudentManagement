@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,7 +140,7 @@ public class NoticeService {
      */
     @Transactional(readOnly = true)
     public Page<NoticeResponse> getActiveNotices(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("isPinned"), Sort.Order.desc("createdAt")));
         Page<Notice> notices = noticeRepository.findActiveNotices(pageable);
         return notices.map(this::toResponse);
     }
@@ -160,7 +161,7 @@ public class NoticeService {
      */
     @Transactional(readOnly = true)
     public Page<NoticeResponse> searchNotices(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("isPinned"), Sort.Order.desc("createdAt")));
         Page<Notice> notices = noticeRepository.searchNotices(keyword, pageable);
         return notices.map(this::toResponse);
     }
