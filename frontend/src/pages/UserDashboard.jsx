@@ -7,12 +7,12 @@ import '../styles/Dashboard.css';
 function UserDashboard() {
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [showRecordingModal, setShowRecordingModal] = useState(false);
-  const [holidays, setHolidays] = useState({});
+  const [holidays, setHolidays] = useState([]);
 
   useEffect(() => {
     const y = new Date().getFullYear();
     Promise.all([holidayService.getHolidays(y), holidayService.getHolidays(y + 1)])
-      .then(([h1, h2]) => setHolidays({ ...h1, ...h2 }))
+      .then(([h1, h2]) => setHolidays([...h1, ...h2]))
       .catch(() => {});
   }, []);
   // 사용자 프로필 조회
