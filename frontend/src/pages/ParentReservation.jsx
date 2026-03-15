@@ -235,8 +235,8 @@ function ParentReservation() {
       return false;
     }
     
-    const startDate = new Date(availableDates.startDate);
-    const endDate = new Date(availableDates.endDate);
+    const startDate = new Date(availableDates.startDate + 'T00:00:00');
+    const endDate = new Date(availableDates.endDate + 'T23:59:59');
     
     
     // 예약 가능한 날짜 범위 내에서만 선택 가능

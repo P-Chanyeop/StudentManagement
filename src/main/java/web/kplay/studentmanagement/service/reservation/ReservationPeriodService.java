@@ -12,6 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -20,6 +21,20 @@ import java.util.Optional;
 public class ReservationPeriodService {
 
     private final ReservationPeriodRepository reservationPeriodRepository;
+
+    private void deactivateAllActivePeriods() {
+        reservationPeriodRepository.findAllActivePeriods().forEach(p -> {
+            ReservationPeriod closed = ReservationPeriod.builder()
+                    .id(p.getId())
+                    .openTime(p.getOpenTime())
+                    .closeTime(p.getCloseTime())
+                    .reservationStartDate(p.getReservationStartDate())
+                    .reservationEndDate(p.getReservationEndDate())
+                    .isActive(false)
+                    .build();
+            reservationPeriodRepository.save(closed);
+        });
+    }
 
     /**
      * 격주 일요일 오전 9시에 새로운 예약 기간 생성
@@ -39,18 +54,7 @@ public class ReservationPeriodService {
         }
 
         // 기존 활성 예약 기간 비활성화
-        reservationPeriodRepository.findLatestActivePeriod()
-                .ifPresent(period -> {
-                    ReservationPeriod updatedPeriod = ReservationPeriod.builder()
-                            .id(period.getId())
-                            .openTime(period.getOpenTime())
-                            .closeTime(period.getCloseTime())
-                            .reservationStartDate(period.getReservationStartDate())
-                            .reservationEndDate(period.getReservationEndDate())
-                            .isActive(false)
-                            .build();
-                    reservationPeriodRepository.save(updatedPeriod);
-                });
+        deactivateAllActivePeriods();
 
         // 새로운 예약 기간 생성
         LocalDateTime openTime = now; // 현재 시간 (일요일 오전 9시)
@@ -90,28 +94,22 @@ public class ReservationPeriodService {
     public ReservationPeriod getCurrentReservationPeriod() {
         LocalDateTime now = LocalDateTime.now();
         
-        // 현재 시간에 유효한 활성 기간 확인
-        Optional<ReservationPeriod> existing = reservationPeriodRepository.findActiveReservationPeriod(now);
-        if (existing.isPresent()) {
-            return existing.get();
-        }
+        // active 기간 중 유효한 것 찾기
+        List<ReservationPeriod> activePeriods = reservationPeriodRepository.findAllActivePeriods();
         
-        // 만료됐지만 아직 active인 기간 정리
-        reservationPeriodRepository.findLatestActivePeriod()
-                .ifPresent(p -> {
-                    if (now.isAfter(p.getCloseTime())) {
-                        ReservationPeriod closed = ReservationPeriod.builder()
-                                .id(p.getId())
-                                .openTime(p.getOpenTime())
-                                .closeTime(p.getCloseTime())
-                                .reservationStartDate(p.getReservationStartDate())
-                                .reservationEndDate(p.getReservationEndDate())
-                                .isActive(false)
-                                .build();
-                        reservationPeriodRepository.save(closed);
-                        log.info("만료된 예약 기간 비활성화: id={}", p.getId());
-                    }
-                });
+        // 만료된 기간 정리
+        for (ReservationPeriod p : activePeriods) {
+            if (now.isAfter(p.getReservationEndDate())) {
+                ReservationPeriod closed = ReservationPeriod.builder()
+                        .id(p.getId()).openTime(p.getOpenTime()).closeTime(p.getCloseTime())
+                        .reservationStartDate(p.getReservationStartDate()).reservationEndDate(p.getReservationEndDate())
+                        .isActive(false).build();
+                reservationPeriodRepository.save(closed);
+                log.info("만료된 예약 기간 비활성화: id={}", p.getId());
+            } else {
+                return p;
+            }
+        }
         
         // 격주 일요일 기준으로 새 기간 자동 생성
         LocalDateTime lastSunday = findLastBiweeklySunday(now);
@@ -172,18 +170,7 @@ public class ReservationPeriodService {
         LocalDateTime now = LocalDateTime.now();
 
         // 기존 활성 기간 비활성화
-        reservationPeriodRepository.findLatestActivePeriod()
-                .ifPresent(p -> {
-                    ReservationPeriod closed = ReservationPeriod.builder()
-                            .id(p.getId())
-                            .openTime(p.getOpenTime())
-                            .closeTime(p.getCloseTime())
-                            .reservationStartDate(p.getReservationStartDate())
-                            .reservationEndDate(p.getReservationEndDate())
-                            .isActive(false)
-                            .build();
-                    reservationPeriodRepository.save(closed);
-                });
+        deactivateAllActivePeriods();
 
         ReservationPeriod period = ReservationPeriod.builder()
                 .openTime(now)
@@ -196,5 +183,10 @@ public class ReservationPeriodService {
         reservationPeriodRepository.save(period);
         log.info("수동 예약 기간 열림: {} ~ {}", startDate, endDate);
         return period;
+    }
+
+    public void closeCurrentPeriod() {
+        deactivateAllActivePeriods();
+        log.info("예약 기간 수동 닫힘");
     }
 }

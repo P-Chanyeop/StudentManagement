@@ -169,6 +169,13 @@ public class ReservationController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/period/close")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> closeReservationPeriod() {
+        reservationPeriodService.closeCurrentPeriod();
+        return ResponseEntity.ok(Map.of("message", "예약이 닫혔습니다"));
+    }
+
     /**
      * 예약 가능한 날짜 범위 조회
      */

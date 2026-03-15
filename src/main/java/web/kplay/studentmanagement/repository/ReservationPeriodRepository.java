@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import web.kplay.studentmanagement.domain.reservation.ReservationPeriod;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface ReservationPeriodRepository extends JpaRepository<ReservationPeriod, Long> {
@@ -13,5 +14,5 @@ public interface ReservationPeriodRepository extends JpaRepository<ReservationPe
     Optional<ReservationPeriod> findActiveReservationPeriod(LocalDateTime now);
     
     @Query("SELECT rp FROM ReservationPeriod rp WHERE rp.isActive = true ORDER BY rp.openTime DESC")
-    Optional<ReservationPeriod> findLatestActivePeriod();
+    List<ReservationPeriod> findAllActivePeriods();
 }
