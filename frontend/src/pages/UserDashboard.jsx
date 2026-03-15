@@ -1,11 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { authAPI, enrollmentAPI, consultationAPI } from '../services/api';
+import { holidayService } from '../services/holidayService';
 import '../styles/Dashboard.css';
 
 function UserDashboard() {
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [showRecordingModal, setShowRecordingModal] = useState(false);
+  const [holidays, setHolidays] = useState({});
+
+  useEffect(() => {
+    const y = new Date().getFullYear();
+    Promise.all([holidayService.getHolidays(y), holidayService.getHolidays(y + 1)])
+      .then(([h1, h2]) => setHolidays({ ...h1, ...h2 }))
+      .catch(() => {});
+  }, []);
   // 사용자 프로필 조회
   const { data: profile } = useQuery({
     queryKey: ['userProfile'],
@@ -76,9 +85,9 @@ function UserDashboard() {
           </div>
         ) : (
           myEnrollments.map((enrollment) => {
-            const daysLeft = Math.ceil(
-              (new Date(enrollment.endDate) - new Date()) / (1000 * 60 * 60 * 24)
-            );
+            const daysLeft = holidayService.calculateRemainingBusinessDaysWithCache(
+              enrollment.startDate, enrollment.endDate, holidays
+            ) || 0;
             
             return (
               <div key={enrollment.id} className="student-section">
