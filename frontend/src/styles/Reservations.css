@@ -1565,3 +1565,33 @@
 .rsv-btn-teal { background: #0d9488; color: white; }
 .rsv-btn-blue { background: #2563eb; color: white; }
 .rsv-btn-red { background: #ef4444; color: white; }
+
+/* 부모님 예약 내역 */
+.pr-section { margin-top: 8px; }
+.pr-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.pr-header h2 { font-size: 17px; font-weight: 700; color: #222; margin: 0; display: flex; align-items: center; gap: 8px; }
+.pr-header h2 i { color: #03C75A; }
+.pr-count { background: #03C75A; color: #fff; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; }
+.pr-empty { text-align: center; padding: 48px 20px; color: #aaa; }
+.pr-empty i { font-size: 36px; margin-bottom: 12px; display: block; }
+.pr-list { display: flex; flex-direction: column; gap: 12px; }
+.pr-card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #eee; transition: box-shadow 0.15s; }
+.pr-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
+.pr-card-cancelled { opacity: 0.55; }
+.pr-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.pr-card-name { font-size: 16px; font-weight: 700; color: #222; }
+.pr-status { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+.pr-status-confirmed { background: #e8f5e9; color: #2e7d32; }
+.pr-status-pending { background: #fff3e0; color: #e65100; }
+.pr-status-cancelled { background: #fce4ec; color: #c62828; }
+.pr-status-completed { background: #e3f2fd; color: #1565c0; }
+.pr-status-no_show { background: #f3e5f5; color: #6a1b9a; }
+.pr-card-type { font-size: 13px; color: #555; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.pr-card-type i { color: #03C75A; }
+.pr-course { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 12px; color: #555; margin-left: 4px; }
+.pr-card-info { display: flex; gap: 20px; font-size: 14px; color: #333; padding: 10px 0; border-top: 1px solid #f2f2f2; }
+.pr-card-info i { color: #999; margin-right: 4px; width: 14px; }
+.pr-card-memo { margin-top: 10px; padding: 10px 12px; background: #f8faf8; border-left: 3px solid #03C75A; border-radius: 6px; font-size: 13px; color: #444; line-height: 1.5; }
+.pr-card-memo i { color: #03C75A; margin-right: 6px; }
+.pr-cancel-btn { margin-top: 12px; width: 100%; padding: 10px; background: #fff; color: #e53935; border: 1px solid #ffcdd2; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.pr-cancel-btn:hover { background: #ffebee; }

@@ -711,6 +711,12 @@ function Reservations() {
                                 <span className="value">{reservation.notes}</span>
                               </div>
                             )}
+                            {reservation.memo && (
+                              <div className="detail-row" style={{ marginTop: 8, padding: '8px 10px', background: '#f8f9fa', borderRadius: 6, borderLeft: '3px solid #03C75A' }}>
+                                <span className="label">요청사항:</span>
+                                <span className="value">{reservation.memo}</span>
+                              </div>
+                            )}
                           </>
                         );
                       })()}
@@ -885,94 +891,55 @@ function Reservations() {
           </div>
         </div>
           ) : (
-            /* 학부모용: 기존 레이아웃 유지 */
-            <div className="reservations-section full-width">
-              <div className="section-header">
-                <h2>내 자녀 예약 현황</h2>
-                <span className="count-badge">{reservations.length}건</span>
+            /* 학부모용 예약 내역 */
+            <div className="pr-section">
+              <div className="pr-header">
+                <h2><i className="fas fa-calendar-check"></i> 내 자녀 예약 현황</h2>
+                <span className="pr-count">{reservations.length}건</span>
               </div>
 
-              <div className="reservations-list">
-                {reservations.length === 0 ? (
-                  <div className="empty-state">
-                    <i className="fas fa-calendar-alt"></i>
-                    <p>예약 내역이 없습니다.</p>
-                  </div>
-                ) : (
-                  reservations.map((reservation) => (
-                    <div key={reservation.id} className="reservation-card">
-                      <div className="reservation-header">
-                        <div className="student-info">
-                          <h3>{reservation.student?.name || reservation.studentName}</h3>
-                          {reservation.isConsultation ? (
-                            <span className="consultation-type-badge">상담</span>
-                          ) : (
-                            <span className="class-type-badge">수업</span>
+              {reservations.length === 0 ? (
+                <div className="pr-empty">
+                  <i className="fas fa-calendar-alt"></i>
+                  <p>예약 내역이 없습니다.</p>
+                </div>
+              ) : (
+                <div className="pr-list">
+                  {reservations.map((reservation) => {
+                    const st = {PENDING:'대기',CONFIRMED:'확정',CANCELLED:'취소',COMPLETED:'완료',NO_SHOW:'노쇼'}[reservation.status] || reservation.status;
+                    return (
+                      <div key={reservation.id} className={`pr-card pr-card-${(reservation.status||'').toLowerCase()}`}>
+                        <div className="pr-card-top">
+                          <div className="pr-card-name">{reservation.student?.name || reservation.studentName}</div>
+                          <span className={`pr-status pr-status-${(reservation.status||'').toLowerCase()}`}>{st}</span>
+                        </div>
+                        <div className="pr-card-type">
+                          {reservation.isConsultation
+                            ? <><i className="fas fa-comments"></i> {reservation.consultationType || '상담'}</>
+                            : <><i className="fas fa-book"></i> 수업</>}
+                          {!reservation.isConsultation && reservation.courseName && (
+                            <span className="pr-course">{reservation.courseName}</span>
                           )}
                         </div>
-                        {getStatusBadge(reservation.status)}
-                      </div>
-                      <div className="reservation-details">
-                        {reservation.isConsultation ? (
-                          <>
-                            <div className="detail-row">
-                              <span className="label">유형:</span>
-                              <span className="value consultation-text">
-                                <i className="fas fa-comments"></i> {reservation.consultationType || '상담'}
-                              </span>
-                            </div>
-                            <div className="detail-row">
-                              <span className="label">날짜:</span>
-                              <span className="value">{reservation.reservationDate}</span>
-                            </div>
-                            <div className="detail-row">
-                              <span className="label">시간:</span>
-                              <span className="value">{reservation.reservationTime}</span>
-                            </div>
-                            {reservation.notes && (
-                              <div className="detail-row">
-                                <span className="label">내용:</span>
-                                <span className="value">{reservation.notes}</span>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <div className="detail-row">
-                              <span className="label">유형:</span>
-                              <span className="value class-text">
-                                <i className="fas fa-book"></i> 수업
-                              </span>
-                            </div>
-                            <div className="detail-row">
-                              <span className="label">반:</span>
-                              <span className="value">{reservation.courseName || "미지정"}</span>
-                            </div>
-                            <div className="detail-row">
-                              <span className="label">날짜:</span>
-                              <span className="value">{reservation.reservationDate}</span>
-                            </div>
-                            <div className="detail-row">
-                              <span className="label">시간:</span>
-                              <span className="value">{reservation.reservationTime}</span>
-                            </div>
-                          </>
+                        <div className="pr-card-info">
+                          <div><i className="fas fa-calendar-day"></i> {reservation.reservationDate}</div>
+                          <div><i className="fas fa-clock"></i> {reservation.reservationTime?.substring(0,5)}</div>
+                        </div>
+                        {(reservation.memo || reservation.notes) && (
+                          <div className="pr-card-memo">
+                            <i className="fas fa-comment-dots"></i> {reservation.memo || reservation.notes}
+                          </div>
                         )}
-                      </div>
-                      <div className="reservation-actions">
                         {reservation.status === 'CONFIRMED' && canCancelReservation(reservation) && (
-                          <button
-                            className="btn-table-delete"
-                            onClick={() => handleCancel(reservation.id)}
-                          >
+                          <button className="pr-cancel-btn" onClick={() => handleCancel(reservation.id)}>
                             <i className="fas fa-times"></i> 예약 취소
                           </button>
                         )}
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -139,6 +139,7 @@ function Sidebar() {
 
     const studentParentMenus = [
       { path: '/dashboard', icon: <i className="fas fa-chart-bar"></i>, label: '대시보드' },
+      { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
       { path: '/students', icon: <i className="fas fa-user"></i>, label: '자녀 관리' },
       { path: '/class-info', icon: <i className="fas fa-calendar-check"></i>, label: '수업 정보' },
       { path: '/parent-reservation', icon: <i className="fas fa-calendar-plus"></i>, label: '수업 예약' },
@@ -146,7 +147,6 @@ function Sidebar() {
       { path: '/reservations', icon: <i className="fas fa-calendar-alt"></i>, label: '예약 내역' },
       { path: '/my-quiz', icon: <i className="fas fa-book-reader"></i>, label: '영어 퀴즈' },
       { path: '/consultations', icon: <i className="fas fa-chart-line"></i>, label: '학습 현황' },
-      { path: '/notices', icon: <i className="fas fa-bell"></i>, label: '공지사항' },
     ];
 
     if (profile?.role === 'PARENT') {
