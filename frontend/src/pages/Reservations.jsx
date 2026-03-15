@@ -657,137 +657,72 @@ function Reservations() {
                   <span className="count-badge">{reservations.length}건</span>
                 </div>
 
-            <div className="reservations-list">
+            <div className="ar-list">
               {reservations.length === 0 ? (
-                <div className="empty-state">
+                <div className="ar-empty">
                   <i className="fas fa-calendar-alt"></i>
-                  <p>{isParent ? '예약 내역이 없습니다.' : '등록된 예약이 없습니다.'}</p>
+                  <p>등록된 예약이 없습니다.</p>
                 </div>
               ) : (
                 <>
-                  {(showAllSystemReservations ? reservations : reservations.slice(0, 2)).map((reservation) => (
-                  <div key={reservation.id} className="reservation-card">
-                    <div className="rsv-card-header">
-                      <div className="rsv-card-student">
-                        <span className="rsv-card-name">{reservation.student?.name || reservation.studentName}</span>
-                        {reservation.student?.phone && (
-                          <span className="rsv-card-phone">{reservation.student.phone}</span>
-                        )}
-                      </div>
-                      <span className={`rsv-card-status rsv-status-${(reservation.status || '').toLowerCase()}`}>
-                        {({PENDING:'대기', CONFIRMED:'확정', CANCELLED:'취소', COMPLETED:'완료', NO_SHOW:'노쇼'})[reservation.status] || reservation.status}
-                      </span>
-                    </div>
-
-                    <div className="reservation-details">
-                      {(() => {
-                        const isClassReservation = reservation.consultationType === '재원생수업' || reservation.consultationType === '레벨테스트';
-                        const isConsultationReservation = reservation.consultationType === '상담';
-                        return (
-                          <>
-                            <div className="detail-row">
-                              <span className="label">유형:</span>
-                              <span className={`value ${isClassReservation ? 'class-badge' : 'consultation-badge'}`}>
-                                {isClassReservation ? '수업 예약' : isConsultationReservation ? '상담 예약' : (reservation.consultationType || '수업 예약')}
-                              </span>
+                  {(showAllSystemReservations ? reservations : reservations.slice(0, 2)).map((reservation) => {
+                    const isClass = reservation.consultationType === '재원생수업' || reservation.consultationType === '레벨테스트';
+                    const stLabel = {PENDING:'대기',CONFIRMED:'확정',CANCELLED:'취소',COMPLETED:'완료',NO_SHOW:'노쇼'}[reservation.status] || reservation.status;
+                    return (
+                      <div key={reservation.id} className={`ar-card ar-card-${(reservation.status||'').toLowerCase()}`}>
+                        <div className="ar-card-top">
+                          <div>
+                            <div className="ar-card-name">{reservation.student?.name || reservation.studentName}</div>
+                            {reservation.student?.phone && <div className="ar-card-phone">{reservation.student.phone}</div>}
+                          </div>
+                          <span className={`ar-status ar-status-${(reservation.status||'').toLowerCase()}`}>{stLabel}</span>
+                        </div>
+                        <div className="ar-card-body">
+                          <div className="ar-card-type">
+                            <span className={isClass ? 'ar-type-class' : 'ar-type-consult'}>
+                              <i className={`fas ${isClass ? 'fa-book' : 'fa-comments'}`}></i> {isClass ? '수업' : '상담'}
+                            </span>
+                            {reservation.consultationType && <span className="ar-type-detail">{reservation.consultationType}</span>}
+                          </div>
+                          <div className="ar-card-info">
+                            <span><i className="fas fa-calendar-day"></i> {reservation.reservationDate}</span>
+                            <span><i className="fas fa-clock"></i> {reservation.reservationTime?.substring(0,5)}</span>
+                          </div>
+                          {reservation.memo && (
+                            <div className="ar-card-memo">
+                              <i className="fas fa-comment-dots"></i> {reservation.memo}
                             </div>
-                            {reservation.consultationType && (
-                              <div className="detail-row">
-                                <span className="label">{isClassReservation ? '수업 유형:' : '상담 유형:'}</span>
-                                <span className="value">{reservation.consultationType}</span>
-                              </div>
-                            )}
-                            <div className="detail-row">
-                              <span className="label">날짜:</span>
-                              <span className="value">{reservation.reservationDate}</span>
-                            </div>
-                            <div className="detail-row">
-                              <span className="label">시간:</span>
-                              <span className="value">{reservation.reservationTime}</span>
-                            </div>
-                            {reservation.notes && (
-                              <div className="detail-row">
-                                <span className="label">메모:</span>
-                                <span className="value">{reservation.notes}</span>
-                              </div>
-                            )}
-                            {reservation.memo && (
-                              <div className="detail-row" style={{ marginTop: 8, padding: '8px 10px', background: '#f8f9fa', borderRadius: 6, borderLeft: '3px solid #03C75A' }}>
-                                <span className="label">요청사항:</span>
-                                <span className="value">{reservation.memo}</span>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-
-                    <div className="reservation-actions">
-                      {/* 상담 예약 상세보기 */}
-                      {reservation.consultationType === '상담' && reservation.memo && (
-                        <button className="btn-secondary" onClick={() => setSelectedConsultation(reservation)}>
-                          <i className="fas fa-eye"></i> 상세보기
-                        </button>
-                      )}
-                      {/* 관리자/선생님 전용 액션 */}
-                      {!isParent && (
-                        <>
+                          )}
+                        </div>
+                        <div className="ar-card-actions">
+                          {reservation.consultationType === '상담' && reservation.memo && (
+                            <button className="ar-btn ar-btn-outline" onClick={() => setSelectedConsultation(reservation)}>
+                              <i className="fas fa-eye"></i> 상세
+                            </button>
+                          )}
                           {reservation.status === 'PENDING' && (
-                            <button
-                              className="btn-primary"
-                              onClick={() => handleConfirm(reservation.id)}
-                            >
+                            <button className="ar-btn ar-btn-confirm" onClick={() => handleConfirm(reservation.id)}>
                               <i className="fas fa-check"></i> 확정
                             </button>
                           )}
                           {reservation.status === 'CONFIRMED' && (
-                            <>
-                              {canCancelReservation(reservation) ? (
-                                <button
-                                  className="btn-table-delete"
-                                  onClick={() => handleCancel(reservation.id)}
-                                >
-                                  <i className="fas fa-times"></i> 취소
+                            canCancelReservation(reservation) ? (
+                              <button className="ar-btn ar-btn-cancel" onClick={() => handleCancel(reservation.id)}>
+                                <i className="fas fa-times"></i> 취소
+                              </button>
+                            ) : (
+                              <>
+                                <span className="ar-deadline">마감</span>
+                                <button className="ar-btn ar-btn-force" onClick={() => handleForceCancel(reservation.id)}>
+                                  <i className="fas fa-ban"></i> 강제취소
                                 </button>
-                              ) : (
-                                <>
-                                  <span className="cancel-deadline-notice">
-                                    취소 마감 (전날 18:00)
-                                  </span>
-                                  <button
-                                    className="btn-secondary"
-                                    onClick={() => handleForceCancel(reservation.id)}
-                                  >
-                                    <i className="fas fa-ban"></i> 관리자 취소
-                                  </button>
-                                </>
-                              )}
-                            </>
+                              </>
+                            )
                           )}
-                        </>
-                      )}
-
-                      {/* 학부모 전용 액션 */}
-                      {isParent && (
-                        <>
-                          {reservation.status === 'CONFIRMED' && canCancelReservation(reservation) && (
-                            <button
-                              className="btn-table-delete"
-                              onClick={() => handleCancel(reservation.id)}
-                            >
-                              <i className="fas fa-times"></i> 예약 취소
-                            </button>
-                          )}
-                          {reservation.status === 'CONFIRMED' && !canCancelReservation(reservation) && (
-                            <span className="cancel-deadline-notice">
-                              취소 불가 (전날 18:00 마감)
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                   {reservations.length > 2 && !showAllSystemReservations && (
                     <button 
                       className="show-more-button"

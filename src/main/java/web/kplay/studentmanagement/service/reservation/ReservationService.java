@@ -370,8 +370,12 @@ public class ReservationService {
         return null;
     }
 
+    private int getMaxPerSlot(String consultationType) {
+        return "레벨테스트".equals(consultationType) ? 1 : MAX_RESERVATIONS_PER_SLOT;
+    }
+
     private List<String> getUnavailableTimes(LocalDate date, String consultationType) {
-        // 1. 차단된 시간 (레벨테스트는 차단 미적용)
+        // 1. 차단된 시간
         String targetType = mapConsultationToTargetType(consultationType);
         java.util.Set<String> unavailable = new java.util.HashSet<>();
         if (targetType != null) {
@@ -381,7 +385,8 @@ public class ReservationService {
                     .forEach(unavailable::add);
         }
 
-        // 2. 9명 만석 시간
+        // 2. 만석 시간 (레벨테스트: 1명, 그 외: 9명)
+        int maxPerSlot = getMaxPerSlot(consultationType);
         List<Reservation> reservations = reservationRepository.findByDateAndStatuses(
                 date, List.of(web.kplay.studentmanagement.domain.reservation.ReservationStatus.CONFIRMED,
                         web.kplay.studentmanagement.domain.reservation.ReservationStatus.PENDING));
@@ -395,7 +400,7 @@ public class ReservationService {
                         r -> r.getReservationTime().toString().substring(0, 5),
                         java.util.stream.Collectors.counting()))
                 .entrySet().stream()
-                .filter(e -> e.getValue() >= MAX_RESERVATIONS_PER_SLOT)
+                .filter(e -> e.getValue() >= maxPerSlot)
                 .forEach(e -> unavailable.add(e.getKey()));
 
         return new java.util.ArrayList<>(unavailable);
@@ -430,6 +435,7 @@ public class ReservationService {
                         r -> r.getReservationTime().toString().substring(0, 5),
                         java.util.stream.Collectors.counting()));
 
+        int maxPerSlot = getMaxPerSlot(consultationType);
         List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
         for (String slot : slots) {
             java.util.Map<String, Object> info = new java.util.LinkedHashMap<>();
@@ -437,8 +443,8 @@ public class ReservationService {
             int count = countMap.getOrDefault(slot, 0L).intValue();
             boolean blocked = blockedTimes.contains(slot);
             info.put("reserved", count);
-            info.put("remaining", blocked ? 0 : MAX_RESERVATIONS_PER_SLOT - count);
-            info.put("status", blocked ? "BLOCKED" : count >= MAX_RESERVATIONS_PER_SLOT ? "FULL" : "AVAILABLE");
+            info.put("remaining", blocked ? 0 : maxPerSlot - count);
+            info.put("status", blocked ? "BLOCKED" : count >= maxPerSlot ? "FULL" : "AVAILABLE");
             result.add(info);
         }
         return result;
