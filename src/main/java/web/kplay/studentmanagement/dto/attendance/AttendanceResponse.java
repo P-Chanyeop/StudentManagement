@@ -25,6 +25,7 @@ public class AttendanceResponse {
     private String startTime;
     private String endTime;
     private AttendanceStatus status;
+    private String attendanceDate; // 출석 날짜
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
     private LocalTime expectedLeaveTime;

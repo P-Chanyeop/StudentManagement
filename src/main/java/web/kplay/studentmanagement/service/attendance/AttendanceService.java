@@ -1069,6 +1069,7 @@ public class AttendanceService {
                         ? attendance.getAttendanceTime().plusMinutes(attendance.getCourse().getDurationMinutes()).toString()
                         : null))
                 .status(attendance.getStatus())
+                .attendanceDate(attendance.getAttendanceDate() != null ? attendance.getAttendanceDate().toString() : null)
                 .checkInTime(attendance.getCheckInTime())
                 .checkOutTime(attendance.getCheckOutTime())
                 .expectedLeaveTime(attendance.getExpectedLeaveTime())
