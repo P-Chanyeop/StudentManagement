@@ -105,7 +105,7 @@ function UserDashboard() {
                   <div className="info-row">
                     <span className="info-label">잔여 횟수</span>
                     <span className="info-value highlight">
-                      {enrollment.enrollmentType === 'COUNT' 
+                      {enrollment.totalCount 
                         ? `${enrollment.remainingCount}회 / ${enrollment.totalCount}회` 
                         : '무제한'}
                     </span>
