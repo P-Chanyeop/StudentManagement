@@ -111,14 +111,28 @@ function RoleMyPage() {
   }
 }
 
+// 이미 로그인된 경우 대시보드로 리다이렉트
+function PublicRoute({ children }) {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp * 1000 > Date.now()) {
+        return <Navigate to="/dashboard" replace />;
+      }
+    } catch { /* 토큰 파싱 실패 시 로그인 페이지 표시 */ }
+  }
+  return children;
+}
+
 function App() {
   return (
     <>
       <ScrollToTop />
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
         <Route
           path="/dashboard"
           element={
