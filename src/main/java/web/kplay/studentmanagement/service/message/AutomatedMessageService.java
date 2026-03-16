@@ -109,8 +109,9 @@ public class AutomatedMessageService {
         
         Student student = consultation.getStudent();
         
-        // 해당 학생의 녹음파일 있는 학습기록 개수 (회차)
-        int recordingCount = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(student.getId());
+        // 해당 학생의 녹음파일 있는 학습기록 개수 (회차) + offset
+        int recordingCount = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(student.getId())
+                + (student.getRecordingOffset() != null ? student.getRecordingOffset() : 0);
         
         String content = String.format(
                 "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +

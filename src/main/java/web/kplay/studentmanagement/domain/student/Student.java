@@ -94,6 +94,14 @@ public class Student extends BaseEntity {
     @Builder.Default
     private Boolean assignedPhonics = false;
 
+    @Column
+    @Builder.Default
+    private Integer recordingOffset = 0;
+
+    public void setRecordingOffset(Integer recordingOffset) {
+        this.recordingOffset = recordingOffset;
+    }
+
     // 학생 정보 업데이트
     public void updateInfo(String studentName, String studentPhone, LocalDate birthDate,
                            String gender, String address, String school, String grade) {

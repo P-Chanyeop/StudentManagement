@@ -120,4 +120,11 @@ public class StudentController {
     public ResponseEntity<List<Map<String, Object>>> getExcelStudentList() {
         return ResponseEntity.ok(additionalClassExcelService.getExcelStudentList());
     }
+
+    @PutMapping("/{id}/recording-offset")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateRecordingOffset(@PathVariable Long id, @RequestBody java.util.Map<String, Integer> request) {
+        studentService.updateRecordingOffset(id, request.get("offset"));
+        return ResponseEntity.ok(java.util.Map.of("message", "레코딩 회차 조정 완료"));
+    }
 }

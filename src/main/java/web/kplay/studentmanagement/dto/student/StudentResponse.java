@@ -33,5 +33,6 @@ public class StudentResponse {
     private Boolean assignedSightword;
     private Boolean assignedGrammar;
     private Boolean assignedPhonics;
+    private Integer recordingOffset;
     private List<EnrollmentResponse> enrollments;
 }

@@ -102,6 +102,7 @@ export const studentAPI = {
     });
   },
   getExcelList: () => api.get('/student-course/list'),
+  updateRecordingOffset: (id, offset) => api.put(`/students/${id}/recording-offset`, { offset }),
 };
 
 // 수업 API

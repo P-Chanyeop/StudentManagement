@@ -225,6 +225,7 @@ public class StudentService {
                 .assignedSightword(student.getAssignedSightword())
                 .assignedGrammar(student.getAssignedGrammar())
                 .assignedPhonics(student.getAssignedPhonics())
+                .recordingOffset(student.getRecordingOffset())
                 .enrollments(student.getEnrollments().stream()
                         .map(this::toEnrollmentResponse)
                         .collect(Collectors.toList()))
@@ -310,5 +311,13 @@ public class StudentService {
                 .assignedPhonics(student.getAssignedPhonics())
                 .assignedClassInitials(student.getAssignedClassInitials())
                 .build();
+    }
+
+    @Transactional
+    public void updateRecordingOffset(Long studentId, int offset) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new web.kplay.studentmanagement.exception.ResourceNotFoundException("학생을 찾을 수 없습니다"));
+        student.setRecordingOffset(offset);
+        studentRepository.save(student);
     }
 }
