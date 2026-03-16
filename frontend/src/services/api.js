@@ -35,7 +35,7 @@ api.interceptors.response.use(
       return new Promise(() => {}); // 리다이렉트 중 대기
     }
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login')) {
       originalRequest._retry = true;
       
       const refreshToken = localStorage.getItem('refreshToken');
