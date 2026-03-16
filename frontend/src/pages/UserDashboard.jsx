@@ -71,7 +71,7 @@ function UserDashboard() {
       {/* 히어로 섹션 */}
       <section className="hero">
         <div className="hero-container">
-          <h1>안녕하세요, {profile?.nickname}님! 👋</h1>
+          <h1>대시보드</h1>
           <p>자녀의 학습 현황을 확인하세요</p>
         </div>
       </section>
