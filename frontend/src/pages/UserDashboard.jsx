@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { authAPI, enrollmentAPI, consultationAPI } from '../services/api';
+import { authAPI, enrollmentAPI, consultationAPI, fileAPI } from '../services/api';
 import { holidayService } from '../services/holidayService';
 import '../styles/Dashboard.css';
 
@@ -189,15 +189,31 @@ function UserDashboard() {
                         )}
                       </div>
                       <div className="recording-actions">
-                        <a 
-                          href={consultation.recordingFileUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
+                        <button
                           className="btn-play"
+                          onClick={async () => {
+                            try {
+                              const urls = consultation.recordingFileUrl.split(',');
+                              for (const entry of urls) {
+                                const parts = entry.split('::');
+                                const filePath = parts.length > 1 ? parts[1] : parts[0];
+                                const fileName = parts.length > 1 ? parts[0] : filePath.split('/').pop();
+                                const response = await fileAPI.download(filePath);
+                                const url = window.URL.createObjectURL(new Blob([response.data]));
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.setAttribute('download', fileName);
+                                document.body.appendChild(link);
+                                link.click();
+                                link.remove();
+                                window.URL.revokeObjectURL(url);
+                              }
+                            } catch (e) { alert('파일 다운로드에 실패했습니다.'); }
+                          }}
                         >
-                          <i className="fas fa-external-link-alt"></i>
-                          재생
-                        </a>
+                          <i className="fas fa-download"></i>
+                          다운로드
+                        </button>
                       </div>
                     </div>
                   ))}
