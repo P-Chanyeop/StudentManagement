@@ -40,7 +40,7 @@ public class AutomatedMessageService {
     private final web.kplay.studentmanagement.repository.ConsultationRepository consultationRepository;
     private final web.kplay.studentmanagement.repository.NaverBookingRepository naverBookingRepository;
     
-    @Value("${app.homepage-url:https://littlebear.kplay.web}")
+    @Value("${app.homepage-url:https://littlebear-readingclub.com}")
     private String homepageUrl;
 
     /**
