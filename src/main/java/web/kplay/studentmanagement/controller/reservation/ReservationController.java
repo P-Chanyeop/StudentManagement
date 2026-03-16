@@ -90,6 +90,12 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getTimeSlotStatus(date, consultationType));
     }
 
+    @GetMapping("/public/time-slot-status/{date}")
+    public ResponseEntity<List<Map<String, Object>>> getPublicTimeSlotStatus(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(reservationService.getTimeSlotStatus(date, "레벨테스트"));
+    }
+
     // getReservationsBySchedule 메서드 삭제 (schedule 제거로 인해 사용 안 함)
 
     @PostMapping("/{id}/confirm")
@@ -181,6 +187,12 @@ public class ReservationController {
     /**
      * 예약 가능한 날짜 범위 조회
      */
+    @PostMapping("/leveltest")
+    public ResponseEntity<ReservationResponse> createLevelTestReservation(@Valid @RequestBody ReservationCreateRequest request) {
+        ReservationResponse response = reservationService.createLevelTestReservation(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @GetMapping("/available-dates")
     public ResponseEntity<Map<String, String>> getAvailableDates() {
         ReservationPeriod period = reservationPeriodService.getCurrentReservationPeriod();

@@ -228,6 +228,12 @@ export const reservationAPI = {
   closePeriod: (startDate, endDate) => api.post('/reservations/period/close', { startDate, endDate }),
 };
 
+export const publicLevelTestAPI = {
+  getAvailableDates: () => api.get('/reservations/available-dates'),
+  getTimeSlotStatus: (date) => api.get(`/reservations/public/time-slot-status/${date}`),
+  create: (data) => api.post('/reservations/leveltest', data),
+};
+
 export const waitlistAPI = {
   add: (data) => api.post('/waitlist', data),
   cancel: (id) => api.delete(`/waitlist/${id}`),

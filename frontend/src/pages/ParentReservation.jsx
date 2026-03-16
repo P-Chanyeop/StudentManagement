@@ -649,7 +649,6 @@ function ParentReservation() {
   };
 
   const consultationTypes = [
-    { value: '레벨테스트', label: '레벨테스트' },
     { value: '재원생수업', label: '재원생 예약 시스템' },
   ];
 

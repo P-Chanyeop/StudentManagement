@@ -86,12 +86,13 @@ public class SecurityConfig {
                         .requestMatchers("/dashboard", "/students", "/courses", "/attendance", "/reservations", 
                                         "/enrollments", "/consultations", "/leveltest", "/makeup-classes", 
                                         "/notices", "/sms", "/payment", "/mypage", "/login", "/register", "/class-info",
-                                        "/parent-reservation", "/consultation-reservation", "/enrollment-adjustment", "/check-in", "/forgot-password").permitAll() // React 라우팅 경로
+                                        "/parent-reservation", "/consultation-reservation", "/enrollment-adjustment", "/check-in", "/forgot-password", "/level-test").permitAll() // React 라우팅 경로
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/naver-booking/events").permitAll() // SSE 엔드포인트
                         .requestMatchers("/api/holidays/year/**").permitAll() // 공휴일 조회
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/settings/**").permitAll() // 사이트 설정 조회
                         .requestMatchers("/api/attendances/search-by-phone", "/api/attendances/checkin-by-phone", "/api/attendances/*/check-in", "/api/attendances/naver-booking/*/check-in", "/api/attendances/*/checkout", "/api/attendances/*/manual-check-in").permitAll() // 출석체크 페이지
+                        .requestMatchers("/api/reservations/leveltest", "/api/reservations/public/**", "/api/reservations/available-dates").permitAll() // 비회원 레벨테스트
                         .requestMatchers("/api/teacher-attendance/**").permitAll() // 선생님 출퇴근 체크
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll() // 개발 환경에서 H2 Console 접근 허용

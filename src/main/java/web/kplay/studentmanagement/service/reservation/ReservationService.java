@@ -52,6 +52,56 @@ public class ReservationService {
     private static final int MAX_RESERVATIONS_PER_SLOT = 9;
 
     @Transactional
+    public ReservationResponse createLevelTestReservation(ReservationCreateRequest request) {
+        // 비회원 레벨테스트: 학생 임시 생성
+        if (request.getParentName() == null || request.getParentPhone() == null || request.getStudents() == null || request.getStudents().isEmpty()) {
+            throw new BusinessException("학부모 정보와 학생 정보를 입력해주세요.");
+        }
+        ReservationCreateRequest.StudentInfo si = request.getStudents().get(0);
+        Student student = Student.builder()
+                .studentName(si.getStudentName())
+                .studentPhone(si.getStudentPhone())
+                .school(si.getSchool())
+                .parentName(request.getParentName())
+                .parentPhone(request.getParentPhone())
+                .memo("비회원 레벨테스트 신청")
+                .build();
+        student = studentRepository.save(student);
+
+        String timeStr = request.getReservationTime().toString().substring(0, 5);
+        List<String> unavailable = getUnavailableTimes(request.getReservationDate(), "레벨테스트");
+        if (unavailable.contains(timeStr)) {
+            throw new BusinessException("해당 시간은 예약이 불가능합니다 (차단 또는 만석)");
+        }
+
+        Reservation reservation = Reservation.builder()
+                .student(student)
+                .reservationDate(request.getReservationDate())
+                .reservationTime(request.getReservationTime())
+                .status(ReservationStatus.CONFIRMED)
+                .memo(request.getMemo())
+                .consultationType("레벨테스트")
+                .reservationSource("WEB")
+                .build();
+        Reservation saved = reservationRepository.save(reservation);
+        createAttendanceRecord(saved);
+
+        try {
+            LocalTime time = request.getReservationTime();
+            String content = String.format("[비회원] %s님이 %d년 %02d월 %02d일 %02d시 %02d분으로 레벨테스트 예약하였습니다. (학부모: %s, %s)",
+                    si.getStudentName(),
+                    request.getReservationDate().getYear(), request.getReservationDate().getMonthValue(), request.getReservationDate().getDayOfMonth(),
+                    time.getHour(), time.getMinute(),
+                    request.getParentName(), request.getParentPhone());
+            adminNotificationService.createNotification("RESERVATION", "새로운 레벨테스트 예약", content, saved.getId());
+        } catch (Exception e) {
+            log.error("관리자 알림 생성 실패: {}", e.getMessage());
+        }
+
+        log.info("비회원 레벨테스트 예약: 학생={}, 날짜={}, 시간={}", si.getStudentName(), request.getReservationDate(), request.getReservationTime());
+        return toResponse(saved);
+    }
+
     public ReservationResponse createReservation(ReservationCreateRequest request) {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("학생을 찾을 수 없습니다"));

@@ -13,6 +13,7 @@ import CheckIn from './pages/CheckIn';
 import Reservations from './pages/Reservations';
 import ParentReservation from './pages/ParentReservation';
 import ConsultationReservation from './pages/ConsultationReservation';
+import LevelTest from './pages/LevelTest';
 import ClassInfo from './pages/ClassInfo';
 import Enrollments from './pages/Enrollments';
 // import EnrollmentAdjustment from './pages/EnrollmentAdjustment';
@@ -133,6 +134,7 @@ function App() {
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+        <Route path="/level-test" element={<LevelTest />} />
         <Route
           path="/dashboard"
           element={
