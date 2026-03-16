@@ -1110,22 +1110,32 @@ function Enrollments() {
                   </span>
                 </div>
                 <div className="enr-detail-item">
-                  <span className="enr-detail-label">레코딩 파일</span>
+                  <span className="enr-detail-label">레코딩 회차</span>
                   <span className="enr-detail-value" style={{ color: '#007AFF', display: 'flex', alignItems: 'center', gap: 8 }}>
                     {selectedEnrollment.recordingStatus || '0/0'}
                     {currentUser?.role === 'ADMIN' && (
-                      <button
-                        style={{ padding: '2px 8px', fontSize: 11, background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer' }}
-                        onClick={() => {
-                          const val = prompt('기존 업로드 회차 (숫자 입력):', selectedEnrollment.student?.recordingOffset || 0);
-                          if (val === null) return;
-                          const offset = parseInt(val);
-                          if (isNaN(offset) || offset < 0) return alert('0 이상의 숫자를 입력하세요.');
-                          studentAPI.updateRecordingOffset(selectedEnrollment.student?.id, offset)
-                            .then(() => { alert('레코딩 회차 조정 완료'); queryClient.invalidateQueries(['enrollments']); })
-                            .catch(() => alert('조정 실패'));
-                        }}
-                      >회차 조정</button>
+                      <>
+                        <button
+                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          onClick={() => {
+                            const cur = selectedEnrollment.student?.recordingOffset || 0;
+                            if (cur <= 0) return;
+                            studentAPI.updateRecordingOffset(selectedEnrollment.student?.id, cur - 1)
+                              .then(() => queryClient.invalidateQueries(['enrollments']))
+                              .catch(() => alert('조정 실패'));
+                          }}
+                        >−</button>
+                        <span style={{ fontSize: 13, color: '#666', minWidth: 20, textAlign: 'center' }}>{selectedEnrollment.student?.recordingOffset || 0}</span>
+                        <button
+                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          onClick={() => {
+                            const cur = selectedEnrollment.student?.recordingOffset || 0;
+                            studentAPI.updateRecordingOffset(selectedEnrollment.student?.id, cur + 1)
+                              .then(() => queryClient.invalidateQueries(['enrollments']))
+                              .catch(() => alert('조정 실패'));
+                          }}
+                        >+</button>
+                      </>
                     )}
                   </span>
                 </div>
