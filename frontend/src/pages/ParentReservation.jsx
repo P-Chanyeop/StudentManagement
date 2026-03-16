@@ -65,10 +65,24 @@ function ParentReservation() {
     consultationType: '',
     
     // 요청사항
-    requirements: ''
+    requirements: '',
+
+    // 레벨테스트 비회원 정보 (관리자용)
+    ltParentName: '',
+    ltParentPhone: '',
+    ltStudentName: '',
+    ltSchool: '',
+    ltStudentPhone: '',
   });
 
   const [errors, setErrors] = useState({});
+
+  const formatPhone = (val) => {
+    const v = val.replace(/[^0-9]/g, '');
+    if (v.length > 7) return v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+    if (v.length > 3) return v.slice(0,3)+'-'+v.slice(3);
+    return v;
+  };
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [holidays, setHolidays] = useState({});
   const [loadedYears, setLoadedYears] = useState(new Set());
@@ -492,45 +506,22 @@ function ParentReservation() {
   const validateForm = () => {
     const newErrors = {};
     
-    // 역할별 유효성 검사
-    if (profile?.role === 'PARENT') {
-      if (!formData.selectedStudentId) {
-        newErrors.selectedStudentId = '수업 대상 자녀를 선택해주세요.';
-        window.alert('수업 대상 자녀를 선택해주세요.');
-        return false;
-      }
+    if (formData.consultationType === '레벨테스트') {
+      if (!formData.ltParentName) { window.alert('학부모 성함을 입력해주세요.'); return false; }
+      if (!formData.ltParentPhone) { window.alert('학부모 전화번호를 입력해주세요.'); return false; }
+      if (!formData.ltStudentName) { window.alert('학생 이름을 입력해주세요.'); return false; }
+    } else if (profile?.role === 'PARENT') {
+      if (!formData.selectedStudentId) { window.alert('수업 대상 자녀를 선택해주세요.'); return false; }
     } else {
-      // 관리자/선생님용 유효성 검사
-      if (!formData.selectedStudentId) {
-        newErrors.selectedStudentId = '학생을 선택해주세요.';
-        window.alert('학생을 선택해주세요.');
-        return false;
-      }
+      if (!formData.selectedStudentId) { window.alert('학생을 선택해주세요.'); return false; }
     }
     
-    if (!formData.preferredDate) {
-      newErrors.preferredDate = '희망 날짜를 선택해주세요.';
-      window.alert('희망 날짜를 선택해주세요.');
-      setErrors(newErrors);
-      return false;
-    }
-    
-    if (!formData.preferredTime) {
-      newErrors.preferredTime = '희망 시간을 선택해주세요.';
-      window.alert('희망 시간을 선택해주세요.');
-      setErrors(newErrors);
-      return false;
-    }
-    
-    if (!formData.consultationType) {
-      newErrors.consultationType = '수업 유형을 선택해주세요.';
-      window.alert('원하시는 예약을 눌러주세요');
-      setErrors(newErrors);
-      return false;
-    }
+    if (!formData.preferredDate) { window.alert('희망 날짜를 선택해주세요.'); return false; }
+    if (!formData.preferredTime) { window.alert('희망 시간을 선택해주세요.'); return false; }
+    if (!formData.consultationType) { window.alert('원하시는 예약을 눌러주세요'); return false; }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handleSubmit = async (e) => {
@@ -558,6 +549,24 @@ function ParentReservation() {
       // 스케줄 체크 제거 - 시간대만 선택하면 예약 가능
       
       // 선택된 학생 정보 처리
+      if (formData.consultationType === '레벨테스트') {
+        const { publicLevelTestAPI } = await import('../services/api');
+        publicLevelTestAPI.create({
+          reservationDate: formData.preferredDate,
+          reservationTime: formData.preferredTime + ':00',
+          memo: formData.requirements,
+          consultationType: '레벨테스트',
+          parentName: formData.ltParentName,
+          parentPhone: formData.ltParentPhone,
+          students: [{ studentName: formData.ltStudentName, studentPhone: formData.ltStudentPhone, school: formData.ltSchool }],
+        }).then(() => {
+          alert('레벨테스트 예약이 완료되었습니다.');
+          setFormData(prev => ({ ...prev, preferredDate: '', preferredTime: '', requirements: '', ltParentName: '', ltParentPhone: '', ltStudentName: '', ltSchool: '', ltStudentPhone: '' }));
+          queryClient.invalidateQueries(['availableDates']);
+        }).catch(err => alert(err.response?.data?.message || '예약 실패'));
+        return;
+      }
+
       const selectedStudent = getSelectedStudent();
       if (!selectedStudent) {
         alert('선택된 학생 정보를 찾을 수 없습니다.');
@@ -648,9 +657,9 @@ function ParentReservation() {
     }
   };
 
-  const consultationTypes = [
-    { value: '재원생수업', label: '재원생 예약 시스템' },
-  ];
+  const consultationTypes = profile?.role === 'ADMIN'
+    ? [{ value: '재원생수업', label: '재원생 예약 시스템' }, { value: '레벨테스트', label: '레벨테스트' }]
+    : [{ value: '재원생수업', label: '재원생 예약 시스템' }];
 
   const timeSlots = (() => {
     if (!formData.preferredDate) return [];
@@ -896,6 +905,32 @@ function ParentReservation() {
                 })()}
               </div>
             )}
+              </>
+            ) : formData.consultationType === '레벨테스트' ? (
+              // 관리자 레벨테스트 - 학부모/학생 정보 입력
+              <>
+                <h2>학부모 정보</h2>
+                <div className="form-group">
+                  <label>학부모 성함 *</label>
+                  <input value={formData.ltParentName} onChange={e => setFormData(p => ({ ...p, ltParentName: e.target.value }))} placeholder="성함" />
+                </div>
+                <div className="form-group">
+                  <label>학부모 전화번호 *</label>
+                  <input value={formData.ltParentPhone} onChange={e => setFormData(p => ({ ...p, ltParentPhone: formatPhone(e.target.value) }))} placeholder="010-0000-0000" />
+                </div>
+                <h2 style={{ marginTop: 16 }}>학생 정보</h2>
+                <div className="form-group">
+                  <label>학생 이름 *</label>
+                  <input value={formData.ltStudentName} onChange={e => setFormData(p => ({ ...p, ltStudentName: e.target.value }))} placeholder="이름" />
+                </div>
+                <div className="form-group">
+                  <label>학교명</label>
+                  <input value={formData.ltSchool} onChange={e => setFormData(p => ({ ...p, ltSchool: e.target.value }))} placeholder="예: 정목초등학교" />
+                </div>
+                <div className="form-group">
+                  <label>학생 전화번호</label>
+                  <input value={formData.ltStudentPhone} onChange={e => setFormData(p => ({ ...p, ltStudentPhone: formatPhone(e.target.value) }))} placeholder="010-0000-0000" />
+                </div>
               </>
             ) : (
               // 관리자/선생님용 - 학생 선택

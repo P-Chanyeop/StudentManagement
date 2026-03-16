@@ -1,0 +1,359 @@
+/* 레벨테스트 예약 페이지 독립 스타일 */
+.lt-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8f5e9 100%);
+  padding: 24px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.lt-container {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.lt-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.lt-logo {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.lt-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 4px;
+}
+
+.lt-subtitle {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+}
+
+/* 안내 카드 */
+.lt-info-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border-left: 4px solid #03C75A;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.lt-info-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #03C75A;
+  margin: 0 0 10px;
+}
+
+.lt-info-content {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.7;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* 폼 카드 */
+.lt-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.lt-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.lt-form-group {
+  margin-bottom: 14px;
+}
+
+.lt-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.lt-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.lt-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.lt-input:focus {
+  border-color: #03C75A;
+  box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
+}
+
+.lt-input.error {
+  border-color: #ff4444;
+}
+
+.lt-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
+}
+
+.lt-textarea:focus {
+  border-color: #03C75A;
+  box-shadow: 0 0 0 3px rgba(3, 199, 90, 0.1);
+}
+
+.lt-error {
+  font-size: 12px;
+  color: #ff4444;
+  margin-top: 4px;
+}
+
+/* 캘린더 */
+.lt-calendar {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lt-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fafafa;
+}
+
+.lt-cal-nav {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: background 0.2s;
+}
+
+.lt-cal-nav:hover {
+  background: #f0f0f0;
+}
+
+.lt-cal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+.lt-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #fafafa;
+  border-top: 1px solid #eee;
+}
+
+.lt-cal-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  padding: 8px 0;
+}
+
+.lt-cal-weekday:first-child {
+  color: #ff4444;
+}
+
+.lt-cal-weekday:last-child {
+  color: #2196F3;
+}
+
+.lt-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 4px;
+}
+
+.lt-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.lt-cal-day.empty {
+  cursor: default;
+}
+
+.lt-cal-day.available:hover {
+  background: #e8f5e9;
+}
+
+.lt-cal-day.selected {
+  background: #03C75A;
+  color: #fff;
+  font-weight: 700;
+}
+
+.lt-cal-day.disabled {
+  color: #ccc;
+  cursor: default;
+}
+
+.lt-cal-day.holiday,
+.lt-cal-day.weekend:first-child {
+  color: #ff4444;
+}
+
+/* 시간 슬롯 */
+.lt-time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.lt-time-btn {
+  padding: 12px 8px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.lt-time-btn:hover:not(:disabled) {
+  border-color: #03C75A;
+  background: #f0faf4;
+}
+
+.lt-time-btn.selected {
+  background: #03C75A;
+  color: #fff;
+  border-color: #03C75A;
+}
+
+.lt-time-btn:disabled {
+  background: #f5f5f5;
+  color: #bbb;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.lt-time-btn .lt-slot-status {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+/* 제출 버튼 */
+.lt-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #03C75A;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background 0.2s;
+}
+
+.lt-submit-btn:hover:not(:disabled) {
+  background: #02b050;
+}
+
+.lt-submit-btn:disabled {
+  background: #a0d8b0;
+  cursor: not-allowed;
+}
+
+/* 성공 화면 */
+.lt-success {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8f5e9 100%);
+}
+
+.lt-success-card {
+  text-align: center;
+  padding: 48px 32px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  max-width: 400px;
+  margin: 0 16px;
+}
+
+.lt-success-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+
+.lt-success-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+}
+
+.lt-success-desc {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .lt-time-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .lt-card {
+    padding: 16px;
+  }
+}

@@ -114,6 +114,12 @@ function Login() {
           </Link>
         </div>
 
+        <div style={{ marginTop: 16, textAlign: 'center' }}>
+          <Link to="/level-test" style={{ display: 'inline-block', padding: '10px 24px', background: '#03C75A', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600, fontSize: 14 }}>
+            🐻 레벨테스트 신청
+          </Link>
+        </div>
+
       </div>
     </div>
   );

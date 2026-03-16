@@ -98,6 +98,12 @@ public class ReservationService {
             log.error("관리자 알림 생성 실패: {}", e.getMessage());
         }
 
+        try {
+            automatedMessageService.sendReservationNotification(saved);
+        } catch (Exception e) {
+            log.error("예약 알림 문자 발송 실패: {}", e.getMessage());
+        }
+
         log.info("비회원 레벨테스트 예약: 학생={}, 날짜={}, 시간={}", si.getStudentName(), request.getReservationDate(), request.getReservationTime());
         return toResponse(saved);
     }

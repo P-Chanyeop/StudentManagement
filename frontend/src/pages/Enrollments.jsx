@@ -1116,25 +1116,23 @@ function Enrollments() {
                     {currentUser?.role === 'ADMIN' && (() => {
                       const si = getStudentInfo(selectedEnrollment.studentId);
                       const cur = si?.recordingOffset || 0;
+                      const dbActual = selectedEnrollment.actualRecordings || 0;
+                      const expected = selectedEnrollment.expectedRecordings || 0;
+                      const updateOffset = (newVal) => {
+                        if (dbActual + newVal > expected) return alert('총 레코딩 회차(' + expected + ')를 초과할 수 없습니다.');
+                        studentAPI.updateRecordingOffset(selectedEnrollment.studentId, newVal).catch(() => alert('조정 실패'));
+                        queryClient.setQueryData(['students'], old => old?.map(s => s.id === selectedEnrollment.studentId ? { ...s, recordingOffset: newVal } : s));
+                      };
                       return (
                       <>
+                        {cur > 0 && <span style={{ fontSize: 13, color: '#03C75A', fontWeight: 600 }}>(+{cur})</span>}
                         <button
                           style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          onClick={() => {
-                            if (cur <= 0) return;
-                            studentAPI.updateRecordingOffset(selectedEnrollment.studentId, cur - 1)
-                              .then(() => { queryClient.invalidateQueries(['enrollments']); queryClient.invalidateQueries(['students']); })
-                              .catch(() => alert('조정 실패'));
-                          }}
+                          onClick={() => cur > 0 && updateOffset(cur - 1)}
                         >−</button>
-                        <span style={{ fontSize: 13, color: '#666', minWidth: 20, textAlign: 'center' }}>{cur}</span>
                         <button
                           style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          onClick={() => {
-                            studentAPI.updateRecordingOffset(selectedEnrollment.studentId, cur + 1)
-                              .then(() => { queryClient.invalidateQueries(['enrollments']); queryClient.invalidateQueries(['students']); })
-                              .catch(() => alert('조정 실패'));
-                          }}
+                          onClick={() => updateOffset(cur + 1)}
                         >+</button>
                       </>
                       );

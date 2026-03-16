@@ -393,7 +393,7 @@ public class EnrollmentService {
         // 해당 학생의 상담 기록 중 레코딩 파일이 있는 개수 조회
         int actualRecordings = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(
             enrollment.getStudent().getId()
-        ) + (enrollment.getStudent().getRecordingOffset() != null ? enrollment.getStudent().getRecordingOffset() : 0);
+        );
         
         String recordingStatus = actualRecordings + "/" + expectedRecordings;
         

@@ -317,6 +317,7 @@ public class StudentService {
     public void updateRecordingOffset(Long studentId, int offset) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new web.kplay.studentmanagement.exception.ResourceNotFoundException("학생을 찾을 수 없습니다"));
+        if (offset < 0) throw new web.kplay.studentmanagement.exception.BusinessException("0 미만으로 설정할 수 없습니다.");
         student.setRecordingOffset(offset);
         studentRepository.save(student);
     }
