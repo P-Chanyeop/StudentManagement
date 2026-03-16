@@ -22,6 +22,8 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    if (loading) return;
     setLoading(true);
     setError('');
 
@@ -29,16 +31,21 @@ function Login() {
       const response = await authAPI.login(formData);
       const { accessToken, refreshToken, name, role } = response.data;
 
-      // 토큰 저장
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('userName', name);
       localStorage.setItem('userRole', role);
 
-      // 역할에 따라 페이지 이동
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || '로그인에 실패했습니다.');
+      console.error('로그인 에러:', err);
+      if (err.response?.status === 401) {
+        setError('아이디 또는 비밀번호가 올바르지 않습니다.');
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
     } finally {
       setLoading(false);
     }
