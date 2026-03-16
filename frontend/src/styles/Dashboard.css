@@ -1082,6 +1082,10 @@
   font-size: 1.8rem;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .recording-modal .modal-header h2 i {
@@ -1098,6 +1102,7 @@
   border-radius: 50%;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .recording-modal .modal-close:hover {
