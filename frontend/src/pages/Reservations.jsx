@@ -694,7 +694,7 @@ function Reservations() {
                             <span className={isClass ? 'ar-type-class' : 'ar-type-consult'}>
                               <i className={`fas ${isClass ? 'fa-book' : 'fa-comments'}`}></i> {isClass ? '수업' : '상담'}
                             </span>
-                            {reservation.consultationType && <span className="ar-type-detail">{reservation.consultationType}</span>}
+                            {reservation.consultationType && <span className={`ar-type-detail ${reservation.consultationType === '레벨테스트' ? 'ar-type-leveltest' : ''}`}>{reservation.consultationType}</span>}
                           </div>
                           <div className="ar-card-info">
                             <span><i className="fas fa-calendar-day"></i> {reservation.reservationDate}</span>
