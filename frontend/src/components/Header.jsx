@@ -47,16 +47,18 @@ function Header() {
 
   // 새 알림 브라우저 푸시
   useEffect(() => {
-    if (profile?.role === 'ADMIN' && unreadCount > 0 && Notification.permission === 'granted') {
+    if (profile?.role === 'ADMIN' && unreadCount > 0 && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       const latest = notifications.find(n => !n.read);
       if (latest) {
-        const notification = new Notification(latest.title, {
-          body: latest.content,
-          icon: '/favicon.ico',
-          tag: 'admin-notification-' + latest.id
-        });
-        notification.onclick = () => { window.focus(); notification.close(); };
-        setTimeout(() => notification.close(), 5000);
+        try {
+          const notification = new Notification(latest.title, {
+            body: latest.content,
+            icon: '/favicon.ico',
+            tag: 'admin-notification-' + latest.id
+          });
+          notification.onclick = () => { window.focus(); notification.close(); };
+          setTimeout(() => notification.close(), 5000);
+        } catch (e) { /* 모바일 등 Notification 미지원 */ }
       }
     }
   }, [unreadCount, profile]);
