@@ -1113,7 +1113,7 @@ function Enrollments() {
                   <span className="enr-detail-label">레코딩 파일</span>
                   <span className="enr-detail-value" style={{ color: '#007AFF', display: 'flex', alignItems: 'center', gap: 8 }}>
                     {selectedEnrollment.recordingStatus || '0/0'}
-                    {profile?.role === 'ADMIN' && (
+                    {currentUser?.role === 'ADMIN' && (
                       <button
                         style={{ padding: '2px 8px', fontSize: 11, background: '#f0f0f0', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer' }}
                         onClick={() => {
