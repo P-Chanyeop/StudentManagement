@@ -62,7 +62,7 @@ function ParentReservation() {
     // 예약 정보
     preferredDate: '',
     preferredTime: '',
-    consultationType: '',
+    consultationType: '재원생수업',
     
     // 요청사항
     requirements: '',
@@ -491,7 +491,7 @@ function ParentReservation() {
       ],
       preferredDate: '',
       preferredTime: '',
-      consultationType: '',
+      consultationType: '재원생수업',
       requirements: ''
     });
     setErrors({});
