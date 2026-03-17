@@ -20,6 +20,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findByStatus(ReservationStatus status);
 
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.student WHERE r.status IN :statuses ORDER BY r.reservationDate DESC, r.reservationTime DESC")
+    List<Reservation> findByStatusIn(@Param("statuses") List<ReservationStatus> statuses);
+
     // 날짜/시간으로 예약 조회
     List<Reservation> findByReservationDateAndReservationTime(LocalDate date, java.time.LocalTime time);
 

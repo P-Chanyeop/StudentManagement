@@ -207,6 +207,7 @@ export const reservationAPI = {
   create: (data) => api.post('/reservations', data),
   getById: (id) => api.get(`/reservations/${id}`),
   getByStudent: (studentId) => api.get(`/reservations/student/${studentId}`),
+  getAll: () => api.get('/reservations/all'),
   getByDate: (date) => api.get(`/reservations/date/${date}`),
   getMyReservations: () => api.get('/reservations/my-reservations'),
   getNewReservations: (since) => api.get(`/reservations/new?since=${since}`),

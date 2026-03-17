@@ -13,7 +13,6 @@ function Reservations() {
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [periodStartDate, setPeriodStartDate] = useState('');
   const [periodEndDate, setPeriodEndDate] = useState('');
-  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showNaverDetailModal, setShowNaverDetailModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -28,6 +27,10 @@ function Reservations() {
   const [showExcelListModal, setShowExcelListModal] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [hideCompleted, setHideCompleted] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
   const [newReservation, setNewReservation] = useState({
     studentId: '',
     scheduleId: '',
@@ -84,60 +87,15 @@ function Reservations() {
     };
   }, [isParent, queryClient]);
 
-  // 월별 예약 조회 (캘린더용) - 간소화
-  const { data: monthlyReservations = [] } = useQuery({
-    queryKey: ['monthlyReservations', currentMonth.getFullYear(), currentMonth.getMonth(), profile?.role],
+  // 전체 예약 조회 (역할별 분기)
+  const { data: allReservations = [], isLoading: reservationsLoading } = useQuery({
+    queryKey: ['reservations', 'all', profile?.role],
     queryFn: async () => {
-      if (!profile) return [];
-      
       if (isParent) {
         const reservationResponse = await reservationAPI.getMyReservations();
         const consultationResponse = await consultationAPI.getMyChildren();
         
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth() + 1;
-        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-        const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
-        
-        // 수업 예약 필터링
-        const filteredReservations = reservationResponse.data.filter(r => {
-          return r.reservationDate >= startDate && r.reservationDate <= endDate;
-        });
-        
-        // 상담 예약 필터링 및 변환
         const consultations = consultationResponse.data
-          .filter(c => c.consultationDate >= startDate && c.consultationDate <= endDate)
-          .map(c => ({
-            id: `consultation-${c.id}`,
-            reservationDate: c.consultationDate,
-            isConsultation: true
-          }));
-        
-        return [...filteredReservations, ...consultations];
-      } else {
-        // 관리자/선생님: 선택된 날짜의 예약만 조회 (월별 조회는 생략)
-        return [];
-      }
-    },
-    enabled: !!profile,
-  });
-  // 날짜별 예약 조회 (역할별 분기)
-  const { data: reservations = [], isLoading: reservationsLoading } = useQuery({
-    queryKey: ['reservations', selectedDate, profile?.role],
-    queryFn: async () => {
-      if (isParent) {
-        // 학부모는 본인 자녀 예약만 조회
-        const reservationResponse = await reservationAPI.getMyReservations();
-        const consultationResponse = await consultationAPI.getMyChildren();
-        
-        // 수업 예약 필터링
-        const filteredReservations = reservationResponse.data.filter(r => {
-          return r.reservationDate === selectedDate;
-        });
-        
-        // 상담 예약을 예약 형식으로 변환하여 병합
-        const consultations = consultationResponse.data
-          .filter(c => c.consultationDate === selectedDate)
           .map(c => ({
             id: `consultation-${c.id}`,
             studentId: c.studentId,
@@ -151,17 +109,24 @@ function Reservations() {
             isConsultation: true
           }));
         
-        return [...filteredReservations, ...consultations];
+        return [...reservationResponse.data, ...consultations];
       } else {
-        // 관리자/선생님은 전체 예약 조회
-        console.log('관리자 예약 조회 - 날짜:', selectedDate);
-        const response = await reservationAPI.getByDate(selectedDate);
-        console.log('관리자 예약 조회 결과:', response.data);
+        const response = await reservationAPI.getAll();
         return response.data;
       }
     },
     enabled: !!profile,
   });
+
+  // 필터링
+  const filteredReservations = allReservations.filter(r => {
+    if (hideCompleted && r.attended) return false;
+    if (statusFilter === 'CONFIRMED') return r.status === 'CONFIRMED';
+    if (statusFilter === 'CANCELLED') return r.status === 'CANCELLED';
+    return true;
+  });
+  const totalPages = Math.ceil(filteredReservations.length / PAGE_SIZE);
+  const reservations = filteredReservations.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // 날짜별 스케줄 조회 (관리자/선생님만)
   const { data: schedules = [], isLoading: schedulesLoading } = useQuery({
@@ -247,7 +212,7 @@ function Reservations() {
   const createMutation = useMutation({
     mutationFn: (data) => reservationAPI.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['reservations', selectedDate]);
+      queryClient.invalidateQueries(['reservations']);
       setShowCreateModal(false);
       setNewReservation({ studentId: '', scheduleId: '', enrollmentId: '' });
     },
@@ -260,7 +225,7 @@ function Reservations() {
   const cancelMutation = useMutation({
     mutationFn: (id) => reservationAPI.cancel(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['reservations', selectedDate]);
+      queryClient.invalidateQueries(['reservations']);
       alert('예약이 취소되었습니다.');
     },
     onError: (error) => {
@@ -272,7 +237,7 @@ function Reservations() {
   const forceCancelMutation = useMutation({
     mutationFn: (id) => reservationAPI.forceCancel(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['reservations', selectedDate]);
+      queryClient.invalidateQueries(['reservations']);
       alert('예약이 강제 취소되었습니다.');
     },
     onError: (error) => {
@@ -284,7 +249,7 @@ function Reservations() {
   const confirmMutation = useMutation({
     mutationFn: (id) => reservationAPI.confirm(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['reservations', selectedDate]);
+      queryClient.invalidateQueries(['reservations']);
       alert('예약이 확정되었습니다.');
     },
     onError: (error) => {
@@ -301,7 +266,7 @@ function Reservations() {
       console.log('실제 데이터:', data);
       setNaverBookings(Array.isArray(data) ? data : []);
       queryClient.invalidateQueries(['naverBookings']);
-      queryClient.invalidateQueries(['reservations', selectedDate]);
+      queryClient.invalidateQueries(['reservations']);
     },
     onError: (error) => {
       console.error('네이버 예약 동기화 실패:', error);
@@ -366,21 +331,28 @@ function Reservations() {
     createMutation.mutate(newReservation);
   };
 
+  // 취소 가능 여부 확인 (수업 전날 오후 6시까지)
+  const canCancelReservation = (reservation) => {
+    const scheduleDate = new Date(reservation.reservationDate);
+    const cancelDeadline = new Date(scheduleDate);
+    cancelDeadline.setDate(cancelDeadline.getDate() - 1);
+    cancelDeadline.setHours(18, 0, 0, 0);
+    return new Date() < cancelDeadline && reservation.status === 'CONFIRMED';
+  };
+
   const handleCancel = (reservationId) => {
     if (window.confirm('예약을 취소하시겠습니까?')) {
-      // 상담 예약인 경우 (ID가 'consultation-'로 시작)
       if (typeof reservationId === 'string' && reservationId.startsWith('consultation-')) {
         const consultationId = reservationId.replace('consultation-', '');
         consultationAPI.delete(consultationId)
           .then(() => {
-            queryClient.invalidateQueries(['reservations', selectedDate]);
+            queryClient.invalidateQueries(['reservations']);
             alert('상담 예약이 취소되었습니다.');
           })
           .catch((error) => {
             alert(`취소 실패: ${error.response?.data?.message || '오류가 발생했습니다.'}`);
           });
       } else {
-        // 일반 수업 예약
         cancelMutation.mutate(reservationId);
       }
     }
@@ -402,97 +374,6 @@ function Reservations() {
     setSelectedSchedule(schedule);
     setNewReservation({ ...newReservation, scheduleId: schedule.id });
     setShowCreateModal(true);
-  };
-
-  // 캘린더 렌더링
-  const renderCalendar = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = new Date(year, month, 1).getDay();
-    
-    const days = [];
-    // 빈 칸 (이전 달)
-    for (let i = 0; i < firstDay; i++) {
-      const prevMonth = month === 0 ? 11 : month - 1;
-      const prevYear = month === 0 ? year - 1 : year;
-      const prevDaysInMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
-      const prevDay = prevDaysInMonth - firstDay + i + 1;
-      const prevDate = new Date(prevYear, prevMonth, prevDay);
-      const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(prevDay).padStart(2, '0')}`;
-      
-      const hasReservations = monthlyReservations.some(reservation => 
-        (reservation.scheduleDate || reservation.schedule?.scheduleDate) === dateStr
-      );
-      
-      days.push(
-        <div
-          key={`prev-${i}`}
-          className={`calendar-day other-month ${dateStr === selectedDate ? 'selected' : ''} ${hasReservations ? 'has-reservations' : ''}`}
-          onClick={() => setSelectedDate(dateStr)}
-        >
-          <span className="day-number">{prevDay}</span>
-          {hasReservations && <div className="reservation-indicator"></div>}
-        </div>
-      );
-    }
-    
-    // 현재 달의 날짜들
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      
-      const hasReservations = monthlyReservations.some(reservation => 
-        (reservation.scheduleDate || reservation.schedule?.scheduleDate) === dateStr
-      );
-      
-      days.push(
-        <div
-          key={day}
-          className={`calendar-day ${dateStr === selectedDate ? 'selected' : ''} ${hasReservations ? 'has-reservations' : ''}`}
-          onClick={() => setSelectedDate(dateStr)}
-        >
-          <span className="day-number">{day}</span>
-          {hasReservations && <div className="reservation-indicator"></div>}
-        </div>
-      );
-    }
-    
-    // 다음 달 날짜들 (6주 완성을 위해)
-    const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-    const remainingCells = totalCells - (firstDay + daysInMonth);
-    
-    for (let day = 1; day <= remainingCells; day++) {
-      const nextMonth = month === 11 ? 0 : month + 1;
-      const nextYear = month === 11 ? year + 1 : year;
-      const dateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      
-      const hasReservations = monthlyReservations.some(reservation => 
-        (reservation.scheduleDate || reservation.schedule?.scheduleDate) === dateStr
-      );
-      
-      days.push(
-        <div
-          key={`next-${day}`}
-          className={`calendar-day other-month ${dateStr === selectedDate ? 'selected' : ''} ${hasReservations ? 'has-reservations' : ''}`}
-          onClick={() => setSelectedDate(dateStr)}
-        >
-          <span className="day-number">{day}</span>
-          {hasReservations && <div className="reservation-indicator"></div>}
-        </div>
-      );
-    }
-
-    return days;
-  };
-
-  // 취소 가능 여부 확인 (수업 전날 오후 6시까지)
-  const canCancelReservation = (reservation) => {
-    const scheduleDate = new Date(reservation.reservationDate);
-    const cancelDeadline = new Date(scheduleDate);
-    cancelDeadline.setDate(cancelDeadline.getDate() - 1);
-    cancelDeadline.setHours(18, 0, 0, 0);
-
-    return new Date() < cancelDeadline && reservation.status === 'CONFIRMED';
   };
 
   // 상태별 배지 색상
@@ -559,59 +440,31 @@ function Reservations() {
                 </button>
               </div>
             )}
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
           </div>
         </div>
       </div>
 
       <div className="page-content">
         <div className="reservations-layout">
-          {/* 캘린더 섹션 */}
-          <div className="calendar-section">
-            <div className="calendar-header">
-              <button 
-                className="nav-button"
-                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-              >
-                <i className="fas fa-chevron-left"></i>
-              </button>
-              <h3>{currentMonth.getFullYear()}년 {currentMonth.getMonth() + 1}월</h3>
-              <button 
-                className="nav-button"
-                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-              >
-                <i className="fas fa-chevron-right"></i>
-              </button>
-            </div>
-            
-            <div className="calendar-weekdays">
-              <div className="weekday">일</div>
-              <div className="weekday">월</div>
-              <div className="weekday">화</div>
-              <div className="weekday">수</div>
-              <div className="weekday">목</div>
-              <div className="weekday">금</div>
-              <div className="weekday">토</div>
-            </div>
-            <div className="calendar-grid">
-              {renderCalendar()}
-            </div>
-          </div>
-
-          {/* 선택된 날짜 정보 섹션 */}
-          <div className="selected-info-section">
+          {/* 예약 현황 섹션 */}
+          <div className="selected-info-section" style={{ maxWidth: '100%' }}>
             <div className="rsv-date-header">
-              <h2 className="rsv-date-title">{new Date(selectedDate).toLocaleDateString('ko-KR', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                weekday: 'long'
-              })} 예약 현황</h2>
-              <span className="rsv-date-count">{reservations.length}건</span>
+              <h2 className="rsv-date-title">전체 예약 현황</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[['ALL', '전체'], ['CONFIRMED', '확정'], ['CANCELLED', '취소']].map(([key, label]) => (
+                    <button key={key} onClick={() => { setStatusFilter(key); setCurrentPage(1); }}
+                      style={{ padding: '4px 14px', borderRadius: 20, border: statusFilter === key ? 'none' : '1px solid #ddd', background: statusFilter === key ? (key === 'CANCELLED' ? '#999' : '#03C75A') : '#fff', color: statusFilter === key ? '#fff' : '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#666', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={hideCompleted} onChange={e => { setHideCompleted(e.target.checked); setCurrentPage(1); }} />
+                  출석 완료 숨기기
+                </label>
+                <span className="rsv-date-count">{filteredReservations.length}건</span>
+              </div>
             </div>
 
             {/* 통계 및 관리 버튼 */}
@@ -620,7 +473,7 @@ function Reservations() {
                 <div className="rsv-stats-row">
                   <div className="rsv-stat-chip">
                     <span className="rsv-stat-label">시스템</span>
-                    <span className="rsv-stat-val">{reservations.length}</span>
+                    <span className="rsv-stat-val">{filteredReservations.length}</span>
                   </div>
                   <div className="rsv-stat-chip">
                     <span className="rsv-stat-label">네이버</span>
@@ -628,14 +481,17 @@ function Reservations() {
                   </div>
                   <div className="rsv-stat-chip rsv-stat-total">
                     <span className="rsv-stat-label">합계</span>
-                    <span className="rsv-stat-val">{reservations.length + naverBookings.length}</span>
+                    <span className="rsv-stat-val">{filteredReservations.length + naverBookings.length}</span>
                   </div>
                 </div>
                 <div className="rsv-btn-group">
-                  <button className="rsv-action-btn rsv-btn-green" onClick={handleSyncNaver} disabled={syncNaverMutation.isPending}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', fontSize: 13 }} />
+                    <button className="rsv-action-btn rsv-btn-green" onClick={handleSyncNaver} disabled={syncNaverMutation.isPending}>
                     <i className={`fas fa-sync-alt ${syncNaverMutation.isPending ? 'fa-spin' : ''}`}></i>
                     {syncNaverMutation.isPending ? '동기화 중...' : '네이버 동기화'}
                   </button>
+                  </div>
                   <label htmlFor="student-list-upload" className="rsv-action-btn rsv-btn-teal">
                     <i className={`fas fa-file-excel ${uploadStudentListMutation.isPending ? 'fa-spin' : ''}`}></i>
                     {uploadStudentListMutation.isPending ? '업로드 중...' : '학생목록 업로드'}
@@ -677,7 +533,7 @@ function Reservations() {
                 </div>
               ) : (
                 <>
-                  {(showAllSystemReservations ? reservations : reservations.slice(0, 2)).map((reservation) => {
+                  {reservations.map((reservation) => {
                     const isClass = reservation.consultationType === '재원생수업' || reservation.consultationType === '레벨테스트';
                     const stLabel = {PENDING:'대기',CONFIRMED:'확정',CANCELLED:'취소',COMPLETED:'완료',NO_SHOW:'노쇼'}[reservation.status] || reservation.status;
                     return (
@@ -735,25 +591,38 @@ function Reservations() {
                       </div>
                     );
                   })}
-                  {reservations.length > 2 && !showAllSystemReservations && (
-                    <button 
-                      className="show-more-button"
-                      onClick={() => setShowAllSystemReservations(true)}
-                    >
-                      더보기 ({reservations.length - 2}개 더)
-                    </button>
-                  )}
-                  {showAllSystemReservations && (
-                    <button 
-                      className="show-more-button"
-                      onClick={() => setShowAllSystemReservations(false)}
-                    >
-                      접기
-                    </button>
-                  )}
                 </>
               )}
             </div>
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, padding: '16px 0' }}>
+                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}
+                  style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#ccc' : '#333', fontSize: 12 }}>
+                  <i className="fas fa-angle-double-left"></i>
+                </button>
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                  style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#ccc' : '#333', fontSize: 12 }}>
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                {Array.from({ length: 5 }, (_, i) => {
+                  let start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                  return start + i;
+                }).filter(p => p <= totalPages).map(p => (
+                  <button key={p} onClick={() => setCurrentPage(p)}
+                    style={{ padding: '6px 12px', border: currentPage === p ? 'none' : '1px solid #ddd', borderRadius: 6, background: currentPage === p ? '#03C75A' : '#fff', color: currentPage === p ? '#fff' : '#333', fontWeight: currentPage === p ? 700 : 400, cursor: 'pointer', minWidth: 36 }}>
+                    {p}
+                  </button>
+                ))}
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                  style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === totalPages ? 'default' : 'pointer', color: currentPage === totalPages ? '#ccc' : '#333', fontSize: 12 }}>
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}
+                  style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === totalPages ? 'default' : 'pointer', color: currentPage === totalPages ? '#ccc' : '#333', fontSize: 12 }}>
+                  <i className="fas fa-angle-double-right"></i>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 오른쪽: 네이버 예약 */}
@@ -781,7 +650,7 @@ function Reservations() {
                 </div>
               ) : (
                 <React.Fragment>
-                  {(showAllNaverBookings ? naverBookings : naverBookings.slice(0, 2)).map((booking, index) => (
+                  {naverBookings.map((booking, index) => (
                     <div key={index} className="reservation-card">
                       <div className="card-header">
                         <div className="student-info">
@@ -809,22 +678,6 @@ function Reservations() {
                       </div>
                     </div>
                   ))}
-                  {naverBookings.length > 2 && !showAllNaverBookings && (
-                    <button 
-                      className="show-more-button"
-                      onClick={() => setShowAllNaverBookings(true)}
-                    >
-                      더보기 ({naverBookings.length - 2}개 더)
-                    </button>
-                  )}
-                  {showAllNaverBookings && (
-                    <button 
-                      className="show-more-button"
-                      onClick={() => setShowAllNaverBookings(false)}
-                    >
-                      접기
-                    </button>
-                  )}
                   <button 
                     className="detail-view-button"
                     onClick={() => setShowNaverDetailModal(true)}

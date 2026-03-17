@@ -56,6 +56,13 @@ public class ReservationController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
+    public ResponseEntity<List<ReservationResponse>> getAllReservations() {
+        List<ReservationResponse> responses = reservationService.getAllActiveReservations();
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping("/date/{date}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'PARENT')")
     public ResponseEntity<List<ReservationResponse>> getReservationsByDate(

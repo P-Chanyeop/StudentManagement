@@ -333,6 +333,49 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
+    public List<ReservationResponse> getAllActiveReservations() {
+        List<ReservationStatus> statuses = List.of(
+                ReservationStatus.CONFIRMED,
+                ReservationStatus.PENDING,
+                ReservationStatus.CANCELLED
+        );
+        List<Reservation> reservationList = reservationRepository.findByStatusIn(statuses);
+
+        // 출석 기록 일괄 조회: 학생ID+날짜 기준
+        java.util.Set<String> attendedKeys = new java.util.HashSet<>();
+        if (!reservationList.isEmpty()) {
+            List<Long> studentIds = reservationList.stream()
+                    .map(r -> r.getStudent().getId()).distinct().collect(Collectors.toList());
+            LocalDate minDate = reservationList.stream()
+                    .map(Reservation::getReservationDate).min(LocalDate::compareTo).orElse(LocalDate.now());
+            LocalDate maxDate = reservationList.stream()
+                    .map(Reservation::getReservationDate).max(LocalDate::compareTo).orElse(LocalDate.now());
+            List<Attendance> attendances = attendanceRepository.findByStudentIdInAndScheduleScheduleDateBetween(studentIds, minDate, maxDate);
+            for (Attendance a : attendances) {
+                if (a.getStatus() == AttendanceStatus.PRESENT || a.getStatus() == AttendanceStatus.LATE) {
+                    attendedKeys.add(a.getStudent().getId() + "_" + a.getAttendanceDate());
+                }
+            }
+        }
+
+        java.util.Set<String> finalAttendedKeys = attendedKeys;
+        return reservationList.stream()
+                .map(r -> {
+                    ReservationResponse resp = toResponse(r);
+                    String key = r.getStudent().getId() + "_" + r.getReservationDate();
+                    return ReservationResponse.builder()
+                            .id(resp.getId()).studentId(resp.getStudentId()).studentName(resp.getStudentName())
+                            .studentEnglishLevel(resp.getStudentEnglishLevel()).courseName(resp.getCourseName())
+                            .reservationDate(resp.getReservationDate()).reservationTime(resp.getReservationTime())
+                            .enrollmentId(resp.getEnrollmentId()).status(resp.getStatus()).memo(resp.getMemo())
+                            .consultationType(resp.getConsultationType()).cancelReason(resp.getCancelReason())
+                            .cancelledAt(resp.getCancelledAt()).reservationSource(resp.getReservationSource())
+                            .canCancel(resp.getCanCancel()).attended(finalAttendedKeys.contains(key))
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
     public List<ReservationResponse> getReservationsByDate(LocalDate date) {
         List<ReservationStatus> activeStatuses = List.of(
                 ReservationStatus.CONFIRMED,

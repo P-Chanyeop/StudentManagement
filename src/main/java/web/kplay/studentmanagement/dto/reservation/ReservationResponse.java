@@ -30,4 +30,5 @@ public class ReservationResponse {
     private LocalDateTime cancelledAt;
     private String reservationSource;
     private Boolean canCancel;
+    private Boolean attended;
 }
