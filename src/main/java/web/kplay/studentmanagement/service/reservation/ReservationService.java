@@ -388,8 +388,12 @@ public class ReservationService {
 
     private ReservationResponse toResponse(Reservation reservation) {
         String courseName = null;
-        if (reservation.getEnrollment() != null && reservation.getEnrollment().getCourse() != null) {
-            courseName = reservation.getEnrollment().getCourse().getCourseName();
+        try {
+            if (reservation.getEnrollment() != null && reservation.getEnrollment().getCourse() != null) {
+                courseName = reservation.getEnrollment().getCourse().getCourseName();
+            }
+        } catch (Exception e) {
+            log.debug("Course 정보 로딩 실패: {}", e.getMessage());
         }
         
         return ReservationResponse.builder()

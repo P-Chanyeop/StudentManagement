@@ -695,7 +695,7 @@ function Reservations() {
             <div className="pr-section">
               <div className="pr-header">
                 <h2><i className="fas fa-calendar-check"></i> 내 자녀 예약 현황</h2>
-                <span className="pr-count">{reservations.length}건</span>
+                <span className="pr-count">{filteredReservations.length}건</span>
               </div>
 
               {reservations.length === 0 ? (
@@ -738,6 +738,35 @@ function Reservations() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, padding: '16px 0' }}>
+                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}
+                    style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#ccc' : '#333', fontSize: 12 }}>
+                    <i className="fas fa-angle-double-left"></i>
+                  </button>
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                    style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#ccc' : '#333', fontSize: 12 }}>
+                    <i className="fas fa-chevron-left"></i>
+                  </button>
+                  {Array.from({ length: 5 }, (_, i) => {
+                    let start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                    return start + i;
+                  }).filter(p => p <= totalPages).map(p => (
+                    <button key={p} onClick={() => setCurrentPage(p)}
+                      style={{ padding: '6px 12px', border: currentPage === p ? 'none' : '1px solid #ddd', borderRadius: 6, background: currentPage === p ? '#03C75A' : '#fff', color: currentPage === p ? '#fff' : '#333', fontWeight: currentPage === p ? 700 : 400, cursor: 'pointer', minWidth: 36 }}>
+                      {p}
+                    </button>
+                  ))}
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                    style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === totalPages ? 'default' : 'pointer', color: currentPage === totalPages ? '#ccc' : '#333', fontSize: 12 }}>
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                  <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}
+                    style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, background: '#fff', cursor: currentPage === totalPages ? 'default' : 'pointer', color: currentPage === totalPages ? '#ccc' : '#333', fontSize: 12 }}>
+                    <i className="fas fa-angle-double-right"></i>
+                  </button>
                 </div>
               )}
             </div>
