@@ -1321,25 +1321,45 @@ function Attendance() {
             <button className="tch-att-today-btn" onClick={() => setSelectedDate(getTodayString())}>오늘</button>
           </div>
           <div className="tch-att-actions">
-            <button className="tch-att-action-btn" onClick={() => {
-              const rows = teacherAttendances || [];
-              if (rows.length === 0) return alert('데이터가 없습니다');
-              const BOM = '\uFEFF';
-              const header = '이름,출근시간,퇴근시간,근무시간,날짜\n';
-              const csv = rows.map(r => {
-                const inTime = r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-                const outTime = r.checkOutTime ? new Date(r.checkOutTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-                const inD = r.checkInTime ? new Date(r.checkInTime) : null;
-                const outD = r.checkOutTime ? new Date(r.checkOutTime) : null;
-                const mins = inD && outD ? Math.round((outD - inD) / 60000) : null;
-                const work = mins !== null ? `${Math.floor(mins / 60)}시간 ${mins % 60}분` : '';
-                return `${r.teacherName},${inTime},${outTime},${work},${r.attendanceDate}`;
-              }).join('\n');
-              const blob = new Blob([BOM + header + csv], { type: 'text/csv;charset=utf-8;' });
-              const link = document.createElement('a');
-              link.href = URL.createObjectURL(blob);
-              link.download = `선생님출석부_${selectedDate}.csv`;
-              link.click();
+            <input type="month" defaultValue={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`}
+              onChange={e => {
+                const [y, m] = e.target.value.split('-');
+                document.getElementById('tch-range-start').value = `${y}-${m}-01`;
+                document.getElementById('tch-range-end').value = `${y}-${m}-${new Date(y, m, 0).getDate()}`;
+              }}
+              style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} />
+            <input type="date" id="tch-range-start" defaultValue={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`}
+              style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} />
+            <span style={{ color: '#888' }}>~</span>
+            <input type="date" id="tch-range-end" defaultValue={`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}`}
+              style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} />
+            <button className="tch-att-action-btn" onClick={async () => {
+              const startDate = document.getElementById('tch-range-start').value;
+              const endDate = document.getElementById('tch-range-end').value;
+              if (!startDate || !endDate) return alert('기간을 선택하세요');
+              try {
+                const res = await teacherAttendanceAPI.getByRange(startDate, endDate);
+                const rows = res.data || [];
+                if (rows.length === 0) return alert('해당 기간에 데이터가 없습니다');
+                const BOM = '\uFEFF';
+                const header = '이름,출근시간,퇴근시간,근무시간,날짜\n';
+                const csv = rows.map(r => {
+                  const inTime = r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+                  const outTime = r.checkOutTime ? new Date(r.checkOutTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+                  const inD = r.checkInTime ? new Date(r.checkInTime) : null;
+                  const outD = r.checkOutTime ? new Date(r.checkOutTime) : null;
+                  const mins = inD && outD ? Math.round((outD - inD) / 60000) : null;
+                  const work = mins !== null ? `${Math.floor(mins / 60)}시간 ${mins % 60}분` : '';
+                  return `${r.teacherName},${inTime},${outTime},${work},${r.attendanceDate}`;
+                }).join('\n');
+                const blob = new Blob([BOM + header + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `선생님출석부_${startDate}~${endDate}.csv`;
+                link.click();
+              } catch (e) {
+                alert('다운로드 실패: ' + (e.response?.data?.message || e.message));
+              }
             }}>
               <i className="fas fa-file-excel"></i> 엑셀 다운로드
             </button>
