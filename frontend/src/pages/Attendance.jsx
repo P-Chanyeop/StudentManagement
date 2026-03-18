@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { attendanceAPI, studentAPI, teacherAttendanceAPI } from '../services/api';
+import { attendanceAPI, studentAPI, teacherAttendanceAPI, reservationAPI } from '../services/api';
 import { getLocalDateString, getTodayString } from '../utils/dateUtils';
 import '../styles/Attendance.css';
 
@@ -38,6 +38,7 @@ function Attendance() {
   const [addStudentSearch, setAddStudentSearch] = useState('');
   const [addSelectedStudent, setAddSelectedStudent] = useState(null);
   const [addStartTime, setAddStartTime] = useState('09:00');
+  const [memoModalText, setMemoModalText] = useState(null);
   
   // 날짜 선택을 위한 분리된 상태
   const [dateComponents, setDateComponents] = useState(() => {
@@ -171,6 +172,19 @@ function Attendance() {
       return response.data;
     },
   });
+
+  // 해당 날짜 예약 조회 (요청사항 표시용)
+  const { data: reservations } = useQuery({
+    queryKey: ['reservations', selectedDate],
+    queryFn: async () => {
+      const response = await reservationAPI.getByDate(selectedDate);
+      return response.data;
+    },
+  });
+  const reservationMemoMap = (reservations || []).reduce((map, r) => {
+    if (r.memo) map[r.studentId] = r.memo;
+    return map;
+  }, {});
 
   // 엑셀 학생 목록 (네이버 예약용)
   const { data: excelStudents } = useQuery({
@@ -575,6 +589,7 @@ function Attendance() {
   if (isLoading) return <LoadingSpinner />;
 
   return (
+    <>
     <div className="page-wrapper">
       <div className="page-header">
         <div className="page-header-content">
@@ -786,6 +801,7 @@ function Attendance() {
                 <th>D/C</th>
                 <th>WR</th>
                 <th>비고</th>
+                <th>요청</th>
               </tr>
             </thead>
             <tbody>
@@ -897,6 +913,11 @@ function Attendance() {
                       className="notes-input"
                       onBlur={(e) => handleReasonBlur(attendance.id, e.target.value)}
                     />
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {reservationMemoMap[attendance.studentId] && (
+                      <span style={{ cursor: 'pointer', fontSize: 18 }} onClick={(e) => { e.stopPropagation(); setMemoModalText(reservationMemoMap[attendance.studentId]); }}>💬</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -1409,6 +1430,21 @@ function Attendance() {
     )}
     </div>
     </div>
+
+    {memoModalText && (
+      <div className="modal-overlay">
+        <div className="modal-content" style={{ maxWidth: 400 }}>
+          <div className="modal-header">
+            <h3>예약 요청사항</h3>
+            <button className="close-btn" onClick={() => setMemoModalText(null)}>&times;</button>
+          </div>
+          <div className="modal-body" style={{ padding: 20, whiteSpace: 'pre-wrap' }}>
+            {memoModalText}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

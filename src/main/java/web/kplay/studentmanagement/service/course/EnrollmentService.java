@@ -394,6 +394,7 @@ public class EnrollmentService {
         int actualRecordings = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(
             enrollment.getStudent().getId()
         );
+        int offset = enrollment.getStudent().getRecordingOffset() != null ? enrollment.getStudent().getRecordingOffset() : 0;
         
         String recordingStatus = actualRecordings + "/" + expectedRecordings;
         
@@ -416,6 +417,7 @@ public class EnrollmentService {
                 .recordingStatus(recordingStatus)
                 .expectedRecordings(expectedRecordings)
                 .actualRecordings(actualRecordings)
+                .recordingOffset(offset)
                 .holdStartDate(enrollment.getHoldStartDate())
                 .holdEndDate(enrollment.getHoldEndDate())
                 .isOnHold(enrollment.getIsOnHold())

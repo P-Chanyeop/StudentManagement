@@ -30,7 +30,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByStudentIdAndStatus(@Param("studentId") Long studentId,
                                                  @Param("status") ReservationStatus status);
 
-    @Query("SELECT r FROM Reservation r WHERE r.reservationDate = :date AND r.status IN :statuses")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.student LEFT JOIN FETCH r.enrollment WHERE r.reservationDate = :date AND r.status IN :statuses")
     List<Reservation> findByDateAndStatuses(@Param("date") LocalDate date,
                                              @Param("statuses") List<ReservationStatus> statuses);
 

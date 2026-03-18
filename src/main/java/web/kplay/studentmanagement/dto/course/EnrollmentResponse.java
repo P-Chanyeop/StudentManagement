@@ -30,6 +30,7 @@ public class EnrollmentResponse {
     private String recordingStatus; // 레코딩 파일 현황 (예: "0/2", "1/4")
     private Integer expectedRecordings; // 예상 레코딩 파일 수
     private Integer actualRecordings; // 실제 레코딩 파일 수
+    private Integer recordingOffset; // 레코딩 오프셋
     
     // 홀딩 관련 필드
     private LocalDate holdStartDate;

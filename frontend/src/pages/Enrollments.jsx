@@ -734,7 +734,7 @@ function Enrollments() {
                   <div className="detail-item">
                     <span className="label">레코딩 파일</span>
                     <span className="value recording-status">
-                      {enrollment.recordingStatus || '0/0'}
+                      {enrollment.recordingStatus || '0/0'}{enrollment.recordingOffset ? ` (+${enrollment.recordingOffset})` : ''}
                     </span>
                   </div>
                 </div>
@@ -1120,7 +1120,9 @@ function Enrollments() {
                       const expected = selectedEnrollment.expectedRecordings || 0;
                       const updateOffset = (newVal) => {
                         if (dbActual + newVal > expected) return alert('총 레코딩 회차(' + expected + ')를 초과할 수 없습니다.');
-                        studentAPI.updateRecordingOffset(selectedEnrollment.studentId, newVal).catch(() => alert('조정 실패'));
+                        studentAPI.updateRecordingOffset(selectedEnrollment.studentId, newVal)
+                          .then(() => queryClient.invalidateQueries(['enrollments']))
+                          .catch(() => alert('조정 실패'));
                         queryClient.setQueryData(['students'], old => old?.map(s => s.id === selectedEnrollment.studentId ? { ...s, recordingOffset: newVal } : s));
                       };
                       return (
