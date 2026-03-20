@@ -212,7 +212,7 @@ function Consultations() {
 
   const checkRecordingLimit = async (studentId) => {
     // 카운팅 제한 제거됨
-  };hㄱ사
+  };
 
   const handleStudentToggle = (studentId) => {
     setSelectedStudentsForConsultation(prev => {
