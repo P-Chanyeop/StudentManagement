@@ -246,7 +246,7 @@ function Dashboard() {
                         <span className="info-label">잔여 횟수</span>
                         <span className="info-value highlight">
                           {enrollment.enrollmentType === 'COUNT' 
-                            ? `${enrollment.remainingCount}회` 
+                            ? `${enrollment.remainingCount}회${enrollment.reservedCount > 0 ? ` (예약 ${enrollment.reservedCount}회)` : ''}` 
                             : '무제한'}
                         </span>
                       </div>
@@ -459,7 +459,7 @@ function Dashboard() {
                         <div className="item-content">
                           <div className="item-title">{enrollment.studentName} - {enrollment.courseName}</div>
                           <div className="item-subtitle">
-                            남은 횟수: {enrollment.remainingCount}회 · 종료일: {enrollment.endDate}
+                            남은 횟수: {enrollment.remainingCount}회{enrollment.reservedCount > 0 && ` (예약 ${enrollment.reservedCount}회)`} · 종료일: {enrollment.endDate}
                           </div>
                         </div>
                         <div className={`item-badge ${daysLeft <= 3 ? 'badge-error' : 'badge-warning'}`}>
@@ -668,7 +668,7 @@ function Dashboard() {
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">남은 횟수</span>
-                      <span className="detail-value highlight">{selectedEnrollment.remainingCount}회</span>
+                      <span className="detail-value highlight">{selectedEnrollment.remainingCount}회{selectedEnrollment.reservedCount > 0 && ` (예약 ${selectedEnrollment.reservedCount}회)`}</span>
                     </div>
                   </div>
                 </div>

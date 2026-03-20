@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { consultationAPI, studentAPI, fileAPI, authAPI, enrollmentAPI } from '../services/api';
+import { consultationAPI, studentAPI, fileAPI, authAPI, enrollmentAPI, consultationTemplateAPI } from '../services/api';
 import { getTodayString, getLocalDateString } from '../utils/dateUtils';
 import '../styles/Consultations.css';
 
@@ -28,6 +28,9 @@ function Consultations() {
   const [showMainStudentDropdown, setShowMainStudentDropdown] = useState(false);
   const [mainStudentSearchQuery, setMainStudentSearchQuery] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [templateForm, setTemplateForm] = useState({ name: '', content: '' });
   const [exportDateRange, setExportDateRange] = useState({
     startDate: '',
     endDate: ''
@@ -128,6 +131,30 @@ function Consultations() {
     onError: (error) => {
       alert('상담 기록 삭제에 실패했습니다.');
     }
+  });
+
+  // 템플릿 CRUD
+  const { data: templates = [] } = useQuery({
+    queryKey: ['consultationTemplates'],
+    queryFn: () => consultationTemplateAPI.list().then(r => r.data),
+    enabled: profile?.role === 'ADMIN' || profile?.role === 'TEACHER'
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: (data) => editingTemplate
+      ? consultationTemplateAPI.update(editingTemplate.id, data)
+      : consultationTemplateAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['consultationTemplates']);
+      setShowTemplateManager(false);
+      setEditingTemplate(null);
+      setTemplateForm({ name: '', content: '' });
+    }
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id) => consultationTemplateAPI.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['consultationTemplates'])
   });
 
   // 학생 선택 드롭다운 핸들러
@@ -541,6 +568,16 @@ function Consultations() {
                         value={mainStudentSearchQuery}
                         onChange={(e) => setMainStudentSearchQuery(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const match = [...students]
+                              .filter(s => !mainStudentSearchQuery ||
+                                s.studentName.toLowerCase().includes(mainStudentSearchQuery.toLowerCase()) ||
+                                s.parentName?.toLowerCase().includes(mainStudentSearchQuery.toLowerCase()))
+                              .sort((a, b) => a.studentName.localeCompare(b.studentName, 'ko'))[0];
+                            if (match) { setSelectedStudent(String(match.id)); setShowMainStudentDropdown(false); setMainStudentSearchQuery(''); }
+                          }
+                        }}
                         autoFocus
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box' }}
                       />
@@ -720,6 +757,12 @@ function Consultations() {
                             value={studentSearchQuery}
                             onChange={(e) => setStudentSearchQuery(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const match = getFilteredStudentsForDropdown()[0];
+                                if (match) handleStudentSelect(match);
+                              }
+                            }}
                             autoFocus
                           />
                         </div>
@@ -759,6 +802,18 @@ function Consultations() {
 
                 <div className="form-group">
                   <label>학습 기록 내용 *</label>
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {templates.map(t => (
+                      <button key={t.id} type="button"
+                        onClick={() => setNewConsultation(prev => ({ ...prev, content: t.content }))}
+                        style={{ padding: '4px 10px', fontSize: '12px', border: '1px solid #ddd', borderRadius: '14px', background: '#f5f5f5', cursor: 'pointer' }}
+                      >{t.name}</button>
+                    ))}
+                    <button type="button"
+                      onClick={() => { setEditingTemplate(null); setTemplateForm({ name: '', content: '' }); setShowTemplateManager(true); }}
+                      style={{ padding: '4px 8px', fontSize: '12px', border: '1px dashed #aaa', borderRadius: '14px', background: 'transparent', cursor: 'pointer', color: '#888' }}
+                    ><i className="fas fa-cog" style={{ marginRight: '3px' }}></i>템플릿 관리</button>
+                  </div>
                   <textarea 
                     value={newConsultation.content}
                     onChange={(e) => setNewConsultation({...newConsultation, content: e.target.value})}
@@ -1158,6 +1213,68 @@ function Consultations() {
                   <strong>다음 상담 예정일:</strong> {selectedConsultation.nextConsultationDate}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 템플릿 관리 모달 */}
+      {showTemplateManager && (
+        <div className="modal-overlay" onClick={() => setShowTemplateManager(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', maxHeight: '80vh', overflow: 'auto' }}>
+            <div className="modal-header">
+              <h2>템플릿 관리</h2>
+              <button className="modal-close" onClick={() => setShowTemplateManager(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  type="text" placeholder="템플릿 이름"
+                  value={templateForm.name}
+                  onChange={(e) => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '6px', marginBottom: '8px', boxSizing: 'border-box' }}
+                />
+                <textarea
+                  placeholder="템플릿 내용"
+                  value={templateForm.content}
+                  onChange={(e) => setTemplateForm(prev => ({ ...prev, content: e.target.value }))}
+                  rows="5"
+                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '6px', boxSizing: 'border-box' }}
+                />
+                <button type="button"
+                  onClick={() => { if (templateForm.name) saveTemplateMutation.mutate(templateForm); }}
+                  style={{ marginTop: '8px', padding: '8px 16px', background: '#00c73c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                >{editingTemplate ? '수정' : '추가'}</button>
+                {editingTemplate && (
+                  <button type="button"
+                    onClick={() => { setEditingTemplate(null); setTemplateForm({ name: '', content: '' }); }}
+                    style={{ marginTop: '8px', marginLeft: '8px', padding: '8px 16px', background: '#eee', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                  >취소</button>
+                )}
+              </div>
+              <div>
+                {templates.map(t => (
+                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: '14px' }}>{t.name}</div>
+                      <div style={{ fontSize: '12px', color: '#888', marginTop: '4px', whiteSpace: 'pre-wrap', maxHeight: '60px', overflow: 'hidden' }}>{t.content}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                      <button type="button"
+                        onClick={() => { setEditingTemplate(t); setTemplateForm({ name: t.name, content: t.content }); }}
+                        style={{ padding: '4px 10px', fontSize: '12px', border: '1px solid #ddd', borderRadius: '4px', background: '#fff', cursor: 'pointer' }}
+                      >수정</button>
+                      <button type="button"
+                        onClick={() => { if (confirm('삭제하시겠습니까?')) deleteTemplateMutation.mutate(t.id); }}
+                        style={{ padding: '4px 10px', fontSize: '12px', border: '1px solid #ffcdd2', borderRadius: '4px', background: '#fff', color: '#e53935', cursor: 'pointer' }}
+                      >삭제</button>
+                    </div>
+                  </div>
+                ))}
+                {templates.length === 0 && (
+                  <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>등록된 템플릿이 없습니다.</div>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -95,4 +95,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
            "WHERE r.createdAt > :since " +
            "ORDER BY r.createdAt DESC")
     List<Reservation> findByCreatedAtAfterOrderByCreatedAtDesc(@Param("since") LocalDateTime since);
+
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.enrollment.id = :enrollmentId AND r.status IN ('PENDING', 'CONFIRMED')")
+    int countActiveByEnrollmentId(@Param("enrollmentId") Long enrollmentId);
 }

@@ -115,7 +115,7 @@ function UserDashboard() {
                     <span className="info-label">잔여 횟수</span>
                     <span className="info-value highlight">
                       {enrollment.totalCount 
-                        ? `${enrollment.remainingCount}회 / ${enrollment.totalCount}회` 
+                        ? `${enrollment.remainingCount}회 / ${enrollment.totalCount}회${enrollment.reservedCount > 0 ? ` (예약 ${enrollment.reservedCount}회)` : ''}` 
                         : '무제한'}
                     </span>
                   </div>

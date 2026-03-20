@@ -332,6 +332,13 @@ export const consultationAPI = {
   exportByDateRange: (startDate, endDate) => api.get(`/consultations/export/date-range?startDate=${startDate}&endDate=${endDate}`, { responseType: 'blob' })
 };
 
+export const consultationTemplateAPI = {
+  list: () => api.get('/consultation-templates'),
+  create: (data) => api.post('/consultation-templates', data),
+  update: (id, data) => api.put(`/consultation-templates/${id}`, data),
+  delete: (id) => api.delete(`/consultation-templates/${id}`)
+};
+
 // 문자 API
 export const messageAPI = {
   send: (data) => api.post('/messages/send', data),

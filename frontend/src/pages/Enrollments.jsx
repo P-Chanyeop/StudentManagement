@@ -720,6 +720,9 @@ function Enrollments() {
                       }}
                     >
                       {enrollment.remainingCount}회
+                      {enrollment.reservedCount > 0 && (
+                        <span style={{ color: '#888', fontSize: '12px', fontWeight: 400 }}> (예약 {enrollment.reservedCount}회)</span>
+                      )}
                     </span>
                   </div>
                   <div className="detail-item">

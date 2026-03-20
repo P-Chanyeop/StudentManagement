@@ -24,6 +24,7 @@ import web.kplay.studentmanagement.repository.StudentRepository;
 import web.kplay.studentmanagement.repository.UserRepository;
 import web.kplay.studentmanagement.repository.enrollment.EnrollmentAdjustmentRepository;
 import web.kplay.studentmanagement.repository.ConsultationRepository;
+import web.kplay.studentmanagement.repository.ReservationRepository;
 import web.kplay.studentmanagement.service.message.AutomatedMessageService;
 
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ public class EnrollmentService {
     private final UserRepository userRepository;
     private final EnrollmentAdjustmentRepository enrollmentAdjustmentRepository;
     private final ConsultationRepository consultationRepository;
+    private final ReservationRepository reservationRepository;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
     private final AutomatedMessageService automatedMessageService;
 
@@ -386,18 +388,14 @@ public class EnrollmentService {
     }
 
     private EnrollmentResponse toResponse(Enrollment enrollment) {
-        // 레코딩 파일 현황 계산
+        // 레코딩 파일 현황 계산 (프론트에서 미사용, 호환성 유지)
         int totalSessions = enrollment.getTotalCount();
-        int expectedRecordings = totalSessions / 6; // 6회에 1회씩 레코딩
-        
-        // 해당 학생의 상담 기록 중 레코딩 파일이 있는 개수 조회
-        int actualRecordings = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(
-            enrollment.getStudent().getId()
-        );
+        int expectedRecordings = totalSessions / 6;
         int offset = enrollment.getStudent().getRecordingOffset() != null ? enrollment.getStudent().getRecordingOffset() : 0;
-        
-        String recordingStatus = actualRecordings + "/" + expectedRecordings;
-        
+
+        // 예약 중인 횟수
+        int reservedCount = reservationRepository.countActiveByEnrollmentId(enrollment.getId());
+
         Course course = enrollment.getCourse();
         return EnrollmentResponse.builder()
                 .id(enrollment.getId())
@@ -414,10 +412,11 @@ public class EnrollmentService {
                 .customDurationMinutes(enrollment.getCustomDurationMinutes())
                 .actualDurationMinutes(enrollment.getActualDurationMinutes())
                 .memo(enrollment.getMemo())
-                .recordingStatus(recordingStatus)
+                .recordingStatus(null)
                 .expectedRecordings(expectedRecordings)
-                .actualRecordings(actualRecordings)
+                .actualRecordings(0)
                 .recordingOffset(offset)
+                .reservedCount(reservedCount)
                 .holdStartDate(enrollment.getHoldStartDate())
                 .holdEndDate(enrollment.getHoldEndDate())
                 .isOnHold(enrollment.getIsOnHold())
