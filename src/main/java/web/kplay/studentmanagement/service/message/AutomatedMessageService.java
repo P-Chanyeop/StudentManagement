@@ -109,20 +109,15 @@ public class AutomatedMessageService {
         
         Student student = consultation.getStudent();
         
-        // 해당 학생의 녹음파일 있는 학습기록 개수 (회차) + offset
-        int recordingCount = consultationRepository.countByStudentIdAndRecordingFileUrlIsNotNull(student.getId())
-                + (student.getRecordingOffset() != null ? student.getRecordingOffset() : 0);
-        
         String content = String.format(
                 "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
-                "%s 학생의 %d회차 레코딩 파일 업로드되었습니다.\n" +
+                "%s 학생의 레코딩 파일 업로드되었습니다.\n" +
                 "학습현황 탭에서 확인 가능합니다.\n감사합니다! :)",
-                student.getStudentName(),
-                recordingCount
+                student.getStudentName()
         );
 
         sendAndSaveMessage(student, MessageType.GENERAL, content);
-        log.info("레코딩 업로드 알림 발송: 학생={}, 회차={}", student.getStudentName(), recordingCount);
+        log.info("레코딩 업로드 알림 발송: 학생={}", student.getStudentName());
     }
 
     /**
@@ -271,14 +266,13 @@ public class AutomatedMessageService {
     public void sendRecordingUploadNotification(Student student, Integer sessionNumber) {
         String content = String.format(
                 "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
-                "%s 학생의 %d회차 레코딩 파일 업로드되었습니다.\n" +
+                "%s 학생의 레코딩 파일 업로드되었습니다.\n" +
                 "학습현황 탭에서 확인 가능합니다.\n감사합니다! :)",
-                student.getStudentName(),
-                sessionNumber
+                student.getStudentName()
         );
 
         sendAndSaveMessage(student, MessageType.GENERAL, content);
-        log.info("레코딩 업로드 알림 발송: 학생={}, 회차={}", student.getStudentName(), sessionNumber);
+        log.info("레코딩 업로드 알림 발송: 학생={}", student.getStudentName());
     }
 
     /**

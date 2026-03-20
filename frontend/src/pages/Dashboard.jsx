@@ -261,12 +261,6 @@ function Dashboard() {
                           {daysLeft > 0 ? `${daysLeft}일` : '만료'}
                         </span>
                       </div>
-                      <div className="info-row">
-                        <span className="info-label">레코딩 파일</span>
-                        <span className="info-value">
-                          {enrollment.actualRecordings || 0} / {enrollment.expectedRecordings || 0}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 );

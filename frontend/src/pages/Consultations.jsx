@@ -211,21 +211,8 @@ function Consultations() {
   };
 
   const checkRecordingLimit = async (studentId) => {
-    try {
-      const res = await enrollmentAPI.getByStudent(studentId);
-      const active = res.data.filter(e => e.isActive);
-      if (active.length > 0) {
-        const e = active[0];
-        const total = (e.actualRecordings || 0) + (e.recordingOffset || 0);
-        if (total >= (e.expectedRecordings || 0) && (e.expectedRecordings || 0) > 0) {
-          const st = students?.find(s => s.id === studentId);
-          setRecordingWarnings(prev => ({ ...prev, [studentId]: `${st?.studentName || '해당 학생'}은(는) 총 ${e.expectedRecordings}회차 중 랠리즈(${e.recordingOffset || 0}회) + 시스템(${e.actualRecordings || 0}회) 업로드가 이미 되어있습니다. 추가하시려면 수강권 모달에서 랠리즈 offset을 조절 후 시도해주세요.` }));
-          return;
-        }
-      }
-      setRecordingWarnings(prev => { const n = { ...prev }; delete n[studentId]; return n; });
-    } catch (err) { /* 무시 */ }
-  };
+    // 카운팅 제한 제거됨
+  };hㄱ사
 
   const handleStudentToggle = (studentId) => {
     setSelectedStudentsForConsultation(prev => {
@@ -262,23 +249,6 @@ function Consultations() {
     
     let recordingFileUrl = '';
     let attachmentFileUrl = '';
-
-    // 레코딩 초과 여부 체크 (파일 유무 관계없이)
-    for (const studentId of selectedStudentsForConsultation) {
-      try {
-        const res = await enrollmentAPI.getByStudent(studentId);
-        const active = res.data.filter(e => e.isActive);
-        if (active.length > 0) {
-          const e = active[0];
-          const total = (e.actualRecordings || 0) + (e.recordingOffset || 0);
-          if (total >= (e.expectedRecordings || 0) && (e.expectedRecordings || 0) > 0) {
-            const st = students?.find(s => s.id === studentId);
-            alert(`${st?.studentName || '해당 학생'}은(는) 총 ${e.expectedRecordings}회차 중 랠리즈(${e.recordingOffset || 0}회) + 시스템(${e.actualRecordings || 0}회) 업로드가 이미 되어있습니다.\n랠리즈 offset을 조절 후 시도해주세요.`);
-            return;
-          }
-        }
-      } catch (err) { /* 무시 */ }
-    }
 
     // 파일 업로드
     if (audioFiles.length > 0) {
@@ -797,12 +767,6 @@ function Consultations() {
 
                 <div className="form-group">
                   <div className="form-group">
-                    {selectedStudentsForConsultation.some(id => recordingWarnings[id]) && (
-                      <div style={{ color: '#dc2626', fontSize: 13, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '10px 14px', marginBottom: 12 }}>
-                        <i className="fas fa-exclamation-triangle" style={{ marginRight: 6 }}></i>
-                        {recordingWarnings[selectedStudentsForConsultation.find(id => recordingWarnings[id])]}
-                      </div>
-                    )}
                     <label>녹음 파일 (여러 개 선택 가능)</label>
                     <div className="file-input-wrapper">
                       <input 

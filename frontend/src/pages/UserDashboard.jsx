@@ -131,14 +131,6 @@ function UserDashboard() {
                       {daysLeft > 0 ? `${daysLeft}일` : '만료'}
                     </span>
                   </div>
-                  <div className="info-row clickable" onClick={() => handleRecordingClick(enrollment)}>
-                    <span className="info-label">레코딩 파일</span>
-                    <span className="info-value">
-                      {(enrollment.actualRecordings || 0) + (enrollment.recordingOffset || 0)} / {enrollment.expectedRecordings || 0}
-                      <span style={{ color: '#666', fontSize: 12, marginLeft: 6 }}>(시스템 {enrollment.actualRecordings || 0}개 / 랠리즈 {enrollment.recordingOffset || 0}개)</span>
-                      <i className="fas fa-chevron-right" style={{marginLeft: '8px', color: '#999'}}></i>
-                    </span>
-                  </div>
                 </div>
               </div>
             );

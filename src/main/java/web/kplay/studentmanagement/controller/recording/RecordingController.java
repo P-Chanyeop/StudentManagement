@@ -58,8 +58,7 @@ public class RecordingController {
         recordingRepository.save(recording);
 
         // 레코딩 업로드 완료 문자 발송
-        int adjustedSession = sessionNumber + (student.getRecordingOffset() != null ? student.getRecordingOffset() : 0);
-        automatedMessageService.sendRecordingUploadNotification(student, adjustedSession);
+        automatedMessageService.sendRecordingUploadNotification(student, sessionNumber);
 
         log.info("레코딩 업로드 완료: 학생={}, 회차={}", student.getStudentName(), sessionNumber);
 

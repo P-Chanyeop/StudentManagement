@@ -731,12 +731,6 @@ function Enrollments() {
                       )}
                     </span>
                   </div>
-                  <div className="detail-item">
-                    <span className="label">레코딩 파일</span>
-                    <span className="value recording-status">
-                      {enrollment.recordingStatus || '0/0'}{enrollment.recordingOffset ? ` (+${enrollment.recordingOffset})` : ''}
-                    </span>
-                  </div>
                 </div>
                 
                 <div className="card-click-hint">
@@ -1107,38 +1101,6 @@ function Enrollments() {
                   <span className="enr-detail-value">
                     {selectedEnrollment.actualDurationMinutes || selectedEnrollment.course?.durationMinutes || '-'}분
                     {selectedEnrollment.customDurationMinutes && <span style={{ color: '#999', fontSize: 12 }}> (개별설정)</span>}
-                  </span>
-                </div>
-                <div className="enr-detail-item">
-                  <span className="enr-detail-label">레코딩 회차</span>
-                  <span className="enr-detail-value" style={{ color: '#007AFF', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {selectedEnrollment.recordingStatus || '0/0'}
-                    {currentUser?.role === 'ADMIN' && (() => {
-                      const si = getStudentInfo(selectedEnrollment.studentId);
-                      const cur = si?.recordingOffset || 0;
-                      const dbActual = selectedEnrollment.actualRecordings || 0;
-                      const expected = selectedEnrollment.expectedRecordings || 0;
-                      const updateOffset = (newVal) => {
-                        if (dbActual + newVal > expected) return alert('총 레코딩 회차(' + expected + ')를 초과할 수 없습니다.');
-                        studentAPI.updateRecordingOffset(selectedEnrollment.studentId, newVal)
-                          .then(() => queryClient.invalidateQueries(['enrollments']))
-                          .catch(() => alert('조정 실패'));
-                        queryClient.setQueryData(['students'], old => old?.map(s => s.id === selectedEnrollment.studentId ? { ...s, recordingOffset: newVal } : s));
-                      };
-                      return (
-                      <>
-                        {cur > 0 && <span style={{ fontSize: 13, color: '#03C75A', fontWeight: 600 }}>(+{cur})</span>}
-                        <button
-                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          onClick={() => cur > 0 && updateOffset(cur - 1)}
-                        >−</button>
-                        <button
-                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid #ddd', background: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          onClick={() => updateOffset(cur + 1)}
-                        >+</button>
-                      </>
-                      );
-                    })()}
                   </span>
                 </div>
                 <div className="enr-detail-item">
