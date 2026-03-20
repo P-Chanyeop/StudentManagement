@@ -21,6 +21,7 @@ function Dashboard() {
   // 더보기 상태
   const [showAllSchedules, setShowAllSchedules] = useState(false);
   const [showAllEnrollments, setShowAllEnrollments] = useState(false);
+  const [enrollmentFilter, setEnrollmentFilter] = useState('all'); // 'all', 'expiring', 'lowCount'
   const [showAllAttendance, setShowAllAttendance] = useState(false);
   const [showAllReservations, setShowAllReservations] = useState(false);
 
@@ -422,21 +423,29 @@ function Dashboard() {
                         <span className="summary-label">활성</span>
                         <span className="summary-value">{enrollmentStats.active}개</span>
                       </div>
-                      <div className="summary-item warning">
+                      <div className="summary-item warning" style={{ cursor: 'pointer', background: enrollmentFilter === 'expiring' ? '#fff3e0' : undefined, borderRadius: '6px', padding: '4px 8px' }} onClick={() => setEnrollmentFilter(enrollmentFilter === 'expiring' ? 'all' : 'expiring')}>
                         <span className="summary-label">만료임박</span>
                         <span className="summary-value">{enrollmentStats.expiring}개</span>
                       </div>
-                      <div className="summary-item urgent">
+                      <div className="summary-item urgent" style={{ cursor: 'pointer', background: enrollmentFilter === 'lowCount' ? '#fce4ec' : undefined, borderRadius: '6px', padding: '4px 8px' }} onClick={() => setEnrollmentFilter(enrollmentFilter === 'lowCount' ? 'all' : 'lowCount')}>
                         <span className="summary-label">횟수부족</span>
                         <span className="summary-value">{enrollmentStats.lowCount}개</span>
                       </div>
                     </div>
                   )}
                   <div className="list">
-                    {(showAllEnrollments ? 
-                      (isParent ? enrollments : enrollments.filter(e => e.isActive)) : 
-                      (isParent ? enrollments : enrollments.filter(e => e.isActive)).slice(0, 5)
-                    ).map((enrollment) => {
+                    {(() => {
+                      let filtered = isParent ? enrollments : enrollments.filter(e => e.isActive);
+                      if (enrollmentFilter === 'expiring') {
+                        filtered = filtered.filter(e => {
+                          if (!e.endDate) return false;
+                          const d = getBusinessDaysLeft(e.startDate, e.endDate);
+                          return d <= 7 && d >= 0;
+                        });
+                      } else if (enrollmentFilter === 'lowCount') {
+                        filtered = filtered.filter(e => e.type === 'COUNT_BASED' && e.remainingCount <= 5);
+                      }
+                      return (showAllEnrollments ? filtered : filtered.slice(0, 5)).map((enrollment) => {
                     const daysLeft = getBusinessDaysLeft(enrollment.startDate, enrollment.endDate);
                     return (
                       <div 
@@ -463,7 +472,8 @@ function Dashboard() {
                         )}
                       </div>
                     );
-                  })}
+                  });
+                    })()}
                   {(isParent ? enrollments.length : enrollmentStats.active) > 5 && (
                     <button 
                       type="button"

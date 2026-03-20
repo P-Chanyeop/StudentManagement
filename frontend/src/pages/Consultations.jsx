@@ -541,6 +541,7 @@ function Consultations() {
                         value={mainStudentSearchQuery}
                         onChange={(e) => setMainStudentSearchQuery(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
+                        autoFocus
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box' }}
                       />
                     </div>
@@ -719,6 +720,7 @@ function Consultations() {
                             value={studentSearchQuery}
                             onChange={(e) => setStudentSearchQuery(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
+                            autoFocus
                           />
                         </div>
                         <div className="student-list">
