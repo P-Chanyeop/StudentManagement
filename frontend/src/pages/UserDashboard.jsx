@@ -106,9 +106,7 @@ function UserDashboard() {
                   <div className="info-row">
                     <span className="info-label">수업 시간</span>
                     <span className="info-value">
-                      {enrollment.courseSchedules?.map(schedule => 
-                        `${schedule.dayOfWeek} ${schedule.startTime}-${schedule.endTime}`
-                      ).join(', ') || '미정'}
+                      {enrollment.actualDurationMinutes ? `${enrollment.actualDurationMinutes}분` : '미정'}
                     </span>
                   </div>
                   <div className="info-row">

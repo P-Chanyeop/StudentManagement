@@ -58,17 +58,15 @@ public class AutomatedMessageService {
         
         String content = String.format(
                 "안녕하세요.\n리틀베어 리딩클럽입니다.\n\n" +
-                "%s학생의 수강 유효기한은\n%d회에 대해 %d/%d - %d/%d까지 유효합니다.\n\n" +
-                "아래 리틀베어 리딩클럽 학원 홈페이지를 통해서\n" +
-                "아이 출결 사항 및 레코딩 파일 들어보실 수 있습니다:)\n\n" +
-                "%s 통해 가입 진행 부탁드립니다.\n\n" +
+                "%s학생의 수강 유효기한은\n%d회에 대해 %d/%d-%d/%d까지 유효합니다.\n\n" +
+                "리틀베어 리딩클럽 학원 홈페이지를 통해서\n" +
+                "아이 출결 사항 및 레코딩 파일 들어보실 수 있습니다:)\n\n\n" +
                 "레코딩은 6회에 1회씩 진행되며\n이번 텀은 총 %d회 업로드 될 예정입니다.\n\n" +
                 "문의사항 있으시면 말씀해주세요! 감사합니다! :)",
                 student.getStudentName(),
                 totalCount,
                 startDate.getMonthValue(), startDate.getDayOfMonth(),
                 endDate.getMonthValue(), endDate.getDayOfMonth(),
-                homepageUrl,
                 recordingCount
         );
 

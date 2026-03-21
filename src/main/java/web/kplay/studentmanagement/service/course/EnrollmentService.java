@@ -45,6 +45,7 @@ public class EnrollmentService {
     private final ReservationRepository reservationRepository;
     private final web.kplay.studentmanagement.service.holiday.HolidayService holidayService;
     private final AutomatedMessageService automatedMessageService;
+    private final web.kplay.studentmanagement.repository.CourseScheduleRepository courseScheduleRepository;
 
     /**
      * 미가입자 학생 + 수강권 동시 등록
@@ -421,6 +422,11 @@ public class EnrollmentService {
                 .holdEndDate(enrollment.getHoldEndDate())
                 .isOnHold(enrollment.getIsOnHold())
                 .totalHoldDays(enrollment.getTotalHoldDays())
+                .courseSchedules(course != null ? courseScheduleRepository.findByCourseId(course.getId()).stream()
+                    .map(s -> s.getDayOfWeek() + "|" + (s.getStartTime() != null ? s.getStartTime().toString().substring(0, 5) : "") + "|" + (s.getEndTime() != null ? s.getEndTime().toString().substring(0, 5) : ""))
+                    .distinct()
+                    .map(key -> { String[] p = key.split("\\|"); return EnrollmentResponse.ScheduleInfo.builder().dayOfWeek(p[0]).startTime(p[1]).endTime(p[2]).build(); })
+                    .collect(java.util.stream.Collectors.toList()) : null)
                 .build();
     }
 

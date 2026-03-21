@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -38,4 +39,16 @@ public class EnrollmentResponse {
     private LocalDate holdEndDate;
     private Boolean isOnHold;
     private Integer totalHoldDays;
+
+    private List<ScheduleInfo> courseSchedules;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ScheduleInfo {
+        private String dayOfWeek;
+        private String startTime;
+        private String endTime;
+    }
 }
